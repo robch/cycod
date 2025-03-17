@@ -8,9 +8,23 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        // Check if we should wait for the debugger
-        args = CheckWaitForDebugger(args);
+        try
+        {
+            SaveConsoleColor();
+            await DoChat(ProcessDirectives(args));
+        }
+        catch (InvalidOperationException ex)
+        {
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+        finally
+        {
+            RestoreConsoleColor();
+        }
+    }
 
+    private static async Task DoChat(string[] args)
+    {
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
         factory.AddFunctions(typeof(TimeAndDateHelperFunctions));
@@ -21,8 +35,6 @@ public class Program
         var chatClient = ChatClientFactory.CreateChatClientFromEnv();
         var systemPrompt = Environment.GetEnvironmentVariable("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
         var chat = new FunctionCallingChat(chatClient, systemPrompt, factory);
-
-        SaveConsoleColor();
 
         while (true)
         {
@@ -36,8 +48,6 @@ public class Program
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
             Console.WriteLine("\n");
         }
-
-        RestoreConsoleColor();
     }
 
     private static void DisplayUserPrompt()
@@ -85,6 +95,11 @@ public class Program
     private static void HandleFunctionCallCompleted(string name, string args, string? result)
     {
         DisplayFunctionResult(name, args, result);
+    }
+
+    private static string[] ProcessDirectives(string[] args)
+    {
+        return CheckWaitForDebugger(args);
     }
 
     private static string[] CheckWaitForDebugger(string[] args)
