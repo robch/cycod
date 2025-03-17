@@ -1,0 +1,24 @@
+CHATX STDIN (`-`)
+
+  The `-` symbol is used to represent the standard input (stdin) for file
+  content. When you use `-` as a file name, CHATX will read from the standard
+  input instead of a file. This is useful when you want to pipe content
+  directly into CHATX from another command or script.
+
+USAGE: chatx - [FILE1 [FILE2]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Pipe output from git diff into CHATX and summarize
+
+    git diff | chatx --input @- "summarize the changes"
+
+  EXAMPLE 2: Pipe output from gh issues into CHATX and summarize in a table
+
+    gh issue list | chatx --input @- "summarize the issues in a table"
+
+SEE ALSO
+
+  chatx help
+  chatx help examples
+  chatx help options

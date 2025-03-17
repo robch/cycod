@@ -1,0 +1,13 @@
+USAGE: chatx [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Ask a single question
+    chatx --question "What time is it?"
+
+  EXAMPLE 2: Use multiple inline inputs
+    chatx --input "Show me a calendar for this month" "And next month"
+
+SEE ALSO
+
+  chatx help options

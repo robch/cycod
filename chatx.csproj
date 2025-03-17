@@ -13,4 +13,13 @@
     <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="assets\help\**">
+      <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="assets\prompts\**">
+      <Link>prompts\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

@@ -21,13 +21,18 @@ public class FunctionCallingChat
         }
 
         _functionCallContext = new FunctionCallContext(_functionFactory, _messages);
-        ClearConversation();
+        ClearChatHistory();
     }
 
-    public void ClearConversation()
+    public void ClearChatHistory()
     {
         _messages.Clear();
         _messages.Add(ChatMessage.CreateSystemMessage(_openAISystemPrompt));
+    }
+
+    public void LoadChatHistory(string fileName)
+    {
+        _messages.ReadChatHistoryFromFile(fileName);
     }
 
     public async Task<string> GetChatCompletionsStreamingAsync(

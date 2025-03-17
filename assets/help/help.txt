@@ -1,0 +1,3 @@
+USAGE: chatx help topics
+   OR: chatx help topics --expand
+   OR: chatx help find "TERMS"

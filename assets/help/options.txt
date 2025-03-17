@@ -1,0 +1,18 @@
+USAGE: chatx [...]
+
+OPTIONS
+
+  --question TEXT               Ask a question or provide a prompt. This is the main input for the chat model. 
+  --input "Q1" "Q2" ...         Provide multiple inputs. Each input is treated as a separate question or prompt.
+  --instructions "I1" "I2" ...  Alias for --input. Use this to provide multiple instructions or prompts.
+
+  --input-chat-history [FILE]   Load chat history from the specified file. The file must be valid chat messages in JSONL format
+  --output-chat-history [FILE]  Save chat history to the specified file (default: "chat-history-{time}.jsonl")
+
+  --save-alias ALIAS            Save current options as an alias
+  --{ALIAS}                     Use options saved under the specified alias name
+
+SEE ALSO
+
+  chatx help
+  chatx help examples

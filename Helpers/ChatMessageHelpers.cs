@@ -34,12 +34,12 @@ public static class OpenAIChatHelpers
             }
         }
 
-        File.WriteAllText(fileName, history.ToString(), Encoding.UTF8);
+        FileHelpers.WriteAllText(fileName, history.ToString());
     }
 
     public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName)
     {
-        var historyFile = File.ReadAllText(fileName, Encoding.UTF8);
+        var historyFile = FileHelpers.ReadAllText(fileName);
 
         var historyFileLines = historyFile.Split(Environment.NewLine);
         var clearIfSystem = () =>
@@ -50,6 +50,8 @@ public static class OpenAIChatHelpers
 
         foreach (var line in historyFileLines)
         {
+            if (string.IsNullOrEmpty(line)) continue;
+            
             var jsonObject = JsonDocument.Parse(line);
             JsonElement roleObj;
 

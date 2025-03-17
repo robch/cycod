@@ -1,18 +1,18 @@
-using OpenAI.Chat;
 using System.Diagnostics;
 
 public class Program
 {
-    public static async Task Main(string[] args)
+    public static async Task<int> Main(string[] args)
     {
         try
         {
             SaveConsoleColor();
-            await DoChat(ProcessDirectives(args));
+            return await DoProgram(ProcessDirectives(args));
         }
         catch (InvalidOperationException ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
+            return 1;
         }
         finally
         {
@@ -20,84 +20,102 @@ public class Program
         }
     }
 
-    private static async Task DoChat(string[] args)
+    private static async Task<int> DoProgram(string[] args)
     {
-        // Create the function factory and add functions.
-        var factory = new FunctionFactory();
-        factory.AddFunctions(typeof(TimeAndDateHelperFunctions));
-        factory.AddFunctions(typeof(BashToolHelperFunctions));
-        factory.AddFunctions(typeof(StrReplaceEditorHelperFunctions));
-
-        // Create the chat completions object with the external ChatClient and system prompt.
-        var chatClient = ChatClientFactory.CreateChatClientFromEnv();
-        var systemPrompt = Environment.GetEnvironmentVariable("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
-        var chat = new FunctionCallingChat(chatClient, systemPrompt, factory);
-
-        while (true)
+        if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
-            DisplayUserPrompt();
-            var userPrompt = Console.ReadLine();
-            if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
-
-            DisplayAssistantLabel();
-            var response = await chat.GetChatCompletionsStreamingAsync(userPrompt,
-                (messages) => HandleMessagesChanged(messages),
-                (update) => HandleStreamingChatCompletionUpdate(update),
-                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-            Console.WriteLine("\n");
+            PrintBanner();
+            if (ex != null)
+            {
+                PrintException(ex);
+                HelpHelpers.PrintUsage(ex.GetCommand());
+                return 2;
+            }
+            else
+            {
+                HelpHelpers.PrintUsage(commandLineOptions!.HelpTopic);
+                return 1;
+            }
         }
-    }
 
-    private static void DisplayUserPrompt()
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("User: ");
-        Console.ForegroundColor = ConsoleColor.White;
-    }
+        ConsoleHelpers.Configure(commandLineOptions!.Debug, commandLineOptions.Verbose);
 
-    private static void DisplayAssistantLabel()
-    {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("\nAssistant: ");
-        Console.ForegroundColor = ConsoleColor.White;
-    }
-
-    private static void DisplayAssistantResponse(string text)
-    {
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write(text);
-    }
-
-    private static void DisplayFunctionResult(string name, string args, string? result)
-    {
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write($"\rassistant-function: {name} {args} => ");
-        
-        if (result == null) Console.Write("...");
-        if (result != null)
+        var helpCommand = commandLineOptions.Commands.OfType<HelpCommand>().FirstOrDefault();
+        if (helpCommand != null)
         {
-            Console.WriteLine(result);
-            DisplayAssistantLabel();
+            PrintBanner();
+            HelpHelpers.PrintHelpTopic(commandLineOptions.HelpTopic, commandLineOptions.ExpandHelpTopics);
+            return 0;
         }
+
+        var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
+        if (shouldSaveAlias)
+        {
+            var filesSaved = commandLineOptions.SaveAlias(commandLineOptions.SaveAliasName!);
+
+            PrintBanner();
+            PrintSavedAliasFiles(filesSaved);
+
+            return 0;
+        }
+
+        var threadCountMax = commandLineOptions.Commands.Max(x => x.ThreadCount);
+        var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
+
+        var allTasks = new List<Task<int>>();
+        var throttler = new SemaphoreSlim(parallelism);
+
+        foreach (var command in commandLineOptions.Commands)
+        {
+            var tasksThisCommand = command switch
+            {
+                ChatCommand chatCommand => await chatCommand.ExecuteAsync(),
+                _ => new List<Task<int>>()
+            };
+
+            allTasks.AddRange(tasksThisCommand);
+        }
+
+        await Task.WhenAll(allTasks.ToArray());
+        ConsoleHelpers.PrintStatusErase();
+
+        return 0;
     }
 
-    private static void HandleMessagesChanged(IList<ChatMessage> messages)
+    private static void PrintBanner()
     {
-        messages.SaveChatHistoryToFile("chat-history.jsonl");
+        var programNameUppercase = Program.Name.ToUpper();
+        ConsoleHelpers.PrintLine(
+            $"{programNameUppercase} - AI-powered CLI, Version 1.0.0\n" +
+            "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
     }
 
-    private static void HandleStreamingChatCompletionUpdate(StreamingChatCompletionUpdate update)
+    private static void PrintException(CommandLineException ex)
     {
-        var text = string.Join("", update.ContentUpdate
-            .Where(x => x.Kind == ChatMessageContentPartKind.Text)
-            .Select(x => x.Text)
-            .ToList());
-        DisplayAssistantResponse(text);
+        var printMessage = !string.IsNullOrEmpty(ex.Message);
+        if (printMessage) ConsoleHelpers.PrintLine($"  {ex.Message}\n\n");
     }
 
-    private static void HandleFunctionCallCompleted(string name, string args, string? result)
+    private static void PrintSavedAliasFiles(List<string> filesSaved)
     {
-        DisplayFunctionResult(name, args, result);
+        var firstFileSaved = filesSaved.First();
+        var additionalFiles = filesSaved.Skip(1).ToList();
+
+        ConsoleHelpers.PrintLine($"Saved: {firstFileSaved}\n");
+
+        var hasAdditionalFiles = additionalFiles.Any();
+        if (hasAdditionalFiles)
+        {
+            foreach (var additionalFile in additionalFiles)
+            {
+                ConsoleHelpers.PrintLine($"  and: {additionalFile}");
+            }
+         
+            ConsoleHelpers.PrintLine();
+        }
+
+        var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
+        ConsoleHelpers.PrintLine($"USAGE: {Program.Name} [...] --" + aliasName);
     }
 
     private static string[] ProcessDirectives(string[] args)
@@ -136,4 +154,6 @@ public class Program
 
     private static ConsoleColor _originalForegroundColor;
     private static ConsoleColor _originalBackgroundColor;
+
+    public const string Name = "chatx";
 }
