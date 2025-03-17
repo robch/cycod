@@ -30,7 +30,7 @@ public class FunctionCallContext
         return updated;
     }
 
-    public bool TryCallFunctions(string content, Action<string, string, string?>? callback)
+    public bool TryCallFunctions(string content, Action<string, string, string?>? funcionCallback, Action<IList<ChatMessage>>? messageCallback)
     {
         var toolCalls = _toolCallsBuilder.Build();
         if (toolCalls.Count == 0) return false;
@@ -42,7 +42,10 @@ public class FunctionCallContext
         {
             assistantMessage.Content.Add(ChatMessageContentPart.CreateTextPart(content));
         }
+        
+        // Add the assistant message to the messages list.
         _messages.Add(assistantMessage);
+        if (messageCallback != null) messageCallback(_messages);
 
         // Process each tool call.
         foreach (var toolCall in toolCalls)
@@ -50,14 +53,16 @@ public class FunctionCallContext
             var functionName = toolCall.FunctionName;
             var functionArguments = toolCall.FunctionArguments.ToString();
 
-            if (callback != null) callback(functionName, functionArguments, null);
+            if (funcionCallback != null) funcionCallback(functionName, functionArguments, null);
 
             var ok = _functionFactory.TryCallFunction(functionName, functionArguments, out var result);
             if (!ok) return false;
 
             result ??= string.Empty;
-            if (callback != null) callback(functionName, functionArguments, result);
+            if (funcionCallback != null) funcionCallback(functionName, functionArguments, result);
+
             _messages.Add(new ToolChatMessage(toolCall.Id, result));
+            if (messageCallback != null) messageCallback(_messages);
         }
 
         return true;

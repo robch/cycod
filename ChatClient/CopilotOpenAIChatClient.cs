@@ -5,10 +5,6 @@ using System.ClientModel.Primitives;
 
 public class CopilotOpenAIChatClient : ChatClient
 {
-    private readonly string _hmacKey;
-    private readonly string _integrationId;
-    private readonly string _endpoint;
-
     public CopilotOpenAIChatClient(string model, string hmacKey, string integrationId, string endpoint)
         : base(model: model, credential: null, options: GetOptionsWithPolicies(hmacKey, integrationId))
     {
@@ -32,4 +28,8 @@ public class CopilotOpenAIChatClient : ChatClient
 
         return options;
     }
+
+    private readonly string _hmacKey;
+    private readonly string _integrationId;
+    private readonly string _endpoint;
 }

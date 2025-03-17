@@ -6,13 +6,6 @@ using System.Threading.Tasks;
 
 public class FunctionCallingChat
 {
-    private readonly string _openAISystemPrompt;
-    private readonly FunctionFactory _functionFactory;
-    private readonly FunctionCallContext _functionCallContext;
-    private readonly ChatCompletionOptions _options;
-    private readonly ChatClient _chatClient;
-    private readonly List<ChatMessage> _messages;
-
     public FunctionCallingChat(ChatClient openAIClient, string openAISystemPrompt, FunctionFactory factory)
     {
         _openAISystemPrompt = openAISystemPrompt;
@@ -37,11 +30,16 @@ public class FunctionCallingChat
         _messages.Add(ChatMessage.CreateSystemMessage(_openAISystemPrompt));
     }
 
-    public async Task<string> GetChatCompletionsStreamingAsync(string userPrompt, Action<StreamingChatCompletionUpdate>? callback = null, Action<string, string, string?>? functionCallCallback = null)
+    public async Task<string> GetChatCompletionsStreamingAsync(
+        string userPrompt,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<StreamingChatCompletionUpdate>? streamingCallback = null,
+        Action<string, string, string?>? functionCallCallback = null)
     {
         _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
-        var responseContent = string.Empty;
+        if (messageCallback != null) messageCallback(_messages);
 
+        var responseContent = string.Empty;
         while (true)
         {
             var response = _chatClient.CompleteChatStreamingAsync(_messages, _options);
@@ -63,17 +61,26 @@ public class FunctionCallingChat
                     continue;
 
                 responseContent += content;
-                callback?.Invoke(update);
+                streamingCallback?.Invoke(update);
             }
 
-            if (_functionCallContext.TryCallFunctions(responseContent, functionCallCallback))
+            if (_functionCallContext.TryCallFunctions(responseContent, functionCallCallback, messageCallback))
             {
                 _functionCallContext.Clear();
                 continue;
             }
 
             _messages.Add(ChatMessage.CreateAssistantMessage(responseContent));
+            if (messageCallback != null) messageCallback(_messages);
+    
             return responseContent;
         }
     }
+
+    private readonly string _openAISystemPrompt;
+    private readonly FunctionFactory _functionFactory;
+    private readonly FunctionCallContext _functionCallContext;
+    private readonly ChatCompletionOptions _options;
+    private readonly ChatClient _chatClient;
+    private readonly List<ChatMessage> _messages;
 }

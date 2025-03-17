@@ -1,8 +1,5 @@
 using OpenAI.Chat;
-using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 public class Program
 {
@@ -44,6 +41,7 @@ public class Program
 
             DisplayAssistantLabel();
             var response = await chat.GetChatCompletionsStreamingAsync(userPrompt,
+                (messages) => HandleMessagesChanged(messages),
                 (update) => HandleStreamingChatCompletionUpdate(update),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
             Console.WriteLine("\n");
@@ -81,6 +79,11 @@ public class Program
             Console.WriteLine(result);
             DisplayAssistantLabel();
         }
+    }
+
+    private static void HandleMessagesChanged(IList<ChatMessage> messages)
+    {
+        messages.SaveChatHistoryToFile("chat-history.jsonl");
     }
 
     private static void HandleStreamingChatCompletionUpdate(StreamingChatCompletionUpdate update)
