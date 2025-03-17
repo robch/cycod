@@ -14,15 +14,19 @@ USAGE: chatx [...]
 EXAMPLES
 
   EXAMPLE 1: Ask a single question
+
     chatx --question "What time is it?"
 
-  EXAMPLE 2: Use multiple inline inputs
-    chatx --instructions "Show me a calendar for this month" "And next month"
+  EXAMPLE 2: Use multiple sequential inline inputs
+
+    chatx --inputs "What's today's date?" "show me a calendar for this month"
 
   EXAMPLE 3: Read/write files
+
     chatx --instructions "Look at the files in this folder. Summarize what they each do"
 
   EXAMPLE 4: Execute shell commands
+
     chatx --instructions "Use gh to find the open issues assigned to me"
 
 SEE ALSO

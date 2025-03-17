@@ -40,7 +40,7 @@ class ChatCommand : Command
         while (true)
         {
             DisplayUserPrompt();
-            var userPrompt = Console.ReadLine();
+            var userPrompt = ReadLineOrSimulateInput(InputInstructions, "exit");
             if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
 
             DisplayAssistantLabel();
@@ -52,6 +52,32 @@ class ChatCommand : Command
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
+    }
+
+    private static string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfRedirectedInput = null)
+    {
+        while (inputInstructions?.Count > 0)
+        {
+            var input = inputInstructions[0];
+            inputInstructions.RemoveAt(0);
+
+            var empty = string.IsNullOrEmpty(input);
+            if (!empty)
+            {
+                Console.WriteLine(input);
+                return input;
+            }
+        }
+
+        if (Console.IsInputRedirected)
+        {
+            var line = Console.ReadLine();
+            line ??= defaultOnEndOfRedirectedInput;
+            if (line != null) Console.WriteLine(line);
+            return line;
+        }
+
+        return Console.ReadLine();
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
@@ -111,4 +137,6 @@ class ChatCommand : Command
 
     public string? InputChatHistory;
     public string? OutputChatHistory;
+
+    public List<string> InputInstructions = new();
 }

@@ -14,7 +14,6 @@ public class BashSession
     private readonly StringBuilder _stdoutBuffer = new StringBuilder();
     private readonly StringBuilder _stderrBuffer = new StringBuilder();
     private readonly object _lock = new object();
-    private readonly bool _verbose = false;
     private const string CommandDoneMarker = "___BEGIN_END_COMMAND_MARKER___";
 
     // Ensure only one session is active.
@@ -47,7 +46,7 @@ public class BashSession
             {
                 lock (_lock)
                 {
-                    if (_verbose && args.Data.Contains(CommandDoneMarker) == false)
+                    if (ConsoleHelpers.IsVerbose() && args.Data.Contains(CommandDoneMarker) == false)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkCyan;
                         Console.WriteLine(args.Data);
@@ -62,7 +61,7 @@ public class BashSession
             {
                 lock (_lock)
                 {
-                    if (_verbose && args.Data.Contains(CommandDoneMarker) == false)
+                    if (ConsoleHelpers.IsVerbose() && args.Data.Contains(CommandDoneMarker) == false)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.WriteLine(args.Data);

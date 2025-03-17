@@ -11,11 +11,11 @@ EXAMPLES
 
   EXAMPLE 1: Pipe output from git diff into CHATX and summarize
 
-    git diff | chatx --input @- "summarize the changes"
+    git diff | chatx --input "summarize these changes:" @-
 
   EXAMPLE 2: Pipe output from gh issues into CHATX and summarize in a table
 
-    gh issue list | chatx --input @- "summarize the issues in a table"
+    gh issue list | chatx --input "summarize the issues in a table" @-
 
 SEE ALSO
 

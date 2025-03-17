@@ -15,6 +15,16 @@ class ConsoleHelpers
         _verbose = verbose;
     }
 
+    public static bool IsVerbose()
+    {
+        return _verbose;
+    }
+
+    public static bool IsDebug()
+    {
+        return _debug;
+    }
+
     public static void PrintStatus(string status)
     {
         if (!_debug && !_verbose) return;

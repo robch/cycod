@@ -3,10 +3,12 @@ USAGE: chatx [...]
 EXAMPLES
 
   EXAMPLE 1: Ask a single question
+
     chatx --question "What time is it?"
 
-  EXAMPLE 2: Use multiple inline inputs
-    chatx --input "Show me a calendar for this month" "And next month"
+  EXAMPLE 2: Use multiple sequential inline inputs
+
+    chatx --inputs "What's today's date?" "show me a calendar for this month"
 
 SEE ALSO
 

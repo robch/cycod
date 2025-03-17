@@ -7,12 +7,6 @@ using System;
 
 public class TimeAndDateHelperFunctions
 {
-    [HelperFunctionDescription("Gets the current weather for a location.")]
-    public static string GetCurrentWeather(string location)
-    {
-        return $"The weather in {location} is 72 degrees and sunny.";
-    }
-
     [HelperFunctionDescription("Gets the current date.")]
     public static string GetCurrentDate()
     {

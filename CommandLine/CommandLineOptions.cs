@@ -292,6 +292,26 @@ class CommandLineOptions
         {
             parsed = false;
         }
+        else if (arg == "--input" || arg == "--instruction" || arg == "--question")
+        {
+            var inputArgs = GetInputOptionArgs(i + 1, args)
+                .Select(x => FileHelpers.FileExists(x)
+                    ? FileHelpers.ReadAllText(x)
+                    : x);
+            var joined = ValidateString(arg, string.Join("\n", inputArgs), "input");
+            command.InputInstructions.Add(joined!);
+            i += inputArgs.Count();
+        }
+        else if (arg == "--inputs" || arg == "--instructions" || arg == "--questions")
+        {
+            var inputArgs = GetInputOptionArgs(i + 1, args)
+                .Select(x => FileHelpers.FileExists(x)
+                    ? FileHelpers.ReadAllText(x)
+                    : x);
+            var inputs = ValidateStrings(arg, inputArgs, "input");
+            command.InputInstructions.AddRange(inputs);
+            i += inputArgs.Count();
+        }
         else if (arg == "--input-chat-history")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -362,6 +382,27 @@ class CommandLineOptions
 
             yield return args[i];
         }
+    }
+
+    private static string? ValidateString(string arg, string? argStr, string argDescription)
+    {
+        if (string.IsNullOrEmpty(argStr))
+        {
+            throw new CommandLineException($"Missing {argDescription} for {arg}");
+        }
+
+        return argStr;
+    }
+
+    private static IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription)
+    {
+        var strings = argStrs.ToList();
+        if (!strings.Any())
+        {
+            throw new CommandLineException($"Missing {argDescription} for {arg}");
+        }
+
+        return strings.Select(x => ValidateString(arg, x, argDescription)!);
     }
 
     private static string? ValidateFileExists(string? arg)

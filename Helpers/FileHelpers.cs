@@ -135,6 +135,11 @@ class FileHelpers
         return relativePath;
     }
 
+    public static bool FileExists(string? fileName)
+    {
+        return !string.IsNullOrEmpty(fileName) && (File.Exists(fileName) || fileName == "-");
+    }
+
     public static string ReadAllText(string fileName)
     {
         var content = fileName == "-"
