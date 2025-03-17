@@ -30,7 +30,7 @@ class ChatCommand : Command
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClientFromEnv();
-        var systemPrompt = Environment.GetEnvironmentVariable("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
+        var systemPrompt = EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
         var chat = new FunctionCallingChat(chatClient, systemPrompt, factory);
 
         // Load the chat history from the file.
@@ -48,7 +48,7 @@ class ChatCommand : Command
                 (messages) => HandleUpdateMessages(messages),
                 (update) => HandleStreamingChatCompletionUpdate(update),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-            Console.WriteLine("\n");
+            ConsoleHelpers.WriteLine("\n");
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
@@ -64,7 +64,7 @@ class ChatCommand : Command
             var empty = string.IsNullOrEmpty(input);
             if (!empty)
             {
-                Console.WriteLine(input);
+                ConsoleHelpers.WriteLine(input);
                 return input;
             }
         }
@@ -73,7 +73,7 @@ class ChatCommand : Command
         {
             var line = Console.ReadLine();
             line ??= defaultOnEndOfRedirectedInput;
-            if (line != null) Console.WriteLine(line);
+            if (line != null) ConsoleHelpers.WriteLine(line);
             return line;
         }
 
@@ -104,33 +104,28 @@ class ChatCommand : Command
 
     private static void DisplayUserPrompt()
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("User: ");
+        ConsoleHelpers.Write("User: ", ConsoleColor.Green);
         Console.ForegroundColor = ConsoleColor.White;
     }
 
     private static void DisplayAssistantLabel()
     {
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.Write("\nAssistant: ");
-        Console.ForegroundColor = ConsoleColor.White;
+        ConsoleHelpers.Write("\nAssistant: ", ConsoleColor.Green);
     }
 
     private static void DisplayAssistantResponse(string text)
     {
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.Write(text);
+        ConsoleHelpers.Write(text, ConsoleColor.White);
     }
 
     private static void DisplayFunctionResult(string name, string args, string? result)
     {
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write($"\rassistant-function: {name} {args} => ");
+        ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
-        if (result == null) Console.Write("...");
+        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
         if (result != null)
         {
-            Console.WriteLine(result);
+            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }

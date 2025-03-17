@@ -11,7 +11,7 @@ public class Program
         }
         catch (InvalidOperationException ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
+            ConsoleHelpers.WriteLine($"Error: {ex.Message}");
             return 1;
         }
         finally
@@ -24,16 +24,16 @@ public class Program
     {
         if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
-            PrintBanner();
+            DisplayBanner();
             if (ex != null)
             {
-                PrintException(ex);
-                HelpHelpers.PrintUsage(ex.GetCommand());
+                DisplayException(ex);
+                HelpHelpers.DisplayUsage(ex.GetCommand());
                 return 2;
             }
             else
             {
-                HelpHelpers.PrintUsage(commandLineOptions!.HelpTopic);
+                HelpHelpers.DisplayUsage(commandLineOptions!.HelpTopic);
                 return 1;
             }
         }
@@ -43,8 +43,8 @@ public class Program
         var helpCommand = commandLineOptions.Commands.OfType<HelpCommand>().FirstOrDefault();
         if (helpCommand != null)
         {
-            PrintBanner();
-            HelpHelpers.PrintHelpTopic(commandLineOptions.HelpTopic, commandLineOptions.ExpandHelpTopics);
+            DisplayBanner();
+            HelpHelpers.DisplayHelpTopic(commandLineOptions.HelpTopic, commandLineOptions.ExpandHelpTopics);
             return 0;
         }
 
@@ -53,8 +53,8 @@ public class Program
         {
             var filesSaved = commandLineOptions.SaveAlias(commandLineOptions.SaveAliasName!);
 
-            PrintBanner();
-            PrintSavedAliasFiles(filesSaved);
+            DisplayBanner();
+            DisplaySavedAliasFiles(filesSaved);
 
             return 0;
         }
@@ -77,45 +77,45 @@ public class Program
         }
 
         await Task.WhenAll(allTasks.ToArray());
-        ConsoleHelpers.PrintStatusErase();
+        ConsoleHelpers.DisplayStatusErase();
 
         return 0;
     }
 
-    private static void PrintBanner()
+    private static void DisplayBanner()
     {
         var programNameUppercase = Program.Name.ToUpper();
-        ConsoleHelpers.PrintLine(
+        ConsoleHelpers.WriteLine(
             $"{programNameUppercase} - AI-powered CLI, Version 1.0.0\n" +
             "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
     }
 
-    private static void PrintException(CommandLineException ex)
+    private static void DisplayException(CommandLineException ex)
     {
         var printMessage = !string.IsNullOrEmpty(ex.Message);
-        if (printMessage) ConsoleHelpers.PrintLine($"  {ex.Message}\n\n");
+        if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n");
     }
 
-    private static void PrintSavedAliasFiles(List<string> filesSaved)
+    private static void DisplaySavedAliasFiles(List<string> filesSaved)
     {
         var firstFileSaved = filesSaved.First();
         var additionalFiles = filesSaved.Skip(1).ToList();
 
-        ConsoleHelpers.PrintLine($"Saved: {firstFileSaved}\n");
+        ConsoleHelpers.WriteLine($"Saved: {firstFileSaved}\n");
 
         var hasAdditionalFiles = additionalFiles.Any();
         if (hasAdditionalFiles)
         {
             foreach (var additionalFile in additionalFiles)
             {
-                ConsoleHelpers.PrintLine($"  and: {additionalFile}");
+                ConsoleHelpers.WriteLine($"  and: {additionalFile}");
             }
          
-            ConsoleHelpers.PrintLine();
+            ConsoleHelpers.WriteLine();
         }
 
         var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.PrintLine($"USAGE: {Program.Name} [...] --" + aliasName);
+        ConsoleHelpers.WriteLine($"USAGE: {Program.Name} [...] --" + aliasName);
     }
 
     private static string[] ProcessDirectives(string[] args)
@@ -129,12 +129,12 @@ public class Program
         if (debug)
         {
             args = args.Skip(2).ToArray();
-            Console.Write("Waiting for debugger...");
+            ConsoleHelpers.Write("Waiting for debugger...");
             for (; !Debugger.IsAttached; Thread.Sleep(200))
             {
-                Console.Write('.');
+                ConsoleHelpers.Write(".");
             }
-            Console.WriteLine();
+            ConsoleHelpers.WriteLine();
         }
 
         return args;

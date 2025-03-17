@@ -48,8 +48,7 @@ public class BashSession
                 {
                     if (ConsoleHelpers.IsVerbose() && args.Data.Contains(CommandDoneMarker) == false)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkCyan;
-                        Console.WriteLine(args.Data);
+                        ConsoleHelpers.WriteLine(args.Data, ConsoleColor.DarkCyan);
                     }
                     _stdoutBuffer.AppendLine(args.Data);
                 }
@@ -63,8 +62,7 @@ public class BashSession
                 {
                     if (ConsoleHelpers.IsVerbose() && args.Data.Contains(CommandDoneMarker) == false)
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(args.Data);
+                        ConsoleHelpers.WriteLine(args.Data, ConsoleColor.Red);
                     }
                     _stderrBuffer.AppendLine(args.Data);
                 }

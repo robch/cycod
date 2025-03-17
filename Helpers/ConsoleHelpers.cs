@@ -13,6 +13,9 @@ class ConsoleHelpers
 
         _debug = debug;
         _verbose = verbose;
+
+        WriteDebugLine($"Debug: {_debug}");
+        WriteDebugLine($"Verbose: {_verbose}");
     }
 
     public static bool IsVerbose()
@@ -25,21 +28,21 @@ class ConsoleHelpers
         return _debug;
     }
 
-    public static void PrintStatus(string status)
+    public static void DisplayStatus(string status)
     {
         if (!_debug && !_verbose) return;
         if (Console.IsOutputRedirected) return;
 
         lock (_printLock)
         {
-            PrintStatusErase();
+            DisplayStatusErase();
             Console.Write("\r" + status);
             _cchLastStatus = status.Length;
             if (_debug) Thread.Sleep(1);
         }
     }
 
-    public static void PrintStatusErase()
+    public static void DisplayStatusErase()
     {
         if (!_debug && !_verbose) return;
         if (_cchLastStatus <= 0) return;
@@ -52,25 +55,42 @@ class ConsoleHelpers
         }
     }
 
-    public static void PrintLine(string message = "")
+    public static void Write(string message = "", ConsoleColor? color = null)
     {
         lock (_printLock)
         {
-            PrintStatusErase();
-            Console.WriteLine(message);
+            var prevColor = Console.ForegroundColor;
+            if (color != null) Console.ForegroundColor = (ConsoleColor)color;
+
+            Console.Write(message);
+            if (color != null) Console.ForegroundColor = prevColor;
         }
     }
 
-    public static void PrintLineIfNotEmpty(string message)
+    public static void WriteLine(string message = "", ConsoleColor? color = null)
     {
-        if (string.IsNullOrEmpty(message)) return;
-        PrintLine(message);
+        lock (_printLock)
+        {
+            DisplayStatusErase();
+
+            var prevColor = Console.ForegroundColor;
+            if (color != null) Console.ForegroundColor = (ConsoleColor)color;
+
+            Console.WriteLine(message);
+            if (color != null) Console.ForegroundColor = prevColor;
+        }
     }
 
-    public static void PrintDebugLine(string message)
+    public static void WriteLineIfNotEmpty(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        WriteLine(message);
+    }
+
+    public static void WriteDebugLine(string message)
     {
         if (!_debug) return;
-        PrintLine(message);
+        WriteLine(message);
     }
 
     public static IEnumerable<string> GetAllLinesFromStdin()

@@ -64,7 +64,7 @@ class FileHelpers
 
         try
         {
-            ConsoleHelpers.PrintStatus($"Processing: {fileName} ...");
+            ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
 
             var content = ReadAllText(fileName);
             var includeFile = includeFileContainsPatternList.All(regex => regex.IsMatch(content));
@@ -78,7 +78,7 @@ class FileHelpers
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
         }
     }
 
@@ -92,10 +92,10 @@ class FileHelpers
         var timeStamp = DateTime.Now.ToString("yyyyMMddHHmmss");
         var time = DateTimeOffset.Now.ToUnixTimeMilliseconds().ToString();
 
-        ConsoleHelpers.PrintDebugLine($"filePath: {filePath}");
-        ConsoleHelpers.PrintDebugLine($"fileBase: {fileBase}");
-        ConsoleHelpers.PrintDebugLine($"fileExt: {fileExt}");
-        ConsoleHelpers.PrintDebugLine($"timeStamp: {timeStamp}");
+        ConsoleHelpers.WriteDebugLine($"filePath: {filePath}");
+        ConsoleHelpers.WriteDebugLine($"fileBase: {fileBase}");
+        ConsoleHelpers.WriteDebugLine($"fileExt: {fileExt}");
+        ConsoleHelpers.WriteDebugLine($"timeStamp: {timeStamp}");
 
         return template
             .Replace("{fileName}", fileName)
@@ -173,7 +173,7 @@ class FileHelpers
         if (found) return true;
 
         var allResourceNames = string.Join("\n  ", assembly.GetManifestResourceNames());
-        ConsoleHelpers.PrintDebugLine($"DEBUG: Embedded resources ({assembly.GetManifestResourceNames().Count()}):\n\n  {allResourceNames}\n");
+        ConsoleHelpers.WriteDebugLine($"DEBUG: Embedded resources ({assembly.GetManifestResourceNames().Count()}):\n\n  {allResourceNames}\n");
 
         return false;
     }

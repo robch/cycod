@@ -30,7 +30,7 @@ class HelpHelpers
         return FileHelpers.ReadEmbeddedStream($"help.{topic}.txt");
     }
 
-    public static void PrintUsage(string command)
+    public static void DisplayUsage(string command)
     {
         var validTopic = !string.IsNullOrEmpty(command) && HelpTopicExists(command);
         var helpContent = validTopic
@@ -39,10 +39,10 @@ class HelpHelpers
 
         helpContent ??= $"USAGE: {Program.Name} [...]";
 
-        ConsoleHelpers.PrintLine(helpContent.TrimEnd());
+        ConsoleHelpers.WriteLine(helpContent.TrimEnd());
     }
 
-    public static void PrintHelpTopic(string topic, bool expandTopics = false)
+    public static void DisplayHelpTopic(string topic, bool expandTopics = false)
     {
         topic ??= UsageHelpTopic;
 
@@ -51,14 +51,14 @@ class HelpHelpers
         {
             if (string.IsNullOrEmpty(topic))
             {
-                PrintHelpTopic("help");
+                DisplayHelpTopic("help");
                 return;
             }
 
             if (topic == "topics" || topic == "topics expand")
             {
                 expandTopics = expandTopics || topic == "topics expand";
-                PrintHelpTopics(expandTopics);
+                DisplayHelpTopics(expandTopics);
                 return;
             }
 
@@ -68,12 +68,12 @@ class HelpHelpers
                 var helpTopics = GetHelpTopics().Where(t => HelpTopicContains(t, topic)).ToList();
                 if (helpTopics.Count > 0)
                 {
-                    PrintHelpTopics(helpTopics, expandTopics);
+                    DisplayHelpTopics(helpTopics, expandTopics);
                     return;
                 }
             }
 
-            ConsoleHelpers.PrintLine(
+            ConsoleHelpers.WriteLine(
                 $"  WARNING: No help topic found for '{topic}'\n\n" +
                 "    " + GetHelpTopicText("help")?.Replace("\n", "\n    ")
                 );
@@ -81,21 +81,21 @@ class HelpHelpers
         }
 
         var helpContent = GetHelpTopicText(topic)!;
-        ConsoleHelpers.PrintLine(helpContent.TrimEnd());
+        ConsoleHelpers.WriteLine(helpContent.TrimEnd());
     }
 
-    public static void PrintHelpTopics(bool expandTopics)
+    public static void DisplayHelpTopics(bool expandTopics)
     {
         var helpTopics = GetHelpTopics();
-        PrintHelpTopics(helpTopics, expandTopics);
+        DisplayHelpTopics(helpTopics, expandTopics);
     }
 
-    public static void PrintHelpTopics(IEnumerable<string> topics, bool expandTopics)
+    public static void DisplayHelpTopics(IEnumerable<string> topics, bool expandTopics)
     {
         topics = topics.Select(t => expandTopics
             ? $"## `{Program.Name} help {t}`\n\n```\n{GetHelpTopicText(t)}\n```\n"
             : $"  {Program.Name} help {t}").ToList();
-        ConsoleHelpers.PrintLine(string.Join("\n", topics));
+        ConsoleHelpers.WriteLine(string.Join("\n", topics));
     }
 
     private static bool HelpTopicContains(string topic, string searchFor)
