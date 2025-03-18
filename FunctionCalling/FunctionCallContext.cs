@@ -51,7 +51,9 @@ public class FunctionCallContext
         foreach (var toolCall in toolCalls)
         {
             var functionName = toolCall.FunctionName;
-            var functionArguments = toolCall.FunctionArguments.ToString();
+            var functionArguments = toolCall.FunctionArguments.ToArray().Length > 0
+                ? toolCall.FunctionArguments.ToString()
+                : "{}";
 
             if (funcionCallback != null) funcionCallback(functionName, functionArguments, null);
 
@@ -100,7 +102,7 @@ public class StreamingChatToolCallsBuilder
 
         // Keep track of which function arguments belong to this update index,
         // and accumulate the arguments as new updates arrive.
-        if (toolCallUpdate.FunctionArgumentsUpdate != null && !toolCallUpdate.FunctionArgumentsUpdate.ToMemory().IsEmpty)
+        if (toolCallUpdate.FunctionArgumentsUpdate != null)
         {
             if (!_indexToFunctionArguments.TryGetValue(toolCallUpdate.Index, out var argumentsBuilder))
             {
@@ -118,12 +120,18 @@ public class StreamingChatToolCallsBuilder
 
         foreach ((int index, string toolCallId) in _indexToToolCallId)
         {
-            ReadOnlySequence<byte> sequence = _indexToFunctionArguments[index].Build();
+            var builder = _indexToFunctionArguments[index];
+            var sequence = builder.Build();
+            var bytes = sequence.ToArray();
+            if (bytes.Length == 0)
+            {
+                bytes = Encoding.UTF8.GetBytes("{}");
+            }
 
             ChatToolCall toolCall = ChatToolCall.CreateFunctionToolCall(
                 id: toolCallId,
                 functionName: _indexToFunctionName[index],
-                functionArguments: BinaryData.FromBytes(sequence.ToArray()));
+                functionArguments: BinaryData.FromBytes(bytes));
 
             toolCalls.Add(toolCall);
         }

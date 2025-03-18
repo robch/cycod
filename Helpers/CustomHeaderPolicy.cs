@@ -19,10 +19,7 @@ public class CustomHeaderPolicy : PipelinePolicy
         message.Request.Headers.Set(_headerName, _headerValue);
 
         // Proceed with the next policy in the pipeline
-        if (currentIndex + 1 < pipeline.Count)
-        {
-            pipeline[currentIndex + 1].Process(message, pipeline, currentIndex + 1);
-        }
+        ProcessNext(message, pipeline, currentIndex);
     }
 
     public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
@@ -31,9 +28,6 @@ public class CustomHeaderPolicy : PipelinePolicy
         message.Request.Headers.Set(_headerName, _headerValue);
 
         // Proceed with the next policy in the pipeline
-        if (currentIndex + 1 < pipeline.Count)
-        {
-            await pipeline[currentIndex + 1].ProcessAsync(message, pipeline, currentIndex + 1);
-        }
+        await ProcessNextAsync(message, pipeline, currentIndex);
     }
 }
