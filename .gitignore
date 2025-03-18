@@ -1,5 +1,5 @@
 .vs/
-src/bin/Debug/
+src/bin/
 src/obj/
 
 .env
