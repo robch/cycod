@@ -90,7 +90,7 @@ class ConsoleHelpers
     public static void WriteDebugLine(string message)
     {
         if (!_debug) return;
-        WriteLine(message);
+        WriteLine(message, ConsoleColor.Cyan);
     }
 
     public static IEnumerable<string> GetAllLinesFromStdin()

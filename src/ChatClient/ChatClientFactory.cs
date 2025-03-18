@@ -33,7 +33,7 @@ public static class ChatClientFactory
 
     public static ChatClient CreateCopilotChatClientWithToken()
     {
-        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
+        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "gpt-4o";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
         var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set.");
 
