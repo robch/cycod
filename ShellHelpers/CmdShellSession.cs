@@ -24,17 +24,12 @@ public class CmdShellSession : ShellSession
 
     protected override string WrapCommand(string command)
     {
-        // In cmd.exe, you might write:
-        // command & echo <marker>%ERRORLEVEL%
         return command + " & echo " + Marker + "%ERRORLEVEL%";
     }
 
     protected override int ParseExitCode(string markerOutput)
     {
-        // Parse the exit code from the marker output.
-        if (markerOutput.Length > Marker.Length &&
-            int.TryParse(markerOutput.Substring(Marker.Length), out int ec))
-            return ec;
-        return 0;
+        markerOutput = markerOutput.Replace(Marker, "").TrimStart();
+        return int.TryParse(markerOutput, out int ec) ? ec : 0;
     }
 }

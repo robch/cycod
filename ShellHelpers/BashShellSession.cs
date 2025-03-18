@@ -24,17 +24,12 @@ public class BashShellSession : ShellSession
 
     protected override string WrapCommand(string command)
     {
-        // Wraps the command to output the marker and exit code.
-        // In bash, you can use: { command; EC=$?; echo <marker>$EC; }
         return "{ " + command + " ; EC=$?; echo " + Marker + "$EC; }";
     }
 
     protected override int ParseExitCode(string markerOutput)
     {
-        // Assumes markerOutput is of the form "___BEGIN_END_COMMAND_MARKER___<exitCode>"
-        if (markerOutput.Length > Marker.Length &&
-            int.TryParse(markerOutput.Substring(Marker.Length), out int ec))
-            return ec;
-        return 0;
+        markerOutput = markerOutput.Replace(Marker, "").TrimStart();
+        return int.TryParse(markerOutput, out int ec) ? ec : 0;
     }
 }

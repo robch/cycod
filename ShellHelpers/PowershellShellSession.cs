@@ -28,16 +28,12 @@ public class PowershellShellSession : ShellSession
 
     protected override string WrapCommand(string command)
     {
-        // In PowerShell, you might do:
-        // command ; echo "<marker>$LASTEXITCODE"
-        return "try { " + command + " } catch { if (-not $LASTEXITCODE) { $LASTEXITCODE = 1 } } ; Write-Output \"" + Marker + "$LASTEXITCODE\"";
+        return "try { " + command + " } catch { if (-not $LASTEXITCODE) { $LASTEXITCODE = 1 } } ; Write-Output ('" + Marker + "', $LASTEXITCODE) ;";
     }
 
     protected override int ParseExitCode(string markerOutput)
     {
-        if (markerOutput.Length > Marker.Length &&
-            int.TryParse(markerOutput.Substring(Marker.Length).Replace("\"", ""), out int ec))
-            return ec;
-        return 0;
+        markerOutput = markerOutput.Replace(Marker, "").TrimStart();
+        return int.TryParse(markerOutput, out int ec) ? ec : 0;
     }
 }

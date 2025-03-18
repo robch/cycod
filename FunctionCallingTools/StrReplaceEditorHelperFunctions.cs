@@ -9,25 +9,48 @@ using System.Linq;
 /// </summary>
 public static class StrReplaceEditorHelperFunctions
 {
-    // Save the previous full text of the file for a single undo operation.
-    private static readonly Dictionary<string, string> EditHistory = new Dictionary<string, string>();
-
-    [HelperFunctionDescription("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers. If `path` is a directory, returns a list of non-hidden files and directories up to 2 levels deep.")]
-    public static string View(
-        [HelperFunctionParameterDescription("Absolute path to file or directory.")] string path,
-        [HelperFunctionParameterDescription("Optional start line number (1-indexed) to view.")] int? startLine = null,
-        [HelperFunctionParameterDescription("Optional end line number. Use -1 to view all remaining lines.")] int? endLine = null)
+    [HelperFunctionDescription("Returns a list of non-hidden files and directories up to 2 levels deep.")]
+    public static string ListFiles([HelperFunctionParameterDescription("Absolute or relative path to directory.")] string path)
     {
         if (Directory.Exists(path))
         {
-            // Return listing of current directory items (non-hidden)
-            var entries = Directory.GetFileSystemEntries(path);
-            return string.Join(Environment.NewLine, entries);
+            path = Path.GetFullPath(path);
+            var entries = Directory.GetFileSystemEntries(path)
+                .Select(entry => Path.GetFullPath(Path.Combine(path, entry)))
+                .SelectMany(entry => new [] { entry }
+                    .Concat(!Directory.Exists(entry)
+                        ? new string[] { }
+                        : Directory.GetFileSystemEntries(entry)
+                            .Select(subEntry => Path.GetFullPath(Path.Combine(entry, subEntry)))))
+                .Select(entry => Directory.Exists(entry) ? $"{entry} (directory)" : $"{entry}")
+                .Select(entry => entry.StartsWith(path)
+                    ? entry.Substring(path.Length + 1)
+                    : entry);
+
+            var joined = string.Join(Environment.NewLine, entries);
+            ConsoleHelpers.WriteDebugLine($"Listing of {path}:\n{joined}");
+
+            return joined;
         }
-        else if (File.Exists(path))
+        else
+        {
+            return $"Path {path} does not exist or is not a directory.";
+        }
+    }
+
+    [HelperFunctionDescription("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
+    public static string ViewFile(
+        [HelperFunctionParameterDescription("Absolute or relative path to file or directory.")] string path,
+        [HelperFunctionParameterDescription("Optional start line number (1-indexed) to view.")] int? startLine = null,
+        [HelperFunctionParameterDescription("Optional end line number. Use -1 to view all remaining lines.")] int? endLine = null,
+        [HelperFunctionParameterDescription("Optional flag to view the file with line numbers.")] bool lineNumbers = false)
+    {
+        if (!Directory.Exists(path) && File.Exists(path))
         {
             var text = File.ReadAllText(path);
-            var lines = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            var lines = text.Split('\n', StringSplitOptions.None)
+                .Select(line => line.TrimEnd('\r'))
+                .ToArray();
             if (startLine.HasValue)
             {
                 int start = Math.Max(1, startLine.Value);
@@ -37,20 +60,25 @@ public static class StrReplaceEditorHelperFunctions
                     return $"Invalid range: start line {start} exceeds file line count of {lines.Length}";
                 }
                 var selected = lines.Skip(start - 1).Take(end - start + 1);
-                return string.Join(Environment.NewLine, selected);
+                return lineNumbers
+                    ? string.Join(Environment.NewLine, selected.Select((line, index) => $"{start + index}: {line}"))
+                    : string.Join(Environment.NewLine, selected);
             }
+
             // Otherwise, return entire file text.
-            return text;
+            return lineNumbers
+                ? string.Join(Environment.NewLine, lines.Select((line, index) => $"{index + 1}: {line}"))
+                : string.Join(Environment.NewLine, lines);
         }
         else
         {
-            return $"Path {path} does not exist.";
+            return $"Path {path} does not exist or is not a file.";
         }
     }
 
     [HelperFunctionDescription("Creates a new file at the specified path with the given content. The `create` command cannot be used if the file already exists.")]
     public static string CreateFile(
-        [HelperFunctionParameterDescription("Absolute path to file.")] string path,
+        [HelperFunctionParameterDescription("Absolute or relative path to file.")] string path,
         [HelperFunctionParameterDescription("Content to be written to the file.")] string fileText)
     {
         if (File.Exists(path))
@@ -63,7 +91,7 @@ public static class StrReplaceEditorHelperFunctions
 
     [HelperFunctionDescription("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
     public static string StrReplace(
-        [HelperFunctionParameterDescription("Absolute path to file.")] string path,
+        [HelperFunctionParameterDescription("Absolute or relative path to file.")] string path,
         [HelperFunctionParameterDescription("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [HelperFunctionParameterDescription("New string content that will replace the old string.")] string newStr)
     {
@@ -94,7 +122,7 @@ public static class StrReplaceEditorHelperFunctions
         return $"File {path} updated: replaced occurrence of specified text.";
     }
 
-    [HelperFunctionDescription("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`).")]
+    [HelperFunctionDescription("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
     public static string Insert(
         [HelperFunctionParameterDescription("Absolute path to file.")] string path,
         [HelperFunctionParameterDescription("Line number (1-indexed) after which to insert the new string.")] int insertLine,
@@ -135,5 +163,7 @@ public static class StrReplaceEditorHelperFunctions
         EditHistory.Remove(path);
         return $"Reverted last edit made to {path}.";
     }
+
+    private static readonly Dictionary<string, string> EditHistory = new Dictionary<string, string>();
 }
 
