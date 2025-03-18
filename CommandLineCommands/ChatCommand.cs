@@ -18,9 +18,10 @@ class ChatCommand : Command
 
     public async Task<List<Task<int>>> ExecuteAsync()
     {
-        // Ground the filenames (in case they're templatized)
+        // Ground the filenames (in case they're templatized), and set the system prompt.
         InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
         OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
+        SystemPrompt ??= EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
 
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
@@ -30,8 +31,7 @@ class ChatCommand : Command
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClientFromEnv();
-        var systemPrompt = EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
-        var chat = new FunctionCallingChat(chatClient, systemPrompt, factory);
+        var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory);
 
         // Load the chat history from the file.
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
@@ -129,6 +129,8 @@ class ChatCommand : Command
             DisplayAssistantLabel();
         }
     }
+
+    public string? SystemPrompt { get; set; }
 
     public string? InputChatHistory;
     public string? OutputChatHistory;

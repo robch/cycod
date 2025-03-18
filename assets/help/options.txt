@@ -2,6 +2,8 @@ USAGE: chatx [...]
 
 OPTIONS
 
+  --system-prompt "PROMPT"        Set the system prompt for the AI model (default: "You are a helpful assistant.")
+
   --input "LINE1" "LINE2" ...     Provide one or more lines of inputs to the AI model.
   --instruction ...               Alias for --input
   --question ...                  Alias for --input

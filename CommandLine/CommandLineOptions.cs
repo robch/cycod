@@ -292,6 +292,14 @@ class CommandLineOptions
         {
             parsed = false;
         }
+        else if (arg == "--system-prompt")
+        {
+            var promptArgs = GetInputOptionArgs(i + 1, args);
+            var prompt = ValidateString(arg, string.Join("\n", promptArgs), "system prompt");
+            command.SystemPrompt = prompt;
+            i += promptArgs.Count();
+            return true;
+        }
         else if (arg == "--input" || arg == "--instruction" || arg == "--question")
         {
             var inputArgs = GetInputOptionArgs(i + 1, args)
