@@ -51,7 +51,7 @@ chatx [options]
 - `--input <text>` or `--question <text>`: Provide input or questions to the AI
 - `--input-chat-history <file>`: Load previous chat history from a file
 - `--output-chat-history <file>`: Save chat history to a file
-- `--save-alias <name>`: Save the current command options as a named alias
+- `--save-alias <n>`: Save the current command options as a named alias
 - `--help`: Display help information
 
 ### Examples
@@ -81,8 +81,24 @@ chatx --input-chat-history "linux-help-session.jsonl"
 
 The application uses the following environment variables:
 
+### OpenAI API
 - `OPENAI_API_KEY`: Your OpenAI API key
+- `OPENAI_CHAT_MODEL_NAME`: Model name to use (default: gpt-4o)
 - `OPENAI_SYSTEM_PROMPT`: Default system prompt if not specified
+
+### Azure OpenAI API
+- `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key
+- `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint
+- `AZURE_OPENAI_CHAT_DEPLOYMENT`: Your Azure OpenAI deployment name
+
+### GitHub Copilot API
+- `GITHUB_TOKEN`: Your GitHub personal access token for Copilot API (preferred method)
+- `COPILOT_API_ENDPOINT`: Copilot API endpoint (default: https://api.githubcopilot.com)
+- `COPILOT_MODEL_NAME`: Model name to use (default: claude-3.7-sonnet)
+
+*Alternative HMAC authentication:*
+- `COPILOT_HMAC_KEY`: Your Copilot HMAC key
+- `COPILOT_INTEGRATION_ID`: Your Copilot integration ID
 
 ## License
 
