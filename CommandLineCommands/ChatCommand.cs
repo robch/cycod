@@ -25,7 +25,7 @@ class ChatCommand : Command
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
         factory.AddFunctions(typeof(TimeAndDateHelperFunctions));
-        factory.AddFunctions(typeof(BashToolHelperFunctions));
+        factory.AddFunctions(typeof(ShellCommandToolHelperFunctions));
         factory.AddFunctions(typeof(StrReplaceEditorHelperFunctions));
 
         // Create the chat completions object with the external ChatClient and system prompt.
