@@ -30,6 +30,23 @@ public class EnvironmentHelpers
                 }
             }
 
+            envFilePath = Path.Combine(currentDirectory, $".{Program.Name}", ".env");
+            if (File.Exists(envFilePath))
+            {
+                ConsoleHelpers.WriteDebugLine($"Reading .env file at: {envFilePath}");
+                var lines = File.ReadAllLines(envFilePath);
+                ConsoleHelpers.WriteDebugLine($"Looking for variable: {variable}");
+                foreach (var line in lines)
+                {
+                    var parts = line.Split('=', 2);
+                    if (parts.Length == 2 && parts[0].Trim() == variable)
+                    {
+                        ConsoleHelpers.WriteDebugLine($"Found variable: {variable} with value: {parts[1].Trim()}");
+                        return parts[1].Trim();
+                    }
+                }
+            }
+
             var parentDirectory = Directory.GetParent(currentDirectory);
             currentDirectory = parentDirectory?.FullName;
         }
