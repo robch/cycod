@@ -15,7 +15,7 @@ Please be respectful and considerate of others when contributing to this project
    cd chatx
    ```
 3. **Set up the development environment**:
-   - Install .NET 6.0 SDK or later
+   - Install .NET 8.0 SDK or later
    - Build the project with `dotnet build`
 
 ## Development Workflow

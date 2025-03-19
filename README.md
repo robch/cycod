@@ -17,7 +17,7 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 
 ### Prerequisites
 
-- .NET 6.0 SDK or later
+- .NET 8.0 SDK or later
 
 ### Building from Source
 

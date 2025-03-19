@@ -135,7 +135,7 @@ This guide provides solutions for common issues you might encounter when using C
 - Error messages about missing dependencies
 
 **Possible Solutions:**
-1. **Check .NET Installation**: Ensure you have .NET 6.0 SDK or later installed.
+1. **Check .NET Installation**: Ensure you have .NET 8.0 SDK or later installed.
    ```bash
    # Check .NET version
    dotnet --version
