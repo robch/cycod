@@ -4,14 +4,11 @@
 //
 
 using System.Reflection;
-using Azure.AI.OpenAI;
 using System.Collections;
 using System.Text;
 using System.Text.Json;
 using OpenAI.Assistants;
-using System.Collections.Generic;
 using OpenAI.Chat;
-using System.Net.Http.Headers;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -70,7 +67,18 @@ public class FunctionFactory
         }
     }
 
-    public void AddFunction(MethodInfo method)
+    public void AddFunctions(object instance)
+    {
+        var type = instance.GetType();
+        var methods = type.GetMethods(BindingFlags.Instance | BindingFlags.Public);
+        foreach (var method in methods)
+        {
+            AddFunction(method, instance);
+        }
+    }
+
+
+    public void AddFunction(MethodInfo method, object? instance = null)
     {
         var attributes = method.GetCustomAttributes(typeof(HelperFunctionDescriptionAttribute), false);
         if (attributes.Length > 0)
@@ -79,13 +87,13 @@ public class FunctionFactory
             var funcDescription = funcDescriptionAttrib!.Description;
 
             string json = GetMethodParametersJsonSchema(method);
-            _functions.TryAdd(method, ChatTool.CreateFunctionTool(method.Name, funcDescription, new BinaryData(json)));
+            _functions.TryAdd(method, (ChatTool.CreateFunctionTool(method.Name, funcDescription, new BinaryData(json)), instance));
         }
     }
 
     public IEnumerable<ChatTool> GetChatTools()
     {
-        return _functions.Values;
+        return _functions.Values.Select(x => x.Tool);
     }
 
     public IEnumerable< ToolDefinition> GetToolDefinitions()
@@ -98,10 +106,10 @@ public class FunctionFactory
         result = null;
         if (!string.IsNullOrEmpty(functionName) && !string.IsNullOrEmpty(functionArguments))
         {
-            var function = _functions.FirstOrDefault(x => x.Value.FunctionName == functionName);
+            var function = _functions.FirstOrDefault(x => x.Value.Tool.FunctionName == functionName);
             if (function.Key != null)
             {
-                result = CallFunction(function.Key, function.Value, functionArguments);
+                result = CallFunction(function.Key, function.Value.Tool, functionArguments, function.Value.Instance);
                 return true;
             }
         }
@@ -117,7 +125,7 @@ public class FunctionFactory
         return newFactory;
     }
 
-    private static string? CallFunction(MethodInfo methodInfo, ChatTool chatTool, string argumentsAsJson)
+    private static string? CallFunction(MethodInfo methodInfo, ChatTool chatTool, string argumentsAsJson, object? instance)
     {
         var parsed = JsonDocument.Parse(argumentsAsJson).RootElement;
         var arguments = new List<object?>();
@@ -143,44 +151,44 @@ public class FunctionFactory
         }
 
         var args = arguments.ToArray();
-        var result = CallFunction(methodInfo, args);
+        var result = CallFunction(methodInfo, args, instance);
         return ConvertFunctionResultToString(result);
     }
 
-    private static object? CallFunction(MethodInfo methodInfo, object?[] args)
+    private static object? CallFunction(MethodInfo methodInfo, object?[] args, object? instance)
     {
         var t = methodInfo.ReturnType;
         return t == typeof(Task)
-            ? CallVoidAsyncFunction(methodInfo, args)
+            ? CallVoidAsyncFunction(methodInfo, args, instance)
             : t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Task<>)
-                ? CallAsyncFunction(methodInfo, args)
+                ? CallAsyncFunction(methodInfo, args, instance)
                 : t.Name != "Void"
-                    ? CallSyncFunction(methodInfo, args)
-                    : CallVoidFunction(methodInfo, args);
+                    ? CallSyncFunction(methodInfo, args, instance)
+                    : CallVoidFunction(methodInfo, args, instance);
     }
 
-    private static object? CallVoidAsyncFunction(MethodInfo methodInfo, object?[] args)
+    private static object? CallVoidAsyncFunction(MethodInfo methodInfo, object?[] args, object? instance)
     {
-        var task = methodInfo.Invoke(null, args) as Task;
+        var task = methodInfo.Invoke(instance, args) as Task;
         task!.Wait();
         return true;
     }
 
-    private static object? CallAsyncFunction(MethodInfo methodInfo, object?[] args)
+    private static object? CallAsyncFunction(MethodInfo methodInfo, object?[] args, object? instance)
     {
-        var task = methodInfo.Invoke(null, args) as Task;
+        var task = methodInfo.Invoke(instance, args) as Task;
         task!.Wait();
         return task.GetType().GetProperty("Result")?.GetValue(task);
     }
 
-    private static object? CallSyncFunction(MethodInfo methodInfo, object?[] args)
+    private static object? CallSyncFunction(MethodInfo methodInfo, object?[] args, object? instance)
     {
-        return methodInfo.Invoke(null, args);
+        return methodInfo.Invoke(instance, args);
     }
 
-    private static object? CallVoidFunction(MethodInfo methodInfo, object?[] args)
+    private static object? CallVoidFunction(MethodInfo methodInfo, object?[] args, object? instance)
     {
-        methodInfo.Invoke(null, args);
+        methodInfo.Invoke(instance, args);
         return true;
     }
 
@@ -465,6 +473,7 @@ public class FunctionFactory
         return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 
-    private Dictionary<MethodInfo, ChatTool> _functions = new();
+    private readonly Dictionary<MethodInfo, (ChatTool Tool, object? Instance)> _functions = new();
+
 }
 

@@ -5,17 +5,17 @@
 
 using System;
 
-public class TimeAndDateHelperFunctions
+public class DateAndTimeHelperFunctions
 {
     [HelperFunctionDescription("Gets the current date.")]
-    public static string GetCurrentDate()
+    public string GetCurrentDate()
     {
         var date = DateTime.Now;
         return $"{date.Year}-{date.Month}-{date.Day}";
     }
 
     [HelperFunctionDescription("Gets the current time.")]
-    public static string GetCurrentTime()
+    public string GetCurrentTime()
     {
         var date = DateTime.Now;
         return $"{date.Hour}:{date.Minute}:{date.Second}";

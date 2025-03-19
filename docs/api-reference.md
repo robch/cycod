@@ -116,7 +116,7 @@ ChatX includes several helper function classes that provide functionality for th
 ### Time and Date Helper Functions
 
 ```csharp
-class TimeAndDateHelperFunctions {
+class DateAndTimeHelperFunctions {
     public string GetCurrentDate();
     public string GetCurrentTime();
 }

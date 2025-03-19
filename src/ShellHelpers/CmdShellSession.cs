@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Text;
 
 public class CmdShellSession : ShellSession
 {
@@ -13,12 +15,14 @@ public class CmdShellSession : ShellSession
         return new ProcessStartInfo
         {
             FileName = "cmd.exe",
-            Arguments = "/K", // /K keeps the session alive
+            Arguments = "/K chcp 65001", // /K keeps the session alive, chcp 65001 sets UTF-8 code page
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
     }
 

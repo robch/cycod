@@ -1,4 +1,6 @@
+using System;
 using System.Diagnostics;
+using System.Text;
 
 public class BashShellSession : ShellSession
 {
@@ -18,13 +20,16 @@ public class BashShellSession : ShellSession
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
     }
 
     protected override string WrapCommand(string command)
     {
-        return "{ " + command + " ; EC=$?; echo " + Marker + "$EC; }";
+        // Try to set UTF-8 locale if available, but don't fail if it's not
+        return "{ export LC_ALL=C.UTF-8 2>/dev/null || export LC_ALL=en_US.UTF-8 2>/dev/null || true; " + command + " ; EC=$?; echo " + Marker + "$EC; }";
     }
 
     protected override int ParseExitCode(string markerOutput)

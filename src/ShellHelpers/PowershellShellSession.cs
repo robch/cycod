@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,13 +23,15 @@ public class PowershellShellSession : ShellSession
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
-            CreateNoWindow = true
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
         };
     }
 
     protected override string WrapCommand(string command)
     {
-        return "try { " + command + " } catch { if (-not $LASTEXITCODE) { $LASTEXITCODE = 1 } } ; Write-Output ('" + Marker + "', $LASTEXITCODE) ;";
+        return "try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + command + " } catch { if (-not $LASTEXITCODE) { $LASTEXITCODE = 1 } } ; Write-Output ('" + Marker + "', $LASTEXITCODE) ;";
     }
 
     protected override int ParseExitCode(string markerOutput)
