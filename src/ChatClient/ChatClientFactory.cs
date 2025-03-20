@@ -33,14 +33,16 @@ public static class ChatClientFactory
 
     public static ChatClient CreateCopilotChatClientWithToken()
     {
-        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "gpt-4o";
+        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
+        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? throw new InvalidOperationException("COPILOT_INTEGRATION_ID is not set.");
         var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set.");
 
         var options = new OpenAIClientOptions();
         options.Endpoint = new Uri(endpoint);
         
         // Use GitHub token for authorization
+        options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId), PipelinePosition.BeforeTransport);
         options.AddPolicy(new CustomHeaderPolicy("Authorization", $"Bearer {githubToken}"), PipelinePosition.BeforeTransport);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
 
@@ -107,6 +109,7 @@ public static class ChatClientFactory
 
                 To use GitHub Copilot with token authentication, please set:
                 - GITHUB_TOKEN
+                - COPILOT_INTEGRATION_ID
                 - COPILOT_API_ENDPOINT (optional)
                 - COPILOT_MODEL_NAME (optional)
 
