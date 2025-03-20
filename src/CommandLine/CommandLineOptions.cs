@@ -334,6 +334,13 @@ class CommandLineOptions
             command.OutputChatHistory = outputChatHistory;
             i += max1Arg.Count();
         }
+        else if (arg == "--trim-token-target")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var trimTokenTarget = ValidateInt(arg, max1Arg.FirstOrDefault(), "trim token target");
+            command.TrimTokenTarget = trimTokenTarget;
+            i += max1Arg.Count();
+        }
         else
         {
             parsed = false;
@@ -428,7 +435,7 @@ class CommandLineOptions
         return arg;
     }
 
-    private static int ValidateInt(string arg, string countStr, string argDescription)
+    private static int ValidateInt(string arg, string? countStr, string argDescription)
     {
         if (string.IsNullOrEmpty(countStr))
         {
@@ -455,6 +462,5 @@ class CommandLineOptions
         return create
             ? FileHelpers.FindOrCreateDirectory(".chatx", "aliases")
             : FileHelpers.FindDirectory(".chatx", "aliases");
-
     }
 }

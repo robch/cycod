@@ -82,6 +82,18 @@ class ChatCommand : Command
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
+        var tokenTarget = TrimTokenTarget.HasValue
+            ? TrimTokenTarget.Value
+            : 160000;
+
+        const int whenTrimmingToolContentTarget = 10;
+        const string snippedIndicator = "...snip...";
+
+        if (messages.IsTooBig(tokenTarget))
+        {
+            messages.ReduceToolCallContent(tokenTarget, whenTrimmingToolContentTarget, snippedIndicator);
+        }
+
         if (OutputChatHistory != null)
         {
             messages.SaveChatHistoryToFile(OutputChatHistory);
@@ -131,6 +143,8 @@ class ChatCommand : Command
     }
 
     public string? SystemPrompt { get; set; }
+
+    public int? TrimTokenTarget { get; set; }
 
     public string? InputChatHistory;
     public string? OutputChatHistory;

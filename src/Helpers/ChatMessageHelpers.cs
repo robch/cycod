@@ -18,19 +18,10 @@ public static class OpenAIChatHelpers
 
         foreach (var message in messages)
         {
-            var messageText = message switch
+            var json = JsonFromMessage(message);
+            if (!string.IsNullOrEmpty(json))
             {
-                UserChatMessage userMessage => ModelReaderWriter.Write(userMessage, ModelReaderWriterOptions.Json).ToString(),
-                AssistantChatMessage assistantMessage => ModelReaderWriter.Write(assistantMessage, ModelReaderWriterOptions.Json).ToString(),
-                FunctionChatMessage functionMessage => ModelReaderWriter.Write(functionMessage, ModelReaderWriterOptions.Json).ToString(),
-                SystemChatMessage systemMessage => ModelReaderWriter.Write(systemMessage, ModelReaderWriterOptions.Json).ToString(),
-                ToolChatMessage toolMessage => ModelReaderWriter.Write(toolMessage, ModelReaderWriterOptions.Json).ToString(),
-                _ => null
-            };
-
-            if (!string.IsNullOrEmpty(messageText))
-            {
-                history.AppendLine(messageText);
+                history.AppendLine(json);
             }
         }
 
@@ -42,38 +33,113 @@ public static class OpenAIChatHelpers
         var historyFile = FileHelpers.ReadAllText(fileName);
 
         var historyFileLines = historyFile.Split(Environment.NewLine);
-        var clearIfSystem = () =>
-        {
-            messages.Clear();
-            return typeof(SystemChatMessage);
-        };
-
         foreach (var line in historyFileLines)
         {
             if (string.IsNullOrEmpty(line)) continue;
-            
-            var jsonObject = JsonDocument.Parse(line);
-            JsonElement roleObj;
 
-            if (!jsonObject.RootElement.TryGetProperty("role", out roleObj))
-            {
-                continue;
-            }
+            var message = MessageFromJson(line);
+            if (message == null) continue;
 
-            var role = roleObj.GetString();
+            var isSystemMessage = message is SystemChatMessage;
+            if (isSystemMessage) messages.Clear();
 
-            var type = role?.ToLowerInvariant() switch
-            {
-                "user" => typeof(UserChatMessage),
-                "assistant" => typeof(AssistantChatMessage),
-                "function" => typeof(FunctionChatMessage),
-                "system" => clearIfSystem(),
-                "tool" => typeof(ToolChatMessage),
-                _ => throw new Exception($"Unknown chat role {role}")
-            };
-
-            var message = ModelReaderWriter.Read(BinaryData.FromString(line), type, ModelReaderWriterOptions.Json) as ChatMessage;
-            messages.Add(message!);
+            messages.Add(message);
         }
     }
+
+    public static bool IsTooBig(this IList<ChatMessage> messages, int maxTokens)
+    {
+        // Loop thru the messages and get the size of each message
+        // and add them up to get the total size
+        var totalBytes = 0;
+        foreach (var message in messages)
+        {
+            var json = JsonFromMessage(message);
+            if (string.IsNullOrEmpty(json)) continue;
+
+            var jsonBytes = Encoding.UTF8.GetByteCount(json);
+            totalBytes += jsonBytes;
+        }
+
+        var estimatedTotalTokens = totalBytes / ESTIMATED_BYTES_PER_TOKEN;
+        var isTooBig = estimatedTotalTokens > maxTokens;
+        ConsoleHelpers.WriteDebugLine($"Total bytes: {totalBytes}, estimated tokens: {estimatedTotalTokens}, max tokens: {maxTokens}, is too big: {isTooBig}");
+
+        return isTooBig;
+    }
+
+    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int maxTokens, int maxToolCallContentTokens, string replaceToolCallContentWith)
+    {
+        // If the total size of the messages is not too big, we don't need to do anything
+        if (!messages.IsTooBig(maxTokens)) return;
+
+        // If assistant messages, there also won't be any tool calls
+        var lastAssistantMessage = messages.LastOrDefault(x => x is AssistantChatMessage);
+        if (lastAssistantMessage == null) return;
+
+        // We're going to focus on the messages before the last assistant message
+        var lastAssistantMessageIndex = messages.IndexOf(lastAssistantMessage);
+
+        // Loop thru those messages and replace the content of tool calls with the replaceToolCallContentWith string
+        // if the content is too big
+        for (int i = 0; i < lastAssistantMessageIndex; i++)
+        {
+            var toolChatMessage = messages[i] as ToolChatMessage;
+            if (toolChatMessage != null && IsTooBig(toolChatMessage, maxToolCallContentTokens))
+            {
+                ConsoleHelpers.WriteDebugLine($"Tool call content is too big, replacing with: {replaceToolCallContentWith}");
+                messages[i] = new ToolChatMessage(toolChatMessage!.ToolCallId, replaceToolCallContentWith);
+            }
+        }
+
+    }
+
+    private static bool IsTooBig(ToolChatMessage toolChatMessage, int maxToolCallContentTokens)
+    {
+        var content = string.Join("", toolChatMessage.Content
+            .Where(x => x.Kind == ChatMessageContentPartKind.Text)
+            .Select(x => x.Text));
+
+        var isTooBig = content.Length > maxToolCallContentTokens;
+        ConsoleHelpers.WriteDebugLine($"Tool call content size: {content.Length}, max size: {maxToolCallContentTokens}, is too big: {isTooBig}");
+
+        return isTooBig;
+    }
+
+    private static string? JsonFromMessage(ChatMessage message)
+    {
+        return message switch
+        {
+            UserChatMessage userMessage => ModelReaderWriter.Write(userMessage, ModelReaderWriterOptions.Json).ToString(),
+            AssistantChatMessage assistantMessage => ModelReaderWriter.Write(assistantMessage, ModelReaderWriterOptions.Json).ToString(),
+            FunctionChatMessage functionMessage => ModelReaderWriter.Write(functionMessage, ModelReaderWriterOptions.Json).ToString(),
+            SystemChatMessage systemMessage => ModelReaderWriter.Write(systemMessage, ModelReaderWriterOptions.Json).ToString(),
+            ToolChatMessage toolMessage => ModelReaderWriter.Write(toolMessage, ModelReaderWriterOptions.Json).ToString(),
+            _ => null
+        };
+    }
+
+    private static ChatMessage? MessageFromJson(string line)
+    {
+        var jsonObject = JsonDocument.Parse(line);
+        if (!jsonObject.RootElement.TryGetProperty("role", out var roleObj))
+        {
+            return null;
+        }
+
+        var role = roleObj.GetString();
+        var type = role?.ToLowerInvariant() switch
+        {
+            "user" => typeof(UserChatMessage),
+            "assistant" => typeof(AssistantChatMessage),
+            "function" => typeof(FunctionChatMessage),
+            "system" => typeof(SystemChatMessage),
+            "tool" => typeof(ToolChatMessage),
+            _ => throw new Exception($"Unknown chat role {role}")
+        };
+
+        return ModelReaderWriter.Read(BinaryData.FromString(line), type, ModelReaderWriterOptions.Json) as ChatMessage;
+    }
+
+    private const int ESTIMATED_BYTES_PER_TOKEN = 4; // This is an estimate, actual bytes per token may vary
 }
