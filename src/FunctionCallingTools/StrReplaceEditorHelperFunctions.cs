@@ -102,25 +102,21 @@ public class StrReplaceEditorHelperFunctions
         }
 
         var text = File.ReadAllText(path);
-        // Check that exactly one occurrence is found.
-        var idx = text.IndexOf(oldStr, StringComparison.Ordinal);
-        if (idx == -1)
+        var replaced = StringHelpers.ReplaceOnce(text, oldStr, newStr, out var countFound);
+        if (countFound != 1)
         {
-            return $"No match found: '{oldStr}' not found in {path}; no changes made.";
+            return countFound == 0
+                ? $"No occurrences of '{oldStr}' found in {path}; no changes made."
+                : $"Multiple matches found for '{oldStr}' in {path}; no changes made. Please be more specific.";
         }
-        // Make sure it occurs only once.
-        if (text.IndexOf(oldStr, idx + 1, StringComparison.Ordinal) != -1)
-        {
-            return $"Multiple matches found for '{oldStr}' in {path}; no changes made. Please be more specific.";
-        }
-        // Save current text for undo.
+
         if (!EditHistory.ContainsKey(path))
         {
             EditHistory[path] = text;
         }
-        var newText = text.Replace(oldStr, newStr);
-        File.WriteAllText(path, newText);
-        return $"File {path} updated: replaced occurrence of specified text.";
+
+        File.WriteAllText(path, replaced);
+        return $"File {path} updated: replaced 1 occurrence of specified text.";
     }
 
     [HelperFunctionDescription("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
