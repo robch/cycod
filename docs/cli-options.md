@@ -16,6 +16,8 @@ These options apply to the overall behavior of ChatX:
 |--------|-------------|
 | `--debug` | Enable debug output |
 | `--verbose` | Enable verbose output |
+| `--quiet` | Suppress non-essential output |
+| `--interactive <true/false>` | Control whether to enter interactive mode (default: true) |
 | `--save-alias <name>` | Save the current command options as a named alias |
 | `--help` | Display help information |
 
@@ -34,6 +36,15 @@ These options control the chat interaction:
 | `--questions <text...>` | Alias for --inputs |
 | `--input-chat-history <file>` | Load previous chat history from a file |
 | `--output-chat-history <file>` | Save chat history to a file |
+| `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
+
+## Help Options
+
+These options control the help system:
+
+| Option | Description |
+|--------|-------------|
+| `--expand` | Show expanded help topics with complete content |
 
 ## Examples
 
@@ -80,16 +91,74 @@ Using the alias:
 chatx --coding-helper --input "Help me write a Python function to sort a list of dictionaries by a specific key."
 ```
 
+### Managing Token Usage
+
+If you're having long conversations that might exceed the AI model's context window:
+
+```bash
+chatx --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl"
+```
+
+This will automatically trim tool call content when the history approaches the specified token target.
+
+### Non-Interactive Mode
+
+For scripting or automation:
+
+```bash
+chatx --interactive false --input "What is the current date?" > result.txt
+```
+
 ## Command Line Input from Files
 
-You can also use the @ symbol to read input from files:
+You can read input content from files in several ways:
+
+### Single Input from a File
+
+Use the @ symbol to read a single input from a file:
 
 ```bash
 chatx --system-prompt @system-prompt.txt --input @question.txt
 ```
+
+### Multiple Inputs from a File
 
 Use @@ to read multiple inputs from a file (one per line):
 
 ```bash
 chatx --inputs @@questions-list.txt
 ```
+
+### Stdin Input
+
+You can also pipe content to ChatX:
+
+```bash
+echo "What is the capital of France?" | chatx
+```
+
+## Environment Configuration
+
+In addition to command line options, ChatX can be configured through environment variables. See the [Getting Started guide](getting-started.md) for more details on environment variables.
+
+## Advanced Usage
+
+### Combining Aliases with Options
+
+You can combine aliases with additional options:
+
+```bash
+chatx --python-expert --input "Explain decorators in Python" --output-chat-history "python-learning.jsonl"
+```
+
+This applies all options from the `python-expert` alias and then adds the additional options specified.
+
+### Debugging Problems
+
+If you're having issues with ChatX, you can enable debug output:
+
+```bash
+chatx --debug --input "Test question"
+```
+
+This will show detailed information about API calls, token usage, and other internals.
