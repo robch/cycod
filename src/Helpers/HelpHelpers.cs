@@ -39,7 +39,7 @@ class HelpHelpers
 
         helpContent ??= $"USAGE: {Program.Name} [...]";
 
-        ConsoleHelpers.WriteLine(helpContent.TrimEnd());
+        ConsoleHelpers.WriteLine(helpContent.TrimEnd(), overrideQuiet: true);
     }
 
     public static void DisplayHelpTopic(string topic, bool expandTopics = false)
@@ -75,13 +75,14 @@ class HelpHelpers
 
             ConsoleHelpers.WriteLine(
                 $"  WARNING: No help topic found for '{topic}'\n\n" +
-                "    " + GetHelpTopicText("help")?.Replace("\n", "\n    ")
+                "    " + GetHelpTopicText("help")?.Replace("\n", "\n    "),
+                overrideQuiet: true
                 );
             return;
         }
 
         var helpContent = GetHelpTopicText(topic)!;
-        ConsoleHelpers.WriteLine(helpContent.TrimEnd());
+        ConsoleHelpers.WriteLine(helpContent.TrimEnd(), overrideQuiet: true);
     }
 
     public static void DisplayHelpTopics(bool expandTopics)
@@ -95,7 +96,7 @@ class HelpHelpers
         topics = topics.Select(t => expandTopics
             ? $"## `{Program.Name} help {t}`\n\n```\n{GetHelpTopicText(t)}\n```\n"
             : $"  {Program.Name} help {t}").ToList();
-        ConsoleHelpers.WriteLine(string.Join("\n", topics));
+        ConsoleHelpers.WriteLine(string.Join("\n", topics), overrideQuiet: true);
     }
 
     private static bool HelpTopicContains(string topic, string searchFor)

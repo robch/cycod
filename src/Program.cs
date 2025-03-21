@@ -38,7 +38,7 @@ public class Program
             }
         }
 
-        ConsoleHelpers.Configure(commandLineOptions!.Debug, commandLineOptions.Verbose);
+        ConsoleHelpers.Configure(commandLineOptions!.Debug, commandLineOptions.Verbose, commandLineOptions.Quiet);
 
         var helpCommand = commandLineOptions.Commands.OfType<HelpCommand>().FirstOrDefault();
         if (helpCommand != null)
@@ -69,7 +69,7 @@ public class Program
         {
             var tasksThisCommand = command switch
             {
-                ChatCommand chatCommand => await chatCommand.ExecuteAsync(),
+                ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
                 _ => new List<Task<int>>()
             };
 
@@ -93,7 +93,7 @@ public class Program
     private static void DisplayException(CommandLineException ex)
     {
         var printMessage = !string.IsNullOrEmpty(ex.Message);
-        if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n");
+        if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n", overrideQuiet: true);
     }
 
     private static void DisplaySavedAliasFiles(List<string> filesSaved)
@@ -129,7 +129,7 @@ public class Program
         if (debug)
         {
             args = args.Skip(2).ToArray();
-            ConsoleHelpers.Write("Waiting for debugger...");
+            ConsoleHelpers.Write("Waiting for debugger...", overrideQuiet: true);
             for (; !Debugger.IsAttached; Thread.Sleep(200))
             {
                 ConsoleHelpers.Write(".");

@@ -7,15 +7,22 @@ using System.Threading;
 
 class ConsoleHelpers
 {
-    public static void Configure(bool debug, bool verbose)
+    public static void Configure(bool debug, bool verbose, bool quiet)
     {
         Console.OutputEncoding = Encoding.UTF8;
 
         _debug = debug;
         _verbose = verbose;
+        _quiet = quiet;
 
         WriteDebugLine($"Debug: {_debug}");
         WriteDebugLine($"Verbose: {_verbose}");
+        WriteDebugLine($"Quiet: {_quiet}");
+    }
+
+    public static bool IsQuiet()
+    {
+        return _quiet;
     }
 
     public static bool IsVerbose()
@@ -55,8 +62,10 @@ class ConsoleHelpers
         }
     }
 
-    public static void Write(string message = "", ConsoleColor? color = null)
+    public static void Write(string message = "", ConsoleColor? color = null, bool overrideQuiet = false)
     {
+        if (_quiet && !overrideQuiet) return;
+
         lock (_printLock)
         {
             var prevColor = Console.ForegroundColor;
@@ -67,8 +76,10 @@ class ConsoleHelpers
         }
     }
 
-    public static void WriteLine(string message = "", ConsoleColor? color = null)
+    public static void WriteLine(string message = "", ConsoleColor? color = null, bool overrideQuiet = false)
     {
+        if (_quiet && !overrideQuiet) return;
+
         lock (_printLock)
         {
             DisplayStatusErase();
@@ -81,10 +92,10 @@ class ConsoleHelpers
         }
     }
 
-    public static void WriteLineIfNotEmpty(string message)
+    public static void WriteDebug(string message)
     {
-        if (string.IsNullOrEmpty(message)) return;
-        WriteLine(message);
+        if (!_debug) return;
+        Write(message, ConsoleColor.Cyan);
     }
 
     public static void WriteDebugLine(string message)
@@ -116,6 +127,8 @@ class ConsoleHelpers
     
     private static bool _debug = false;
     private static bool _verbose = false;
+    private static bool _quiet = false;
+
     private static object _printLock = new();
     private static int _cchLastStatus = 0;
 

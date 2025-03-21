@@ -10,8 +10,11 @@ class CommandLineOptions
 {
     public CommandLineOptions()
     {
+        Interactive = true;
+
         Debug = false;
         Verbose = false;
+        Quiet = false;
 
         HelpTopic = string.Empty;
         ExpandHelpTopics = false;
@@ -22,8 +25,11 @@ class CommandLineOptions
         SaveAliasName = null;
     }
 
+    public bool Interactive;
+
     public bool Debug;
     public bool Verbose;
+    public bool Quiet;
 
     public string HelpTopic;
     public bool ExpandHelpTopics;
@@ -241,6 +247,13 @@ class CommandLineOptions
         {
             // ignore --and ... used when combining @@ files
         }
+        else if (arg == "--interactive")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var interactive = max1Arg.FirstOrDefault() ?? "true";
+            commandLineOptions.Interactive = interactive.ToLower() == "true" || interactive == "1";
+            i += max1Arg.Count();
+        }
         else if (arg == "--debug")
         {
             commandLineOptions.Debug = true;
@@ -248,6 +261,10 @@ class CommandLineOptions
         else if (arg == "--verbose")
         {
             commandLineOptions.Verbose = true;
+        }
+        else if (arg == "--quiet")
+        {
+            commandLineOptions.Quiet = true;
         }
         else if (arg == "--save-alias")
         {

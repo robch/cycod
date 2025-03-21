@@ -16,7 +16,7 @@ class ChatCommand : Command
         return "";
     }
 
-    public async Task<List<Task<int>>> ExecuteAsync()
+    public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
     {
         // Ground the filenames (in case they're templatized), and set the system prompt.
         InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
@@ -37,10 +37,19 @@ class ChatCommand : Command
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
         if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!);
 
+        // Check to make sure we're either in interactive mode, or have input instructions.
+        if (!interactive && InputInstructions.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No input instructions provided. Exiting.", ConsoleColor.Red, overrideQuiet: true);
+            return new List<Task<int>>() { Task.FromResult(1) };
+        }
+
         while (true)
         {
             DisplayUserPrompt();
-            var userPrompt = ReadLineOrSimulateInput(InputInstructions, "exit");
+            var userPrompt = interactive
+                ? ReadLineOrSimulateInput(InputInstructions, "exit")
+                : ReadOrSimulateInput(InputInstructions, "exit");
             if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
 
             DisplayAssistantLabel();
@@ -48,13 +57,13 @@ class ChatCommand : Command
                 (messages) => HandleUpdateMessages(messages),
                 (update) => HandleStreamingChatCompletionUpdate(update),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-            ConsoleHelpers.WriteLine("\n");
+            ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
     }
 
-    private static string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfRedirectedInput = null)
+    private string? ReadOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
     {
         while (inputInstructions?.Count > 0)
         {
@@ -72,12 +81,20 @@ class ChatCommand : Command
         if (Console.IsInputRedirected)
         {
             var line = Console.ReadLine();
-            line ??= defaultOnEndOfRedirectedInput;
+            line ??= defaultOnEndOfInput;
             if (line != null) ConsoleHelpers.WriteLine(line);
             return line;
         }
 
-        return Console.ReadLine();
+        return defaultOnEndOfInput;
+    }
+
+    private string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
+    {
+        var input = ReadOrSimulateInput(inputInstructions, null);
+        if (input != null) return input;
+
+        return Console.ReadLine() ?? defaultOnEndOfInput;
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
@@ -127,7 +144,7 @@ class ChatCommand : Command
 
     private static void DisplayAssistantResponse(string text)
     {
-        ConsoleHelpers.Write(text, ConsoleColor.White);
+        ConsoleHelpers.Write(text, ConsoleColor.White, overrideQuiet: true);
     }
 
     private static void DisplayFunctionResult(string name, string args, string? result)
