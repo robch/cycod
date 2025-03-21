@@ -1,8 +1,4 @@
 using OpenAI.Chat;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 public class FunctionCallingChat
 {
@@ -42,6 +38,8 @@ public class FunctionCallingChat
         Action<string, string, string?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
+        streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
+        functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
 
         _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
         if (messageCallback != null) messageCallback(_messages);
