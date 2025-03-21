@@ -41,6 +41,8 @@ public class FunctionCallingChat
         Action<StreamingChatCompletionUpdate>? streamingCallback = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
+        messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
+
         _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
         if (messageCallback != null) messageCallback(_messages);
 
@@ -77,7 +79,7 @@ public class FunctionCallingChat
 
             _messages.Add(ChatMessage.CreateAssistantMessage(responseContent));
             if (messageCallback != null) messageCallback(_messages);
-    
+
             return responseContent;
         }
     }
