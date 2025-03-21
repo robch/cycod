@@ -47,7 +47,7 @@ class ChatCommand : Command
         while (true)
         {
             DisplayUserPrompt();
-            var userPrompt = interactive
+            var userPrompt = interactive && !Console.IsInputRedirected
                 ? ReadLineOrSimulateInput(InputInstructions, "exit")
                 : ReadOrSimulateInput(InputInstructions, "exit");
             if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
