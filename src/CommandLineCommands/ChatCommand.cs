@@ -142,13 +142,20 @@ class ChatCommand : Command
         ConsoleHelpers.Write("\nAssistant: ", ConsoleColor.Green);
     }
 
-    private static void DisplayAssistantResponse(string text)
+    private void DisplayAssistantResponse(string text)
     {
         ConsoleHelpers.Write(text, ConsoleColor.White, overrideQuiet: true);
+        _asssistantResponseNeedsLF = !text.EndsWith("\n");
     }
 
-    private static void DisplayFunctionResult(string name, string args, string? result)
+    private void DisplayFunctionResult(string name, string args, string? result)
     {
+        if (_asssistantResponseNeedsLF)
+        {
+            ConsoleHelpers.WriteLine();
+            _asssistantResponseNeedsLF = false;
+        }
+        
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
         if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
@@ -167,4 +174,6 @@ class ChatCommand : Command
     public string? OutputChatHistory;
 
     public List<string> InputInstructions = new();
+
+    private bool _asssistantResponseNeedsLF = false;
 }
