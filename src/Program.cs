@@ -16,20 +16,7 @@ public class Program
         }
         catch (Exception ex)
         {
-            var message1 = $"EXCEPTION: {ex.Message}";
-            var message2 = $"  {ex.GetType().FullName}\n\n" +
-                           $"  {ex.StackTrace}";
-
-            var fileName = FileHelpers.GetFileNameFromTemplate("exception.log", "{filebase}-{fileext}-{time}.{fileext}")!;
-            var combined = message1 + message2;
-            FileHelpers.WriteAllText(fileName, combined);
-
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
-            ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
-
-            ConsoleHelpers.Write("\n\n", overrideQuiet: true);
-            ConsoleHelpers.WriteError($"{message1}");
-            ConsoleHelpers.WriteLine($"\n\n{message2}", ConsoleColor.Cyan, overrideQuiet: true);
+            ExceptionHelpers.SaveAndDisplayException(ex);
             return 1;
         }
         finally
