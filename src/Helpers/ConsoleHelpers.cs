@@ -142,6 +142,11 @@ class ConsoleHelpers
         WriteLine(message, ConsoleColor.Cyan);
     }
 
+    public static bool IsStandardInputReference(string fileName)
+    {
+        return fileName == "-" || fileName == "stdin" || fileName == "STDIN" || fileName == "STDIN:";
+    }
+
     public static IEnumerable<string> GetAllLinesFromStdin()
     {
         return _allLinesFromStdin == null

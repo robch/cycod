@@ -111,7 +111,7 @@ class CommandLineOptions
         var fileNameOk = fileName == "-" || File.Exists(fileName);
         if (fileNameOk)
         {
-            var lines = fileName == "-"
+            var lines = ConsoleHelpers.IsStandardInputReference(fileName)
                 ? ConsoleHelpers.GetAllLinesFromStdin()
                 : File.ReadLines(fileName);
 
@@ -309,6 +309,13 @@ class CommandLineOptions
         {
             parsed = false;
         }
+        else if (arg == "--var")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var assignment = ValidateAssignment(arg, max1Arg.FirstOrDefault());
+            command.Variables[assignment.Item1] = assignment.Item2;
+            i += max1Arg.Count();
+        }
         else if (arg == "--system-prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
@@ -435,6 +442,19 @@ class CommandLineOptions
         }
 
         return strings.Select(x => ValidateString(arg, x, argDescription)!);
+    }
+
+    private static (string, string) ValidateAssignment(string arg, string? assignment)
+    {
+        assignment = ValidateString(arg, assignment, "assignment")!;
+        
+        var parts = assignment.Split('=', 2);
+        if (parts.Length != 2)
+        {
+            throw new CommandLineException($"Invalid variable definition for {arg}: {assignment}. Use NAME=VALUE format.");
+        }
+
+        return (parts[0], parts[1]);
     }
 
     private static string? ValidateFileExists(string? arg)

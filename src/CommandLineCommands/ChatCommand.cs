@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using OpenAI.Chat;
 
 class ChatCommand : Command
@@ -21,7 +22,13 @@ class ChatCommand : Command
         // Ground the filenames (in case they're templatized), and set the system prompt.
         InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
         OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
+        
+        // Ground the system prompt, and InputInstructions.
         SystemPrompt ??= EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? "You are a helpful AI assistant.";
+        SystemPrompt = ProcessTemplate(SystemPrompt);
+        InputInstructions = InputInstructions
+            .Select(x => ProcessTemplate(x))
+            .ToList();
 
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
@@ -221,6 +228,17 @@ class ChatCommand : Command
         }
     }
 
+    private string ProcessTemplate(string template)
+    {
+        if (string.IsNullOrEmpty(template))
+        {
+            return template;
+        }
+
+        var variables = new TemplateVariables(Variables);
+        return TemplateHelpers.ProcessTemplate(template, variables);
+    }
+
     public string? SystemPrompt { get; set; }
 
     public int? TrimTokenTarget { get; set; }
@@ -229,6 +247,8 @@ class ChatCommand : Command
     public string? OutputChatHistory;
 
     public List<string> InputInstructions = new();
+    
+    public Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

@@ -31,4 +31,18 @@ public class ExceptionHelpers
             ex = ex.InnerException;
         }
     }
+
+    public static void SaveAndDisplayException(CalcException ex)
+    {
+        ConsoleHelpers.WriteWarning($"{ex.Message} ({ex.Position})");
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+        ConsoleHelpers.WriteWarning($"{ex.Expression}");
+        if (ex.Position < 50)
+        {
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            ConsoleHelpers.WriteWarning($"{new string(' ', ex.Position)}^");
+        }
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+        ExceptionHelpers.SaveAndDisplayException(ex as Exception);
+    }
 }

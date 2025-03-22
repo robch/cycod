@@ -14,6 +14,11 @@ public class Program
             ConsoleHelpers.WriteLine($"Error: {ex.Message}");
             return 2;
         }
+        catch (CalcException ex)
+        {
+            ExceptionHelpers.SaveAndDisplayException(ex);
+            return 1;
+        }
         catch (Exception ex)
         {
             ExceptionHelpers.SaveAndDisplayException(ex);

@@ -142,7 +142,7 @@ class FileHelpers
 
     public static string ReadAllText(string fileName)
     {
-        var content = fileName == "-"
+        var content = ConsoleHelpers.IsStandardInputReference(fileName)
             ? string.Join("\n", ConsoleHelpers.GetAllLinesFromStdin())
             : File.ReadAllText(fileName, Encoding.UTF8);
 
@@ -193,5 +193,18 @@ class FileHelpers
 
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
+    }
+
+    public static string ExpandAtFileValue(string atFileValue, INamedValues? values = null)
+    {
+        if (atFileValue.StartsWith("@") && FileHelpers.FileExists(atFileValue[1..]))
+        {
+            return FileHelpers.ReadAllText(atFileValue[1..]);
+        }
+        else if (atFileValue.StartsWith("@") && ConsoleHelpers.IsStandardInputReference(atFileValue[1..]))
+        {
+            return string.Join('\n', ConsoleHelpers.GetAllLinesFromStdin());
+        }
+        return atFileValue;
     }
 }
