@@ -43,7 +43,7 @@ class FunctionCallingChat {
     public void LoadChatHistory(string fileName);
     
     // Gets a streaming chat completion and handles function calls
-    public async Task<string> GetChatCompletionsStreamingAsync(
+    public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<StreamingChatCompletionUpdate>? streamingCallback = null,

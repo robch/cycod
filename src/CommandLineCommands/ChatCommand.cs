@@ -48,9 +48,12 @@ class ChatCommand : Command
         {
             DisplayUserPrompt();
             var userPrompt = interactive && !Console.IsInputRedirected
-                ? ReadLineOrSimulateInput(InputInstructions, "exit")
-                : ReadOrSimulateInput(InputInstructions, "exit");
+                ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
+                : ReadLineOrSimulateInput(InputInstructions, "exit");
             if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
+
+            var handled = TryHandleChatCommand(chat, userPrompt);
+            if (handled) continue;
 
             DisplayAssistantLabel();
             var response = await CompleteChatStreamingAsync(chat, userPrompt,
@@ -61,6 +64,19 @@ class ChatCommand : Command
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
+    }
+
+    private static bool TryHandleChatCommand(FunctionCallingChat chat, string userPrompt)
+    {
+        if (userPrompt == "/save")
+        {
+            ConsoleHelpers.Write("\nSaving chat-history.jsonl ...");
+            chat.SaveChatHistory("chat-history.jsonl");
+            ConsoleHelpers.WriteLine("Saved!\n");
+            return true;
+        }
+
+        return false;
     }
 
     private async Task<string> CompleteChatStreamingAsync(
@@ -81,7 +97,7 @@ class ChatCommand : Command
                 (update) => HandleStreamingChatCompletionUpdate(update),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
 
-            return await chat.CompleteChatStreamingAsync(userPrompt, messageCallback, streamingCallback, functionCallCallback);
+            return response;
         }
         catch (Exception)
         {
@@ -94,7 +110,7 @@ class ChatCommand : Command
         }
     }
 
-    private string? ReadOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
+    private string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
     {
         while (inputInstructions?.Count > 0)
         {
@@ -120,9 +136,9 @@ class ChatCommand : Command
         return defaultOnEndOfInput;
     }
 
-    private string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
+    private string? InteractivelyReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
     {
-        var input = ReadOrSimulateInput(inputInstructions, null);
+        var input = ReadLineOrSimulateInput(inputInstructions, null);
         if (input != null) return input;
 
         return Console.ReadLine() ?? defaultOnEndOfInput;
@@ -162,20 +178,28 @@ class ChatCommand : Command
         DisplayFunctionResult(name, args, result);
     }
 
-    private static void DisplayUserPrompt()
+    private void DisplayUserPrompt()
     {
         ConsoleHelpers.Write("User: ", ConsoleColor.Green);
         Console.ForegroundColor = ConsoleColor.White;
     }
 
-    private static void DisplayAssistantLabel()
+    private void DisplayAssistantLabel()
     {
         ConsoleHelpers.Write("\nAssistant: ", ConsoleColor.Green);
+        _assistantResponseCharsSinceLabel = 0;
     }
 
     private void DisplayAssistantResponse(string text)
     {
+        if (_assistantResponseCharsSinceLabel == 0 && text.StartsWith("\n"))
+        {
+            text = text.TrimStart(new char[] { '\n', '\r', ' ' });
+        }
+
         ConsoleHelpers.Write(text, ConsoleColor.White, overrideQuiet: true);
+
+        _assistantResponseCharsSinceLabel += text.Length;
         _asssistantResponseNeedsLF = !text.EndsWith("\n");
     }
 
@@ -206,5 +230,6 @@ class ChatCommand : Command
 
     public List<string> InputInstructions = new();
 
+    private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 }

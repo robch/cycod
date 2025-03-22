@@ -45,9 +45,10 @@ public class FunctionCallingChat
         _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
         if (messageCallback != null) messageCallback(_messages);
 
-        var responseContent = string.Empty;
+        var contentToReturn = string.Empty;
         while (true)
         {
+            var responseContent = string.Empty;
             var response = _chatClient.CompleteChatStreamingAsync(_messages, _options);
             await foreach (var update in response)
             {
@@ -67,6 +68,8 @@ public class FunctionCallingChat
                     continue;
 
                 responseContent += content;
+                contentToReturn += content;
+
                 streamingCallback?.Invoke(update);
             }
 
@@ -76,10 +79,10 @@ public class FunctionCallingChat
                 continue;
             }
 
-            _messages.Add(ChatMessage.CreateAssistantMessage(responseContent));
+            _messages.Add(ChatMessage.CreateAssistantMessage(contentToReturn));
             if (messageCallback != null) messageCallback(_messages);
 
-            return responseContent;
+            return contentToReturn;
         }
     }
 
