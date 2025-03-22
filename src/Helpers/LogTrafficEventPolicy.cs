@@ -6,8 +6,11 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
 {
     public LogTrafficEventPolicy()
     {
-        OnRequest += (sender, request) => LogRequest(request);
-        OnResponse += (sender, response) => LogResponse(response);
+        var wrapLogRequest = TryCatchHelpers.NoThrowWrap((PipelineRequest request) => LogRequest(request))!;
+        OnRequest += (sender, request) => wrapLogRequest(request);
+
+        var wrapLogResponse = TryCatchHelpers.NoThrowWrap((PipelineResponse response) => LogResponse(response))!;
+        OnResponse += (sender, response) => wrapLogResponse(response);
     }
 
     private static void LogRequest(PipelineRequest request)
@@ -19,21 +22,15 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
             ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {headerValue}");
         }
 
-        try
-        {
-            using MemoryStream dumpStream = new();
-            request.Content?.WriteTo(dumpStream);
-            dumpStream.Position = 0;
-            BinaryData requestData = BinaryData.FromStream(dumpStream);
+        using MemoryStream dumpStream = new();
+        request.Content?.WriteTo(dumpStream);
+        dumpStream.Position = 0;
+        BinaryData requestData = BinaryData.FromStream(dumpStream);
 
-            var line = requestData.ToString().Replace("\n", "\\n").Replace("\r", "");
-            if (!string.IsNullOrWhiteSpace(line))
-            {
-                ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {line}");
-            }
-        }
-        catch
+        var line = requestData.ToString().Replace("\n", "\\n").Replace("\r", "");
+        if (!string.IsNullOrWhiteSpace(line))
         {
+            ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {line}");
         }
     }
 
@@ -52,12 +49,7 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE HEADERS: {headers}");
         }
 
-        try
-        {
-            var line = response.Content?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "");
-            ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {line}");
-        }
-        catch
-        {
-        }
-    }}
+        var line = response.Content?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "");
+        ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {line}");
+    }
+}

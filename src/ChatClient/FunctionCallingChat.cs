@@ -31,16 +31,17 @@ public class FunctionCallingChat
         _messages.ReadChatHistoryFromFile(fileName);
     }
 
-    public async Task<string> GetChatCompletionsStreamingAsync(
+    public void SaveChatHistory(string fileName)
+    {
+        _messages.SaveChatHistoryToFile(fileName);
+    }
+
+    public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<StreamingChatCompletionUpdate>? streamingCallback = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
-        messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
-        streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
-        functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
-
         _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
         if (messageCallback != null) messageCallback(_messages);
 

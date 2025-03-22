@@ -40,7 +40,7 @@ class ChatCommand : Command
         // Check to make sure we're either in interactive mode, or have input instructions.
         if (!interactive && InputInstructions.Count == 0)
         {
-            ConsoleHelpers.WriteLine("No input instructions provided. Exiting.", ConsoleColor.Red, overrideQuiet: true);
+            ConsoleHelpers.WriteWarning("\nNo input instructions provided. Exiting.");
             return new List<Task<int>>() { Task.FromResult(1) };
         }
 
@@ -53,7 +53,7 @@ class ChatCommand : Command
             if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
 
             DisplayAssistantLabel();
-            var response = await chat.GetChatCompletionsStreamingAsync(userPrompt,
+            var response = await CompleteChatStreamingAsync(chat, userPrompt,
                 (messages) => HandleUpdateMessages(messages),
                 (update) => HandleStreamingChatCompletionUpdate(update),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
@@ -61,6 +61,37 @@ class ChatCommand : Command
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
+    }
+
+    private async Task<string> CompleteChatStreamingAsync(
+        FunctionCallingChat chat,
+        string userPrompt,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<StreamingChatCompletionUpdate>? streamingCallback = null,
+        Action<string, string, string?>? functionCallCallback = null)
+    {
+        messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
+        streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
+        functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
+
+        try
+        {
+            var response = await chat.CompleteChatStreamingAsync(userPrompt,
+                (messages) => HandleUpdateMessages(messages),
+                (update) => HandleStreamingChatCompletionUpdate(update),
+                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+
+            return await chat.CompleteChatStreamingAsync(userPrompt, messageCallback, streamingCallback, functionCallCallback);
+        }
+        catch (Exception)
+        {
+            var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
+            chat.SaveChatHistory(fileName);
+
+            ConsoleHelpers.Write("\n\n", overrideQuiet: true);
+            ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+            throw;
+        }
     }
 
     private string? ReadOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)

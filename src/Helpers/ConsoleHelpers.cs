@@ -62,21 +62,35 @@ class ConsoleHelpers
         }
     }
 
-    public static void Write(string message = "", ConsoleColor? color = null, bool overrideQuiet = false)
+    public static void Write(string message, ConsoleColor? foregroundColor = null, bool overrideQuiet = false)
+    {
+        Write(message, foregroundColor, null, overrideQuiet);
+    }
+
+    public static void Write(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor, bool overrideQuiet = false)
     {
         if (_quiet && !overrideQuiet) return;
 
         lock (_printLock)
         {
-            var prevColor = Console.ForegroundColor;
-            if (color != null) Console.ForegroundColor = (ConsoleColor)color;
+            var prevForegroundColor = Console.ForegroundColor;
+            if (foregroundColor != null) Console.ForegroundColor = (ConsoleColor)foregroundColor;
+
+            var prevBackgroundColor = Console.BackgroundColor;
+            if (backgroundColor != null) Console.BackgroundColor = (ConsoleColor)backgroundColor;
 
             Console.Write(message);
-            if (color != null) Console.ForegroundColor = prevColor;
+            if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;
+            if (backgroundColor != null) Console.BackgroundColor = prevBackgroundColor;
         }
     }
 
     public static void WriteLine(string message = "", ConsoleColor? color = null, bool overrideQuiet = false)
+    {
+        WriteLine(message, color, null, overrideQuiet);
+    }
+
+    public static void WriteLine(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor, bool overrideQuiet = false)
     {
         if (_quiet && !overrideQuiet) return;
 
@@ -84,12 +98,36 @@ class ConsoleHelpers
         {
             DisplayStatusErase();
 
-            var prevColor = Console.ForegroundColor;
-            if (color != null) Console.ForegroundColor = (ConsoleColor)color;
+            var prevForegroundColor = Console.ForegroundColor;
+            if (foregroundColor != null) Console.ForegroundColor = (ConsoleColor)foregroundColor;
+
+            var prevBackgroundColor = Console.BackgroundColor;
+            if (backgroundColor != null) Console.BackgroundColor = (ConsoleColor)backgroundColor;
 
             Console.WriteLine(message);
-            if (color != null) Console.ForegroundColor = prevColor;
+            if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;
+            if (backgroundColor != null) Console.BackgroundColor = prevBackgroundColor;
         }
+    }
+
+    public static void WriteWarning(string message)
+    {
+        Write(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+    }
+
+    public static void WriteWarningLine(string message)
+    {
+        WriteLine(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+    }
+    
+    public static void WriteError(string message)
+    {
+        Write(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
+    }
+
+    public static void WriteErrorLine(string message)
+    {
+        WriteLine(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
     }
 
     public static void WriteDebug(string message)

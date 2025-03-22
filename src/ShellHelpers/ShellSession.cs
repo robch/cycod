@@ -52,7 +52,7 @@ public abstract class ShellSession
                 {
                     if (ConsoleHelpers.IsVerbose() && args.Data.Contains(Marker) == false)
                     {
-                        ConsoleHelpers.WriteLine(args.Data, ConsoleColor.Red);
+                        ConsoleHelpers.WriteErrorLine(args.Data);
                     }
                     _stderrBuffer.AppendLine(args.Data);
                 }
