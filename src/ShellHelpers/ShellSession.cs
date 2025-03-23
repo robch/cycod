@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Text;
+using System.Text.RegularExpressions;
 
 public abstract class ShellSession
 {
@@ -35,11 +36,12 @@ public abstract class ShellSession
             {
                 lock (_lock)
                 {
-                    if (ConsoleHelpers.IsVerbose() && args.Data.Contains(Marker) == false)
+                    var line = args.Data.TrimEnd(new char[] { '\r', '\n' });
+                    if (ConsoleHelpers.IsVerbose())
                     {
-                        ConsoleHelpers.WriteLine(args.Data, ConsoleColor.DarkCyan);
+                        ConsoleHelpers.WriteLine(line, ConsoleColor.DarkMagenta);
                     }
-                    _stdoutBuffer.AppendLine(args.Data);
+                    _stdoutBuffer.AppendLine(line);
                 }
             }
         };
@@ -50,11 +52,12 @@ public abstract class ShellSession
             {
                 lock (_lock)
                 {
-                    if (ConsoleHelpers.IsVerbose() && args.Data.Contains(Marker) == false)
+                    var line = args.Data.TrimEnd(new char[] { '\r', '\n' });
+                    if (ConsoleHelpers.IsVerbose())
                     {
-                        ConsoleHelpers.WriteErrorLine(args.Data);
+                        ConsoleHelpers.WriteErrorLine(line);
                     }
-                    _stderrBuffer.AppendLine(args.Data);
+                    _stderrBuffer.AppendLine(line);
                 }
             }
         };
@@ -107,6 +110,9 @@ public abstract class ShellSession
 
     private async Task<string> WaitForMarkerAsync(int timeoutMs)
     {
+        var pattern = $@"{Marker}\s*(-?\d+)";
+        var regex = new Regex(pattern, RegexOptions.Compiled | RegexOptions.Multiline);
+
         int waited = 0;
         while (waited < timeoutMs)
         {
@@ -115,7 +121,7 @@ public abstract class ShellSession
             {
                 currentOutput = _stdoutBuffer.ToString();
             }
-            if (currentOutput.Contains(Marker))
+            if (regex.IsMatch(currentOutput))
             {
                 return currentOutput;
             }

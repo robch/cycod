@@ -31,7 +31,16 @@ public class PowershellShellSession : ShellSession
 
     protected override string WrapCommand(string command)
     {
-        return "try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + command + " } catch { if (-not $LASTEXITCODE) { $LASTEXITCODE = 1 } } ; Write-Output ('" + Marker + "', $LASTEXITCODE) ;";
+        return "try { " +
+               "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; " + 
+               "$global:LASTEXITCODE = 0; " +  // Initialize to 0 before command
+               command + 
+               " } catch { " +
+               "if (-not $LASTEXITCODE) { $global:LASTEXITCODE = 1 } " + 
+               "} finally { " +
+               "if (-not $?) { if ($LASTEXITCODE -eq 0) { $global:LASTEXITCODE = 1 } }" +  // If $? is false but exit code is 0, set it to 1
+               "Write-Output \"" + Marker + "$LASTEXITCODE\"" +  // Output marker with exit code
+               " };";
     }
 
     protected override int ParseExitCode(string markerOutput)
