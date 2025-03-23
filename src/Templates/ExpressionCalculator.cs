@@ -21,7 +21,13 @@ public class ExpressionCalculator
         Number,
         String,
         Bool,
-        Equal,
+        Equal,            // =
+        EqualEqual,       // ==
+        NotEqual,         // !=
+        LessThan,         // <
+        LessThanEqual,    // <=
+        GreaterThan,      // >
+        GreaterThanEqual, // >=
         Plus,
         Minus,
         Times,
@@ -248,15 +254,139 @@ public class ExpressionCalculator
         return value;
     }
 
-    private dynamic BitTerm()
+    private dynamic ComparisonExpression()
     {
         var value = BitFactor();
+        
+        if (_tokenType == TokenType.EqualEqual)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is string && value2 is string)
+            {
+                return ((string)value).Equals((string)value2);
+            }
+            else if (value is bool && value2 is bool)
+            {
+                return (bool)value == (bool)value2;
+            }
+            else if (value is double && value2 is double)
+            {
+                return Math.Abs((double)value - (double)value2) < 1e-10;
+            }
+            else
+            {
+                return value.ToString().Equals(value2.ToString());
+            }
+        }
+        else if (_tokenType == TokenType.NotEqual)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is string && value2 is string)
+            {
+                return !((string)value).Equals((string)value2);
+            }
+            else if (value is bool && value2 is bool)
+            {
+                return (bool)value != (bool)value2;
+            }
+            else if (value is double && value2 is double)
+            {
+                return Math.Abs((double)value - (double)value2) >= 1e-10;
+            }
+            else
+            {
+                return !value.ToString().Equals(value2.ToString());
+            }
+        }
+        else if (_tokenType == TokenType.LessThan)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is double && value2 is double)
+            {
+                return (double)value < (double)value2;
+            }
+            else if (value is string && value2 is string)
+            {
+                return String.Compare((string)value, (string)value2) < 0;
+            }
+            else
+            {
+                throw new CalcException("Cannot compare these types with <", _expression, _position);
+            }
+        }
+        else if (_tokenType == TokenType.LessThanEqual)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is double && value2 is double)
+            {
+                return (double)value <= (double)value2;
+            }
+            else if (value is string && value2 is string)
+            {
+                return String.Compare((string)value, (string)value2) <= 0;
+            }
+            else
+            {
+                throw new CalcException("Cannot compare these types with <=", _expression, _position);
+            }
+        }
+        else if (_tokenType == TokenType.GreaterThan)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is double && value2 is double)
+            {
+                return (double)value > (double)value2;
+            }
+            else if (value is string && value2 is string)
+            {
+                return String.Compare((string)value, (string)value2) > 0;
+            }
+            else
+            {
+                throw new CalcException("Cannot compare these types with >", _expression, _position);
+            }
+        }
+        else if (_tokenType == TokenType.GreaterThanEqual)
+        {
+            NextToken();
+            var value2 = BitFactor();
+            
+            if (value is double && value2 is double)
+            {
+                return (double)value >= (double)value2;
+            }
+            else if (value is string && value2 is string)
+            {
+                return String.Compare((string)value, (string)value2) >= 0;
+            }
+            else
+            {
+                throw new CalcException("Cannot compare these types with >=", _expression, _position);
+            }
+        }
+        
+        return value;
+    }
+
+    private dynamic BitTerm()
+    {
+        var value = ComparisonExpression();
         while (true)
         {
             if (_tokenType == TokenType.LogicalAnd)
             {
                 NextToken();
-                var value2 = BitFactor();
+                var value2 = ComparisonExpression();
                 if (!(value is bool) || !(value2 is bool))
                 {
                     throw new CalcException("Expected boolean", _expression, _position);
@@ -266,7 +396,7 @@ public class ExpressionCalculator
             else if (_tokenType == TokenType.BitwiseAnd)
             {
                 NextToken();
-                var value2 = BitFactor();
+                var value2 = ComparisonExpression();
                 if (value >= long.MinValue && value <= long.MaxValue)
                 {
                     var l1 = (long)value;
@@ -298,17 +428,7 @@ public class ExpressionCalculator
         var value = Expression();
         while (true)
         {
-            if (_tokenType == TokenType.LogicalAnd)
-            {
-                NextToken();
-                var value2 = Expression();
-                if (!(value is bool) || !(value2 is bool))
-                {
-                    throw new CalcException("Expected boolean", _expression, _position);
-                }
-                value = (bool)value && (bool)value2;
-            }
-            else if (_tokenType == TokenType.BitwiseAnd)
+            if (_tokenType == TokenType.BitwiseAnd)
             {
                 NextToken();
                 var value2 = Expression();
@@ -521,7 +641,7 @@ public class ExpressionCalculator
         else if (_tokenType == TokenType.OpenParen)
         {
             NextToken();
-            value = Expression();
+            value = BitExpression();
             if (_tokenType != TokenType.CloseParen)
             {
                 throw new CalcException("Expected close parenthesis", _expression, _position);
@@ -613,7 +733,52 @@ public class ExpressionCalculator
                 switch (_expression[_nextPosition])
                 {
                     case '=':
-                        _tokenType = TokenType.Equal;
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '=')
+                        {
+                            _tokenType = TokenType.EqualEqual;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.Equal;
+                        }
+                        break;
+                    case '!':
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '=')
+                        {
+                            _tokenType = TokenType.NotEqual;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.LogicalNot;
+                        }
+                        break;
+                    case '<':
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '=')
+                        {
+                            _tokenType = TokenType.LessThanEqual;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.LessThan;
+                        }
+                        break;
+                    case '>':
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '=')
+                        {
+                            _tokenType = TokenType.GreaterThanEqual;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.GreaterThan;
+                        }
                         break;
                     case '+':
                         _tokenType = TokenType.Plus;
@@ -645,20 +810,35 @@ public class ExpressionCalculator
                     case ',':
                         _tokenType = TokenType.Comma;
                         break;
-                    case '!':
-                        _tokenType = TokenType.LogicalNot;
-                        break;
                     case '~':
                         _tokenType = TokenType.BitwiseNot;
                         break;
                     case '&':
-                        _tokenType = TokenType.BitwiseAnd;
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '&')
+                        {
+                            _tokenType = TokenType.LogicalAnd;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.BitwiseAnd;
+                        }
                         break;
                     case '^':
                         _tokenType = TokenType.Power;
                         break;
                     case '|':
-                        _tokenType = TokenType.BitwiseOr;
+                        if (_nextPosition + 1 < _expression.Length &&
+                            _expression[_nextPosition + 1] == '|')
+                        {
+                            _tokenType = TokenType.LogicalOr;
+                            _nextPosition++;
+                        }
+                        else
+                        {
+                            _tokenType = TokenType.BitwiseOr;
+                        }
                         break;
                     default:
                         throw UnexpectedCharacterCalcException(_nextPosition);
@@ -1115,7 +1295,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value = BitExpression();
+        var value = Expression();
         if (!(value is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1138,7 +1318,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value = BitExpression();
+        var value = Expression();
         if (!(value is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1161,7 +1341,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value1 = BitExpression();
+        var value1 = Expression();
         if (!(value1 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1173,7 +1353,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value2 = BitExpression();
+        var value2 = Expression();
         if (!(value2 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1198,7 +1378,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value1 = BitExpression();
+        var value1 = Expression();
         if (!(value1 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1210,7 +1390,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value2 = BitExpression();
+        var value2 = Expression();
         if (!(value2 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1234,7 +1414,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value1 = BitExpression();
+        var value1 = Expression();
         if (!(value1 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1246,7 +1426,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value2 = BitExpression();
+        var value2 = Expression();
         if (!(value2 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1270,7 +1450,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value1 = BitExpression();
+        var value1 = Expression();
         if (!(value1 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1282,7 +1462,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value2 = BitExpression();
+        var value2 = Expression();
         if (!(value2 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
@@ -1306,7 +1486,7 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value = BitExpression();
+        var value = Expression();
         if (!(value is string))
         {
             throw new CalcException("Expected string", _expression, _position);
