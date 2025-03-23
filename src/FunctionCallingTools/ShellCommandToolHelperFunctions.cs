@@ -17,7 +17,7 @@ public class ShellCommandToolHelperFunctions
         try
         {
             var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs);
-            string output = result.stdout;
+            string output = result.merged;
             if (result.exitCode != 0)
             {
                 output += Environment.NewLine + $"<exited with exit code {result.exitCode}>";
@@ -46,7 +46,7 @@ public class ShellCommandToolHelperFunctions
         try
         {
             var result = await CmdShellSession.Instance.ExecuteCommandAsync(command, timeoutMs);
-            string output = result.stdout;
+            string output = result.merged;
             if (result.exitCode != 0)
             {
                 output += Environment.NewLine + $"<exited with exit code {result.exitCode}>";
@@ -75,7 +75,7 @@ public class ShellCommandToolHelperFunctions
         try
         {
             var result = await PowershellShellSession.Instance.ExecuteCommandAsync(command, timeoutMs);
-            string output = result.stdout;
+            string output = result.merged;
             if (result.exitCode != 0)
             {
                 output += Environment.NewLine + $"<exited with exit code {result.exitCode}>";

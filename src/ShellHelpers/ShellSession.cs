@@ -7,6 +7,7 @@ public abstract class ShellSession
     protected Process? _process;
     protected readonly StringBuilder _stdoutBuffer = new StringBuilder();
     protected readonly StringBuilder _stderrBuffer = new StringBuilder();
+    protected readonly StringBuilder _mergedBuffer = new StringBuilder();
     protected readonly object _lock = new object();
 
     // This marker will be used to indicate when a command has finished.
@@ -42,6 +43,7 @@ public abstract class ShellSession
                         ConsoleHelpers.WriteLine(line, ConsoleColor.DarkMagenta);
                     }
                     _stdoutBuffer.AppendLine(line);
+                    _mergedBuffer.AppendLine(line);
                 }
             }
         };
@@ -58,6 +60,7 @@ public abstract class ShellSession
                         ConsoleHelpers.WriteErrorLine(line);
                     }
                     _stderrBuffer.AppendLine(line);
+                    _mergedBuffer.AppendLine(line);
                 }
             }
         };
@@ -73,13 +76,14 @@ public abstract class ShellSession
     }
 
     // Executes a command and waits for the marker.
-    public async Task<(string stdout, string stderr, int exitCode)> ExecuteCommandAsync(string command, int timeoutMs = 60000)
+    public async Task<(string stdout, string stderr, string merged, int exitCode)> ExecuteCommandAsync(string command, int timeoutMs = 10000)
     {
         EnsureProcess();
         lock (_lock)
         {
             _stdoutBuffer.Clear();
             _stderrBuffer.Clear();
+            _mergedBuffer.Clear();
         }
 
         string wrappedCommand = WrapCommand(command);
@@ -105,7 +109,7 @@ public abstract class ShellSession
 
         // Everything before the marker is command output.
         stdout = stdout.Substring(0, markerIndex).TrimEnd();
-        return (stdout, _stderrBuffer.ToString(), exitCode);
+        return (stdout, _stderrBuffer.ToString(), _mergedBuffer.ToString(), exitCode);
     }
 
     private async Task<string> WaitForMarkerAsync(int timeoutMs)
@@ -128,7 +132,7 @@ public abstract class ShellSession
             await Task.Delay(100);
             waited += 100;
         }
-        throw new TimeoutException("Command timed out.");
+        throw new TimeoutException($"<waiting {timeoutMs}ms for command to finish>\n{_mergedBuffer.ToString()}");
     }
 
     public void Shutdown()
