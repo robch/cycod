@@ -36,6 +36,7 @@ class ChatCommand : Command
         factory.AddFunctions(new DateAndTimeHelperFunctions());
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
+        factory.AddFunctions(new ThinkingToolHelperFunction());
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClientFromEnv();
