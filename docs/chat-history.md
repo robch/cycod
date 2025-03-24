@@ -1,6 +1,6 @@
 # Chat History
 
-ChatX provides functionality to save and load chat histories, allowing you to maintain context across sessions and refer back to previous conversations.
+ChatX provides functionality to save and load chat histories, allowing you to maintain context across sessions and refer back to previous conversations. It also supports saving conversations in a human-readable trajectory format.
 
 ## Understanding Chat History Files
 
@@ -145,6 +145,62 @@ Each line in a chat history file contains a JSON object representing a message. 
 ```
 
 ### Tool Messages (Function Call Results)
+## Trajectory Format
+
+In addition to JSONL-formatted chat history, ChatX can also save your conversation in a more human-readable trajectory format using the `--output-trajectory` option:
+
+```bash
+chatx --output-trajectory "conversation.md"
+```
+
+### Understanding Trajectory Format
+
+The trajectory format is designed to be more readable than JSONL, making it easier to review conversations. It uses a Markdown-like syntax that shows:
+
+1. User messages in plain text
+2. Assistant responses in plain text
+3. Function calls in XML-formatted blocks
+4. Function results in XML-formatted blocks
+
+For example:
+
+```
+I need to know the current date.
+
+The current date is October 3, 2023.
+
+<function_calls>
+<invoke name="GetCurrentTime">
+</invoke>
+</function_calls>
+
+<function_results>
+The current time is 14:25:36 UTC.
+</function_results>
+
+Thank you for providing the time.
+```
+
+### When to Use Trajectory Format
+
+The trajectory format is particularly useful when:
+
+1. You want to share conversations with others in a readable format
+2. You need to review your chat history yourself
+3. You're documenting interactions for training or reference purposes
+
+It's important to note that unlike JSONL chat history files, trajectory files cannot be loaded back into ChatX as context for future conversations.
+
+### Using Both Formats Together
+
+You can use both history formats simultaneously:
+
+```bash
+chatx --output-chat-history "conversation.jsonl" --output-trajectory "conversation.md"
+```
+
+This gives you both a machine-readable format (JSONL) for continuing conversations and a human-readable format (trajectory) for review and documentation.
+
 ```json
 {
   "role": "tool",

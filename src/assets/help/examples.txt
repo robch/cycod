@@ -9,6 +9,18 @@ EXAMPLES
   EXAMPLE 2: Use multiple sequential inline inputs
 
     chatx --inputs "What's today's date?" "show me a calendar for this month"
+    
+  EXAMPLE 3: Save chat history in JSONL format
+
+    chatx --question "Tell me a joke" --output-chat-history chat-history.jsonl
+
+  EXAMPLE 3: Continue chat, after loading chat history from a JSONL file
+
+    chatx --input-chat-history chat-history.jsonl --question "Tell me another"
+
+  EXAMPLE 4: Save chat history in human readable trajectory format
+  
+    chatx --question "What time is it?" --output-trajectory trajectory.md
 
 SEE ALSO
 

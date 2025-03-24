@@ -155,6 +155,12 @@ class FileHelpers
         File.WriteAllText(fileName, content, Encoding.UTF8);
     }
 
+    public static void AppendAllText(string fileName, string trajectoryContent)
+    {
+        EnsureDirectoryForFileExists(fileName);
+        File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
+    }
+
     public static IEnumerable<string> GetEmbeddedStreamFileNames()
     {
         var assembly = System.Reflection.Assembly.GetExecutingAssembly();

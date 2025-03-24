@@ -12,8 +12,9 @@ OPTIONS
   --instructions ...              Alias for --inputs
   --questions ...                 Alias for --inputs
 
-  --input-chat-history [FILE]     Load chat history from the specified file. The file must be valid chat messages in JSONL format
+  --input-chat-history [FILE]     Load chat history from the specified JSONL file.
   --output-chat-history [FILE]    Save chat history to the specified file (default: "chat-history-{time}.jsonl")
+  --output-trajectory [FILE]      Save chat history in human readable trajectory format (default: "trajectory-{time}.md")
 
   --trim-token-target             If LLM payload exceeds this target, message array trimming may take place
 

@@ -34,8 +34,9 @@ These options control the chat interaction:
 | `--inputs <text...>` | Provide multiple inputs/questions to the AI |
 | `--instructions <text...>` | Alias for --inputs |
 | `--questions <text...>` | Alias for --inputs |
-| `--input-chat-history <file>` | Load previous chat history from a file |
-| `--output-chat-history <file>` | Save chat history to a file |
+| `--input-chat-history <file>` | Load previous chat history from a JSONL file |
+| `--output-chat-history <file>` | Save chat history to a JSONL file |
+| `--output-trajectory <file>` | Save chat history in a more readable trajectory format |
 | `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
 
 ## Help Options
@@ -78,6 +79,14 @@ chatx --inputs "What is a shell script?" "How do I make a shell script executabl
 chatx --output-chat-history "programming-help.jsonl"
 chatx --input-chat-history "programming-help.jsonl" --input "Can you explain that last example again?"
 ```
+
+### Saving Conversation in Trajectory Format
+
+```bash
+chatx --output-trajectory "conversation.md" --input "What is the most efficient sorting algorithm?"
+```
+
+This saves the conversation in a more human-readable format.
 
 ### Creating an Alias
 

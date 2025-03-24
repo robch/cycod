@@ -38,7 +38,6 @@ class CommandLineOptions
 
     public string[] AllOptions;
     public string? SaveAliasName;
-    private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
 
     public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
     {
@@ -365,6 +364,13 @@ class CommandLineOptions
             command.TrimTokenTarget = trimTokenTarget;
             i += max1Arg.Count();
         }
+        else if (arg == "--output-trajectory")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var outputTrajectory = max1Arg.FirstOrDefault() ?? DefaultOutputTrajectoryFileNameTemplate;
+            command.OutputTrajectory = outputTrajectory;
+            i += max1Arg.Count();
+        }
         else
         {
             parsed = false;
@@ -500,4 +506,7 @@ class CommandLineOptions
             ? FileHelpers.FindOrCreateDirectory(".chatx", "aliases")
             : FileHelpers.FindDirectory(".chatx", "aliases");
     }
+
+    private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
+    private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";
 }

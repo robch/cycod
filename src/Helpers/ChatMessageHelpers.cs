@@ -142,4 +142,15 @@ public static class OpenAIChatHelpers
     }
 
     private const int ESTIMATED_BYTES_PER_TOKEN = 4; // This is an estimate, actual bytes per token may vary
+    
+    public static void AppendMessageToTrajectoryFile(this ChatMessage message, string? fileName)
+    {
+        if (string.IsNullOrEmpty(fileName)) return;
+        
+        var trajectoryContent = TrajectoryFormatter.FormatMessage(message);
+        if (!string.IsNullOrEmpty(trajectoryContent))
+        {
+            FileHelpers.AppendAllText(fileName, trajectoryContent);
+        }
+    }
 }

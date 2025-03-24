@@ -19,9 +19,10 @@ class ChatCommand : Command
 
     public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
     {
-        // Ground the filenames (in case they're templatized), and set the system prompt.
+        // Ground the filenames (in case they're templatized)
         InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
         OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
+        OutputTrajectory = FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
 
         // Ground the system prompt, and InputInstructions.
         SystemPrompt ??= EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? GetBuiltInSystemPrompt();
@@ -57,7 +58,7 @@ class ChatCommand : Command
             var userPrompt = interactive && !Console.IsInputRedirected
                 ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                 : ReadLineOrSimulateInput(InputInstructions, "exit");
-            if (string.IsNullOrEmpty(userPrompt) || userPrompt == "exit") break;
+            if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
 
             var handled = TryHandleChatCommand(chat, userPrompt);
             if (handled) continue;
@@ -180,6 +181,11 @@ class ChatCommand : Command
         {
             messages.SaveChatHistoryToFile(OutputChatHistory);
         }
+        
+        if (OutputTrajectory != null && messages.Count > 0)
+        {
+            messages.Last().AppendMessageToTrajectoryFile(OutputTrajectory);
+        }
     }
 
     private void HandleStreamingChatCompletionUpdate(StreamingChatCompletionUpdate update)
@@ -256,6 +262,7 @@ class ChatCommand : Command
 
     public string? InputChatHistory;
     public string? OutputChatHistory;
+    public string? OutputTrajectory;
 
     public List<string> InputInstructions = new();
     
