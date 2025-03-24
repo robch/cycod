@@ -77,7 +77,6 @@ public class FunctionFactory
         }
     }
 
-
     public void AddFunction(MethodInfo method, object? instance = null)
     {
         var attributes = method.GetCustomAttributes(typeof(HelperFunctionDescriptionAttribute), false);

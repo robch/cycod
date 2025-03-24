@@ -48,6 +48,12 @@ public class TemplateVariables : INamedValues
         // Finally check special variables
         switch (name.ToLowerInvariant())
         {
+            case "os":
+                return Environment.OSVersion.ToString();
+            case "osname":
+                return Environment.OSVersion.Platform.ToString();
+            case "osversion":
+                return Environment.OSVersion.Version.ToString();
             case "date":
                 return DateTime.Now.ToString("yyyy-MM-dd");
             case "time":
