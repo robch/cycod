@@ -100,10 +100,8 @@ public class ExpressionCalculator
 
         _constantE = new Constant("E", 2.71828182845905);
         _constantPI = new Constant("PI", 3.14159265358979);
-        _constantNAN = new Constant("NAN", double.NaN);
         AddConstant(_constantE);
         AddConstant(_constantPI);
-        AddConstant(_constantNAN);
 
         // math functions
         AddFunction(new Function("ABS", Abs));
@@ -828,6 +826,9 @@ public class ExpressionCalculator
                     case '^':
                         _tokenType = TokenType.Power;
                         break;
+                    case '%':
+                        _tokenType = TokenType.Mod;
+                        break;
                     case '|':
                         if (_nextPosition + 1 < _expression.Length &&
                             _expression[_nextPosition + 1] == '|')
@@ -1546,7 +1547,6 @@ public class ExpressionCalculator
     private string _token = string.Empty;
     private readonly Constant _constantE;
     private readonly Constant _constantPI;
-    private readonly Constant _constantNAN;
     private readonly List<Function> _functions;
     private readonly List<Constant> _constants;
     private readonly List<Variable> _variables;
