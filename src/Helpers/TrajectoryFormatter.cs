@@ -131,10 +131,16 @@ public static class TrajectoryFormatter
         {
             return string.Empty;
         }
+
+        if (role == "user")
+        {
+            content = string.Join("\n", content
+                .Split(new[] { '\n' }, StringSplitOptions.None)
+                .Select(line => line.TrimEnd(' ', '\r', '\t'))
+                .Select(line => $"> {line}"));
+        }
         
-        return role == "user"
-            ? $"\n> {content.Trim()}\n"
-            : $"\n{content.Trim()}\n";
+        return $"\n{content.Trim()}\n";
     }
 
     /// <summary>
