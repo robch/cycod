@@ -3,7 +3,6 @@ using Azure.AI.OpenAI;
 using OpenAI;
 using OpenAI.Chat;
 using System.ClientModel;
-using Azure.Identity;
 using System.ClientModel.Primitives;
 
 public static class ChatClientFactory
@@ -12,6 +11,7 @@ public static class ChatClientFactory
     {
         var options = new AzureOpenAIClientOptions();
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+        options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
 
         string deployment = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT") ?? throw new InvalidOperationException("AZURE_OPENAI_CHAT_DEPLOYMENT is not set.");
         string endpoint = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT") ?? throw new InvalidOperationException("AZURE_OPENAI_ENDPOINT is not set.");
@@ -25,9 +25,11 @@ public static class ChatClientFactory
     {
         var options = new OpenAIClientOptions();
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+        options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
 
         var model = EnvironmentHelpers.FindEnvVar("OPENAI_CHAT_MODEL_NAME") ?? "gpt-4o";
         var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new InvalidOperationException("OPENAI_API_KEY is not set.");
+
         return new ChatClient(model, new ApiKeyCredential(apiKey), options);
     }
 
@@ -39,12 +41,13 @@ public static class ChatClientFactory
         var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set.");
 
         var options = new OpenAIClientOptions();
+        options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+        options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
         options.Endpoint = new Uri(endpoint);
         
         // Use GitHub token for authorization
         options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId), PipelinePosition.BeforeTransport);
         options.AddPolicy(new CustomHeaderPolicy("Authorization", $"Bearer {githubToken}"), PipelinePosition.BeforeTransport);
-        options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
 
         return new ChatClient(model, new ApiKeyCredential(" "), options);
     }
@@ -57,6 +60,8 @@ public static class ChatClientFactory
         var hmacKey = EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY") ?? throw new InvalidOperationException("COPILOT_HMAC_KEY is not set.");
 
         var options = new OpenAIClientOptions();
+        options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+        options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
         options.Endpoint = new Uri(endpoint);
 
         var hmacValue = HMACHelper.Encode(hmacKey);

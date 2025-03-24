@@ -489,16 +489,16 @@ public class MdxCliWrapper
     
     #endregion
     
-    /// <summary>
-    /// Escapes special characters in command arguments.
-    /// </summary>
-    /// <param name="arg">The argument to escape</param>
-    /// <returns>The escaped argument</returns>
     private string EscapeArgument(string arg)
     {
-        return arg;
-        // When passing directly to process without a shell intermediary,
-        // we still need to escape double quotes since we're building command line arguments
-        // return arg.Replace("\"", "\\\"");
+        var alreadyDoubleQuoted = arg.StartsWith("\"") && arg.EndsWith("\"");
+        if (alreadyDoubleQuoted) return arg;
+
+        var noSpacesOrSlashesOrQuotes = !arg.Contains(" ") && !arg.Contains("\\") && !arg.Contains("\"");
+        if (noSpacesOrSlashesOrQuotes) return arg;
+
+        var escaped = arg.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        var needsDoubleQuotes = escaped.Contains(" ") || escaped.Contains("\\") || escaped.Contains("\"");
+        return needsDoubleQuotes ? $"\"{escaped}\"" : escaped;
     }
 }
