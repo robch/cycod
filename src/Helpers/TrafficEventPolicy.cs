@@ -14,7 +14,7 @@ public class TrafficEventPolicy : PipelinePolicy
     public override async ValueTask ProcessAsync(PipelineMessage message, IReadOnlyList<PipelinePolicy> pipeline, int currentIndex)
     {
         FireEvents(message);
-        await ProcessNextAsync(message, pipeline, currentIndex).ConfigureAwait(false);
+        await ProcessNextAsync(message, pipeline, currentIndex);
     }
 
     public void FireEvents(PipelineMessage message)

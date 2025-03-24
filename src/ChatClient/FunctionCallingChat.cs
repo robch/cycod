@@ -79,7 +79,7 @@ public class FunctionCallingChat
                 continue;
             }
 
-            _messages.Add(ChatMessage.CreateAssistantMessage(contentToReturn));
+            _messages.Add(ChatMessage.CreateAssistantMessage(responseContent));
             if (messageCallback != null) messageCallback(_messages);
 
             return contentToReturn;
