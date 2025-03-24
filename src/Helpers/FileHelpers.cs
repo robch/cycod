@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-class FileHelpers
+public class FileHelpers
 {
     public static string EnsureDirectoryExists(string folder)
     {
