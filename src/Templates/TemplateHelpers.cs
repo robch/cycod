@@ -15,13 +15,16 @@ public static class TemplateHelpers
         Func<string, bool> evaluateCondition = (condition) =>
         {
             condition = condition.ReplaceValues(values).Trim();
-            return condition switch
+            var evaluated = condition switch
             {
                 "" => false,
                 "true" => true,
                 "false" => false,
                 _ => calculator.Evaluate(condition)
             };
+
+            ConsoleHelpers.WriteDebugLine($"Evaluating condition: {condition} => {evaluated}");
+            return evaluated;
         };
         Action<string> setVariable = (s) => {
             var result = calculator.Evaluate(s);
@@ -34,6 +37,8 @@ public static class TemplateHelpers
 
     public static string ProcessTemplate(string template, Func<string, bool> evaluateCondition, Func<string, string> interpolate, Action<string> setVariable)
     {
+        var safeEvaluateCondition = TryCatchHelpers.NoThrowWrapException(evaluateCondition, false);
+
         var lines = template.Split('\n').ToList();
         var output = new StringBuilder();
 
@@ -50,10 +55,13 @@ public static class TemplateHelpers
             if (trimmedLine.StartsWith("{{if ") && trimmedLine.EndsWith("}}") && !trimmedLine.EndsWith("{{endif}}"))
             {
                 var condition = trimmedLine[5..^2].Trim();
-                var evaluated = evaluateCondition(condition);
-                inTrueBranchNow.Push(evaluated);
-                skipElseBranches.Push(evaluated);
-                continue;
+                var evaluated = safeEvaluateCondition(condition);
+                if (evaluated.ex == null)
+                {
+                    inTrueBranchNow.Push(evaluated.value);
+                    skipElseBranches.Push(evaluated.value);
+                    continue;
+                }
             }
             else if (trimmedLine.StartsWith("{{else if ") && trimmedLine.EndsWith("}}"))
             {
@@ -70,12 +78,15 @@ public static class TemplateHelpers
                 }
 
                 var condition = trimmedLine[10..^2].Trim();
-                var evaluated = evaluateCondition(condition);
-                inTrueBranchNow.Pop();
-                inTrueBranchNow.Push(evaluated);
-                skipElseBranches.Pop();
-                skipElseBranches.Push(evaluated);
-                continue;
+                var evaluated = safeEvaluateCondition(condition);
+                if (evaluated.ex == null)
+                {
+                    inTrueBranchNow.Pop();
+                    inTrueBranchNow.Push(evaluated.value);
+                    skipElseBranches.Pop();
+                    skipElseBranches.Push(evaluated.value);
+                    continue;
+                }
             }
             else if (trimmedLine.StartsWith("{{else}}"))
             {
@@ -137,6 +148,8 @@ public static class TemplateHelpers
 
     private static string HandleInlineIf(string line, Func<string, bool> evaluateCondition, Func<string, string> interpolate)
     {
+        var safeEvaluateCondition = TryCatchHelpers.NoThrowWrapException(evaluateCondition, false);
+
         var output = new StringBuilder();
 
         var inTrueBranchNow = new Stack<bool>();
@@ -166,10 +179,13 @@ public static class TemplateHelpers
             if (check.StartsWith("{{if ") && check.EndsWith("}}"))
             {
                 var condition = check[5..^2].Trim();
-                var evaluated = evaluateCondition(condition);
-                inTrueBranchNow.Push(evaluated);
-                skipElseBranches.Push(evaluated);
-                continue;
+                var evaluated = safeEvaluateCondition(condition);
+                if (evaluated.ex == null)
+                {
+                    inTrueBranchNow.Push(evaluated.value);
+                    skipElseBranches.Push(evaluated.value);
+                    continue;
+                }
             }
             else if (check.StartsWith("{{else if ") && check.EndsWith("}}"))
             {
@@ -186,12 +202,15 @@ public static class TemplateHelpers
                 }
 
                 var condition = check[10..^2].Trim();
-                var evaluated = evaluateCondition(condition);
-                inTrueBranchNow.Pop();
-                inTrueBranchNow.Push(evaluated);
-                skipElseBranches.Pop();
-                skipElseBranches.Push(evaluated);
-                continue;
+                var evaluated = safeEvaluateCondition(condition);
+                if (evaluated.ex == null)
+                {
+                    inTrueBranchNow.Pop();
+                    inTrueBranchNow.Push(evaluated.value);
+                    skipElseBranches.Pop();
+                    skipElseBranches.Push(evaluated.value);
+                    continue;
+                }
             }
             else if (check.StartsWith("{{else}}") && check.EndsWith("}}"))
             {

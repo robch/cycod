@@ -9,6 +9,7 @@ Welcome to the ChatX documentation. This documentation provides detailed informa
 - [Function Calling](function-calling.md)
 - [Creating Aliases](aliases.md)
 - [Chat History](chat-history.md)
+- [Templates](templates.md)
 - [API Reference](api-reference.md)
 - [Troubleshooting](troubleshooting.md)
 
