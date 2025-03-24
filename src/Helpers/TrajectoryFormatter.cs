@@ -19,13 +19,16 @@ public static class TrajectoryFormatter
     {
         var sb = new StringBuilder();
 
-        var isUserMessage = message is UserChatMessage;
-        if (isUserMessage) return null;
-
         var messageContent = string.Join("", message.Content
             .Where(x => x.Kind == ChatMessageContentPartKind.Text)
             .Select(x => x.Text));
         var hasContent = !string.IsNullOrWhiteSpace(messageContent);
+
+        var isUserMessage = message is UserChatMessage;
+        if (isUserMessage && hasContent)
+        {
+            sb.Append(FormatMessage("user", messageContent));
+        }
 
         var assistantMessage = message as AssistantChatMessage;
         var isAssistantMessage = assistantMessage != null && hasContent;
@@ -129,7 +132,9 @@ public static class TrajectoryFormatter
             return string.Empty;
         }
         
-        return $"\n{content.Trim()}\n";
+        return role == "user"
+            ? $"\n> {content.Trim()}\n"
+            : $"\n{content.Trim()}\n";
     }
 
     /// <summary>
