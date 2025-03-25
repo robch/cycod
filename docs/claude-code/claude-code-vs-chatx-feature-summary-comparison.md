@@ -2,15 +2,19 @@
 
 This is an analysis of the [chatx](https://github.com/robch/chatx/) codebase compared to [Anthropic's Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) feature by feature, along with a list of tasks to update chatx to have all of [Claude Code's capabilities](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials).
 
-This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](https://github.com/robch/chatx/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) using these commands:
+This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](https://github.com/robch/chatx/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) and compare them to the chatx codebase.
 
-```bash
-echo Using mdx to search for claude code tutorials, summarizing them in markdown format
-mdx web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.md"
+1. Use `mdx` to search for claude code tutorials on the web, and summarize in markdown:
 
-echo Using chatx to analyze the summary of claude code tutorials
-mdx src\**\*.cs | chatx --input-chat-history "claude-code-tutorial-summary.md" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the chatx codebase you see here. At the end list the tasks to update the chatx codebase to have all the features that claude code has."
-```
+   ```bash
+   mdx web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.jsonl"
+   ```
+
+2. Use `chatx` to compare claude code tutorials/summary to the chatx codebase, obtained using `mdx`:
+
+   ```bash
+   mdx src\**\*.cs | chatx --input-chat-history "claude-code-tutorial-summary.jsonl" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the chatx codebase you see here. At the end list the tasks to update the chatx codebase to have all the features that claude code has."
+   ```
 
 ## Command Structure Comparison
 
