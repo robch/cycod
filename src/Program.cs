@@ -80,6 +80,7 @@ public class Program
             var tasksThisCommand = command switch
             {
                 ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
+                VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
                 _ => new List<Task<int>>()
             };
 
@@ -96,7 +97,7 @@ public class Program
     {
         var programNameUppercase = Program.Name.ToUpper();
         ConsoleHelpers.WriteLine(
-            $"{programNameUppercase} - AI-powered CLI, Version 1.0.0\n" +
+            $"{programNameUppercase} - AI-powered CLI, Version {VersionInfo.GetVersion()}\n" +
             "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
     }
 

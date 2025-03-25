@@ -195,6 +195,7 @@ class CommandLineOptions
             command = commandName switch
             {
                 "help" => new HelpCommand(),
+                "version" => new VersionCommand(),
                 _ => new ChatCommand()
             };
 
@@ -209,6 +210,7 @@ class CommandLineOptions
 
         var parsedOption = TryParseGlobalCommandLineOptions(commandLineOptions, args, ref i, arg) ||
             TryParseHelpCommandOptions(commandLineOptions, command as HelpCommand, args, ref i, arg) ||
+            TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
             TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg);
         if (parsedOption) return true;
@@ -217,6 +219,13 @@ class CommandLineOptions
         {
             commandLineOptions.HelpTopic = command is ChatCommand ? "usage" : command!.GetCommandName();
             command = new HelpCommand();
+            i = args.Count();
+            parsedOption = true;
+        }
+        else if (arg == "--version")
+        {
+            commandLineOptions.HelpTopic = "version";
+            command = new VersionCommand();
             i = args.Count();
             parsedOption = true;
         }
@@ -291,6 +300,22 @@ class CommandLineOptions
         else if (arg == "--expand")
         {
             commandLineOptions.ExpandHelpTopics = true;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseVersionCommandOptions(CommandLineOptions commandLineOptions, VersionCommand? versionCommand, string[] args, ref int i, string arg)
+    {
+        bool parsed = true;
+
+        if (versionCommand == null)
+        {
+            parsed = false;
         }
         else
         {
