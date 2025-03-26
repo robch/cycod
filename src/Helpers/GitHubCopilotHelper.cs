@@ -23,8 +23,6 @@ public class GitHubCopilotHelper
         { "editor-plugin-version", "copilot.vim/1.16.0" },
         { "content-type", "application/json" },
         { "user-agent", "GithubCopilot/1.155.0" }
-        // ,
-        // { "accept-encoding", "gzip,deflate,br" }
     };
 
     private readonly HttpClient _httpClient;

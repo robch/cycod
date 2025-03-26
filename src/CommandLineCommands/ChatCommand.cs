@@ -28,7 +28,7 @@ class ChatCommand : Command
         SystemPrompt ??= EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? GetBuiltInSystemPrompt();
         SystemPrompt = ProcessTemplate(SystemPrompt);
         InputInstructions = InputInstructions
-            .Select(x => ProcessTemplate(x))
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
 
         // Create the function factory and add functions.
@@ -37,7 +37,7 @@ class ChatCommand : Command
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
-        // factory.AddFunctions(new CodeExplorationHelperFunctions());
+        factory.AddFunctions(new CodeExplorationHelperFunctions());
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClientFromEnv();
@@ -267,7 +267,8 @@ class ChatCommand : Command
     public string? OutputTrajectory;
 
     public List<string> InputInstructions = new();
-    
+    public bool UseTemplates = true;
+
     public Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
 
     private int _assistantResponseCharsSinceLabel = 0;

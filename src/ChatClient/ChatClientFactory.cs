@@ -9,9 +9,9 @@ public static class ChatClientFactory
 {
     public static ChatClient CreateAzureOpenAIChatClientWithApiKey()
     {
-        string deployment = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT") ?? throw new InvalidOperationException("AZURE_OPENAI_CHAT_DEPLOYMENT is not set.");
-        string endpoint = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT") ?? throw new InvalidOperationException("AZURE_OPENAI_ENDPOINT is not set.");
-        string apiKey = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY") ?? throw new InvalidOperationException("AZURE_OPENAI_API_KEY is not set.");
+        string deployment = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT") ?? throw new EnvVarSettingException("AZURE_OPENAI_CHAT_DEPLOYMENT is not set.");
+        string endpoint = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT") ?? throw new EnvVarSettingException("AZURE_OPENAI_ENDPOINT is not set.");
+        string apiKey = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY") ?? throw new EnvVarSettingException("AZURE_OPENAI_API_KEY is not set.");
 
         var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey), InitAzureOpenAIClientOptions());
 
@@ -22,7 +22,7 @@ public static class ChatClientFactory
     public static ChatClient CreateOpenAIChatClientWithApiKey()
     {
         var model = EnvironmentHelpers.FindEnvVar("OPENAI_CHAT_MODEL_NAME") ?? "gpt-4o";
-        var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new InvalidOperationException("OPENAI_API_KEY is not set.");
+        var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new EnvVarSettingException("OPENAI_API_KEY is not set.");
 
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
         return new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions());
@@ -32,7 +32,7 @@ public static class ChatClientFactory
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
-        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set. Run 'chatx ghcp login' to authenticate with GitHub Copilot.");
+        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new EnvVarSettingException("GITHUB_TOKEN is not set. Run 'chatx ghcp login' to authenticate with GitHub Copilot.");
         var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
         var editorVersion = EnvironmentHelpers.FindEnvVar("COPILOT_EDITOR_VERSION") ?? "vscode/1.80.1";
 
@@ -42,7 +42,7 @@ public static class ChatClientFactory
         
         if (string.IsNullOrEmpty(copilotToken))
         {
-            throw new InvalidOperationException("Failed to get a valid Copilot token from GitHub. Please run 'chatx ghcp login' to authenticate.");
+            throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'chatx ghcp login' to authenticate.");
         }
 
         var options = InitOpenAIClientOptions(endpoint, $"Bearer {copilotToken}");
@@ -61,8 +61,8 @@ public static class ChatClientFactory
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
-        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? throw new InvalidOperationException("COPILOT_INTEGRATION_ID is not set.");
-        var hmacKey = EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY") ?? throw new InvalidOperationException("COPILOT_HMAC_KEY is not set.");
+        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? throw new EnvVarSettingException("COPILOT_INTEGRATION_ID is not set.");
+        var hmacKey = EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY") ?? throw new EnvVarSettingException("COPILOT_HMAC_KEY is not set.");
 
         var options = InitOpenAIClientOptions(endpoint, "");
         options.AddPolicy(new CustomHeaderPolicy("Request-HMAC", HMACHelper.Encode(hmacKey)), PipelinePosition.BeforeTransport);
@@ -124,7 +124,7 @@ public static class ChatClientFactory
             .Split(new[] { '\n' })
             .Select(line => line.Trim()));
 
-        throw new InvalidOperationException(message);
+        throw new EnvVarSettingException(message);
     }
 
     private static AzureOpenAIClientOptions InitAzureOpenAIClientOptions()

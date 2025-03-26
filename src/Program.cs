@@ -9,7 +9,7 @@ public class Program
             SaveConsoleColor();
             return await DoProgram(ProcessDirectives(args));
         }
-        catch (InvalidOperationException ex)
+        catch (EnvVarSettingException ex)
         {
             ConsoleHelpers.WriteLine($"Error: {ex.Message}");
             return 2;

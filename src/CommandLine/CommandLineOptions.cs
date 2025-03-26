@@ -341,6 +341,17 @@ class CommandLineOptions
             command.Variables[assignment.Item1] = assignment.Item2;
             i += max1Arg.Count();
         }
+        else if (arg == "--use-templates")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var useTemplates = max1Arg.FirstOrDefault() ?? "true";
+            command.UseTemplates = useTemplates.ToLower() == "true" || useTemplates == "1";
+            i += max1Arg.Count();
+        }
+        else if (arg == "--no-templates")
+        {
+            command.UseTemplates = false;
+        }
         else if (arg == "--system-prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
