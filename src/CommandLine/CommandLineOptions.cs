@@ -195,8 +195,9 @@ class CommandLineOptions
 
             command = commandName switch
             {
-                "version" => new VersionCommand(),
                 "help" => new HelpCommand(),
+                "version" => new VersionCommand(),
+                "ghcp login" => new GitHubCopilotLoginCommand(),
                 _ => new ChatCommand()
             };
 

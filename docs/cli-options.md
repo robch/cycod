@@ -8,6 +8,17 @@ ChatX provides a variety of command line options to customize its behavior. This
 chatx [options]
 ```
 
+## Commands
+
+ChatX supports the following commands:
+
+| Command | Description |
+|---------|-------------|
+| `chat` | Start a chat session (default) |
+| `ghcp login` | Authenticate with GitHub Copilot |
+| `version` | Display version information |
+| `help` | Display help information |
+
 ## Global Options
 
 These options apply to the overall behavior of ChatX:
@@ -109,6 +120,16 @@ chatx --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" 
 ```
 
 This will automatically trim tool call content when the history approaches the specified token target.
+
+### GitHub Copilot Authentication
+
+To use GitHub Copilot with ChatX, you need to authenticate:
+
+```bash
+chatx ghcp login
+```
+
+This will initiate the GitHub device flow authentication process, displaying a code and URL to visit. After authenticating, ChatX will store your GitHub token in the `.chatx/config` file and you'll be able to use Copilot for chat completions.
 
 ### Non-Interactive Mode
 

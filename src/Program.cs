@@ -81,6 +81,7 @@ public class Program
             {
                 ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
                 VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
+                GitHubCopilotLoginCommand loginCommand => await loginCommand.ExecuteAsync(commandLineOptions.Interactive),
                 _ => new List<Task<int>>()
             };
 

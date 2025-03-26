@@ -32,11 +32,20 @@ public static class ChatClientFactory
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
-        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set.");
-        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;;
+        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new InvalidOperationException("GITHUB_TOKEN is not set. Run 'chatx ghcp login' to authenticate with GitHub Copilot.");
+        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
         var editorVersion = EnvironmentHelpers.FindEnvVar("COPILOT_EDITOR_VERSION") ?? "vscode/1.80.1";
 
-        var options = InitOpenAIClientOptions(endpoint, $"Bearer {githubToken}");
+        // Get the Copilot token using the GitHub token
+        var helper = new GitHubCopilotHelper();
+        var copilotToken = helper.GetCopilotTokenSync(githubToken);
+        
+        if (string.IsNullOrEmpty(copilotToken))
+        {
+            throw new InvalidOperationException("Failed to get a valid Copilot token from GitHub. Please run 'chatx ghcp login' to authenticate.");
+        }
+
+        var options = InitOpenAIClientOptions(endpoint, $"Bearer {copilotToken}");
 
         var integrationIdOk = !string.IsNullOrEmpty(integrationId);
         if (integrationIdOk) options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId!), PipelinePosition.BeforeTransport);
@@ -44,7 +53,7 @@ public static class ChatClientFactory
         var impersonateVsCodeEditor = !integrationIdOk;
         if (impersonateVsCodeEditor) options.AddPolicy(new CustomHeaderPolicy("Editor-Version", editorVersion), PipelinePosition.BeforeTransport);
 
-        ConsoleHelpers.WriteDebugLine("Using GitHub token for Copilot authentication");
+        ConsoleHelpers.WriteDebugLine("Using GitHub Copilot token for authentication");
         return new ChatClient(model, new ApiKeyCredential(" "), options);
     }
 

@@ -78,6 +78,16 @@ GitHub Copilot API can be accessed using two authentication methods:
 
 #### GitHub Token Authentication (Recommended)
 
+The easiest way to authenticate with GitHub Copilot is to use the built-in login command:
+
+```bash
+chatx ghcp login
+```
+
+This will guide you through the GitHub device flow authentication process and save the token to your `.chatx/config` file.
+
+Alternatively, you can manually set the following environment variables:
+
 ```bash
 # Windows
 set GITHUB_TOKEN=your_github_token_here
