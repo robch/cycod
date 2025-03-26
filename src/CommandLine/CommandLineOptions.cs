@@ -187,6 +187,7 @@ class CommandLineOptions
             var name2 = GetInputOptionArgs(i + 1, args, max: 1).FirstOrDefault();
             var commandName = name1 switch
             {
+                "version" => "version",
                 "help" => "help",
                 "chat" => "chat",
                 _ => $"{name1} {name2}".Trim()
@@ -194,8 +195,8 @@ class CommandLineOptions
 
             command = commandName switch
             {
-                "help" => new HelpCommand(),
                 "version" => new VersionCommand(),
+                "help" => new HelpCommand(),
                 _ => new ChatCommand()
             };
 
@@ -224,7 +225,6 @@ class CommandLineOptions
         }
         else if (arg == "--version")
         {
-            commandLineOptions.HelpTopic = "version";
             command = new VersionCommand();
             i = args.Count();
             parsedOption = true;
