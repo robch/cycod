@@ -18,17 +18,17 @@ public class FileHelpers
         return folder;
     }
 
-    public static string FindOrCreateDirectory(params string[] paths)
+    public static string FindOrCreateDirectorySearchParents(params string[] paths)
     {
-        return FindDirectory(paths, createIfNotFound: true)!;
+        return FindDirectorySearchParents(paths, createIfNotFound: true)!;
     }
 
-    public static string? FindDirectory(params string[] paths)
+    public static string? FindDirectorySearchParents(params string[] paths)
     {
-        return FindDirectory(paths, createIfNotFound: false);
+        return FindDirectorySearchParents(paths, createIfNotFound: false);
     }
 
-    public static string? FindDirectory(string[] paths, bool createIfNotFound)
+    public static string? FindDirectorySearchParents(string[] paths, bool createIfNotFound)
     {
         var current = Directory.GetCurrentDirectory();
         while (current != null)
@@ -47,6 +47,42 @@ public class FileHelpers
             current = Directory.GetCurrentDirectory();
             var combined = Path.Combine(paths.Prepend(current).ToArray());
             return EnsureDirectoryExists(combined);
+        }
+
+        return null;
+    }
+
+    public static string FindOrCreateFileSearchParents(params string[] paths)
+    {
+        return FindFileSearchParents(paths, createIfNotFound: true)!;
+    }
+
+    public static string? FindFileSearchParents(params string[] paths)
+    {
+        return FindFileSearchParents(paths, createIfNotFound: false);
+    }
+
+    public static string? FindFileSearchParents(string[] paths, bool createIfNotFound)
+    {
+        var current = Directory.GetCurrentDirectory();
+        while (current != null)
+        {
+            var combined = Path.Combine(paths.Prepend(current).ToArray());
+            if (File.Exists(combined))
+            {
+                return combined;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        if (createIfNotFound)
+        {
+            current = Directory.GetCurrentDirectory();
+            var combined = Path.Combine(paths.Prepend(current).ToArray());
+            EnsureDirectoryForFileExists(combined);
+            WriteAllText(combined, string.Empty);
+            return combined;
         }
 
         return null;

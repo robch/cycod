@@ -198,6 +198,12 @@ class CommandLineOptions
                 "help" => new HelpCommand(),
                 "version" => new VersionCommand(),
                 "ghcp login" => new GitHubCopilotLoginCommand(),
+                "config list" => new ConfigListCommand(),
+                "config get" => new ConfigGetCommand(),
+                "config set" => new ConfigSetCommand(),
+                "config clear" => new ConfigClearCommand(),
+                "config add" => new ConfigAddCommand(),
+                "config remove" => new ConfigRemoveCommand(),
                 _ => new ChatCommand()
             };
 
@@ -239,11 +245,55 @@ class CommandLineOptions
             commandLineOptions.HelpTopic = $"{commandLineOptions.HelpTopic} {arg}".Trim();
             parsedOption = true;
         }
-        // else if (command is ChatCommand chatCommand)
-        // {
-        //     // TODO: If there are "default" options, add them to the command here
-        //     parsedOption = true;
-        // }
+        else if (command is ConfigGetCommand configGetCommand && string.IsNullOrEmpty(configGetCommand.Key))
+        {
+            configGetCommand.Key = arg;
+            parsedOption = true;
+        }
+        else if (command is ConfigClearCommand configClearCommand && string.IsNullOrEmpty(configClearCommand.Key))
+        {
+            configClearCommand.Key = arg;
+            parsedOption = true;
+        }
+        else if (command is ConfigSetCommand configSetCommand)
+        {
+            if (string.IsNullOrEmpty(configSetCommand.Key))
+            {
+                configSetCommand.Key = arg;
+                parsedOption = true;
+            }
+            else if (string.IsNullOrEmpty(configSetCommand.Value))
+            {
+                configSetCommand.Value = arg;
+                parsedOption = true;
+            }
+        }
+        else if (command is ConfigAddCommand configAddCommand)
+        {
+            if (string.IsNullOrEmpty(configAddCommand.Key))
+            {
+                configAddCommand.Key = arg;
+                parsedOption = true;
+            }
+            else if (string.IsNullOrEmpty(configAddCommand.Value))
+            {
+                configAddCommand.Value = arg;
+                parsedOption = true;
+            }
+        }
+        else if (command is ConfigRemoveCommand configRemoveCommand)
+        {
+            if (string.IsNullOrEmpty(configRemoveCommand.Key))
+            {
+                configRemoveCommand.Key = arg;
+                parsedOption = true;
+            }
+            else if (string.IsNullOrEmpty(configRemoveCommand.Value))
+            {
+                configRemoveCommand.Value = arg;
+                parsedOption = true;
+            }
+        }
 
         return parsedOption;
     }
@@ -317,6 +367,39 @@ class CommandLineOptions
         if (versionCommand == null)
         {
             parsed = false;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseConfigCommandOptions(ConfigBaseCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--global" || arg == "-g")
+        {
+            command.Global = true;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.User = true;
+        }
+        else if (arg == "--yaml")
+        {
+            command.UseYaml = true;
+        }
+        else if (arg == "--ini")
+        {
+            command.UseYaml = false;
         }
         else
         {
@@ -540,8 +623,8 @@ class CommandLineOptions
     private static string? FindAliasDirectory(bool create = false)
     {
         return create
-            ? FileHelpers.FindOrCreateDirectory(".chatx", "aliases")
-            : FileHelpers.FindDirectory(".chatx", "aliases");
+            ? FileHelpers.FindOrCreateDirectorySearchParents(".chatx", "aliases")
+            : FileHelpers.FindDirectorySearchParents(".chatx", "aliases");
     }
 
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";

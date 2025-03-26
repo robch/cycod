@@ -161,48 +161,17 @@ public class GitHubCopilotHelper
     }
 
     /// <summary>
-    /// Saves the GitHub token to the .chatx/config file
+    /// Saves the GitHub token to the configuration
     /// </summary>
     public void SaveGitHubTokenToConfig(string token)
     {
-        var configDirectory = FindOrCreateConfigDirectory();
-        var configPath = Path.Combine(configDirectory, "config");
+        var configStore = ConfigStore.Instance;
+        configStore.Set("GitHub.Token", token, ConfigScope.User, true);
         
-        // Read the existing config if it exists
-        var configLines = File.Exists(configPath) 
-            ? File.ReadAllLines(configPath).ToList() 
-            : new List<string>();
-        
-        // Update or add the GITHUB_TOKEN entry
-        var tokenEntry = $"GITHUB_TOKEN={token}";
-        var existingTokenIndex = configLines.FindIndex(line => line.StartsWith("GITHUB_TOKEN="));
-        
-        if (existingTokenIndex >= 0)
-        {
-            configLines[existingTokenIndex] = tokenEntry;
-        }
-        else
-        {
-            configLines.Add(tokenEntry);
-        }
-        
-        // Write the updated config back to the file
-        File.WriteAllLines(configPath, configLines);
-        
-        ConsoleHelpers.WriteLine($"GitHub token saved to {configPath}", ConsoleColor.Green, overrideQuiet: true);
+        ConsoleHelpers.WriteLine("GitHub token saved to user configuration", ConsoleColor.Green, overrideQuiet: true);
     }
 
-    private string FindOrCreateConfigDirectory()
-    {
-        var configDirectory = Path.Combine(Directory.GetCurrentDirectory(), ".chatx");
-        
-        if (!Directory.Exists(configDirectory))
-        {
-            Directory.CreateDirectory(configDirectory);
-        }
-        
-        return configDirectory;
-    }
+
 
     // Response classes for JSON deserialization
     private class DeviceCodeResponse

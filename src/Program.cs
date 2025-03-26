@@ -82,6 +82,12 @@ public class Program
                 ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
                 VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
                 GitHubCopilotLoginCommand loginCommand => await loginCommand.ExecuteAsync(commandLineOptions.Interactive),
+                ConfigListCommand configListCommand => configListCommand.Execute(commandLineOptions.Interactive),
+                ConfigGetCommand configGetCommand => configGetCommand.Execute(commandLineOptions.Interactive),
+                ConfigSetCommand configSetCommand => configSetCommand.Execute(commandLineOptions.Interactive),
+                ConfigClearCommand configClearCommand => configClearCommand.Execute(commandLineOptions.Interactive),
+                ConfigAddCommand configAddCommand => configAddCommand.Execute(commandLineOptions.Interactive),
+                ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(commandLineOptions.Interactive),
                 _ => new List<Task<int>>()
             };
 
