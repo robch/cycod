@@ -69,10 +69,7 @@ public class ConfigStore
     {
         ConfigLocation.EnsureConfigDirectoryExists(scope);
         
-        string configPath = useYaml 
-            ? ConfigLocation.GetYamlConfigPath(scope) 
-            : ConfigLocation.GetIniConfigPath(scope);
-            
+        var configPath = ConfigLocation.GetConfigPath(scope);
         var configFile = ConfigFile.Create(configPath);
         configFile.Write(_configData[scope]);
     }
