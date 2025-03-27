@@ -5,11 +5,15 @@ Using CHATX, you can:
   - Interactively chat an with AI model
   - Programmatically chat with an AI model
   - Provide one or more inputs to the AI model
+  - Manage configuration settings with the 'config' commands
+  - Authenticate with GitHub Copilot using 'ghcp login'
   - Use built-in function tools to 
     - Read and write files
     - Execute shell commands/scripts
 
 USAGE: chatx [...]
+   OR: chatx config [COMMAND] [...]
+   OR: chatx ghcp login
 
 EXAMPLES
 
@@ -34,3 +38,5 @@ SEE ALSO
   chatx help
   chatx help examples
   chatx help options
+  chatx help config
+  chatx help ghcp login

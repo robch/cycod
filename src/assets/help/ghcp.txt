@@ -1,0 +1,14 @@
+CHATX GITHUB COPILOT COMMANDS
+
+  These commands allow you to integrate CHATX with GitHub Copilot.
+
+USAGE: chatx ghcp login
+
+COMMANDS
+
+  login           Authenticate with GitHub Copilot
+
+SEE ALSO
+
+  chatx help ghcp login
+  chatx help config
