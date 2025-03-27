@@ -193,6 +193,14 @@ class CommandLineOptions
                 _ => $"{name1} {name2}".Trim()
             };
 
+            var partialCommandNeedsHelp = commandName == "config" || commandName == "ghcp";
+            if (partialCommandNeedsHelp)
+            {
+                command = new HelpCommand();
+                commandLineOptions.HelpTopic = commandName;
+                return true;
+            }
+
             command = commandName switch
             {
                 "help" => new HelpCommand(),
