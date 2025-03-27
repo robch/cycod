@@ -1,0 +1,49 @@
+CHATX CONFIG COMMANDS
+
+  The 'config' commands allow you to manage CHATX configuration settings.
+  CHATX supports three configuration scopes:
+    - Global: Applied to all users on the computer
+    - User: Applied to current user across all folders
+    - Local: Applied only to the current directory
+
+  IMPORTANT: CHATX uses environment variable names as configuration keys.
+  Common configuration settings include:
+    - OPENAI_API_KEY          - API key for OpenAI
+    - OPENAI_CHAT_MODEL_NAME  - Model name for OpenAI (default: gpt-4o)
+    - AZURE_OPENAI_API_KEY    - API key for Azure OpenAI
+    - AZURE_OPENAI_ENDPOINT   - Endpoint URL for Azure OpenAI
+    - GITHUB_TOKEN            - Token for GitHub Copilot
+
+USAGE: chatx config list [--scope]
+   OR: chatx config get KEY [--scope]
+   OR: chatx config set KEY VALUE [--scope]
+   OR: chatx config clear KEY [--scope]
+   OR: chatx config add KEY VALUE [--scope]
+   OR: chatx config remove KEY VALUE [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include settings from all scopes (default for 'list' command)
+
+COMMANDS
+
+    list            List configuration settings
+    get             Get the value of a configuration setting
+    set             Set the value of a configuration setting
+    clear           Clear a configuration setting
+    add             Add a value to a list setting
+    remove          Remove a value from a list setting
+
+SEE ALSO
+
+  chatx help config list
+  chatx help config get
+  chatx help config set
+  chatx help config clear
+  chatx help config add
+  chatx help config remove

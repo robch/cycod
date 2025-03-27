@@ -121,24 +121,32 @@ public static class OpenAIChatHelpers
 
     private static ChatMessage? MessageFromJson(string line)
     {
-        var jsonObject = JsonDocument.Parse(line);
-        if (!jsonObject.RootElement.TryGetProperty("role", out var roleObj))
+        try
         {
+            var jsonObject = JsonDocument.Parse(line);
+            if (!jsonObject.RootElement.TryGetProperty("role", out var roleObj))
+            {
+                return null;
+            }
+
+            var role = roleObj.GetString();
+            var type = role?.ToLowerInvariant() switch
+            {
+                "user" => typeof(UserChatMessage),
+                "assistant" => typeof(AssistantChatMessage),
+                "function" => typeof(FunctionChatMessage),
+                "system" => typeof(SystemChatMessage),
+                "tool" => typeof(ToolChatMessage),
+                _ => throw new Exception($"Unknown chat role {role}")
+            };
+
+            return ModelReaderWriter.Read(BinaryData.FromString(line), type, ModelReaderWriterOptions.Json) as ChatMessage;
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Error reading chat message from json: {ex.Message}");
             return null;
         }
-
-        var role = roleObj.GetString();
-        var type = role?.ToLowerInvariant() switch
-        {
-            "user" => typeof(UserChatMessage),
-            "assistant" => typeof(AssistantChatMessage),
-            "function" => typeof(FunctionChatMessage),
-            "system" => typeof(SystemChatMessage),
-            "tool" => typeof(ToolChatMessage),
-            _ => throw new Exception($"Unknown chat role {role}")
-        };
-
-        return ModelReaderWriter.Read(BinaryData.FromString(line), type, ModelReaderWriterOptions.Json) as ChatMessage;
     }
 
     private const int ESTIMATED_BYTES_PER_TOKEN = 4; // This is an estimate, actual bytes per token may vary

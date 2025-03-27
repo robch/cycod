@@ -1,0 +1,37 @@
+CHATX CONFIG GET
+
+  Get the value of a configuration setting.
+
+USAGE: chatx config get KEY [--scope]
+
+ARGUMENTS
+
+  KEY              The name of the configuration setting to retrieve
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default)
+    --any, -a       Get from any scope (searches local, then user, then global)
+
+EXAMPLES
+
+  EXAMPLE 1: Get the OpenAI model name from local configuration
+
+    chatx config get OPENAI_CHAT_MODEL_NAME
+
+  EXAMPLE 2: Get the OpenAI API key from user configuration
+
+    chatx config get OPENAI_API_KEY --user
+
+  EXAMPLE 3: Get the Azure OpenAI deployment from any configuration scope
+
+    chatx config get AZURE_OPENAI_CHAT_DEPLOYMENT --any
+
+SEE ALSO
+
+  chatx help config
+  chatx help config list
