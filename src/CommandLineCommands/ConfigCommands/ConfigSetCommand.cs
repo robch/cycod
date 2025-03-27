@@ -1,33 +1,30 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using System.Linq;
 using System.Threading.Tasks;
 
-/// <summary>
-/// Implements the 'config set' command for setting configuration values.
-/// </summary>
 class ConfigSetCommand : ConfigBaseCommand
 {
     public string? Key { get; set; }
     public string? Value { get; set; }
 
-    /// <summary>
-    /// Gets the name of the command.
-    /// </summary>
     public override string GetCommandName()
     {
         return "config set";
     }
 
-    /// <summary>
-    /// Executes the command.
-    /// </summary>
-    /// <param name="interactive">Whether the command is run in interactive mode.</param>
-    /// <returns>A list of tasks representing the execution of the command.</returns>
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteSet(Key, Value, GetConfigScope())));
+        var scope = GetConfigScope();
+        
+        // Cannot set to 'Any' scope
+        if (scope == ConfigFileScope.Any)
+        {
+            throw new CommandLineException("Error: Cannot set configuration to 'Any' scope. Please specify --global, --user, or use local scope (default).");
+        }
+        
+        tasks.Add(Task.FromResult(ExecuteSet(Key, Value, scope)));
         return tasks;
     }
 
@@ -59,11 +56,7 @@ class ConfigSetCommand : ConfigBaseCommand
             }
             
             _configStore.Set(key, listValue, scope, true);
-
-            ConsoleHelpers.WriteLine(listValue.Count > 0
-                ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
-                : $"{key}: (empty list)",
-                overrideQuiet: true);
+            ConfigDisplayHelpers.DisplayList(key, listValue);
         }
         else
         {

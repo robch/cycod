@@ -18,15 +18,16 @@ public class ConfigStore
             { ConfigFileScope.Global, new Dictionary<string, object>() },
             { ConfigFileScope.User, new Dictionary<string, object>() },
             { ConfigFileScope.Local, new Dictionary<string, object>() }
+            // Note: ConfigFileScope.Any is not included as it's just a view
         };
     }
 
     public void LoadConfig()
     {
-        foreach (ConfigFileScope scope in Enum.GetValues(typeof(ConfigFileScope)))
-        {
-            LoadConfigFilesForScope(scope);
-        }
+        // Load each real scope (excluding Any which is just a view)
+        LoadConfigFilesForScope(ConfigFileScope.Global);
+        LoadConfigFilesForScope(ConfigFileScope.User);
+        LoadConfigFilesForScope(ConfigFileScope.Local);
         _isLoaded = true;
     }
  
@@ -219,6 +220,13 @@ public class ConfigStore
     {
         EnsureLoaded();
         var result = new Dictionary<string, ConfigValue>();
+        
+        // If Any scope is requested, return the merged result from all scopes
+        if (scope == ConfigFileScope.Any)
+        {
+            return ListAll();
+        }
+        
         AddFlattenedValuesToResult(_scopeToSettings[scope], result, scope);
         return result;
     }
@@ -316,6 +324,12 @@ public class ConfigStore
 
     private void LoadConfigFilesForScope(ConfigFileScope scope)
     {
+        // Any scope is just a view, not a real scope with files
+        if (scope == ConfigFileScope.Any)
+        {
+            return;
+        }
+        
         var configPath = ConfigFileHelpers.FindConfigFile(scope);
         if (configPath == null)
         {

@@ -388,11 +388,19 @@ class CommandLineOptions
 
         if (arg == "--global" || arg == "-g")
         {
-            command.Global = true;
+            command.Scope = ConfigFileScope.Global;
         }
         else if (arg == "--user" || arg == "-u")
         {
-            command.User = true;
+            command.Scope = ConfigFileScope.User;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Scope = ConfigFileScope.Local;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Scope = ConfigFileScope.Any;
         }
         else
         {
