@@ -52,7 +52,10 @@ public static class ConfigDisplayHelpers
         }
         
         // Default: display as simple key-value
-        ConsoleHelpers.WriteLine($"{indent}{key}: {value.Value}", overrideQuiet: true);
+        ConsoleHelpers.WriteLine(!value.IsNullOrEmpty()
+            ? $"{indent}{key}: {value.Value}"
+            : $"{indent}{key}: (not found)",
+            overrideQuiet: true);
     }
     
     public static void DisplayList(string key, List<string> list, int indentLevel = 2)

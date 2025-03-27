@@ -26,24 +26,9 @@ class ConfigGetCommand : ConfigBaseCommand
             throw new CommandLineException("Error: No key specified.");
         }
 
-        ConfigValue value;
-        
-        if (scope == ConfigFileScope.Any)
-        {
-            // When using Any scope, get from the highest priority scope
-            value = _configStore.GetFromAnyScope(key);
-        }
-        else
-        {
-            // When using a specific scope, get only from that scope
-            value = _configStore.GetFromScope(key, scope);
-        }
-
-        if (value.IsNullOrEmpty())
-        {
-            throw new CommandLineException($"Error: No value found for key '{key}'" + 
-                (scope != ConfigFileScope.Any ? $" in {scope} scope." : "."));
-        }
+        var value = scope == ConfigFileScope.Any
+            ? _configStore.GetFromAnyScope(key)
+            : _configStore.GetFromScope(key, scope);
 
         ConfigDisplayHelpers.DisplayConfigValue(key, value);
         return 0;
