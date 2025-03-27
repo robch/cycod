@@ -8,33 +8,23 @@ using System.Text;
 /// </summary>
 public class IniConfigFile : ConfigFile
 {
-    /// <summary>
-    /// Initializes a new instance of the IniConfigFile class.
-    /// </summary>
-    /// <param name="filePath">The path to the INI configuration file.</param>
     public IniConfigFile(string filePath) : base(filePath)
     {
     }
 
-    /// <summary>
-    /// Reads the configuration from the INI file.
-    /// </summary>
-    /// <returns>A dictionary containing the configuration data.</returns>
     public override Dictionary<string, object> Read()
     {
         var result = new Dictionary<string, object>();
 
-        if (!Exists())
-        {
-            return result;
-        }
+        var exists = FileHelpers.FileExists(FilePath);
+        if (!exists) return result;
 
         try
         {
-            string[] lines = File.ReadAllLines(FilePath);
-            foreach (string line in lines)
+            var lines = File.ReadAllLines(FilePath);
+            foreach (var line in lines)
             {
-                string trimmedLine = line.Trim();
+                var trimmedLine = line.Trim();
                 
                 // Skip empty lines and comments
                 if (string.IsNullOrWhiteSpace(trimmedLine) || trimmedLine.StartsWith("#") || trimmedLine.StartsWith(";"))
@@ -46,11 +36,11 @@ public class IniConfigFile : ConfigFile
                 int equalsPos = trimmedLine.IndexOf('=');
                 if (equalsPos > 0)
                 {
-                    string key = trimmedLine.Substring(0, equalsPos).Trim();
-                    string value = trimmedLine.Substring(equalsPos + 1).Trim();
+                    var key = trimmedLine.Substring(0, equalsPos).Trim();
+                    var value = trimmedLine.Substring(equalsPos + 1).Trim();
 
                     // Convert from flat format to hierarchical format
-                    string dotNotationKey = ConfigPathHelpers.FromEnvVar(key);
+                    var dotNotationKey = ConfigPathHelpers.FromEnvVar(key);
                     SetNestedValue(result, dotNotationKey.Split('.'), value);
                 }
             }
@@ -63,27 +53,21 @@ public class IniConfigFile : ConfigFile
         return result;
     }
 
-    /// <summary>
-    /// Writes the configuration to the INI file.
-    /// </summary>
-    /// <param name="data">The configuration data to write.</param>
     public override void Write(Dictionary<string, object> data)
     {
         try
         {
-            EnsureDirectoryExists();
-
             var flatData = FlattenDictionary(data);
             var lines = new StringBuilder();
 
             foreach (var pair in flatData)
             {
-                string key = ConfigPathHelpers.ToEnvVar(pair.Key);
-                string value = pair.Value?.ToString() ?? string.Empty;
+                var key = ConfigPathHelpers.ToEnvVar(pair.Key);
+                var value = pair.Value?.ToString() ?? string.Empty;
                 lines.AppendLine($"{key}={value}");
             }
 
-            File.WriteAllText(FilePath, lines.ToString());
+            FileHelpers.WriteAllText(FilePath, lines.ToString());
         }
         catch (Exception ex)
         {
@@ -91,12 +75,6 @@ public class IniConfigFile : ConfigFile
         }
     }
 
-    /// <summary>
-    /// Sets a nested value in a dictionary structure.
-    /// </summary>
-    /// <param name="data">The root dictionary.</param>
-    /// <param name="keyParts">The key parts representing the path to the value.</param>
-    /// <param name="value">The value to set.</param>
     private void SetNestedValue(Dictionary<string, object> data, string[] keyParts, object value)
     {
         if (keyParts.Length == 1)
@@ -123,19 +101,13 @@ public class IniConfigFile : ConfigFile
         }
     }
 
-    /// <summary>
-    /// Flattens a hierarchical dictionary to a flat dictionary with dot notation keys.
-    /// </summary>
-    /// <param name="data">The hierarchical dictionary to flatten.</param>
-    /// <param name="prefix">The prefix to use for the flattened keys.</param>
-    /// <returns>A flat dictionary.</returns>
     private Dictionary<string, object> FlattenDictionary(Dictionary<string, object> data, string prefix = "")
     {
         var result = new Dictionary<string, object>();
 
         foreach (var pair in data)
         {
-            string key = string.IsNullOrEmpty(prefix) ? pair.Key : $"{prefix}.{pair.Key}";
+            var key = string.IsNullOrEmpty(prefix) ? pair.Key : $"{prefix}.{pair.Key}";
 
             if (pair.Value is Dictionary<string, object> nestedDict)
             {

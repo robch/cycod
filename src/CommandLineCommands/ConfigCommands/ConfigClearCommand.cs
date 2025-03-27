@@ -29,7 +29,7 @@ class ConfigClearCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteClear(string? key, ConfigScope scope)
+    private int ExecuteClear(string? key, ConfigFileScope scope)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -37,14 +37,10 @@ class ConfigClearCommand : ConfigBaseCommand
         }
 
         bool cleared = _configStore.Clear(key, scope, true);
-        if (cleared)
-        {
-            Console.WriteLine($"Cleared '{key}' from {scope} configuration.");
-        }
-        else
-        {
-            Console.Error.WriteLine($"Key '{key}' not found in {scope} configuration.");
-        }
+        ConsoleHelpers.WriteLine(cleared
+            ? $"{key}: (cleared)"
+            : $"{key}: (not found)",
+            overrideQuiet: true);
 
         return 0;
     }

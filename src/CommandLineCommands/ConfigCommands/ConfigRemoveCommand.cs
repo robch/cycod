@@ -30,7 +30,7 @@ class ConfigRemoveCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteRemove(string? key, string? value, ConfigScope scope)
+    private int ExecuteRemove(string? key, string? value, ConfigFileScope scope)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -42,15 +42,13 @@ class ConfigRemoveCommand : ConfigBaseCommand
             throw new CommandLineException($"Error: No value specified.");
         }
 
-        bool removed = _configStore.RemoveFromList(key, value, scope, true);
-        if (removed)
-        {
-            Console.WriteLine($"Removed '{value}' from '{key}' in {scope} configuration.");
-        }
-        else
-        {
-            Console.Error.WriteLine($"Value '{value}' not found in '{key}' in {scope} configuration.");
-        }
+        _configStore.RemoveFromList(key, value, scope, true);
+
+        var listValue = _configStore.GetFromScope(key, scope).AsList();
+        ConsoleHelpers.WriteLine(listValue.Count > 0
+            ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
+            : $"{key}: (empty list)",
+            overrideQuiet: true);
 
         return 0;
     }

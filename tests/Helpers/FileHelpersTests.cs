@@ -143,24 +143,6 @@ public class FileHelpersTests
 
     #endregion
 
-    #region MakeRelativePath Tests
-
-    [TestMethod]
-    public void MakeRelativePath_PathInsideCurrentDirectory_ReturnsRelativePath()
-    {
-        // This test needs to be aware of the current directory
-        string currentDir = Directory.GetCurrentDirectory();
-        string fullPath = Path.Combine(currentDir, "subfolder", "file.txt");
-        
-        // Act
-        string result = FileHelpers.MakeRelativePath(fullPath);
-        
-        // Assert
-        Assert.AreEqual(Path.Combine("subfolder", "file.txt"), result);
-    }
-
-    #endregion
-
     #region Utility Method Tests
 
     [TestMethod]

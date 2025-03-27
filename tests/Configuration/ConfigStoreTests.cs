@@ -43,8 +43,8 @@ namespace ChatX.Tests.Configuration
         public void SetAndGetValue_ProjectScope_Success()
         {
             // Act
-            _configStore!.Set("OpenAI.ChatModelName", "gpt-4o", ConfigScope.Project);
-            var value = _configStore.Get("OpenAI.ChatModelName");
+            _configStore!.Set("OpenAI.ChatModelName", "gpt-4o", ConfigFileScope.Local);
+            var value = _configStore.GetFromAnyScope("OpenAI.ChatModelName");
 
             // Assert
             Assert.AreEqual("gpt-4o", value.AsString());
@@ -54,17 +54,17 @@ namespace ChatX.Tests.Configuration
         public void SetAndGetValue_DifferentScopes_ReturnsHighestPriorityValue()
         {
             // Arrange
-            _configStore!.Set("OpenAI.ApiKey", "global-key", ConfigScope.Global);
-            _configStore.Set("OpenAI.ApiKey", "user-key", ConfigScope.User);
-            _configStore.Set("OpenAI.ApiKey", "project-key", ConfigScope.Project);
+            _configStore!.Set("OpenAI.ApiKey", "global-key", ConfigFileScope.Global);
+            _configStore.Set("OpenAI.ApiKey", "user-key", ConfigFileScope.User);
+            _configStore.Set("OpenAI.ApiKey", "project-key", ConfigFileScope.Local);
 
             // Act - Get from specific scopes
-            var globalValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigScope.Global);
-            var userValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigScope.User);
-            var projectValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigScope.Project);
+            var globalValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigFileScope.Global);
+            var userValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigFileScope.User);
+            var projectValue = _configStore.GetFromScope("OpenAI.ApiKey", ConfigFileScope.Local);
             
             // Act - Get automatically (should return highest priority)
-            var highestPriorityValue = _configStore.Get("OpenAI.ApiKey");
+            var highestPriorityValue = _configStore.GetFromAnyScope("OpenAI.ApiKey");
 
             // Assert
             Assert.AreEqual("global-key", globalValue.AsString());
@@ -77,7 +77,7 @@ namespace ChatX.Tests.Configuration
         public void GetValue_EnvironmentVarOverride_ReturnsEnvVar()
         {
             // Arrange
-            _configStore!.Set("Azure.OpenAI.ApiKey", "config-value", ConfigScope.User);
+            _configStore!.Set("Azure.OpenAI.ApiKey", "config-value", ConfigFileScope.User);
             
             // Make sure the environment variable is set
             Environment.SetEnvironmentVariable("AZURE_OPENAI_API_KEY", "env-value");
@@ -90,7 +90,7 @@ namespace ChatX.Tests.Configuration
             Console.WriteLine($"Environment variable key: {envVarKey}");
             
             // Act
-            var value = _configStore.Get("Azure.OpenAI.ApiKey");
+            var value = _configStore.GetFromAnyScope("Azure.OpenAI.ApiKey");
             Console.WriteLine($"Value from ConfigStore.Get(): {value.AsString()}");
 
             // Assert
@@ -101,10 +101,10 @@ namespace ChatX.Tests.Configuration
         public void AddToList_Success()
         {
             // Act
-            _configStore!.AddToList("AllowedTools", "Tool1", ConfigScope.User);
-            _configStore.AddToList("AllowedTools", "Tool2", ConfigScope.User);
+            _configStore!.AddToList("AllowedTools", "Tool1", ConfigFileScope.User);
+            _configStore.AddToList("AllowedTools", "Tool2", ConfigFileScope.User);
             
-            var value = _configStore.Get("AllowedTools");
+            var value = _configStore.GetFromAnyScope("AllowedTools");
             var list = value.AsList();
 
             // Assert
@@ -117,12 +117,12 @@ namespace ChatX.Tests.Configuration
         public void RemoveFromList_Success()
         {
             // Arrange
-            _configStore!.AddToList("AllowedTools", "Tool1", ConfigScope.User);
-            _configStore.AddToList("AllowedTools", "Tool2", ConfigScope.User);
+            _configStore!.AddToList("AllowedTools", "Tool1", ConfigFileScope.User);
+            _configStore.AddToList("AllowedTools", "Tool2", ConfigFileScope.User);
             
             // Act
-            _configStore.RemoveFromList("AllowedTools", "Tool1", ConfigScope.User);
-            var value = _configStore.Get("AllowedTools");
+            _configStore.RemoveFromList("AllowedTools", "Tool1", ConfigFileScope.User);
+            var value = _configStore.GetFromAnyScope("AllowedTools");
             var list = value.AsList();
 
             // Assert
@@ -135,11 +135,11 @@ namespace ChatX.Tests.Configuration
         public void Clear_Success()
         {
             // Arrange
-            _configStore!.Set("OpenAI.ChatModelName", "gpt-4o", ConfigScope.User);
+            _configStore!.Set("OpenAI.ChatModelName", "gpt-4o", ConfigFileScope.User);
             
             // Act
-            bool result = _configStore.Clear("OpenAI.ChatModelName", ConfigScope.User);
-            var value = _configStore.GetFromScope("OpenAI.ChatModelName", ConfigScope.User);
+            bool result = _configStore.Clear("OpenAI.ChatModelName", ConfigFileScope.User);
+            var value = _configStore.GetFromScope("OpenAI.ChatModelName", ConfigFileScope.User);
 
             // Assert
             Assert.IsTrue(result);

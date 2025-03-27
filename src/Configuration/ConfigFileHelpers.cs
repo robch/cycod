@@ -4,26 +4,26 @@ using System.IO;
 /// <summary>
 /// Provides methods for determining configuration file locations.
 /// </summary>
-public static class ConfigLocation
+public static class ConfigFileHelpers
 {
-    public static string GetConfigPath(ConfigScope scope)
+    public static string GetConfigFileName(ConfigFileScope scope)
     {
-        var path = GetExistingConfigPath(scope);
+        var path = FindConfigFile(scope);
         if (path != null) return path;
 
-        return GetYamlConfigPath(scope);
+        return GetYamlConfigFileName(scope);
     }
 
-    public static string? GetExistingConfigPath(ConfigScope scope)
+    public static string? FindConfigFile(ConfigFileScope scope)
     {
-        string yamlPath = GetYamlConfigPath(scope);
+        var yamlPath = GetYamlConfigFileName(scope);
         if (File.Exists(yamlPath))
         {
             ConsoleHelpers.WriteDebugLine($"Found YAML config file at: {yamlPath}");
             return yamlPath;
         }
 
-        string iniPath = GetIniConfigPath(scope);
+        var iniPath = GetIniConfigFileName(scope);
         if (File.Exists(iniPath))
         {
             ConsoleHelpers.WriteDebugLine($"Found YAML config file at: {yamlPath}");
@@ -33,32 +33,23 @@ public static class ConfigLocation
         return null;
     }
 
-    public static void EnsureConfigDirectoryExists(ConfigScope scope)
-    {
-        string directory = GetScopeDirectory(scope);
-        if (!Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-    }
-
-    private static string GetYamlConfigPath(ConfigScope scope)
+    private static string GetYamlConfigFileName(ConfigFileScope scope)
     {
         return Path.Combine(GetScopeDirectory(scope), YAML_CONFIG_NAME);
     }
 
-    private static string GetIniConfigPath(ConfigScope scope)
+    private static string GetIniConfigFileName(ConfigFileScope scope)
     {
         return Path.Combine(GetScopeDirectory(scope), INI_CONFIG_NAME);
     }
 
-    private static string GetScopeDirectory(ConfigScope scope)
+    private static string GetScopeDirectory(ConfigFileScope scope)
     {
         var directory = scope switch
         {
-            ConfigScope.Global => GetGlobalScopeDirectory(),
-            ConfigScope.User => GetUserScopeDirectory(),
-            ConfigScope.Project => GetProjectScopeDirectory(),
+            ConfigFileScope.Global => GetGlobalScopeDirectory(),
+            ConfigFileScope.User => GetUserScopeDirectory(),
+            ConfigFileScope.Local => GetLocalScopeDirectory(),
             _ => throw new ArgumentOutOfRangeException(nameof(scope))
         };
 
@@ -66,7 +57,7 @@ public static class ConfigLocation
         return directory;
     }
 
-   private static string GetGlobalScopeDirectory()
+    private static string GetGlobalScopeDirectory()
     {
         var isLinuxOrMac = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
         var parent = isLinuxOrMac ? $"/etc" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
@@ -79,7 +70,7 @@ public static class ConfigLocation
         return Path.Combine(parent, CONFIG_DIR_NAME);
     }
 
-    private static string GetProjectScopeDirectory()
+    private static string GetLocalScopeDirectory()
     {
         var existingYamlFile = FileHelpers.FindFileSearchParents(CONFIG_DIR_NAME, YAML_CONFIG_NAME);
         if (existingYamlFile != null) return Path.GetDirectoryName(existingYamlFile)!;

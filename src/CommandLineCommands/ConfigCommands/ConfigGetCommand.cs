@@ -29,15 +29,15 @@ class ConfigGetCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteGet(string? key, ConfigScope scope)
+    private int ExecuteGet(string? key, ConfigFileScope scope)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new CommandLineException("Error: No key specified.");
         }
 
-        var value = scope == ConfigScope.Project
-            ? _configStore.Get(key) // Get from the highest priority scope
+        var value = scope == ConfigFileScope.Local
+            ? _configStore.GetFromAnyScope(key) // Get from the highest priority scope
             : _configStore.GetFromScope(key, scope); // Get from the specified scope
 
         if (value.IsNullOrEmpty())
@@ -45,13 +45,16 @@ class ConfigGetCommand : ConfigBaseCommand
             throw new CommandLineException($"Error: No value found for key '{key}' in {scope} scope.");
         }
 
-        if (value.RawValue is List<string> listValue)
+        if (value.Value is List<string> listValue)
         {
-            Console.WriteLine($"[{string.Join(", ", listValue)}]");
+            ConsoleHelpers.WriteLine(listValue.Count > 0
+                ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
+                : $"{key}: (empty list)",
+                overrideQuiet: true);
         }
         else
         {
-            Console.WriteLine(value);
+            ConsoleHelpers.WriteLine($"{key}: {value.Value}", overrideQuiet: true);
         }
 
         return 0;

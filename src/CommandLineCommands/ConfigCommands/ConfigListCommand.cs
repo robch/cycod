@@ -27,11 +27,11 @@ class ConfigListCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteList(ConfigScope scope)
+    private int ExecuteList(ConfigFileScope scope)
     {
         Dictionary<string, ConfigValue> config;
         
-        if (scope == ConfigScope.Project)
+        if (scope == ConfigFileScope.Local)
         {
             // When listing with no scope flag, show merged configuration
             Console.WriteLine("Listing all configuration settings (merged from all scopes):");
@@ -57,13 +57,16 @@ class ConfigListCommand : ConfigBaseCommand
         foreach (var key in sortedKeys)
         {
             var value = config[key];
-            if (value.RawValue is List<string> listValue)
+            if (value.Value is List<string> listValue)
             {
-                Console.WriteLine($"{key} = [{string.Join(", ", listValue)}]");
+                ConsoleHelpers.WriteLine(listValue.Count > 0
+                    ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
+                    : $"{key}: (empty list)",
+                    overrideQuiet: true);
             }
             else
             {
-                Console.WriteLine($"{key} = {value}");
+                ConsoleHelpers.WriteLine($"{key}: {value.Value}", overrideQuiet: true);
             }
         }
 

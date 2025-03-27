@@ -166,7 +166,7 @@ public class GitHubCopilotHelper
     public void SaveGitHubTokenToConfig(string token)
     {
         var configStore = ConfigStore.Instance;
-        configStore.Set("GitHub.Token", token, ConfigScope.User, true);
+        configStore.Set("GitHub.Token", token, ConfigFileScope.User, true);
         
         ConsoleHelpers.WriteLine("GitHub token saved to user configuration", ConsoleColor.Green, overrideQuiet: true);
     }

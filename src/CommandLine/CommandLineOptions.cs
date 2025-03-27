@@ -219,6 +219,7 @@ class CommandLineOptions
         var parsedOption = TryParseGlobalCommandLineOptions(commandLineOptions, args, ref i, arg) ||
             TryParseHelpCommandOptions(commandLineOptions, command as HelpCommand, args, ref i, arg) ||
             TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
+            TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
             TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg);
         if (parsedOption) return true;
@@ -392,14 +393,6 @@ class CommandLineOptions
         else if (arg == "--user" || arg == "-u")
         {
             command.User = true;
-        }
-        else if (arg == "--yaml")
-        {
-            command.UseYaml = true;
-        }
-        else if (arg == "--ini")
-        {
-            command.UseYaml = false;
         }
         else
         {
@@ -623,8 +616,8 @@ class CommandLineOptions
     private static string? FindAliasDirectory(bool create = false)
     {
         return create
-            ? FileHelpers.FindOrCreateDirectorySearchParents(".chatx", "aliases")
-            : FileHelpers.FindDirectorySearchParents(".chatx", "aliases");
+            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "aliases")
+            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "aliases");
     }
 
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";

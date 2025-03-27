@@ -8,14 +8,14 @@ public static class HMACHelper
     public static string Encode(string key)
     {
         // Get current Unix timestamp
-        long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        string data = unixTime.ToString();
+        var unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var data = unixTime.ToString();
 
         byte[] keyBytes = Encoding.ASCII.GetBytes(key);
         using (var hmac = new HMACSHA256(keyBytes))
         {
-            byte[] hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(data));
-            string hashHex = BitConverter.ToString(hash).Replace("-", "").ToUpperInvariant();
+            var hash = hmac.ComputeHash(Encoding.ASCII.GetBytes(data));
+            var hashHex = BitConverter.ToString(hash).Replace("-", "").ToUpperInvariant();
             return $"{unixTime}.{hashHex}";
         }
     }

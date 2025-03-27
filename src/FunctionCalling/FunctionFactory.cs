@@ -85,7 +85,7 @@ public class FunctionFactory
             var funcDescriptionAttrib = attributes[0] as HelperFunctionDescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
-            string json = GetMethodParametersJsonSchema(method);
+            var json = GetMethodParametersJsonSchema(method);
             _functions.TryAdd(method, (ChatTool.CreateFunctionTool(method.Name, funcDescription, new BinaryData(json)), instance));
         }
     }

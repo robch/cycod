@@ -7,56 +7,6 @@ using System.Text.RegularExpressions;
 
 public class FileHelpers
 {
-    public static string EnsureDirectoryExists(string folder)
-    {
-        var validFolderName = !string.IsNullOrEmpty(folder);
-        if (validFolderName && !Directory.Exists(folder))
-        {
-            Directory.CreateDirectory(folder!);
-        }
-
-        return folder;
-    }
-
-    public static string FindOrCreateDirectorySearchParents(params string[] paths)
-    {
-        return FindDirectorySearchParents(paths, createIfNotFound: true)!;
-    }
-
-    public static string? FindDirectorySearchParents(params string[] paths)
-    {
-        return FindDirectorySearchParents(paths, createIfNotFound: false);
-    }
-
-    public static string? FindDirectorySearchParents(string[] paths, bool createIfNotFound)
-    {
-        var current = Directory.GetCurrentDirectory();
-        while (current != null)
-        {
-            var combined = Path.Combine(paths.Prepend(current).ToArray());
-            if (Directory.Exists(combined))
-            {
-                return combined;
-            }
-
-            current = Directory.GetParent(current)?.FullName;
-        }
-
-        if (createIfNotFound)
-        {
-            current = Directory.GetCurrentDirectory();
-            var combined = Path.Combine(paths.Prepend(current).ToArray());
-            return EnsureDirectoryExists(combined);
-        }
-
-        return null;
-    }
-
-    public static string FindOrCreateFileSearchParents(params string[] paths)
-    {
-        return FindFileSearchParents(paths, createIfNotFound: true)!;
-    }
-
     public static string? FindFileSearchParents(params string[] paths)
     {
         return FindFileSearchParents(paths, createIfNotFound: false);
@@ -80,7 +30,7 @@ public class FileHelpers
         {
             current = Directory.GetCurrentDirectory();
             var combined = Path.Combine(paths.Prepend(current).ToArray());
-            EnsureDirectoryForFileExists(combined);
+            DirectoryHelpers.EnsureDirectoryForFileExists(combined);
             WriteAllText(combined, string.Empty);
             return combined;
         }
@@ -88,9 +38,9 @@ public class FileHelpers
         return null;
     }
 
-    public static void EnsureDirectoryForFileExists(string fileName)
+    public static bool FileExists(string? fileName)
     {
-        EnsureDirectoryExists(Path.GetDirectoryName(fileName) ?? ".");
+        return !string.IsNullOrEmpty(fileName) && (File.Exists(fileName) || fileName == "-");
     }
 
     public static bool IsFileMatch(string fileName, List<Regex> includeFileContainsPatternList, List<Regex> excludeFileContainsPatternList)
@@ -148,34 +98,6 @@ public class FileHelpers
             .Trim(' ', '/', '\\');
     }
 
-    public static string MakeRelativePath(string fullPath)
-    {
-        var currentDirectory = Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
-        fullPath = Path.GetFullPath(fullPath);
-
-        if (fullPath.StartsWith(currentDirectory, StringComparison.OrdinalIgnoreCase))
-        {
-            return fullPath.Substring(currentDirectory.Length);
-        }
-
-        Uri fullPathUri = new Uri(fullPath);
-        Uri currentDirectoryUri = new Uri(currentDirectory);
-
-        string relativePath = Uri.UnescapeDataString(currentDirectoryUri.MakeRelativeUri(fullPathUri).ToString().Replace('/', Path.DirectorySeparatorChar));
-
-        if (Path.DirectorySeparatorChar == '\\')
-        {
-            relativePath = relativePath.Replace('/', Path.DirectorySeparatorChar);
-        }
-
-        return relativePath;
-    }
-
-    public static bool FileExists(string? fileName)
-    {
-        return !string.IsNullOrEmpty(fileName) && (File.Exists(fileName) || fileName == "-");
-    }
-
     public static string ReadAllText(string fileName)
     {
         var content = ConsoleHelpers.IsStandardInputReference(fileName)
@@ -187,13 +109,13 @@ public class FileHelpers
 
     public static void WriteAllText(string fileName, string content)
     {
-        EnsureDirectoryForFileExists(fileName);
+        DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
         File.WriteAllText(fileName, content, Encoding.UTF8);
     }
 
     public static void AppendAllText(string fileName, string trajectoryContent)
     {
-        EnsureDirectoryForFileExists(fileName);
+        DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
         File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
     }
 

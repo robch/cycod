@@ -85,7 +85,7 @@ public class StrReplaceEditorHelperFunctions
         {
             return $"Path {path} already exists; cannot create file.";
         }
-        FileHelpers.EnsureDirectoryForFileExists(path);
+        DirectoryHelpers.EnsureDirectoryForFileExists(path);
         File.WriteAllText(path, fileText);
         return $"Created file {path} with {fileText.Length} characters.";
     }

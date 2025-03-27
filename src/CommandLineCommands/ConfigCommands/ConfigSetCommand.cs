@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -30,7 +31,7 @@ class ConfigSetCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteSet(string? key, string? value, ConfigScope scope)
+    private int ExecuteSet(string? key, string? value, ConfigFileScope scope)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -45,25 +46,29 @@ class ConfigSetCommand : ConfigBaseCommand
         // Try to parse as a list if the value is enclosed in brackets
         if (value.StartsWith("[") && value.EndsWith("]"))
         {
-            string listContent = value.Substring(1, value.Length - 2);
-            List<string> listValue = new List<string>();
+            var listContent = value.Substring(1, value.Length - 2);
+            var listValue = new List<string>();
             
             if (!string.IsNullOrWhiteSpace(listContent))
             {
-                string[] items = listContent.Split(',');
-                foreach (string item in items)
+                var items = listContent.Split(',');
+                foreach (var item in items)
                 {
                     listValue.Add(item.Trim());
                 }
             }
             
             _configStore.Set(key, listValue, scope, true);
-            Console.WriteLine($"Set list value for '{key}' in {scope} configuration.");
+
+            ConsoleHelpers.WriteLine(listValue.Count > 0
+                ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
+                : $"{key}: (empty list)",
+                overrideQuiet: true);
         }
         else
         {
             _configStore.Set(key, value, scope, true);
-            Console.WriteLine($"Set '{key}' to '{value}' in {scope} configuration.");
+            ConsoleHelpers.WriteLine($"{key}: {value}", overrideQuiet: true);
         }
 
         return 0;

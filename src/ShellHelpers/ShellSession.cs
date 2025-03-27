@@ -86,7 +86,7 @@ public abstract class ShellSession
             _mergedBuffer.Clear();
         }
 
-        string wrappedCommand = WrapCommand(command);
+        var wrappedCommand = WrapCommand(command);
         _process!.StandardInput.WriteLine(wrappedCommand);
         _process.StandardInput.Flush();
 
@@ -104,7 +104,7 @@ public abstract class ShellSession
         }
 
         // Extract the part containing the marker and exit code.
-        string markerOutput = stdout.Substring(markerIndex).Trim();
+        var markerOutput = stdout.Substring(markerIndex).Trim();
         int exitCode = ParseExitCode(markerOutput);
 
         // Everything before the marker is command output.

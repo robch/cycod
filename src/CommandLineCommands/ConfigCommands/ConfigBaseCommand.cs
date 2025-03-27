@@ -9,7 +9,6 @@ abstract class ConfigBaseCommand : Command
     
     public bool Global { get; set; }
     public bool User { get; set; }
-    public bool UseYaml { get; set; } = true;
 
     /// <summary>
     /// Initializes a new instance of the ConfigBaseCommand class.
@@ -28,17 +27,17 @@ abstract class ConfigBaseCommand : Command
     /// Determines the configuration scope based on command options.
     /// </summary>
     /// <returns>The selected configuration scope.</returns>
-    protected ConfigScope GetConfigScope()
+    protected ConfigFileScope GetConfigScope()
     {
         if (Global)
         {
-            return ConfigScope.Global;
+            return ConfigFileScope.Global;
         }
         else if (User)
         {
-            return ConfigScope.User;
+            return ConfigFileScope.User;
         }
-        return ConfigScope.Project;
+        return ConfigFileScope.Local;
     }
 
     /// <summary>

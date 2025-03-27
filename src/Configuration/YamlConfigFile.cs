@@ -4,29 +4,16 @@ using System.IO;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-/// <summary>
-/// Handles reading and writing YAML configuration files.
-/// </summary>
 public class YamlConfigFile : ConfigFile
 {
-    /// <summary>
-    /// Initializes a new instance of the YamlConfigFile class.
-    /// </summary>
-    /// <param name="filePath">The path to the YAML configuration file.</param>
     public YamlConfigFile(string filePath) : base(filePath)
     {
     }
 
-    /// <summary>
-    /// Reads the configuration from the YAML file.
-    /// </summary>
-    /// <returns>A dictionary containing the configuration data.</returns>
     public override Dictionary<string, object> Read()
     {
-        if (!Exists())
-        {
-            return new Dictionary<string, object>();
-        }
+        var exists = FileHelpers.FileExists(FilePath);
+        if (!exists) return new Dictionary<string, object>();
 
         try
         {
@@ -34,10 +21,9 @@ public class YamlConfigFile : ConfigFile
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
 
-            string yamlContent = File.ReadAllText(FilePath);
+            var yamlContent = FileHelpers.ReadAllText(FilePath);
             var result = deserializer.Deserialize<Dictionary<string, object>>(yamlContent) ?? new Dictionary<string, object>();
             
-            // Convert nested dictionaries to proper format (YamlDotNet gives us Dictionary<object, object>)
             return NormalizeNestedDictionaries(result);
         }
         catch (Exception ex)
@@ -47,22 +33,16 @@ public class YamlConfigFile : ConfigFile
         }
     }
 
-    /// <summary>
-    /// Writes the configuration to the YAML file.
-    /// </summary>
-    /// <param name="data">The configuration data to write.</param>
     public override void Write(Dictionary<string, object> data)
     {
         try
         {
-            EnsureDirectoryExists();
-
             var serializer = new SerializerBuilder()
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
 
-            string yamlContent = serializer.Serialize(data);
-            File.WriteAllText(FilePath, yamlContent);
+            var yamlContent = serializer.Serialize(data);
+            FileHelpers.WriteAllText(FilePath, yamlContent);
         }
         catch (Exception ex)
         {
@@ -70,11 +50,6 @@ public class YamlConfigFile : ConfigFile
         }
     }
 
-    /// <summary>
-    /// Normalizes nested dictionaries to ensure consistent type usage.
-    /// </summary>
-    /// <param name="data">The dictionary to normalize.</param>
-    /// <returns>A normalized dictionary.</returns>
     private Dictionary<string, object> NormalizeNestedDictionaries(Dictionary<string, object> data)
     {
         var result = new Dictionary<string, object>();
@@ -110,11 +85,6 @@ public class YamlConfigFile : ConfigFile
         return result;
     }
 
-    /// <summary>
-    /// Converts a Dictionary<object, object> to Dictionary<string, object>.
-    /// </summary>
-    /// <param name="dict">The dictionary to convert.</param>
-    /// <returns>A converted dictionary.</returns>
     private Dictionary<string, object> ConvertToStringDictionary(Dictionary<object, object> dict)
     {
         var result = new Dictionary<string, object>();

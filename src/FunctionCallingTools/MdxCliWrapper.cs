@@ -87,7 +87,7 @@ public class MdxCliWrapper
                 cts.Cancel(); // Cancel the timeout task
                 process.WaitForExit();
                 
-                string output = mergedBuffer.ToString().TrimEnd();
+                var output = mergedBuffer.ToString().TrimEnd();
                 if (process.ExitCode != 0)
                 {
                     output += Environment.NewLine + $"<mdx command exited with code {process.ExitCode}>";
@@ -115,7 +115,7 @@ public class MdxCliWrapper
         int? contextLines = null,
         string? processingInstructions = null)
     {
-        string arguments = BuildSearchCodebaseArguments(
+        var arguments = BuildSearchCodebaseArguments(
             filePatterns, 
             contentPattern, 
             excludePatterns, 
@@ -192,7 +192,7 @@ public class MdxCliWrapper
         int maxFiles = 10,
         string? processingInstructions = null)
     {
-        string arguments = BuildFindFilesContainingPatternArguments(
+        var arguments = BuildFindFilesContainingPatternArguments(
             filePatterns, 
             contentPattern, 
             excludePatterns,
@@ -234,12 +234,12 @@ public class MdxCliWrapper
         sb.Append($"--file-contains {EscapeArgument(contentPattern)} ");
         
         // Add max files limit using custom instructions
-        string limitInstruction = maxFiles > 0 
+        var limitInstruction = maxFiles > 0 
             ? $"Limit to the first {maxFiles} files. " 
             : "";
         
         // Combine with any user-provided processing instructions
-        string combinedInstructions = !string.IsNullOrEmpty(processingInstructions)
+        var combinedInstructions = !string.IsNullOrEmpty(processingInstructions)
             ? limitInstruction + processingInstructions
             : limitInstruction + "Format as markdown with file names as headers.";
             
@@ -263,7 +263,7 @@ public class MdxCliWrapper
         string? formattingInstructions = null,
         bool showLineNumbers = false)
     {
-        string arguments = BuildConvertFilesToMarkdownArguments(
+        var arguments = BuildConvertFilesToMarkdownArguments(
             filePaths, 
             formattingInstructions, 
             showLineNumbers);
@@ -317,7 +317,7 @@ public class MdxCliWrapper
         bool stripHtml = true,
         string? processingInstructions = null)
     {
-        string arguments = BuildResearchWebTopicArguments(
+        var arguments = BuildResearchWebTopicArguments(
             searchQuery, 
             includePageContent, 
             maxResults, 
@@ -383,7 +383,7 @@ public class MdxCliWrapper
         string? pageProcessingInstructions = null,
         string? finalProcessingInstructions = null)
     {
-        string arguments = BuildExtractContentFromWebPagesArguments(
+        var arguments = BuildExtractContentFromWebPagesArguments(
             urls, 
             stripHtml, 
             pageProcessingInstructions, 
@@ -445,7 +445,7 @@ public class MdxCliWrapper
         string shell = "cmd",
         string? processingInstructions = null)
     {
-        string arguments = BuildRunCommandsAndFormatOutputArguments(
+        var arguments = BuildRunCommandsAndFormatOutputArguments(
             commands, 
             shell, 
             processingInstructions);

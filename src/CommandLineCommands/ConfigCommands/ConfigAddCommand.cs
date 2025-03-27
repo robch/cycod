@@ -30,7 +30,7 @@ class ConfigAddCommand : ConfigBaseCommand
         return tasks;
     }
 
-    private int ExecuteAdd(string? key, string? value, ConfigScope scope)
+    private int ExecuteAdd(string? key, string? value, ConfigFileScope scope)
     {
         if (string.IsNullOrWhiteSpace(key))
         {
@@ -42,15 +42,13 @@ class ConfigAddCommand : ConfigBaseCommand
             throw new CommandLineException($"Error: No value specified.");
         }
 
-        bool added = _configStore.AddToList(key, value, scope, true);
-        if (added)
-        {
-            Console.WriteLine($"Added '{value}' to '{key}' in {scope} configuration.");
-        }
-        else
-        {
-            Console.WriteLine($"Value '{value}' already exists in '{key}' in {scope} configuration.");
-        }
+        _configStore.AddToList(key, value, scope, true);
+
+        var listValue = _configStore.GetFromScope(key, scope).AsList();
+        ConsoleHelpers.WriteLine(listValue.Count > 0
+            ? $"{key}:\n" + $"- {string.Join("\n- ", listValue)}"
+            : $"{key}: (empty list)",
+            overrideQuiet: true);
 
         return 0;
     }
