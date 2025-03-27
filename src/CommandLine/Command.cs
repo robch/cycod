@@ -4,7 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-abstract class Command
+abstract public class Command
 {
     public Command()
     {

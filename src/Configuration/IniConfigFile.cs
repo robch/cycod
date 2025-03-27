@@ -8,20 +8,20 @@ using System.Text;
 /// </summary>
 public class IniConfigFile : ConfigFile
 {
-    public IniConfigFile(string filePath) : base(filePath)
+    public IniConfigFile(string filePath, ConfigFileScope scope) : base(filePath, scope)
     {
     }
 
-    public override Dictionary<string, object> Read()
+    protected override Dictionary<string, object> ReadSettings(string fileName)
     {
         var result = new Dictionary<string, object>();
 
-        var exists = FileHelpers.FileExists(FilePath);
+        var exists = FileHelpers.FileExists(fileName);
         if (!exists) return result;
 
         try
         {
-            var lines = File.ReadAllLines(FilePath);
+            var lines = File.ReadAllLines(fileName);
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
@@ -40,7 +40,7 @@ public class IniConfigFile : ConfigFile
                     var value = trimmedLine.Substring(equalsPos + 1).Trim();
 
                     // Convert from flat format to hierarchical format
-                    var dotNotationKey = ConfigPathHelpers.FromEnvVar(key);
+                    var dotNotationKey = KnownSettings.ToDotNotation(key);
                     SetNestedValue(result, dotNotationKey.Split('.'), value);
                 }
             }
@@ -53,21 +53,21 @@ public class IniConfigFile : ConfigFile
         return result;
     }
 
-    public override void Write(Dictionary<string, object> data)
+    protected override void WriteSettings(string fileName, Dictionary<string, object>? settings = null)
     {
         try
         {
-            var flatData = FlattenDictionary(data);
+            var flatData = FlattenDictionary(Settings);
             var lines = new StringBuilder();
 
             foreach (var pair in flatData)
             {
-                var key = ConfigPathHelpers.ToEnvVar(pair.Key);
+                var key = KnownSettings.ToEnvironmentVariable(pair.Key);
                 var value = pair.Value?.ToString() ?? string.Empty;
                 lines.AppendLine($"{key}={value}");
             }
 
-            FileHelpers.WriteAllText(FilePath, lines.ToString());
+            FileHelpers.WriteAllText(fileName, lines.ToString());
         }
         catch (Exception ex)
         {

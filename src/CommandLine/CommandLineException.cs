@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-internal class CommandLineException : Exception
+public class CommandLineException : Exception
 {
     public CommandLineException() : base()
     {

@@ -4,28 +4,57 @@ using System.IO;
 
 public abstract class ConfigFile
 {
-    protected ConfigFile(string filePath)
+    public static ConfigFile FromFile(string filePath, ConfigFileScope scope)
     {
-        FilePath = filePath;
-    }
-
-    public abstract Dictionary<string, object> Read();
-
-    public abstract void Write(Dictionary<string, object> data);
-
-    public static ConfigFile FromFile(string filePath)
-    {
-        if (string.IsNullOrEmpty(filePath))
-        {
-            throw new ArgumentNullException(nameof(filePath));
-        }
-
         return Path.GetExtension(filePath).ToLowerInvariant() switch
         {
-            ".yaml" or ".yml" => new YamlConfigFile(filePath),
-            _ => new IniConfigFile(filePath)
+            ".yaml" or ".yml" => new YamlConfigFile(filePath, scope),
+            _ => new IniConfigFile(filePath, scope)
         };
     }
 
-    protected readonly string FilePath;
+    public string FileName { get => _fileName; }
+    public ConfigFileScope Scope { get => _scope; }
+
+    public Dictionary<string, object> Settings
+    {
+        get
+        {
+            EnsureLoaded();
+            return _settings!;
+        }
+
+        protected set
+        {
+            _settings = value;
+        }
+    }
+
+    public void Save()
+    {
+        EnsureLoaded();
+        WriteSettings(_fileName);
+    }
+
+    protected ConfigFile(string fileName, ConfigFileScope scope = ConfigFileScope.FileName)
+    {
+        _fileName = fileName;
+        _scope = scope;
+    }
+
+    protected abstract Dictionary<string, object> ReadSettings(string fileName);
+
+    protected abstract void WriteSettings(string fileName, Dictionary<string, object>? settings = null);
+
+    protected void EnsureLoaded()
+    {
+        if (_settings == null)
+        {
+            _settings = ReadSettings(_fileName);
+        }
+    }
+
+    private readonly string _fileName;
+    private readonly ConfigFileScope _scope;
+    private Dictionary<string, object>? _settings;
 }

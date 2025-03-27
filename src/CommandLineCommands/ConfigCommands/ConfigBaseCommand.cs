@@ -5,6 +5,7 @@ abstract class ConfigBaseCommand : Command
     protected readonly ConfigStore _configStore;
     
     public ConfigFileScope? Scope { get; set; }
+    public string? ConfigFileName { get; internal set; }
 
     public ConfigBaseCommand()
     {
@@ -13,13 +14,11 @@ abstract class ConfigBaseCommand : Command
 
     protected ConfigFileScope GetConfigScope()
     {
-        // If a scope was explicitly set via command line, use it
-        if (Scope.HasValue)
+        if (Scope.HasValue) 
         {
             return Scope.Value;
         }
-        
-        // Default to Any for config list, Local for other commands
+
         if (this is ConfigListCommand)
         {
             return ConfigFileScope.Any;

@@ -84,9 +84,9 @@ namespace ChatX.Tests.Configuration
             Console.WriteLine($"Environment variable AZURE_OPENAI_API_KEY value: {Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY")}");
             
             // Test direct environment variable conversion
-            string normalizedKey = ConfigPathHelpers.Normalize("Azure.OpenAI.ApiKey");
-            string envVarKey = ConfigPathHelpers.ToEnvVar(normalizedKey);
-            Console.WriteLine($"Normalized key: {normalizedKey}");
+            string dotNotationKey = KnownSettings.ToDotNotation("Azure.OpenAI.ApiKey");
+            string envVarKey = KnownSettings.ToEnvironmentVariable(dotNotationKey);
+            Console.WriteLine($"Normalized key: {dotNotationKey}");
             Console.WriteLine($"Environment variable key: {envVarKey}");
             
             // Act

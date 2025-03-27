@@ -19,37 +19,75 @@ class ConfigListCommand : ConfigBaseCommand
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteList(GetConfigScope())));
+        var scope = GetConfigScope();
+        tasks.Add(Task.FromResult(scope == ConfigFileScope.FileName
+            ? ExecuteList(this.ConfigFileName!)
+            : ExecuteList(scope)));
         return tasks;
+    }
+
+    private int ExecuteList(string configFileName)
+    {
+        DisplayConfigSettings(configFileName);
+        return 0;
     }
 
     private int ExecuteList(ConfigFileScope scope)
     {
-        if (scope != ConfigFileScope.Any)
+        var isAnyScope = scope == ConfigFileScope.Any;
+        
+        if (isAnyScope || scope == ConfigFileScope.Global)
         {
-            Console.WriteLine($"LOCATION: {ConfigFileHelpers.GetLocationDisplayName(scope)}\n");
-            var config = _configStore.ListScope(scope);
-            ConfigDisplayHelpers.DisplayConfigSettings(config);
-            return 0;
+            DisplayConfigSettings(ConfigFileScope.Global);
+            if (isAnyScope) Console.WriteLine();
+        }
+
+        if (isAnyScope || scope == ConfigFileScope.User)
+        {
+            DisplayConfigSettings(ConfigFileScope.User);
+            if (isAnyScope) Console.WriteLine();
         }
         
-        // Global scope
-        Console.WriteLine($"LOCATION: {ConfigFileHelpers.GetLocationDisplayName(ConfigFileScope.Global)}\n");
-        var globalConfig = _configStore.ListScope(ConfigFileScope.Global);
-        ConfigDisplayHelpers.DisplayConfigSettings(globalConfig);
-        Console.WriteLine();
-        
-        // User scope
-        Console.WriteLine($"LOCATION: {ConfigFileHelpers.GetLocationDisplayName(ConfigFileScope.User)}\n");
-        var userConfig = _configStore.ListScope(ConfigFileScope.User);
-        ConfigDisplayHelpers.DisplayConfigSettings(userConfig);
-        Console.WriteLine();
-        
-        // Local scope
-        Console.WriteLine($"LOCATION: {ConfigFileHelpers.GetLocationDisplayName(ConfigFileScope.Local)}\n");
-        var localConfig = _configStore.ListScope(ConfigFileScope.Local);
-        ConfigDisplayHelpers.DisplayConfigSettings(localConfig);
+        if (isAnyScope || scope == ConfigFileScope.User)
+        {
+            DisplayConfigSettings(ConfigFileScope.Local);
+            if (isAnyScope) Console.WriteLine();
+        }
+
+        if (isAnyScope || scope == ConfigFileScope.FileName)
+        {
+            var fileNameToConfigValues = _configStore.ListFileNameScopeValues();
+            foreach (var kvp in fileNameToConfigValues)
+            {
+                var location = $"{kvp.Key} (specified)";
+                ConfigDisplayHelpers.DisplayConfigSettings(location, kvp.Value);
+                Console.WriteLine();
+            }
+        }
+
+        if (isAnyScope)
+        {
+            var commandLineValues = _configStore.ListFromCommandLineSettings();
+            if (commandLineValues.Count > 0)
+            {
+                var location = "Command line (specified)";
+                ConfigDisplayHelpers.DisplayConfigSettings(location, commandLineValues);
+                Console.WriteLine();
+            }
+        }
         
         return 0;
+    }
+
+    private void DisplayConfigSettings(string fileName)
+    {
+        var location = $"{fileName} (specified)";
+        ConfigDisplayHelpers.DisplayConfigSettings(location, _configStore.ListValuesFromFile(fileName));
+    }
+
+    private void DisplayConfigSettings(ConfigFileScope scope)
+    {
+        var location = ConfigFileHelpers.GetLocationDisplayName(scope);
+        ConfigDisplayHelpers.DisplayConfigSettings(location, _configStore.ListValuesFromKnownScope(scope));
     }
 }

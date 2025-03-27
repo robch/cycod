@@ -7,18 +7,67 @@ public class ConfigValue
     public ConfigValue()
     {
         _value = null;
+        Source = ConfigSource.NotFound;
+        IsSecret = false;
     }
 
     public ConfigValue(object? value)
     {
         _value = value;
+        Source = ConfigSource.Default;
+        IsSecret = false;
+    }
+    
+    public ConfigValue(object? value, ConfigSource source)
+    {
+        _value = value;
+        Source = source;
+        IsSecret = false;
+    }
+    
+    public ConfigValue(object? value, ConfigSource source, bool isSecret)
+    {
+        _value = value;
+        Source = source;
+        IsSecret = isSecret;
     }
 
     public object? Value => _value;
+    
+    /// <summary>
+    /// Gets the source of this configuration value.
+    /// </summary>
+    public ConfigSource Source { get; }
+    
+    /// <summary>
+    /// Gets whether this value should be treated as a secret.
+    /// </summary>
+    public bool IsSecret { get; }
 
     public string? AsString()
     {
         return _value?.ToString();
+    }
+    
+    /// <summary>
+    /// Returns an obfuscated version of the value if it's a secret.
+    /// </summary>
+    /// <returns>The obfuscated value if it's a secret, otherwise the normal string representation.</returns>
+    public string? AsObfuscated()
+    {
+        if (!IsSecret || _value == null)
+        {
+            return AsString();
+        }
+        
+        string valueStr = _value.ToString() ?? string.Empty;
+        if (valueStr.Length <= 4)
+        {
+            return "****";
+        }
+        
+        // Show first 2 and last 2 characters, obfuscate the rest
+        return valueStr.Substring(0, 2) + new string('*', valueStr.Length - 4) + valueStr.Substring(valueStr.Length - 2);
     }
 
     public int AsInt(int defaultValue = 0)

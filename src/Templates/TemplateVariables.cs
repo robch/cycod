@@ -24,7 +24,7 @@ public class TemplateVariables : INamedValues
     {
         _variables = new Dictionary<string, string>(variables, StringComparer.OrdinalIgnoreCase);
     }
-
+    
     /// <summary>
     /// Gets a value by name, or an empty string if not found
     /// </summary>
@@ -36,6 +36,13 @@ public class TemplateVariables : INamedValues
         if (_variables.TryGetValue(name, out var value))
         {
             return value;
+        }
+        
+        // Then check configuration
+        var configValue = ConfigStore.Instance.GetFromAnyScope(name);
+        if (configValue != null)
+        {
+            return configValue!.AsString();
         }
         
         // Then check environment variables
@@ -78,7 +85,7 @@ public class TemplateVariables : INamedValues
         
         return null;
     }
-
+    
     /// <summary>
     /// Sets a value by name
     /// </summary>
@@ -96,6 +103,8 @@ public class TemplateVariables : INamedValues
     /// <returns>True if the value exists, false otherwise</returns>
     public bool Contains(string name)
     {
-        return _variables.ContainsKey(name);
+        return _variables.ContainsKey(name) || 
+               ConfigStore.Instance.GetFromAnyScope(name) != null ||
+               Environment.GetEnvironmentVariable(name) != null;
     }
 }

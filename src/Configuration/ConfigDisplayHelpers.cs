@@ -4,8 +4,13 @@ using System.Linq;
 
 public static class ConfigDisplayHelpers
 {
-    public static void DisplayConfigSettings(Dictionary<string, ConfigValue> config, int indentLevel = 2)
+    public static void DisplayConfigSettings(string? location, Dictionary<string, ConfigValue> config, int indentLevel = 2)
     {
+        if (location != null)
+        {
+            Console.WriteLine($"LOCATION: {location}\n");
+        }
+
         if (config.Count == 0)
         {
             Console.WriteLine($"{new string(' ', indentLevel)}No configuration settings found.");
@@ -51,11 +56,14 @@ public static class ConfigDisplayHelpers
             return;
         }
         
-        // Default: display as simple key-value
-        ConsoleHelpers.WriteLine(!value.IsNullOrEmpty()
-            ? $"{indent}{key}: {value.Value}"
-            : $"{indent}{key}: (not found)",
-            overrideQuiet: true);
+        // Get value to display, obfuscating if it's a secret
+        string displayValue = value.IsSecret
+            ? value.AsObfuscated() ?? "(empty)"
+            : !value.IsNullOrEmpty()
+                ? value.Value?.ToString() ?? "(null)"
+                : "(not found)";
+                            
+        ConsoleHelpers.WriteLine($"{indent}{key}: {displayValue}", overrideQuiet: true);
     }
     
     public static void DisplayList(string key, List<string> list, int indentLevel = 2)
@@ -76,7 +84,7 @@ public static class ConfigDisplayHelpers
             ConsoleHelpers.WriteLine($"{keyIndent}{key}: (empty list)", overrideQuiet: true);
         }
     }
-
+    
     private static List<string> SortKeysWithNonDottedFirst(IEnumerable<string> keys)
     {
         // Split keys into two groups: non-dotted and dotted

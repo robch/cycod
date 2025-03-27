@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-class CommandLineOptions
+public class CommandLineOptions
 {
     public CommandLineOptions()
     {
@@ -38,7 +38,7 @@ class CommandLineOptions
 
     public string[] AllOptions;
     public string? SaveAliasName;
-
+    
     public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
     {
         options = null;
@@ -164,6 +164,34 @@ class CommandLineOptions
         return commandLineOptions;
     }
 
+    private static bool TryParseKnownSettingOption(string[] args, ref int i, string arg)
+    {
+        // Check if this is a known setting CLI option
+        if (KnownSettingsCLIParser.TryParseCLIOption(arg, out string? settingName, out string? value))
+        {
+            // If value is in the same arg (e.g. --setting=value)
+            if (value != null)
+            {
+                // Add to configuration store
+                ConfigStore.Instance.SetFromCommandLine(settingName!, value);
+                ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {value}");
+                return true;
+            }
+            
+            // Otherwise, the value should be the next argument
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var settingValue = max1Arg.FirstOrDefault() ?? throw new CommandLineException($"Missing value for {arg}");
+            
+            // Add to configuration store
+            ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
+            ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");
+            i += max1Arg.Count();
+            return true;
+        }
+        
+        return false;
+    }
+
     private static bool TryParseInputOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string arg)
     {
         var isEndOfCommand = arg == "--" && command != null && !command.IsEmpty();
@@ -229,7 +257,8 @@ class CommandLineOptions
             TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
             TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
             TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
-            TryParseSharedCommandOptions(command, args, ref i, arg);
+            TryParseSharedCommandOptions(command, args, ref i, arg) ||
+            TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
 
         if (arg == "--help")
@@ -341,6 +370,12 @@ class CommandLineOptions
             commandLineOptions.SaveAliasName = aliasName;
             i += max1Arg.Count();
         }
+        else if (arg == "--config")
+        {
+            var configFiles = GetInputOptionArgs(i + 1, args);
+            ConfigStore.Instance.LoadConfigFiles(ValidateFilesExist(configFiles));
+            i += configFiles.Count();
+        }
         else
         {
             parsed = false;
@@ -394,7 +429,16 @@ class CommandLineOptions
 
         bool parsed = true;
 
-        if (arg == "--global" || arg == "-g")
+        if (arg == "--file")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var configPath = ValidateOkFileName(max1Arg.FirstOrDefault());
+            ConfigStore.Instance.LoadConfigFile(configPath);
+            command.ConfigFileName = configPath;
+            command.Scope = ConfigFileScope.FileName;
+            i += max1Arg.Count();
+        }
+        else if (arg == "--global" || arg == "-g")
         {
             command.Scope = ConfigFileScope.Global;
         }
@@ -431,6 +475,7 @@ class CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var assignment = ValidateAssignment(arg, max1Arg.FirstOrDefault());
             command.Variables[assignment.Item1] = assignment.Item2;
+            ConfigStore.Instance.SetFromCommandLine($"Var.{assignment.Item1}", assignment.Item2);
             i += max1Arg.Count();
         }
         else if (arg == "--use-templates")
@@ -590,6 +635,35 @@ class CommandLineOptions
         }
 
         return (parts[0], parts[1]);
+    }
+
+    private static string ValidateOkFileName(string? arg)
+    {
+        if (string.IsNullOrEmpty(arg))
+        {
+            throw new CommandLineException("Missing file name");
+        }
+
+        return arg;
+    }
+
+    private static IEnumerable<string> ValidateFilesExist(IEnumerable<string> args)
+    {
+        args = args.ToList();
+        foreach (var arg in args)
+        {
+            if (string.IsNullOrEmpty(arg))
+            {
+                throw new CommandLineException("Missing file name");
+            }
+
+            if (!File.Exists(arg))
+            {
+                throw new CommandLineException($"File does not exist: {arg}");
+            }
+        }
+
+        return args;
     }
 
     private static string? ValidateFileExists(string? arg)

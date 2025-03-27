@@ -6,13 +6,13 @@ using YamlDotNet.Serialization.NamingConventions;
 
 public class YamlConfigFile : ConfigFile
 {
-    public YamlConfigFile(string filePath) : base(filePath)
+    public YamlConfigFile(string filePath, ConfigFileScope scope) : base(filePath, scope)
     {
     }
 
-    public override Dictionary<string, object> Read()
+    protected override Dictionary<string, object> ReadSettings(string fileName)
     {
-        var exists = FileHelpers.FileExists(FilePath);
+        var exists = FileHelpers.FileExists(fileName);
         if (!exists) return new Dictionary<string, object>();
 
         try
@@ -21,7 +21,7 @@ public class YamlConfigFile : ConfigFile
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
 
-            var yamlContent = FileHelpers.ReadAllText(FilePath);
+            var yamlContent = FileHelpers.ReadAllText(fileName);
             var result = deserializer.Deserialize<Dictionary<string, object>>(yamlContent) ?? new Dictionary<string, object>();
             
             return NormalizeNestedDictionaries(result);
@@ -33,7 +33,7 @@ public class YamlConfigFile : ConfigFile
         }
     }
 
-    public override void Write(Dictionary<string, object> data)
+    protected override void WriteSettings(string fileName, Dictionary<string, object>? settings = null)
     {
         try
         {
@@ -41,8 +41,8 @@ public class YamlConfigFile : ConfigFile
                 .WithNamingConvention(PascalCaseNamingConvention.Instance)
                 .Build();
 
-            var yamlContent = serializer.Serialize(data);
-            FileHelpers.WriteAllText(FilePath, yamlContent);
+            var yamlContent = serializer.Serialize(Settings);
+            FileHelpers.WriteAllText(fileName, yamlContent);
         }
         catch (Exception ex)
         {

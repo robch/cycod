@@ -6,7 +6,7 @@ using System.IO;
 /// </summary>
 public static class ConfigFileHelpers
 {
-    public static string GetConfigFileName(ConfigFileScope scope)
+    public static string? GetConfigFileName(ConfigFileScope scope)
     {
         var path = FindConfigFile(scope);
         if (path != null) return path;
@@ -33,68 +33,47 @@ public static class ConfigFileHelpers
         return null;
     }
     
-    public static string GetScopeDirectoryPath(ConfigFileScope scope)
+    public static string? GetScopeDirectoryPath(ConfigFileScope scope)
     {
-        // Any scope doesn't have a directory, it's a special case for display/query only
-        if (scope == ConfigFileScope.Any)
-        {
-            throw new ArgumentOutOfRangeException(nameof(scope), 
-                "Any scope is not valid for file operations. Use Global, User, or Local scope.");
-        }
-        
         return scope switch
         {
             ConfigFileScope.Global => GetGlobalScopeDirectory(),
             ConfigFileScope.User => GetUserScopeDirectory(),
             ConfigFileScope.Local => GetLocalScopeDirectory(),
-            _ => throw new ArgumentOutOfRangeException(nameof(scope))
+            _ => null
         };
     }
     
-    public static string GetLocationDisplayName(ConfigFileScope scope)
+    public static string? GetLocationDisplayName(ConfigFileScope scope)
     {
-        if (scope == ConfigFileScope.Any)
-        {
-            return "Multiple locations";
-        }
-        
         var configPath = FindConfigFile(scope);
-        
-        // If config file exists, use its path
         if (configPath != null)
         {
             return $"{configPath} ({scope.ToString().ToLower()})";
         }
         
-        // Otherwise use the directory path with the default filename
         var directory = GetScopeDirectoryPath(scope);
-        var defaultPath = Path.Combine(directory, YAML_CONFIG_NAME);
+        var badDirectory = string.IsNullOrEmpty(directory);
+        if (badDirectory) return null;
+
+        var defaultPath = Path.Combine(directory!, YAML_CONFIG_NAME);
         return $"{defaultPath} ({scope.ToString().ToLower()})";
     }
-
-    private static string GetYamlConfigFileName(ConfigFileScope scope)
+    
+    private static string? GetYamlConfigFileName(ConfigFileScope scope)
     {
-        return Path.Combine(GetScopeDirectoryPath(scope), YAML_CONFIG_NAME);
+        var path = GetScopeDirectoryPath(scope);
+        return path != null
+            ? Path.Combine(path, YAML_CONFIG_NAME)
+            : null;
     }
 
-    private static string GetIniConfigFileName(ConfigFileScope scope)
+    private static string? GetIniConfigFileName(ConfigFileScope scope)
     {
-        return Path.Combine(GetScopeDirectoryPath(scope), INI_CONFIG_NAME);
-    }
-
-    private static string GetScopeDirectory(ConfigFileScope scope)
-    {
-        // Any scope doesn't have a directory, it's a special case for display/query only
-        if (scope == ConfigFileScope.Any)
-        {
-            throw new ArgumentOutOfRangeException(nameof(scope), 
-                "Any scope is not valid for file operations. Use Global, User, or Local scope.");
-        }
-        
-        var directory = GetScopeDirectoryPath(scope);
-
-        ConsoleHelpers.WriteDebugLine($"Config directory for {scope} scope: {directory}");
-        return directory;
+        var path = GetScopeDirectoryPath(scope);
+        return path != null
+            ? Path.Combine(path, INI_CONFIG_NAME)
+            : null;
     }
 
     private static string GetGlobalScopeDirectory()

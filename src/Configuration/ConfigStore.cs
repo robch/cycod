@@ -12,53 +12,98 @@ public class ConfigStore
 
     protected ConfigStore()
     {
-        _isLoaded = false;
-        _scopeToSettings = new Dictionary<ConfigFileScope, Dictionary<string, object>>
+        _loadedKnownConfigFiles = false;
+        _commandLineSettings = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public void LoadConfigFile(string fileName)
+    {
+        EnsureLoaded();
+
+        var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        _configFiles.Add(configFile);
+    }
+
+    public void LoadConfigFiles(IEnumerable<string> fileNames)
+    {
+        EnsureLoaded();
+
+        foreach (var fileName in fileNames)
         {
-            { ConfigFileScope.Global, new Dictionary<string, object>() },
-            { ConfigFileScope.User, new Dictionary<string, object>() },
-            { ConfigFileScope.Local, new Dictionary<string, object>() }
-            // Note: ConfigFileScope.Any is not included as it's just a view
-        };
-    }
-
-    public void LoadConfig()
-    {
-        // Load each real scope (excluding Any which is just a view)
-        LoadConfigFilesForScope(ConfigFileScope.Global);
-        LoadConfigFilesForScope(ConfigFileScope.User);
-        LoadConfigFilesForScope(ConfigFileScope.Local);
-        _isLoaded = true;
-    }
- 
-    public void SaveConfig(ConfigFileScope scope)
-    {
-        var fileName = ConfigFileHelpers.GetConfigFileName(scope);
-        DirectoryHelpers.EnsureDirectoryForFileExists(fileName!);
-
-        var configFile = ConfigFile.FromFile(fileName);
-        configFile.Write(_scopeToSettings[scope]);
+            var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+            _configFiles.Add(configFile);
+        }
     }
 
     public ConfigValue GetFromAnyScope(string key)
     {
         EnsureLoaded();
 
-        // First, try environment variable (highest priority)
-        if (TryGetFromEnv(key, out var configValue)) return configValue!;
+        var dotNotationKey = KnownSettings.ToDotNotation(key);
+        bool isSecret = KnownSettings.IsSecret(dotNotationKey);
 
-        // Second, try environment again, but with normalized key
-        var normalizedKey = ConfigPathHelpers.Normalize(key);
-        var envVarKey = ConfigPathHelpers.ToEnvVar(normalizedKey);
-        if (TryGetFromEnv(envVarKey, out configValue)) return configValue!;
-
-        // Then search in order: Project -> User -> Global
-        foreach (ConfigFileScope scope in new[] { ConfigFileScope.Local, ConfigFileScope.User, ConfigFileScope.Global })
+        // 1. First, check command line settings (highest priority)
+        if (_commandLineSettings.TryGetValue(dotNotationKey, out var cmdLineValue))
         {
-            var value = GetFromScope(normalizedKey, scope);
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in command line settings");
+            return new ConfigValue(cmdLineValue, ConfigSource.CommandLine, isSecret);
+        }
+
+        // 2. Try environment variable 
+        var envVarKey = KnownSettings.ToEnvironmentVariable(dotNotationKey);
+        if (TryGetFromEnv(envVarKey, out var configValue))
+        {
+            return configValue!;
+        }
+
+        // 3. Then search the config files in order of priority (Local, User, Global)
+        // Check Local (project-specific) scope first - highest priority
+        var localConfigFile = _configFiles.FirstOrDefault(c => c.Scope == ConfigFileScope.Local);
+        if (localConfigFile != null)
+        {
+            var value = GetFromConfig(dotNotationKey, localConfigFile);
             if (!value.IsNullOrEmpty())
             {
-                return value;
+                var source = ConfigSourceFromScope(localConfigFile.Scope);
+                return new ConfigValue(value.Value, source, isSecret);
+            }
+        }
+        
+        // Check User scope next
+        var userConfigFile = _configFiles.FirstOrDefault(c => c.Scope == ConfigFileScope.User);
+        if (userConfigFile != null)
+        {
+            var value = GetFromConfig(dotNotationKey, userConfigFile);
+            if (!value.IsNullOrEmpty())
+            {
+                var source = ConfigSourceFromScope(userConfigFile.Scope);
+                return new ConfigValue(value.Value, source, isSecret);
+            }
+        }
+        
+        // Check Global scope last - lowest priority
+        var globalConfigFile = _configFiles.FirstOrDefault(c => c.Scope == ConfigFileScope.Global);
+        if (globalConfigFile != null)
+        {
+            var value = GetFromConfig(dotNotationKey, globalConfigFile);
+            if (!value.IsNullOrEmpty())
+            {
+                var source = ConfigSourceFromScope(globalConfigFile.Scope);
+                return new ConfigValue(value.Value, source, isSecret);
+            }
+        }
+        
+        // Check any other file scopes (e.g., FileName)
+        foreach (var configFile in _configFiles.Where(c => 
+            c.Scope != ConfigFileScope.Local && 
+            c.Scope != ConfigFileScope.User && 
+            c.Scope != ConfigFileScope.Global))
+        {
+            var value = GetFromConfig(dotNotationKey, configFile);
+            if (!value.IsNullOrEmpty())
+            {
+                var source = ConfigSourceFromScope(configFile.Scope);
+                return new ConfigValue(value.Value, source, isSecret);
             }
         }
 
@@ -68,20 +113,27 @@ public class ConfigStore
 
     public ConfigValue GetFromScope(string key, ConfigFileScope scope)
     {
+        var configFile = ConfigFileFromScope(scope);
+        return GetFromConfig(key, configFile);
+    }
+
+    public ConfigValue GetFromConfig(string key, ConfigFile configFile)
+    {
         EnsureLoaded();
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; checking {scope} variable: {key}");
-        var normalizedKey = ConfigPathHelpers.Normalize(key);
-        var keyParts = normalizedKey.Split('.');
-        
-        Dictionary<string, object> scopeData = _scopeToSettings[scope];
-        var value = GetNestedValue(scopeData, keyParts);
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; checking {configFile.Scope} setting: {key}");
 
+        var dotNotationKey = KnownSettings.ToDotNotation(key);
+        bool isSecret = KnownSettings.IsSecret(dotNotationKey);
+        var keyParts = dotNotationKey.Split('.');
+        
+        var value = GetNestedValue(configFile.Settings, keyParts);
         var foundInScope = value != null;
+
         if (foundInScope)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; Found '{normalizedKey}' in {scope} variable: {value}");
-            return new ConfigValue(value);
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; Found '{dotNotationKey}' in {configFile.Scope} setting: {value}");
+            return new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
         }
 
         return new ConfigValue();
@@ -89,50 +141,52 @@ public class ConfigStore
 
     public bool Set(string key, object value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
+        var configFile = ConfigFileFromScope(scope);
+        return Set(key, value, configFile, save);
+    }
+
+    public bool Set(string key, object value, ConfigFile configFile, bool save = true)
+    {
         EnsureLoaded();
-        var normalizedKey = ConfigPathHelpers.Normalize(key);
-        var keyParts = normalizedKey.Split('.');
-        
-        var scopeData = _scopeToSettings[scope];
-        SetNestedValue(scopeData, keyParts, value);
-        
-        if (save)
-        {
-            SaveConfig(scope);
-        }
-        
+
+        var dotNotationKey = KnownSettings.ToDotNotation(key);
+        var keyParts = dotNotationKey.Split('.');
+        if (keyParts.Length == 0) return false;
+
+        SetNestedValue(configFile.Settings, keyParts, value);
+        if (save) configFile.Save();
+
         return true;
     }
 
     public bool Clear(string key, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
-        EnsureLoaded();
-        var normalizedKey = ConfigPathHelpers.Normalize(key);
-        var keyParts = normalizedKey.Split('.');
-        
-        if (keyParts.Length == 0)
-        {
-            return false;
-        }
+        var configFile = ConfigFileFromScope(scope);
+        return Clear(key, configFile, save);
+    }
 
-        var scopeData = _scopeToSettings[scope];
+    public bool Clear(string key, ConfigFile configFile, bool save = true)
+    {
+        EnsureLoaded();
+
+        var dotNotationKey = KnownSettings.ToDotNotation(key);
+        var keyParts = dotNotationKey.Split('.');
+        if (keyParts.Length == 0) return false;
         
         if (keyParts.Length == 1)
         {
-            if (scopeData.ContainsKey(keyParts[0]))
+            if (configFile.Settings.ContainsKey(keyParts[0]))
             {
-                scopeData.Remove(keyParts[0]);
-                if (save)
-                {
-                    SaveConfig(scope);
-                }
+                configFile.Settings.Remove(keyParts[0]);
+                if (save) configFile.Save();
+
                 return true;
             }
             return false;
         }
 
         // Navigate to the parent dictionary
-        var parent = scopeData;
+        var parent = configFile.Settings;
         for (int i = 0; i < keyParts.Length - 1; i++)
         {
             if (!parent.ContainsKey(keyParts[i]) || !(parent[keyParts[i]] is Dictionary<string, object> nextLevel))
@@ -147,10 +201,8 @@ public class ConfigStore
         if (parent.ContainsKey(lastKey))
         {
             parent.Remove(lastKey);
-            if (save)
-            {
-                SaveConfig(scope);
-            }
+            if (save) configFile.Save();
+
             return true;
         }
 
@@ -159,14 +211,20 @@ public class ConfigStore
 
     public bool AddToList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
+        var configFile = ConfigFileFromScope(scope);
+        return AddToList(key, value, configFile, save);
+    }
+
+    public bool AddToList(string key, string value, ConfigFile configFile, bool save = true)
+    {
         EnsureLoaded();
-        var configValue = GetFromScope(key, scope);
+        var configValue = GetFromConfig(key, configFile);
         List<string> list = configValue.AsList();
         
         if (!list.Contains(value))
         {
             list.Add(value);
-            Set(key, list, scope, save);
+            Set(key, list, configFile, save);
             return true;
         }
         
@@ -175,60 +233,118 @@ public class ConfigStore
 
     public bool RemoveFromList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
+        var configFile = ConfigFileFromScope(scope);
+        return RemoveFromList(key, value, configFile, save);
+    }
+
+    public bool RemoveFromList(string key, string value, ConfigFile configFile, bool save = true)
+    {
         EnsureLoaded();
-        var configValue = GetFromScope(key, scope);
+        var configValue = GetFromConfig(key, configFile);
+
         List<string> list = configValue.AsList();
-        
         if (list.Remove(value))
         {
-            Set(key, list, scope, save);
+            Set(key, list, configFile, save);
             return true;
         }
         
         return false;
     }
 
-    public Dictionary<string, ConfigValue> ListAll()
+    public Dictionary<string, Dictionary<string, ConfigValue>> ListFileNameScopeValues()
     {
         EnsureLoaded();
-        var result = new Dictionary<string, ConfigValue>();
 
-        // Start with global scope
-        AddFlattenedValuesToResult(_scopeToSettings[ConfigFileScope.Global], result, ConfigFileScope.Global);
-        
-        // Override with user scope
-        AddFlattenedValuesToResult(_scopeToSettings[ConfigFileScope.User], result, ConfigFileScope.User);
-        
-        // Finally override with project scope
-        AddFlattenedValuesToResult(_scopeToSettings[ConfigFileScope.Local], result, ConfigFileScope.Local);
+        var result = new Dictionary<string, Dictionary<string, ConfigValue>>(StringComparer.OrdinalIgnoreCase);
 
-        // Add environment variables if they override any values
-        foreach (var key in result.Keys.ToList()) // Use ToList to avoid collection modified during iteration
+        var configFiles = _configFiles.Where(c => c.Scope == ConfigFileScope.FileName);
+        foreach (var configFile in configFiles)
         {
-            var envVarKey = ConfigPathHelpers.ToEnvVar(key);
-            var envValue = Environment.GetEnvironmentVariable(envVarKey);
-            if (!string.IsNullOrEmpty(envValue))
-            {
-                result[key] = new ConfigValue(envValue);
-            }
+            var source = ConfigSourceFromScope(configFile.Scope);
+            var fileName = Path.GetFileName(configFile.FileName);
+            var settings = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
+            AddFlattenedValuesToResult(configFile.Settings, settings, source);
+            result[fileName] = settings;
         }
 
         return result;
     }
 
-    public Dictionary<string, ConfigValue> ListScope(ConfigFileScope scope)
+    public Dictionary<string, ConfigValue> ListFromCommandLineSettings()
+    {
+        var result = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
+        foreach (var setting in _commandLineSettings)
+        {
+            var isSecret = KnownSettings.IsSecret(setting.Key);
+            result[setting.Key] = new ConfigValue(setting.Value, ConfigSource.CommandLine, isSecret);
+        }
+        return result;
+    }
+
+    public Dictionary<string, ConfigValue> ListValuesFromKnownScope(ConfigFileScope scope)
+    {
+        var source = ConfigSourceFromScope(scope);
+        var configFile = ConfigFileFromScope(scope);
+
+        var result = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
+        AddFlattenedValuesToResult(configFile.Settings, result, source);
+        
+        return result;
+    }
+
+    public Dictionary<string, ConfigValue> ListValuesFromFile(string fileName)
     {
         EnsureLoaded();
-        var result = new Dictionary<string, ConfigValue>();
-        
-        // If Any scope is requested, return the merged result from all scopes
-        if (scope == ConfigFileScope.Any)
+
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        if (configFile == null)
         {
-            return ListAll();
+            throw new InvalidOperationException($"No config file found for {fileName}.");
         }
-        
-        AddFlattenedValuesToResult(_scopeToSettings[scope], result, scope);
+
+        return ListValuesFromFile(configFile);
+    }
+
+    public Dictionary<string, ConfigValue> ListValuesFromFile(ConfigFile configFile)
+    {
+        var result = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
+        var source = ConfigSourceFromScope(configFile.Scope);
+        AddFlattenedValuesToResult(configFile.Settings, result, source);
         return result;
+    }
+
+    public bool SetFromCommandLine(string key, object value)
+    {
+        var dotNotationKey = KnownSettings.ToDotNotation(key);
+        _commandLineSettings[dotNotationKey] = value;
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.SetFromCommandLine; set '{dotNotationKey}' to '{value}'");
+        return true;
+    }
+    
+    private ConfigFile ConfigFileFromScope(ConfigFileScope scope)
+    {
+        EnsureLoaded();
+
+        var configFile = _configFiles.Where(c => c.Scope == scope).FirstOrDefault();
+        if (configFile == null)
+        {
+            throw new InvalidOperationException($"No config file found for {scope} scope.");
+        }
+
+        return configFile;
+    }
+
+    private static ConfigSource ConfigSourceFromScope(ConfigFileScope scope)
+    {
+        return scope switch
+        {
+            ConfigFileScope.Local => ConfigSource.LocalConfig,
+            ConfigFileScope.User => ConfigSource.UserConfig,
+            ConfigFileScope.Global => ConfigSource.GlobalConfig,
+            ConfigFileScope.FileName => ConfigSource.ConfigFileName,
+            _ => ConfigSource.Default
+        };
     }
 
     private static bool TryGetFromEnv(string key, out ConfigValue? configValue)
@@ -241,14 +357,14 @@ public class ConfigStore
         if (found)
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.TryGetFromEnv; Found '{key}' environment variable: {value}");
-            configValue = new ConfigValue(value);
+            configValue = new ConfigValue(value, ConfigSource.EnvironmentVariable, isSecret: KnownSettings.IsSecret(key));
             return true;
         }
 
         return false;
     }
 
-    private void AddFlattenedValuesToResult(Dictionary<string, object> data, Dictionary<string, ConfigValue> result, ConfigFileScope scope, string prefix = "")
+    private void AddFlattenedValuesToResult(Dictionary<string, object> data, Dictionary<string, ConfigValue> result, ConfigSource source, string prefix = "")
     {
         foreach (var pair in data)
         {
@@ -257,12 +373,15 @@ public class ConfigStore
             if (pair.Value is Dictionary<string, object> nestedDict)
             {
                 // Recursively flatten nested dictionaries
-                AddFlattenedValuesToResult(nestedDict, result, scope, key);
+                AddFlattenedValuesToResult(nestedDict, result, source, key);
             }
             else
             {
+                // Check if this is a secret
+                bool isSecret = KnownSettings.IsSecret(key);
+                
                 // Add or update the result
-                result[key] = new ConfigValue(pair.Value);
+                result[key] = new ConfigValue(pair.Value, source, isSecret);
             }
         }
     }
@@ -292,7 +411,7 @@ public class ConfigStore
         return null;
     }
 
-    private void SetNestedValue(Dictionary<string, object> data, string[] keyParts, object value)
+    private void SetNestedValue(Dictionary<string, object> settings, string[] keyParts, object value)
     {
         if (keyParts.Length == 0)
         {
@@ -301,50 +420,52 @@ public class ConfigStore
 
         if (keyParts.Length == 1)
         {
-            data[keyParts[0]] = value;
+            settings[keyParts[0]] = value;
             return;
         }
 
-        if (!data.ContainsKey(keyParts[0]) || !(data[keyParts[0]] is Dictionary<string, object>))
+        if (!settings.ContainsKey(keyParts[0]) || !(settings[keyParts[0]] is Dictionary<string, object>))
         {
-            data[keyParts[0]] = new Dictionary<string, object>();
+            settings[keyParts[0]] = new Dictionary<string, object>();
         }
 
-        var nestedDict = (Dictionary<string, object>)data[keyParts[0]];
+        var nestedDict = (Dictionary<string, object>)settings[keyParts[0]];
         SetNestedValue(nestedDict, keyParts[1..], value);
     }
 
     private void EnsureLoaded()
     {
-        if (!_isLoaded)
+        if (!_loadedKnownConfigFiles)
         {
-            LoadConfig();
+            LoadKnownConfigFiles();
         }
+    }
+
+    private void LoadKnownConfigFiles()
+    {
+        LoadConfigFilesForScope(ConfigFileScope.Global);
+        LoadConfigFilesForScope(ConfigFileScope.User);
+        LoadConfigFilesForScope(ConfigFileScope.Local);
+        _loadedKnownConfigFiles = true;
     }
 
     private void LoadConfigFilesForScope(ConfigFileScope scope)
     {
-        // Any scope is just a view, not a real scope with files
-        if (scope == ConfigFileScope.Any)
-        {
-            return;
-        }
-        
         var configPath = ConfigFileHelpers.FindConfigFile(scope);
         if (configPath == null)
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; no config file found for {scope} scope");
-            _scopeToSettings[scope] = new Dictionary<string, object>();
             return;
         }
 
         ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {configPath}");
-        var configFile = ConfigFile.FromFile(configPath);
-        _scopeToSettings[scope] = configFile.Read();
+        var configFile = ConfigFile.FromFile(configPath, scope);
+        _configFiles.Add(configFile);
     }
 
-    private bool _isLoaded;
-    private readonly Dictionary<ConfigFileScope, Dictionary<string, object>> _scopeToSettings;
+    private bool _loadedKnownConfigFiles = false;
+    private List<ConfigFile> _configFiles = new List<ConfigFile>();
+    private readonly Dictionary<string, object> _commandLineSettings;
 
     private static readonly ConfigStore _instance = new ConfigStore();
 }

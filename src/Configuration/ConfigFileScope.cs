@@ -19,6 +19,11 @@ public enum ConfigFileScope
     Local,
     
     /// <summary>
+    /// Config file settings (from explicitly loaded configuration file paths).
+    /// </summary>
+    FileName,
+    
+    /// <summary>
     /// All scopes (used for display/querying across scopes).
     /// </summary>
     Any
