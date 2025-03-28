@@ -60,7 +60,7 @@ public class ConfigValue
             return AsString();
         }
         
-        string valueStr = _value.ToString() ?? string.Empty;
+        var valueStr = _value.ToString() ?? string.Empty;
         if (valueStr.Length <= 4)
         {
             return "****";

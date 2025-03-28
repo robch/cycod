@@ -46,7 +46,7 @@ public static class ConfigDisplayHelpers
     
     public static void DisplayConfigValue(string key, ConfigValue value, int indentLevel = 2)
     {
-        string indent = new string(' ', indentLevel);
+        var indent = new string(' ', indentLevel);
         
         // If it's a list type in memory (actual List objects)
         if (value.Value is List<object> || value.Value is List<string>)
@@ -57,7 +57,7 @@ public static class ConfigDisplayHelpers
         }
         
         // Get value to display, obfuscating if it's a secret
-        string displayValue = value.IsSecret
+        var displayValue = value.IsSecret
             ? value.AsObfuscated() ?? "(empty)"
             : !value.IsNullOrEmpty()
                 ? value.Value?.ToString() ?? "(null)"
@@ -68,8 +68,8 @@ public static class ConfigDisplayHelpers
     
     public static void DisplayList(string key, List<string> list, int indentLevel = 2)
     {
-        string keyIndent = new string(' ', indentLevel);
-        string valueIndent = new string(' ', indentLevel + 2);
+        var keyIndent = new string(' ', indentLevel);
+        var valueIndent = new string(' ', indentLevel + 2);
         
         if (list.Count > 0)
         {

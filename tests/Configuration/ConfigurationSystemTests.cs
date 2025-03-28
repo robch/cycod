@@ -38,11 +38,11 @@ namespace ChatX.Tests.Configuration
         public void KnownSettings_ToEnvironmentVariable_ReturnsCorrectEnvVar()
         {
             // Arrange
-            string input = "GitHub.Token";
-            string expected = "GITHUB_TOKEN";
+            var input = "GitHub.Token";
+            var expected = "GITHUB_TOKEN";
 
             // Act
-            string result = KnownSettings.ToEnvironmentVariable(input);
+            var result = KnownSettings.ToEnvironmentVariable(input);
 
             // Assert
             Assert.AreEqual(expected, result);
@@ -52,11 +52,11 @@ namespace ChatX.Tests.Configuration
         public void KnownSettings_ToCLIOption_ReturnsCorrectOption()
         {
             // Arrange
-            string input = "GitHub.Token";
-            string expected = "--github-token";
+            var input = "GitHub.Token";
+            var expected = "--github-token";
 
             // Act
-            string result = KnownSettings.ToCLIOption(input);
+            var result = KnownSettings.ToCLIOption(input);
 
             // Assert
             Assert.AreEqual(expected, result);
@@ -96,13 +96,13 @@ namespace ChatX.Tests.Configuration
         public void KnownSettingsCLIParser_TryParseCLIOption_ParsesCorrectly()
         {
             // Arrange
-            string arg1 = "--github-token";
+            var arg1 = "--github-token";
             // string arg2 = "mytoken";
-            string arg3 = "--openai-api-key=secretkey";
+            var arg3 = "--openai-api-key=secretkey";
             
             // Act
-            bool result1 = KnownSettingsCLIParser.TryParseCLIOption(arg1, out string? settingName1, out string? value1);
-            bool result2 = KnownSettingsCLIParser.TryParseCLIOption(arg3, out string? settingName2, out string? value2);
+            var result1 = KnownSettingsCLIParser.TryParseCLIOption(arg1, out string? settingName1, out string? value1);
+            var result2 = KnownSettingsCLIParser.TryParseCLIOption(arg3, out string? settingName2, out string? value2);
             
             // Assert
             Assert.IsTrue(result1);

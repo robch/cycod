@@ -9,12 +9,12 @@ public class StringHelpersTests
     public void ReplaceOnce_ExactMatchOnce_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "This is a test string with a specific word.";
-        string oldStr = "specific";
-        string newStr = "replaced";
+        var content = "This is a test string with a specific word.";
+        var oldStr = "specific";
+        var newStr = "replaced";
 
         // Act
-        string? result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -26,12 +26,12 @@ public class StringHelpersTests
     public void ReplaceOnce_ExactMatchMultipleTimes_ReturnsNull()
     {
         // Arrange
-        string content = "This test string has two test words.";
-        string oldStr = "test";
-        string newStr = "replaced";
+        var content = "This test string has two test words.";
+        var oldStr = "test";
+        var newStr = "replaced";
 
         // Act
-        string? result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -42,12 +42,12 @@ public class StringHelpersTests
     public void ReplaceOnce_NoMatch_ReturnsNull()
     {
         // Arrange
-        string content = "This is a test string.";
-        string oldStr = "nonexistent";
-        string newStr = "replaced";
+        var content = "This is a test string.";
+        var oldStr = "nonexistent";
+        var newStr = "replaced";
 
         // Act
-        string? result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -58,12 +58,12 @@ public class StringHelpersTests
     public void ReplaceOnce_ExactMatchFailsFuzzySucceeds_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "This is a test string\r\nwith a specific  \r\nword.";
-        string oldStr = "specific\nword";
-        string newStr = "replaced text";
+        var content = "This is a test string\r\nwith a specific  \r\nword.";
+        var oldStr = "specific\nword";
+        var newStr = "replaced text";
 
         // Act
-        string? result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -79,12 +79,12 @@ public class StringHelpersTests
     public void ExactlyReplaceOnce_MatchOnce_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "Replace this word in this sentence.";
-        string oldStr = "this word";
-        string newStr = "these words";
+        var content = "Replace this word in this sentence.";
+        var oldStr = "this word";
+        var newStr = "these words";
 
         // Act
-        string? result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -96,12 +96,12 @@ public class StringHelpersTests
     public void ExactlyReplaceOnce_MatchMultipleTimes_ReturnsNull()
     {
         // Arrange
-        string content = "This text has 'match' and another 'match' in it.";
-        string oldStr = "match";
-        string newStr = "replacement";
+        var content = "This text has 'match' and another 'match' in it.";
+        var oldStr = "match";
+        var newStr = "replacement";
 
         // Act
-        string? result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -112,12 +112,12 @@ public class StringHelpersTests
     public void ExactlyReplaceOnce_NoMatch_ReturnsNull()
     {
         // Arrange
-        string content = "This text has no matches.";
-        string oldStr = "nonexistent";
-        string newStr = "replacement";
+        var content = "This text has no matches.";
+        var oldStr = "nonexistent";
+        var newStr = "replacement";
 
         // Act
-        string? result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -128,12 +128,12 @@ public class StringHelpersTests
     public void ExactlyReplaceOnce_CaseSensitiveMatch_ReplacesCorrectly()
     {
         // Arrange
-        string content = "This text has Case sensitivity.";
-        string oldStr = "Case";
-        string newStr = "proper case";
+        var content = "This text has Case sensitivity.";
+        var oldStr = "Case";
+        var newStr = "proper case";
 
         // Act
-        string? result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -145,12 +145,12 @@ public class StringHelpersTests
     public void ExactlyReplaceOnce_EmptyString_ReturnsNull()
     {
         // Arrange
-        string content = "Some content";
-        string oldStr = "";
-        string newStr = "replacement";
+        var content = "Some content";
+        var oldStr = "";
+        var newStr = "replacement";
 
         // Act
-        string? result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -165,12 +165,12 @@ public class StringHelpersTests
     public void FuzzyReplaceOnce_WhitespaceVariation_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "This is line one\r\n  line two with spaces  \r\nline three";
-        string oldStr = "line two with spaces\nline three";
-        string newStr = "replaced text";
+        var content = "This is line one\r\n  line two with spaces  \r\nline three";
+        var oldStr = "line two with spaces\nline three";
+        var newStr = "replaced text";
 
         // Act
-        string? result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -182,12 +182,12 @@ public class StringHelpersTests
     public void FuzzyReplaceOnce_MultiLineWithTrailingWhitespace_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "Line 1\r\nLine 2  \r\nLine 3";
-        string oldStr = "Line 2\nLine 3";
-        string newStr = "New Content";
+        var content = "Line 1\r\nLine 2  \r\nLine 3";
+        var oldStr = "Line 2\nLine 3";
+        var newStr = "New Content";
 
         // Act
-        string? result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);
@@ -199,12 +199,12 @@ public class StringHelpersTests
     public void FuzzyReplaceOnce_MultipleFuzzyMatches_ReturnsNull()
     {
         // Arrange
-        string content = "Line 1  \r\nLine 2\r\nLine 3\r\nLine 1  \r\nLine 2\r\nLine 3";
-        string oldStr = "Line 1\nLine 2";
-        string newStr = "New Content";
+        var content = "Line 1  \r\nLine 2\r\nLine 3\r\nLine 1  \r\nLine 2\r\nLine 3";
+        var oldStr = "Line 1\nLine 2";
+        var newStr = "New Content";
 
         // Act
-        string? result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -215,12 +215,12 @@ public class StringHelpersTests
     public void FuzzyReplaceOnce_NoFuzzyMatch_ReturnsNull()
     {
         // Arrange
-        string content = "Line 1\r\nLine 2\r\nLine 3";
-        string oldStr = "Line X\nLine Y";
-        string newStr = "New Content";
+        var content = "Line 1\r\nLine 2\r\nLine 3";
+        var oldStr = "Line X\nLine Y";
+        var newStr = "New Content";
 
         // Act
-        string? result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNull(result);
@@ -231,12 +231,12 @@ public class StringHelpersTests
     public void FuzzyReplaceOnce_SingleLineWithDifferentTrailingWhitespace_ReplacesSuccessfully()
     {
         // Arrange
-        string content = "This line has trailing spaces    \r\nNext line";
-        string oldStr = "This line has trailing spaces";
-        string newStr = "Replaced line";
+        var content = "This line has trailing spaces    \r\nNext line";
+        var oldStr = "This line has trailing spaces";
+        var newStr = "Replaced line";
 
         // Act
-        string? result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out int countFound);
+        var result = StringHelpers.FuzzyReplaceOnce(content, oldStr, newStr, out var countFound);
 
         // Assert
         Assert.IsNotNull(result);

@@ -11,11 +11,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_NullTemplate_ReturnsNull()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
+        var fileName = "C:\\path\\to\\file.txt";
         string? template = null;
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.IsNull(result);
@@ -25,11 +25,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_EmptyTemplate_ReturnsEmptyString()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual("", result);
@@ -39,11 +39,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_FullFileNamePlaceholder_ReturnsFileName()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{fileName}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{fileName}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual(fileName, result);
@@ -53,11 +53,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_FileNamePlaceholder_ReturnsFileName()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{filename}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{filename}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual(fileName, result);
@@ -67,11 +67,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_FilePathPlaceholder_ReturnsDirectoryName()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{filePath}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{filePath}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual("C:\\path\\to", result);
@@ -81,11 +81,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_FileBasePlaceholder_ReturnsFileNameWithoutExtension()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{fileBase}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{fileBase}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual("file", result);
@@ -95,11 +95,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_FileExtPlaceholder_ReturnsExtensionWithoutDot()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{fileExt}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{fileExt}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual("txt", result);
@@ -109,11 +109,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_ComplexTemplate_ReturnsCorrectlyFormattedString()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "backup-{fileBase}-{timeStamp}.{fileExt}";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "backup-{fileBase}-{timeStamp}.{fileExt}";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.IsNotNull(result);
@@ -131,11 +131,11 @@ public class FileHelpersTests
     public void GetFileNameFromTemplate_TemplateWithTrailingSlashes_TrimsSlashes()
     {
         // Arrange
-        string fileName = "C:\\path\\to\\file.txt";
-        string template = "{fileBase}/////";
+        var fileName = "C:\\path\\to\\file.txt";
+        var template = "{fileBase}/////";
 
         // Act
-        string? result = FileHelpers.GetFileNameFromTemplate(fileName, template);
+        var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
         Assert.AreEqual("file", result);
@@ -149,7 +149,7 @@ public class FileHelpersTests
     public void FileExists_NullFileName_ReturnsFalse()
     {
         // Act
-        bool result = FileHelpers.FileExists(null);
+        var result = FileHelpers.FileExists(null);
         
         // Assert
         Assert.IsFalse(result);
@@ -159,7 +159,7 @@ public class FileHelpersTests
     public void FileExists_EmptyFileName_ReturnsFalse()
     {
         // Act
-        bool result = FileHelpers.FileExists("");
+        var result = FileHelpers.FileExists("");
         
         // Assert
         Assert.IsFalse(result);
@@ -169,7 +169,7 @@ public class FileHelpersTests
     public void FileExists_StdinReference_ReturnsTrue()
     {
         // Act
-        bool result = FileHelpers.FileExists("-");
+        var result = FileHelpers.FileExists("-");
         
         // Assert
         Assert.IsTrue(result);
@@ -179,10 +179,10 @@ public class FileHelpersTests
     public void ExpandAtFileValue_NoAtPrefix_ReturnsOriginalValue()
     {
         // Arrange
-        string value = "just a string";
+        var value = "just a string";
         
         // Act
-        string result = FileHelpers.ExpandAtFileValue(value);
+        var result = FileHelpers.ExpandAtFileValue(value);
         
         // Assert
         Assert.AreEqual(value, result);

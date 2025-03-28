@@ -220,7 +220,7 @@ public static class KnownSettings
     /// <returns>True if the key is a secret, false otherwise.</returns>
     public static bool IsSecret(string key)
     {
-        string dotNotationKey = ToDotNotation(key);
+        var dotNotationKey = ToDotNotation(key);
         return _secretSettings.Contains(dotNotationKey);
     }
     
@@ -243,7 +243,7 @@ public static class KnownSettings
         if (IsEnvironmentVariableFormat(key)) return key;
         
         // Try to map to an environment variable
-        string dotNotationKey = ToDotNotation(key);
+        var dotNotationKey = ToDotNotation(key);
         if (_dotToEnvVarMap.TryGetValue(dotNotationKey, out string? envVarKey))
         {
             return envVarKey;
