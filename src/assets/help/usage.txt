@@ -7,6 +7,7 @@ Using CHATX, you can:
   - Provide one or more inputs to the AI model
   - Manage configuration settings with the 'config' commands
   - Authenticate with GitHub Copilot using 'ghcp login'
+  - Select different chat providers (OpenAI, Azure OpenAI, GitHub Copilot)
   - Use built-in function tools to 
     - Read and write files
     - Execute shell commands/scripts
@@ -38,5 +39,6 @@ SEE ALSO
   chatx help
   chatx help examples
   chatx help options
+  chatx help provider
   chatx help config
   chatx help ghcp login

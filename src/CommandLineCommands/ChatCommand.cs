@@ -40,7 +40,7 @@ class ChatCommand : Command
         factory.AddFunctions(new CodeExplorationHelperFunctions());
 
         // Create the chat completions object with the external ChatClient and system prompt.
-        var chatClient = ChatClientFactory.CreateChatClientFromEnv();
+        var chatClient = ChatClientFactory.CreateChatClient();
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory);
 
         // Load the chat history from the file.

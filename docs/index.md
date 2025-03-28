@@ -7,6 +7,7 @@ Welcome to the ChatX documentation. This documentation provides detailed informa
 - [Getting Started](getting-started.md)
 - [Command Line Options](cli-options.md)
 - [Function Calling](function-calling.md)
+- [Provider Selection](provider-selection.md)
 - [Creating Aliases](aliases.md)
 - [Chat History](chat-history.md)
 - [Templates](templates.md)

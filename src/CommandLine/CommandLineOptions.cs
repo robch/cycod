@@ -370,6 +370,13 @@ public class CommandLineOptions
             commandLineOptions.SaveAliasName = aliasName;
             i += max1Arg.Count();
         }
+        else if (arg == "--profile")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var profileName = ValidateString(arg, max1Arg.FirstOrDefault(), "profile name");
+            LoadProfile(profileName!);
+            i += max1Arg.Count();
+        }
         else if (arg == "--config")
         {
             var configFiles = GetInputOptionArgs(i + 1, args);
@@ -545,6 +552,26 @@ public class CommandLineOptions
             command.OutputTrajectory = outputTrajectory;
             i += max1Arg.Count();
         }
+        else if (arg == "--use-openai")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+        }
+        else if (arg == "--use-azure-openai" || arg == "--use-azure")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");
+        }
+        else if (arg == "--use-copilot") 
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot");
+        }
+        else if (arg == "--use-copilot-token") 
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
+        }
+        else if (arg == "--use-copilot-hmac") 
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-hmac");
+        }
         else
         {
             parsed = false;
@@ -701,6 +728,33 @@ public class CommandLineOptions
         var message = $"Invalid argument: {arg}";
         var ex = new CommandLineException(message);
         return ex;
+    }
+
+    private static void LoadProfile(string profileName)
+    {
+        if (string.IsNullOrEmpty(profileName))
+        {
+            throw new CommandLineException("Profile name cannot be empty.");
+        }
+        
+        var profilesDirectory = FindProfilesDirectory(create: false);
+        var profilePath = profilesDirectory != null
+            ? Path.Combine(profilesDirectory, $"{profileName}.yaml")
+            : Path.Combine(Directory.GetCurrentDirectory(), $"{profileName}.yaml");
+        if (!File.Exists(profilePath))
+        {
+            throw new CommandLineException($"Profile '{profileName}' not found at path: {profilePath}");
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"Loading profile from {profilePath}");
+        ConfigStore.Instance.LoadConfigFile(profilePath);
+    }
+    
+    private static string? FindProfilesDirectory(bool create = false)
+    {
+        return create
+            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "profiles")
+            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "profiles");
     }
 
     private static string? FindAliasDirectory(bool create = false)

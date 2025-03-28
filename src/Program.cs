@@ -111,7 +111,11 @@ public class Program
     private static void DisplayException(CommandLineException ex)
     {
         var printMessage = !string.IsNullOrEmpty(ex.Message);
-        if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n", overrideQuiet: true);
+        if (printMessage)
+        {
+            ConsoleHelpers.WriteWarning($"{ex.Message}");
+            ConsoleHelpers.Write("\n\n", overrideQuiet: true);
+        }
     }
 
     private static void DisplaySavedAliasFiles(List<string> filesSaved)

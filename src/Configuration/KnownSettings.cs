@@ -35,6 +35,7 @@ public static class KnownSettings
     public const string AppHistorySavePath = "App.HistorySavePath";
     public const string AppDefaultModel = "App.DefaultModel";
     public const string AppMaxTokens = "App.MaxTokens";
+    public const string AppPreferredProvider = "App.PreferredProvider";
     
     #endregion
     
@@ -91,7 +92,8 @@ public static class KnownSettings
         { AppTemplatePath, "APP_TEMPLATE_PATH" },
         { AppHistorySavePath, "APP_HISTORY_SAVE_PATH" },
         { AppDefaultModel, "APP_DEFAULT_MODEL" },
-        { AppMaxTokens, "APP_MAX_TOKENS" }
+        { AppMaxTokens, "APP_MAX_TOKENS" },
+        { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" }
     };
     
     /// <summary>
@@ -188,7 +190,8 @@ public static class KnownSettings
         AppTemplatePath,
         AppHistorySavePath,
         AppDefaultModel,
-        AppMaxTokens
+        AppMaxTokens,
+        AppPreferredProvider
     };
     
     #endregion

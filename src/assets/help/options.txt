@@ -20,8 +20,18 @@ OPTIONS
 
   --save-alias ALIAS              Save current options as an alias
   --{ALIAS}                       Use options saved under the specified alias name
+  
+  --use-copilot                   Use GitHub Copilot (either token or HMAC)
+  --use-copilot                   Use GitHub Copilot (with token) as the chat provider
+  --use-copilot-hmac              Use GitHub Copilot (with HMAC) as the chat provider
+  --use-azure-openai              Use Azure OpenAI API as the chat provider
+  --use-openai                    Use OpenAI API as the chat provider
+  --use-azure                     Alias for --use-azure-openai
+  
+  --profile NAME                  Load a named profile from .chatx/profiles/NAME.yaml
 
 SEE ALSO
 
   chatx help
   chatx help examples
+  chatx help provider
