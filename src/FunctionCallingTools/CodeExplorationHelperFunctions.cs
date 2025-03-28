@@ -74,7 +74,7 @@ public class CodeExplorationHelperFunctions
         [HelperFunctionParameterDescription("Search query or research topic")] string searchQuery,
         [HelperFunctionParameterDescription("Whether to download and include actual page content (not just links)")] bool includePageContent = true,
         [HelperFunctionParameterDescription("Maximum number of search results to process")] int maxResults = 5,
-        [HelperFunctionParameterDescription("Search engine to use: 'google', 'bing', 'duckduckgo', or 'yahoo'")] string searchEngine = "google",
+        [HelperFunctionParameterDescription("Search engine to use: 'google', 'bing', 'duckduckgo', or 'yahoo'")] string searchEngine = "duckduckgo",
         [HelperFunctionParameterDescription("Whether to strip HTML formatting from page content")] bool stripHtml = true,
         [HelperFunctionParameterDescription("Instructions for AI to process or filter the results (e.g. 'focus on technical details', 'summarize each page in one paragraph')")] string? processingInstructions = null)
     {

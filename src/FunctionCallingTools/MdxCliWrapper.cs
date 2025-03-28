@@ -313,7 +313,7 @@ public class MdxCliWrapper
         string searchQuery,
         bool includePageContent = true,
         int maxResults = 5,
-        string searchEngine = "google",
+        string searchEngine = "duckduckgo",
         bool stripHtml = true,
         string? processingInstructions = null)
     {
@@ -325,7 +325,7 @@ public class MdxCliWrapper
             stripHtml, 
             processingInstructions);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        return await ExecuteMdxCommandAsync($"{arguments} --firefox");
     }
     
     /// <summary>
@@ -335,7 +335,7 @@ public class MdxCliWrapper
         string searchQuery,
         bool includePageContent = true,
         int maxResults = 5,
-        string searchEngine = "google",
+        string searchEngine = "duckduckgo",
         bool stripHtml = true,
         string? processingInstructions = null)
     {
@@ -389,7 +389,7 @@ public class MdxCliWrapper
             pageProcessingInstructions, 
             finalProcessingInstructions);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        return await ExecuteMdxCommandAsync($"{arguments} --firefox");
     }
     
     /// <summary>
