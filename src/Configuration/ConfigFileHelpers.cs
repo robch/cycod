@@ -14,7 +14,7 @@ public static class ConfigFileHelpers
         return GetYamlConfigFileName(scope);
     }
 
-    public static string? FindConfigFile(ConfigFileScope scope)
+    public static string? FindConfigFile(ConfigFileScope scope, bool forceCreate = false)
     {
         var yamlPath = GetYamlConfigFileName(scope);
         if (File.Exists(yamlPath))
@@ -28,6 +28,12 @@ public static class ConfigFileHelpers
         {
             ConsoleHelpers.WriteDebugLine($"Found INI config file at: {iniPath}");
             return iniPath;
+        }
+
+        if (forceCreate && !string.IsNullOrEmpty(yamlPath))
+        {
+            FileHelpers.WriteAllText(yamlPath!, string.Empty);
+            return yamlPath;
         }
 
         return null;

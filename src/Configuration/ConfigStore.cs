@@ -120,33 +120,37 @@ public class ConfigStore
         return GetFromConfig(key, configFile);
     }
 
-    public ConfigValue GetFromConfig(string key, ConfigFile configFile)
+    public ConfigValue GetFromConfig(string key, ConfigFile? configFile)
     {
-        EnsureLoaded();
-
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; checking {configFile.Scope} setting: {key}");
-
-        var dotNotationKey = KnownSettings.ToDotNotation(key);
-        bool isSecret = KnownSettings.IsSecret(dotNotationKey);
-        var keyParts = dotNotationKey.Split('.');
-        
-        var value = GetNestedValue(configFile.Settings, keyParts);
-        var foundInScope = value != null;
-
-        if (foundInScope)
+        if (configFile != null)
         {
-            var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
-            var displayValue = configValue.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; Found '{dotNotationKey}' in {configFile.FileName} setting: {displayValue}");
-            return configValue;
+            EnsureLoaded();
+
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; checking {configFile.Scope} setting: {key}");
+
+            var dotNotationKey = KnownSettings.ToDotNotation(key);
+            bool isSecret = KnownSettings.IsSecret(dotNotationKey);
+            var keyParts = dotNotationKey.Split('.');
+            
+            var value = GetNestedValue(configFile.Settings, keyParts);
+            var foundInScope = value != null;
+
+            if (foundInScope)
+            {
+                var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
+                var displayValue = configValue.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
+                ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; Found '{dotNotationKey}' in {configFile.FileName} setting: {displayValue}");
+                return configValue;
+            }
         }
 
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; no config file found for {key}");
         return new ConfigValue();
     }
 
     public bool Set(string key, object value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
-        var configFile = ConfigFileFromScope(scope);
+        var configFile = ConfigFileFromScope(scope, forceCreate: true)!;
         return Set(key, value, configFile, save);
     }
 
@@ -166,7 +170,7 @@ public class ConfigStore
 
     public bool Clear(string key, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
-        var configFile = ConfigFileFromScope(scope);
+        var configFile = ConfigFileFromScope(scope, forceCreate: true)!;
         return Clear(key, configFile, save);
     }
 
@@ -216,7 +220,7 @@ public class ConfigStore
 
     public bool AddToList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
-        var configFile = ConfigFileFromScope(scope);
+        var configFile = ConfigFileFromScope(scope, forceCreate: true)!;
         return AddToList(key, value, configFile, save);
     }
 
@@ -238,7 +242,7 @@ public class ConfigStore
 
     public bool RemoveFromList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
-        var configFile = ConfigFileFromScope(scope);
+        var configFile = ConfigFileFromScope(scope, forceCreate: true)!;
         return RemoveFromList(key, value, configFile, save);
     }
 
@@ -293,7 +297,7 @@ public class ConfigStore
         var configFile = ConfigFileFromScope(scope);
 
         var result = new Dictionary<string, ConfigValue>(StringComparer.OrdinalIgnoreCase);
-        AddFlattenedValuesToResult(configFile.Settings, result, source);
+        AddFlattenedValuesToResult(configFile?.Settings, result, source);
         
         return result;
     }
@@ -327,14 +331,21 @@ public class ConfigStore
         return true;
     }
     
-    private ConfigFile ConfigFileFromScope(ConfigFileScope scope)
+    private ConfigFile? ConfigFileFromScope(ConfigFileScope scope, bool forceCreate = false)
     {
         EnsureLoaded();
 
         var configFile = _configFiles.Where(c => c.Scope == scope).FirstOrDefault();
-        if (configFile == null)
+        if (configFile != null) return configFile;
+
+        if (forceCreate)
         {
-            throw new InvalidOperationException($"No config file found for {scope} scope.");
+            var fileName = ConfigFileHelpers.FindConfigFile(scope, forceCreate: true)!;
+            if (fileName != null)
+            {
+                configFile = ConfigFile.FromFile(fileName, scope);
+                _configFiles.Add(configFile);
+            }
         }
 
         return configFile;
@@ -369,8 +380,10 @@ public class ConfigStore
         return false;
     }
 
-    private void AddFlattenedValuesToResult(Dictionary<string, object> data, Dictionary<string, ConfigValue> result, ConfigSource source, string prefix = "")
+    private void AddFlattenedValuesToResult(Dictionary<string, object>? data, Dictionary<string, ConfigValue> result, ConfigSource source, string prefix = "")
     {
+        if (data == null) return;
+
         foreach (var pair in data)
         {
             var key = string.IsNullOrEmpty(prefix) ? pair.Key : $"{prefix}.{pair.Key}";
