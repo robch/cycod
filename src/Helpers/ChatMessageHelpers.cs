@@ -47,7 +47,7 @@ public static class OpenAIChatHelpers
         }
     }
 
-    public static bool IsTooBig(this IList<ChatMessage> messages, int maxTokens)
+    public static bool IsTooBig(this IList<ChatMessage> messages, int trimTokenTarget)
     {
         // Loop thru the messages and get the size of each message
         // and add them up to get the total size
@@ -62,16 +62,16 @@ public static class OpenAIChatHelpers
         }
 
         var estimatedTotalTokens = totalBytes / ESTIMATED_BYTES_PER_TOKEN;
-        var isTooBig = estimatedTotalTokens > maxTokens;
-        ConsoleHelpers.WriteDebugLine($"Total bytes: {totalBytes}, estimated tokens: {estimatedTotalTokens}, max tokens: {maxTokens}, is too big: {isTooBig}");
+        var isTooBig = estimatedTotalTokens > trimTokenTarget;
+        ConsoleHelpers.WriteDebugLine($"Total bytes: {totalBytes}, estimated tokens: {estimatedTotalTokens}, trim target: {trimTokenTarget}, is too big: {isTooBig}");
 
         return isTooBig;
     }
 
-    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int maxTokens, int maxToolCallContentTokens, string replaceToolCallContentWith)
+    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int trimTokenTarget, int maxToolCallContentTokens, string replaceToolCallContentWith)
     {
         // If the total size of the messages is not too big, we don't need to do anything
-        if (!messages.IsTooBig(maxTokens)) return;
+        if (!messages.IsTooBig(trimTokenTarget)) return;
 
         // If assistant messages, there also won't be any tool calls
         var lastAssistantMessage = messages.LastOrDefault(x => x is AssistantChatMessage);

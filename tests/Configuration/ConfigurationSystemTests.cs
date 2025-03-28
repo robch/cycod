@@ -72,7 +72,6 @@ namespace ChatX.Tests.Configuration
             Assert.IsTrue(KnownSettings.IsSecret("OpenAI.ApiKey"));
             
             Assert.IsFalse(KnownSettings.IsSecret("OpenAI.ChatModelName"));
-            Assert.IsFalse(KnownSettings.IsSecret("App.TemplatePath"));
         }
 
         [TestMethod]

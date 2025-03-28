@@ -31,9 +31,6 @@ public static class KnownSettings
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
 
     // Application settings
-    public const string AppTemplatePath = "App.TemplatePath";
-    public const string AppHistorySavePath = "App.HistorySavePath";
-    public const string AppDefaultModel = "App.DefaultModel";
     public const string AppMaxTokens = "App.MaxTokens";
     public const string AppPreferredProvider = "App.PreferredProvider";
     
@@ -89,9 +86,6 @@ public static class KnownSettings
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
         
         // Application settings
-        { AppTemplatePath, "APP_TEMPLATE_PATH" },
-        { AppHistorySavePath, "APP_HISTORY_SAVE_PATH" },
-        { AppDefaultModel, "APP_DEFAULT_MODEL" },
         { AppMaxTokens, "APP_MAX_TOKENS" },
         { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" }
     };
@@ -122,9 +116,6 @@ public static class KnownSettings
         { CopilotEditorVersion, "--copilot-editor-version" },
         
         // Application settings
-        { AppTemplatePath, "--template-path" },
-        { AppHistorySavePath, "--history-save-path" },
-        { AppDefaultModel, "--default-model" },
         { AppMaxTokens, "--max-tokens" }
     };
     
@@ -187,9 +178,6 @@ public static class KnownSettings
     /// </summary>
     public static readonly HashSet<string> AppSettings = new(StringComparer.OrdinalIgnoreCase)
     {
-        AppTemplatePath,
-        AppHistorySavePath,
-        AppDefaultModel,
         AppMaxTokens,
         AppPreferredProvider
     };

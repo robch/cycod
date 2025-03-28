@@ -101,7 +101,7 @@ public static class ChatClientFactory
             
             // If preferred provider credentials aren't available, warn the user
             ConsoleHelpers.WriteWarning($"Preferred provider '{preferredProvider}' credentials not found. Falling back to default selection.");
-            ConsoleHelpers.WriteLine();
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
         
         return null;

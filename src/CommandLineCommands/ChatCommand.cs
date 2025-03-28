@@ -19,6 +19,11 @@ class ChatCommand : Command
 
     public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
     {
+        // Transfer known settings to the command if not already set
+        var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
+        var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
+        if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
+
         // Ground the filenames (in case they're templatized)
         InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
         OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
@@ -41,7 +46,7 @@ class ChatCommand : Command
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient();
-        var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory);
+        var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, MaxOutputTokens);
 
         // Load the chat history from the file.
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
@@ -262,6 +267,7 @@ class ChatCommand : Command
     public string? SystemPrompt { get; set; }
 
     public int? TrimTokenTarget { get; set; }
+    public int? MaxOutputTokens { get; set; }
 
     public string? InputChatHistory;
     public string? OutputChatHistory;

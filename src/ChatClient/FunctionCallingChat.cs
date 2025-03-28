@@ -2,14 +2,16 @@ using OpenAI.Chat;
 
 public class FunctionCallingChat
 {
-    public FunctionCallingChat(ChatClient openAIClient, string openAISystemPrompt, FunctionFactory factory)
+    public FunctionCallingChat(ChatClient openAIClient, string systemPrompt, FunctionFactory factory, int? maxOutputTokens = null)
     {
-        _openAISystemPrompt = openAISystemPrompt;
+        _systemPrompt = systemPrompt;
         _functionFactory = factory;
         _chatClient = openAIClient;
 
         _messages = new List<ChatMessage>();
         _options = new ChatCompletionOptions();
+
+        if (maxOutputTokens.HasValue) _options.MaxOutputTokenCount = maxOutputTokens.Value;
 
         foreach (var tool in _functionFactory.GetChatTools())
         {
@@ -23,7 +25,7 @@ public class FunctionCallingChat
     public void ClearChatHistory()
     {
         _messages.Clear();
-        _messages.Add(ChatMessage.CreateSystemMessage(_openAISystemPrompt));
+        _messages.Add(ChatMessage.CreateSystemMessage(_systemPrompt));
     }
 
     public void LoadChatHistory(string fileName)
@@ -86,7 +88,7 @@ public class FunctionCallingChat
         }
     }
 
-    private readonly string _openAISystemPrompt;
+    private readonly string _systemPrompt;
     private readonly FunctionFactory _functionFactory;
     private readonly FunctionCallContext _functionCallContext;
     private readonly ChatCompletionOptions _options;
