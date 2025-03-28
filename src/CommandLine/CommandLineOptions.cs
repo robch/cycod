@@ -161,6 +161,15 @@ public class CommandLineOptions
             commandLineOptions.Commands.Add(command);
         }
 
+        var oneChatCommandWithNoInput = commandLineOptions.Commands.Count == 1 && command is ChatCommand chatCommand && chatCommand.InputInstructions.Count == 0;
+        var implictlyUseStdIn = oneChatCommandWithNoInput && Console.IsInputRedirected;
+        if (implictlyUseStdIn)
+        {
+            var stdinLines = ConsoleHelpers.GetAllLinesFromStdin();
+            var joined = string.Join("\n", stdinLines);
+            (command as ChatCommand)!.InputInstructions.Add(joined);
+        }
+
         return commandLineOptions;
     }
 
