@@ -1,37 +1,68 @@
 USAGE: chatx [...]
 
-OPTIONS
+  MODEL INPUTS
+    --system-prompt "PROMPT"              Load system prompt for the AI model (default: "You are a helpful assistant.")
 
-  --system-prompt "PROMPT"        Set the system prompt for the AI model (default: "You are a helpful assistant.")
+    --input-chat-history [FILE]           Load chat history from the specified JSONL fil
+    --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
+    --question ...                        Alias for --interactive false --quiet --input
+    --instruction ...                     Alias for --inp
 
-  --input "LINE1" "LINE2" ...     Provide one or more lines of inputs to the AI model.
-  --question ...                  Alias for --interactive false --quiet --input
-  --instruction ...               Alias for --input
+    --inputs "INPUT1" "INPUT2" ...        Provide one or more inputs, sequentially, to the AI model.
+    --questions ...                       Alias for --interactive false --quiet --inputs
+    --instructions ...                    Alias for --inpu
 
-  --inputs "INPUT1" "INPUT2" ...  Provide one or more inputs, sequentially, to the AI model.
-  --questions ...                 Alias for --interactive false --quiet --inputs
-  --instructions ...              Alias for --inputs
+    --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
+    --no-templates                        Alias for --use-templates fal
 
-  --input-chat-history [FILE]     Load chat history from the specified JSONL file.
-  --output-chat-history [FILE]    Save chat history to the specified file (default: "chat-history-{time}.jsonl")
-  --output-trajectory [FILE]      Save chat history in human readable trajectory format (default: "trajectory-{time}.md")
+  CHAT HISTORY
+    --output-chat-history [FILE]          Save chat history to the specified file (default: "chat-history-{time}.jsonl")
+    --output-trajectory [FILE]            Save chat history in human readable trajectory format (default: "trajectory-{time}.md
 
-  --trim-token-target             If LLM payload exceeds this target, message array trimming may take place
+  MODEL OPTIONS
+    --max-tokens TOKENS                   AI model should output no more than TOKENS
+    --trim-token-target TOKENS            Specify chat history maximum tokens target (default: 18000
 
-  --save-alias ALIAS              Save current options as an alias
-  --{ALIAS}                       Use options saved under the specified alias name
-  
-  --use-copilot                   Use GitHub Copilot (either token or HMAC)
-  --use-copilot                   Use GitHub Copilot (with token) as the chat provider
-  --use-copilot-hmac              Use GitHub Copilot (with HMAC) as the chat provider
-  --use-azure-openai              Use Azure OpenAI API as the chat provider
-  --use-openai                    Use OpenAI API as the chat provider
-  --use-azure                     Alias for --use-azure-openai
-  
-  --profile NAME                  Load a named profile from .chatx/profiles/NAME.yaml
+  MODEL PROVIDERS
+    --use-copilot                         Prefer use of GitHub Copilot
+    --use-openai                          Prefer use of OpenAI API as the chat provider
+    --use-azure-openai                    Prefer use of Azure OpenAI API as the chat provider
+    --use-azure                           Alias for --use-azure-open
+
+  AZURE OPENAI OPTIONS
+    --azure-openai-api-key KEY            Use a specific authentication key
+    --azure-openai-endpoint URL           Use a specific API endpoint
+    --azure-openai-chat-deployment NAME   Use a specific chat model deployment
+
+  COPILOT OPTIONS
+    --copilot-model-name NAME             Use a specific model by name (default: claude-3.7-sonnet)
+    --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
+    --copilot-integration-id ID           Use a specific integration id
+    --copilot-hmac-key KEY                Use a specific authenticaion key
+    --github-token TOKEN                  Use a specific GitHub authentication tok
+
+  OPENAI OPTIONS
+    --openai-api-key KEY                  Use a specific API key
+    --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
+    --openai-system-prompt PROMPT         Use a specific system prompt w/ OpenAI
+
+  CONFIGURATION
+    --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
+    --profile NAME                        Load a specific profile's configuration from .chatx/profiles/NAME.yaml
+      
+  ALIASES      
+    --save-alias ALIAS                    Save current options as an alias
+    --{ALIAS}                             Use options saved under the specified alias name
+
+  ADDITIONAL OPTIONS
+    --interactive TRUE/FALSE              Allow interactive use (default: true, unless stdin redirected)
+    --debug                               Turn on diagnostics/debug outputs
+    --quiet                               Turn off all but the most critical console outputs
+    --verbose                             Turn on additional diagnostics/debug outputs
 
 SEE ALSO
 
   chatx help
   chatx help examples
   chatx help provider
+  chatx help config

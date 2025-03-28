@@ -6,14 +6,20 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 
 - **Interactive AI Chat**: Have conversations with an AI assistant directly in your terminal
 - **Multiple AI Providers**: Support for OpenAI, Azure OpenAI, and GitHub Copilot APIs
+- **Provider Selection**: Easily switch between different AI providers or use profiles
 - **Function Calling**: Allow the AI assistant to execute various operations:
   - Run shell commands (Bash, CMD, PowerShell) with persistent sessions
   - Manipulate files (view, create, edit, replace text)
   - Access date and time information
+- **Comprehensive Configuration System**: 
+  - Multiple configuration scopes (global, user, local)
+  - Profile support for different configurations
+  - Full configuration CLI with get, set, list, clear, add, remove commands
 - **Customizable Experience**: Configure the AI's behavior with system prompts and other options
 - **Chat History**: Load and save chat histories for later reference
 - **Command Aliases**: Create shortcuts for frequently used command configurations
 - **Token Management**: Automatically manages token usage for long conversations
+- **Chat Commands**: Special commands like `/clear` during chat sessions
 
 ## Installation
 
@@ -82,21 +88,29 @@ chatx --output-chat-history "linux-help-session.jsonl"
 chatx --input-chat-history "linux-help-session.jsonl"
 ```
 
-## Environment Variables
+## Environment Variables and Configuration
 
-The application uses the following environment variables:
+ChatX supports a flexible configuration system with multiple scopes (global, user, local) and formats (YAML, INI). You can:
 
-### OpenAI API
+1. Use environment variables
+2. Use configuration files at:
+   - Global: `%ProgramData%\.chatx\config` (Windows) or `/etc/.chatx/config` (Linux/macOS)
+   - User: `%AppData%\.chatx\config` (Windows) or `~/.chatx/config` (Linux/macOS)
+   - Local: `.chatx\config` in the current directory
+
+### Common Configuration Settings
+
+#### OpenAI API
 - `OPENAI_API_KEY`: Your OpenAI API key
 - `OPENAI_CHAT_MODEL_NAME`: Model name to use (default: gpt-4o)
 - `OPENAI_SYSTEM_PROMPT`: Default system prompt if not specified
 
-### Azure OpenAI API
+#### Azure OpenAI API
 - `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key
 - `AZURE_OPENAI_ENDPOINT`: Your Azure OpenAI endpoint
 - `AZURE_OPENAI_CHAT_DEPLOYMENT`: Your Azure OpenAI deployment name
 
-### GitHub Copilot API
+#### GitHub Copilot API
 - `GITHUB_TOKEN`: Your GitHub personal access token for Copilot API (preferred method)
 - `COPILOT_API_ENDPOINT`: Copilot API endpoint (default: https://api.githubcopilot.com)
 - `COPILOT_MODEL_NAME`: Model name to use (default: claude-3.7-sonnet)
@@ -105,9 +119,38 @@ The application uses the following environment variables:
 *Alternative HMAC authentication:*
 - `COPILOT_HMAC_KEY`: Your Copilot HMAC key
 
-### Configuration Files
+#### App Configuration
+- `CHATX_PREFERRED_PROVIDER`: Set default AI provider (openai, azure-openai, copilot, copilot-hmac)
 
-Environment variables can also be set in a `.chatx/config` file in your home or project directory, with each variable on a separate line in `NAME=VALUE` format.
+### Configuration Profiles
+
+You can create named profiles to store different provider configurations:
+
+1. Create YAML files at `.chatx/profiles/<name>.yaml`
+2. Use `--profile <name>` to load that profile
+
+Example profile at `.chatx/profiles/work.yaml`:
+```yaml
+app:
+  preferredProvider: "azure-openai"
+
+azure:
+  openai:
+    endpoint: "https://my-work-endpoint.openai.azure.com"
+    chatDeployment: "gpt-4"
+```
+
+### Configuration Management
+
+Manage configurations from the command line:
+
+```bash
+chatx config list              # List all settings in current scope
+chatx config list --any        # List all settings from all scopes
+chatx config get KEY           # Get a configuration value
+chatx config set KEY VALUE     # Set a configuration value
+chatx config clear KEY         # Clear a configuration value
+```
 
 ## Documentation
 

@@ -2,18 +2,14 @@ Welcome to CHATX, the AI-Powered Chat interface.
 
 Using CHATX, you can:
 
-  - Interactively chat an with AI model
-  - Programmatically chat with an AI model
+  - Chat with an AI model (interactively/programmatically)
   - Provide one or more inputs to the AI model
-  - Manage configuration settings with the 'config' commands
-  - Authenticate with GitHub Copilot using 'ghcp login'
-  - Select different chat providers (OpenAI, Azure OpenAI, GitHub Copilot)
-  - Use built-in function tools to 
+  - Use built-in function tools to:
     - Read and write files
     - Execute shell commands/scripts
 
 USAGE: chatx [...]
-   OR: chatx config [COMMAND] [...]
+   OR: chatx config [COMMAND] [--scope] [...]
    OR: chatx ghcp login
 
 EXAMPLES
@@ -33,6 +29,18 @@ EXAMPLES
   EXAMPLE 4: Execute shell commands
 
     chatx --instructions "Use gh to find the open issues assigned to me"
+    
+  EXAMPLE 5: Use a specific AI provider
+  
+    chatx --use-openai --question "What are GPT models?"
+    
+  EXAMPLE 6: Use a configuration profile
+  
+    chatx --profile work --question "What's on my agenda today?"
+    
+  EXAMPLE 7: Pipe input through stdin
+  
+    echo "What is the capital of France?" | chatx
 
 SEE ALSO
 

@@ -15,6 +15,7 @@ ChatX supports the following commands:
 | Command | Description |
 |---------|-------------|
 | `chat` | Start a chat session (default) |
+| `config` | Manage configuration settings |
 | `ghcp login` | Authenticate with GitHub Copilot |
 | `version` | Display version information |
 | `help` | Display help information |
@@ -29,6 +30,7 @@ These options apply to the overall behavior of ChatX:
 | `--verbose` | Enable verbose output |
 | `--quiet` | Suppress non-essential output |
 | `--interactive <true/false>` | Control whether to enter interactive mode (default: true) |
+| `--no-templates` | Disable template processing in input |
 | `--save-alias <name>` | Save the current command options as a named alias |
 | `--help` | Display help information |
 
@@ -49,6 +51,31 @@ These options control the chat interaction:
 | `--output-chat-history <file>` | Save chat history to a JSONL file |
 | `--output-trajectory <file>` | Save chat history in a more readable trajectory format |
 | `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
+
+## Provider Selection Options
+
+These options control which AI provider to use:
+
+| Option | Description |
+|--------|-------------|
+| `--use-openai` | Use OpenAI API as the chat provider |
+| `--use-azure-openai` | Use Azure OpenAI API as the chat provider |
+| `--use-azure` | Alias for `--use-azure-openai` |
+| `--use-copilot` | Use GitHub Copilot (either token or HMAC) |
+| `--use-copilot-token` | Use GitHub Copilot with token authentication |
+| `--use-copilot-hmac` | Use GitHub Copilot with HMAC authentication |
+| `--profile <name>` | Load a named profile from `.chatx/profiles/<name>.yaml` |
+
+## Configuration Options
+
+These options control the configuration system:
+
+| Option | Description |
+|--------|-------------|
+| `--global`, `-g` | Use global scope (all users) |
+| `--user`, `-u` | Use user scope (current user) |
+| `--local`, `-l` | Use local scope (current directory) |
+| `--any`, `-a` | Include settings from all scopes (for 'list' command) |
 
 ## Help Options
 
@@ -121,6 +148,34 @@ chatx --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" 
 
 This will automatically trim tool call content when the history approaches the specified token target.
 
+### Using Different Providers
+
+You can explicitly select which AI provider to use:
+
+```bash
+chatx --use-openai --input "Tell me about OpenAI's models"
+chatx --use-azure-openai --input "Tell me about Azure OpenAI services"
+chatx --use-copilot --input "Tell me about GitHub Copilot"
+```
+
+### Using Configuration Profiles
+
+Load a named configuration profile:
+
+```bash
+chatx --profile work --input "What's on my schedule today?"
+```
+
+### Configuration Management
+
+View and manage configuration settings:
+
+```bash
+chatx config list --any           # List all configuration settings from all scopes
+chatx config get OPENAI_API_KEY   # Get the value of a specific setting
+chatx config set OPENAI_API_KEY value123  # Set a configuration value
+```
+
 ### GitHub Copilot Authentication
 
 To use GitHub Copilot with ChatX, you need to authenticate:
@@ -182,6 +237,14 @@ chatx --python-expert --input "Explain decorators in Python" --output-chat-histo
 ```
 
 This applies all options from the `python-expert` alias and then adds the additional options specified.
+
+### Using Chat Commands
+
+You can use special commands during chat:
+
+```
+/clear      Clear the current conversation history
+```
 
 ### Debugging Problems
 
