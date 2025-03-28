@@ -33,7 +33,7 @@ public class FunctionCallingChat
         _messages.ReadChatHistoryFromFile(fileName);
     }
 
-    public void SaveChatHistory(string fileName)
+    public void SaveChatHistoryToFile(string fileName)
     {
         _messages.SaveChatHistoryToFile(fileName);
     }

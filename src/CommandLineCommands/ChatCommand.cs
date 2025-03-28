@@ -96,13 +96,29 @@ class ChatCommand : Command
     {
         if (userPrompt == "/save")
         {
-            ConsoleHelpers.Write("\nSaving chat-history.jsonl ...");
-            chat.SaveChatHistory("chat-history.jsonl");
-            ConsoleHelpers.WriteLine("Saved!\n");
-            return true;
+            return SaveChatHistory(chat);
+        }
+        else if (userPrompt == "/clear")
+        {
+            return ClearChatHistory(chat);
         }
 
         return false;
+    }
+
+    private static bool ClearChatHistory(FunctionCallingChat chat)
+    {
+        chat.ClearChatHistory();
+        ConsoleHelpers.WriteLine("\nCleared chat history.\n");
+        return true;
+    }
+
+    private static bool SaveChatHistory(FunctionCallingChat chat)
+    {
+        ConsoleHelpers.Write("\nSaving chat-history.jsonl ...");
+        chat.SaveChatHistoryToFile("chat-history.jsonl");
+        ConsoleHelpers.WriteLine("Saved!\n");
+        return true;
     }
 
     private async Task<string> CompleteChatStreamingAsync(
@@ -128,7 +144,7 @@ class ChatCommand : Command
         catch (Exception)
         {
             var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
-            chat.SaveChatHistory(fileName);
+            chat.SaveChatHistoryToFile(fileName);
 
             ConsoleHelpers.Write("\n\n", overrideQuiet: true);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");

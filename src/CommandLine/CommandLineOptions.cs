@@ -504,21 +504,28 @@ public class CommandLineOptions
             command.SystemPrompt = prompt;
             i += promptArgs.Count();
         }
-        else if (arg == "--input" || arg == "--instruction" || arg == "--question")
+        else if (arg == "--input" || arg == "--instruction" || arg == "--question" || arg == "-q")
         {
             var inputArgs = GetInputOptionArgs(i + 1, args)
                 .Select(x => FileHelpers.FileExists(x)
                     ? FileHelpers.ReadAllText(x)
                     : x);
-            var joined = ValidateString(arg, string.Join("\n", inputArgs), "input");
-            command.InputInstructions.Add(joined!);
 
-            var isQuietNonInteractiveAlias = arg == "--question";
+            var isQuietNonInteractiveAlias = arg == "--question" || arg == "-q";
             if (isQuietNonInteractiveAlias)
             {
                 commandLineOptions.Quiet = true;
                 commandLineOptions.Interactive = false;
             }
+
+            var implictlyUseStdIn = isQuietNonInteractiveAlias && inputArgs.Count() == 0;
+            if (implictlyUseStdIn)
+            {
+                inputArgs = ConsoleHelpers.GetAllLinesFromStdin();
+            }
+
+            var joined = ValidateString(arg, string.Join("\n", inputArgs), "input");
+            command.InputInstructions.Add(joined!);
 
             i += inputArgs.Count();
         }
@@ -528,8 +535,6 @@ public class CommandLineOptions
                 .Select(x => FileHelpers.FileExists(x)
                     ? FileHelpers.ReadAllText(x)
                     : x);
-            var inputs = ValidateStrings(arg, inputArgs, "input");
-            command.InputInstructions.AddRange(inputs);
 
             var isQuietNonInteractiveAlias = arg == "--questions";
             if (isQuietNonInteractiveAlias)
@@ -537,6 +542,15 @@ public class CommandLineOptions
                 commandLineOptions.Quiet = true;
                 commandLineOptions.Interactive = false;
             }
+
+            var implictlyUseStdIn = isQuietNonInteractiveAlias && inputArgs.Count() == 0;
+            if (implictlyUseStdIn)
+            {
+                inputArgs = ConsoleHelpers.GetAllLinesFromStdin();
+            }
+
+            var inputs = ValidateStrings(arg, inputArgs, "input");
+            command.InputInstructions.AddRange(inputs);
 
             i += inputArgs.Count();
         }
