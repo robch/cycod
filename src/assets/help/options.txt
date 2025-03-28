@@ -5,12 +5,12 @@ OPTIONS
   --system-prompt "PROMPT"        Set the system prompt for the AI model (default: "You are a helpful assistant.")
 
   --input "LINE1" "LINE2" ...     Provide one or more lines of inputs to the AI model.
+  --question ...                  Alias for --interactive false --quiet --input
   --instruction ...               Alias for --input
-  --question ...                  Alias for --input
 
   --inputs "INPUT1" "INPUT2" ...  Provide one or more inputs, sequentially, to the AI model.
+  --questions ...                 Alias for --interactive false --quiet --inputs
   --instructions ...              Alias for --inputs
-  --questions ...                 Alias for --inputs
 
   --input-chat-history [FILE]     Load chat history from the specified JSONL file.
   --output-chat-history [FILE]    Save chat history to the specified file (default: "chat-history-{time}.jsonl")

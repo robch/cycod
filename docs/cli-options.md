@@ -40,11 +40,11 @@ These options control the chat interaction:
 |--------|-------------|
 | `--system-prompt <prompt>` | Set a custom system prompt for the AI |
 | `--input <text>` | Provide a single input/question to the AI |
-| `--instruction <text>` | Alias for --input |
-| `--question <text>` | Alias for --input |
+| `--question <text>` | Alias for `--interactive false --quiet --input` |
+| `--instruction <text>` | Alias for `--input` |
 | `--inputs <text...>` | Provide multiple inputs/questions to the AI |
-| `--instructions <text...>` | Alias for --inputs |
-| `--questions <text...>` | Alias for --inputs |
+| `--questions <text...>` | Alias for `--interactive false --quiet --inputs` |
+| `--instructions <text...>` | Alias for `--inputs` |
 | `--input-chat-history <file>` | Load previous chat history from a JSONL file |
 | `--output-chat-history <file>` | Save chat history to a JSONL file |
 | `--output-trajectory <file>` | Save chat history in a more readable trajectory format |

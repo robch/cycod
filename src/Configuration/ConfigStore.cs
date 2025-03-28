@@ -20,6 +20,7 @@ public class ConfigStore
     {
         EnsureLoaded();
 
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
         var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
         _configFiles.Add(configFile);
     }
@@ -30,6 +31,7 @@ public class ConfigStore
 
         foreach (var fileName in fileNames)
         {
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
             var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
             _configFiles.Add(configFile);
         }
@@ -56,8 +58,23 @@ public class ConfigStore
             return configValue!;
         }
 
+        // 3. Then search the non-local, user, and global config files
+        foreach (var configFile in _configFiles.Where(c => 
+            c.Scope != ConfigFileScope.Local && 
+            c.Scope != ConfigFileScope.User && 
+            c.Scope != ConfigFileScope.Global))
+        {
+            var value = GetFromConfig(dotNotationKey, configFile);
+            if (!value.IsNullOrEmpty())
+            {
+                var source = ConfigSourceFromScope(configFile.Scope);
+                return new ConfigValue(value.Value, source, isSecret);
+            }
+        }
+
+
         // 3. Then search the config files in order of priority (Local, User, Global)
-        // Check Local (project-specific) scope first - highest priority
+        // Check Local scope first
         var localConfigFile = _configFiles.FirstOrDefault(c => c.Scope == ConfigFileScope.Local);
         if (localConfigFile != null)
         {
@@ -93,20 +110,6 @@ public class ConfigStore
             }
         }
         
-        // Check any other file scopes (e.g., FileName)
-        foreach (var configFile in _configFiles.Where(c => 
-            c.Scope != ConfigFileScope.Local && 
-            c.Scope != ConfigFileScope.User && 
-            c.Scope != ConfigFileScope.Global))
-        {
-            var value = GetFromConfig(dotNotationKey, configFile);
-            if (!value.IsNullOrEmpty())
-            {
-                var source = ConfigSourceFromScope(configFile.Scope);
-                return new ConfigValue(value.Value, source, isSecret);
-            }
-        }
-
         ConsoleHelpers.WriteDebugLine($"ConfigStore.Get; no value found for '{key}'");
         return new ConfigValue();
     }
@@ -121,7 +124,7 @@ public class ConfigStore
     {
         EnsureLoaded();
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; checking {configFile.Scope} setting: {key}");
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; checking {configFile.Scope} setting: {key}");
 
         var dotNotationKey = KnownSettings.ToDotNotation(key);
         bool isSecret = KnownSettings.IsSecret(dotNotationKey);
@@ -132,8 +135,10 @@ public class ConfigStore
 
         if (foundInScope)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromScope; Found '{dotNotationKey}' in {configFile.Scope} setting: {value}");
-            return new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
+            var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
+            var displayValue = configValue.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; Found '{dotNotationKey}' in {configFile.FileName} setting: {displayValue}");
+            return configValue;
         }
 
         return new ConfigValue();
@@ -443,13 +448,13 @@ public class ConfigStore
 
     private void LoadKnownConfigFiles()
     {
-        LoadConfigFilesForScope(ConfigFileScope.Global);
-        LoadConfigFilesForScope(ConfigFileScope.User);
-        LoadConfigFilesForScope(ConfigFileScope.Local);
+        LoadConfigFileForScope(ConfigFileScope.Global);
+        LoadConfigFileForScope(ConfigFileScope.User);
+        LoadConfigFileForScope(ConfigFileScope.Local);
         _loadedKnownConfigFiles = true;
     }
 
-    private void LoadConfigFilesForScope(ConfigFileScope scope)
+    private void LoadConfigFileForScope(ConfigFileScope scope)
     {
         var configPath = ConfigFileHelpers.FindConfigFile(scope);
         if (configPath == null)

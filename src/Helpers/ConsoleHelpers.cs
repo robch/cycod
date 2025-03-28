@@ -7,6 +7,12 @@ using System.Threading;
 
 class ConsoleHelpers
 {
+    public static void ConfigureDebug(bool debug)
+    {
+        _debug = _debug || debug;
+        WriteDebugLine($"Debug: {_debug}");
+    }
+
     public static void Configure(bool debug, bool verbose, bool quiet)
     {
         Console.OutputEncoding = Encoding.UTF8;

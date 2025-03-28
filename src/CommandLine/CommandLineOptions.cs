@@ -255,8 +255,8 @@ public class CommandLineOptions
         var parsedOption = TryParseGlobalCommandLineOptions(commandLineOptions, args, ref i, arg) ||
             TryParseHelpCommandOptions(commandLineOptions, command as HelpCommand, args, ref i, arg) ||
             TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
+            TryParseChatCommandOptions(commandLineOptions, command as ChatCommand, args, ref i, arg) ||
             TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
-            TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
@@ -354,6 +354,7 @@ public class CommandLineOptions
         else if (arg == "--debug")
         {
             commandLineOptions.Debug = true;
+            ConsoleHelpers.ConfigureDebug(true);
         }
         else if (arg == "--verbose")
         {
@@ -469,7 +470,7 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static bool TryParseChatCommandOptions(ChatCommand? command, string[] args, ref int i, string arg)
+    private static bool TryParseChatCommandOptions(CommandLineOptions commandLineOptions, ChatCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -502,7 +503,6 @@ public class CommandLineOptions
             var prompt = ValidateString(arg, string.Join("\n", promptArgs), "system prompt");
             command.SystemPrompt = prompt;
             i += promptArgs.Count();
-            return true;
         }
         else if (arg == "--input" || arg == "--instruction" || arg == "--question")
         {
@@ -512,6 +512,14 @@ public class CommandLineOptions
                     : x);
             var joined = ValidateString(arg, string.Join("\n", inputArgs), "input");
             command.InputInstructions.Add(joined!);
+
+            var isQuietNonInteractiveAlias = arg == "--question";
+            if (isQuietNonInteractiveAlias)
+            {
+                commandLineOptions.Quiet = true;
+                commandLineOptions.Interactive = false;
+            }
+
             i += inputArgs.Count();
         }
         else if (arg == "--inputs" || arg == "--instructions" || arg == "--questions")
@@ -522,6 +530,14 @@ public class CommandLineOptions
                     : x);
             var inputs = ValidateStrings(arg, inputArgs, "input");
             command.InputInstructions.AddRange(inputs);
+
+            var isQuietNonInteractiveAlias = arg == "--questions";
+            if (isQuietNonInteractiveAlias)
+            {
+                commandLineOptions.Quiet = true;
+                commandLineOptions.Interactive = false;
+            }
+
             i += inputArgs.Count();
         }
         else if (arg == "--input-chat-history")
@@ -738,16 +754,25 @@ public class CommandLineOptions
         }
         
         var profilesDirectory = FindProfilesDirectory(create: false);
-        var profilePath = profilesDirectory != null
+        var yamlProfile = profilesDirectory != null
             ? Path.Combine(profilesDirectory, $"{profileName}.yaml")
             : Path.Combine(Directory.GetCurrentDirectory(), $"{profileName}.yaml");
-        if (!File.Exists(profilePath))
+        var iniProfile = profilesDirectory != null
+            ? Path.Combine(profilesDirectory, profileName)
+            : Path.Combine(Directory.GetCurrentDirectory(), profileName);
+
+        var yamlProfileOk = FileHelpers.FileExists(yamlProfile);
+        var iniProfileOk = FileHelpers.FileExists(iniProfile);
+        var profileOk = yamlProfileOk || iniProfileOk;
+
+        if (!profileOk)
         {
-            throw new CommandLineException($"Profile '{profileName}' not found at path: {profilePath}");
+            throw new CommandLineException($"Profile '{profileName}' not found at path; checked:\n- {yamlProfile}\n- {iniProfile}");
         }
         
-        ConsoleHelpers.WriteDebugLine($"Loading profile from {profilePath}");
-        ConfigStore.Instance.LoadConfigFile(profilePath);
+        var profile = yamlProfileOk ? yamlProfile : iniProfile;
+        ConsoleHelpers.WriteDebugLine($"Loading profile from {profile}");
+        ConfigStore.Instance.LoadConfigFile(profile);
     }
     
     private static string? FindProfilesDirectory(bool create = false)

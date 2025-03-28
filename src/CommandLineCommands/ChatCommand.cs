@@ -233,7 +233,8 @@ class ChatCommand : Command
     {
         if (_asssistantResponseNeedsLF)
         {
-            ConsoleHelpers.WriteLine();
+            var oneLineFeedOrTwo = ConsoleHelpers.IsQuiet() ? "\n\n" : "\n";
+            ConsoleHelpers.Write(oneLineFeedOrTwo, overrideQuiet: true);
             _asssistantResponseNeedsLF = false;
         }
         
