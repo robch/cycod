@@ -81,7 +81,7 @@ public class Program
             {
                 ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
                 VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
-                GitHubCopilotLoginCommand loginCommand => await loginCommand.ExecuteAsync(commandLineOptions.Interactive),
+                GitHubLoginCommand loginCommand => await loginCommand.ExecuteAsync(commandLineOptions.Interactive),
                 ConfigListCommand configListCommand => configListCommand.Execute(commandLineOptions.Interactive),
                 ConfigGetCommand configGetCommand => configGetCommand.Execute(commandLineOptions.Interactive),
                 ConfigSetCommand configSetCommand => configSetCommand.Execute(commandLineOptions.Interactive),

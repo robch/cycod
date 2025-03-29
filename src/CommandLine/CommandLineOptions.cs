@@ -230,7 +230,7 @@ public class CommandLineOptions
                 _ => $"{name1} {name2}".Trim()
             };
 
-            var partialCommandNeedsHelp = commandName == "config" || commandName == "ghcp";
+            var partialCommandNeedsHelp = commandName == "config" || commandName == "github";
             if (partialCommandNeedsHelp)
             {
                 command = new HelpCommand();
@@ -242,7 +242,7 @@ public class CommandLineOptions
             {
                 "help" => new HelpCommand(),
                 "version" => new VersionCommand(),
-                "ghcp login" => new GitHubCopilotLoginCommand(),
+                "github login" => new GitHubLoginCommand(),
                 "config list" => new ConfigListCommand(),
                 "config get" => new ConfigGetCommand(),
                 "config set" => new ConfigSetCommand(),

@@ -10,7 +10,7 @@ Using CHATX, you can:
 
 USAGE: chatx [...]
    OR: chatx config [COMMAND] [--scope] [...]
-   OR: chatx ghcp login
+   OR: chatx github login
 
 EXAMPLES
 
@@ -49,4 +49,4 @@ SEE ALSO
   chatx help options
   chatx help provider
   chatx help config
-  chatx help ghcp login
+  chatx help github login

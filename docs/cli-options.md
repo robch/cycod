@@ -16,7 +16,7 @@ ChatX supports the following commands:
 |---------|-------------|
 | `chat` | Start a chat session (default) |
 | `config` | Manage configuration settings |
-| `ghcp login` | Authenticate with GitHub Copilot |
+| `github login` | Authenticate with GitHub Copilot |
 | `version` | Display version information |
 | `help` | Display help information |
 
@@ -181,7 +181,7 @@ chatx config set OPENAI_API_KEY value123  # Set a configuration value
 To use GitHub Copilot with ChatX, you need to authenticate:
 
 ```bash
-chatx ghcp login
+chatx github login
 ```
 
 This will initiate the GitHub device flow authentication process, displaying a code and URL to visit. After authenticating, ChatX will store your GitHub token in the `.chatx/config` file and you'll be able to use Copilot for chat completions.

@@ -1,10 +1,10 @@
-CHATX GITHUB COPILOT LOGIN
+CHATX GITHUB LOGIN
 
-  This command helps you authenticate with GitHub Copilot for use with CHATX.
+  This command helps you authenticate with GitHub to use Copilot with CHATX.
   It handles the device authorization flow with GitHub and saves the token
   in your CHATX configuration.
 
-USAGE: chatx ghcp login
+USAGE: chatx github login
 
 DETAILS
 
@@ -14,7 +14,7 @@ DETAILS
   3. Allow CHATX to use GitHub Copilot for AI interactions
 
   After successful authentication, CHATX will automatically use your 
-  GitHub Copilot credentials when appropriate.
+  GitHub credentials when appropriate.
 
 NOTE: This requires a valid GitHub Copilot subscription.
 

@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-class GitHubCopilotLoginCommand : Command
+class GitHubLoginCommand : Command
 {
-    public GitHubCopilotLoginCommand()
+    public GitHubLoginCommand()
     {
     }
 
@@ -14,18 +14,18 @@ class GitHubCopilotLoginCommand : Command
 
     override public string GetCommandName()
     {
-        return "ghcp login";
+        return "github login";
     }
 
     public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
     {
-        ConsoleHelpers.WriteDebugLine("Initiating GitHub Copilot login...");
+        ConsoleHelpers.WriteDebugLine("Initiating GitHub login...");
         
         var helper = new GitHubCopilotHelper();
         var githubToken = await helper.GetGitHubTokenAsync();
         helper.SaveGitHubTokenToConfig(githubToken);
         
-        ConsoleHelpers.WriteLine("GitHub Copilot login successful! You can now use chatx with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
+        ConsoleHelpers.WriteLine("GitHub login successful! You can now use chatx with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
             
         return new List<Task<int>>() { Task.FromResult(0) };
     }
