@@ -92,6 +92,16 @@ public abstract class ShellSession
 
         await WaitForMarkerAsync(timeoutMs);
 
+        var exitCode = ParseExitCode();
+        var stdOut = StripMarker(_stdoutBuffer);
+        var stdErr = StripMarker(_stderrBuffer);
+        var merged = StripMarker(_mergedBuffer);
+
+        return (stdOut, stdErr, merged, exitCode);
+    }
+
+    private int ParseExitCode()
+    {
         string stdout;
         lock (_lock)
         {
@@ -103,13 +113,24 @@ public abstract class ShellSession
             throw new Exception("Marker not found in output.");
         }
 
-        // Extract the part containing the marker and exit code.
         var markerOutput = stdout.Substring(markerIndex).Trim();
-        int exitCode = ParseExitCode(markerOutput);
+        return ParseExitCode(markerOutput);
+    }
 
-        // Everything before the marker is command output.
-        stdout = stdout.Substring(0, markerIndex).TrimEnd();
-        return (stdout, _stderrBuffer.ToString(), _mergedBuffer.ToString(), exitCode);
+    private string StripMarker(StringBuilder sb)
+    {
+        string output;
+        lock (_lock)
+        {
+            output = sb.ToString();
+        }
+
+        var lines = output
+            .Split('\n', StringSplitOptions.None)
+            .Select(line => line.TrimEnd(new char[] { '\r', '\n' }))
+            .Where(line => !line.Contains(Marker));
+
+        return string.Join("\n", lines);
     }
 
     private async Task<string> WaitForMarkerAsync(int timeoutMs)
