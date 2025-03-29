@@ -117,21 +117,71 @@ public class ConfigValue
 
     public List<string> AsList()
     {
-        if (_value is List<object> objList)
+        // Handle null value
+        if (_value == null)
         {
-            return objList.Select(o => o?.ToString() ?? string.Empty).ToList();
+            ConsoleHelpers.WriteDebugLine($"AsList: null value");
+            return new List<string>();
         }
 
+        // Handle List<object>
+        if (_value is List<object> objList)
+        {
+            var list = objList.Select(o => o?.ToString() ?? string.Empty).ToList();
+            ConsoleHelpers.WriteDebugLine($"AsList: List<object> [{string.Join(", ", list)}]");
+            return list;
+        }
+
+        // Handle List<string>
         if (_value is List<string> stringList)
         {
+            ConsoleHelpers.WriteDebugLine($"AsList: List<string> [{string.Join(", ", stringList)}]");
             return stringList;
         }
 
+        // Handle arrays (object[] and string[])
+        if (_value is object[] objArray)
+        {
+            var list = objArray.Select(o => o?.ToString() ?? string.Empty).ToList();
+            ConsoleHelpers.WriteDebugLine($"AsList: object[] [{string.Join(", ", list)}]");
+            return list;
+        }
+
+        if (_value is string[] strArray)
+        {
+            ConsoleHelpers.WriteDebugLine($"AsList: string[] [{string.Join(", ", strArray)}]");
+            return strArray.ToList();
+        }
+
+        // Handle single string
         if (_value is string singleString)
         {
+            // Check if it's an empty array representation from YAML
+            if (singleString == "[]")
+            {
+                ConsoleHelpers.WriteDebugLine($"AsList: empty array string representation");
+                return new List<string>();
+            }
+            
+            ConsoleHelpers.WriteDebugLine($"AsList: single string {singleString}");
             return new List<string> { singleString };
         }
 
+        // Handle IEnumerable<object> (catches more generic collections)
+        if (_value is System.Collections.IEnumerable enumerable && 
+            !(_value is string)) // Exclude strings which are IEnumerable<char>
+        {
+            var list = new List<string>();
+            foreach (var item in enumerable)
+            {
+                list.Add(item?.ToString() ?? string.Empty);
+            }
+            ConsoleHelpers.WriteDebugLine($"AsList: IEnumerable [{string.Join(", ", list)}]");
+            return list;
+        }
+
+        // Default - empty list
+        ConsoleHelpers.WriteDebugLine($"AsList: unknown type ({_value?.GetType().Name ?? "null"}) - returning empty list");
         return new List<string>();
     }
 

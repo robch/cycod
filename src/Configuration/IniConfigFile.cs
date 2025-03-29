@@ -39,9 +39,24 @@ public class IniConfigFile : ConfigFile
                     var key = trimmedLine.Substring(0, equalsPos).Trim();
                     var value = trimmedLine.Substring(equalsPos + 1).Trim();
 
-                    // Convert from flat format to hierarchical format
-                    var dotNotationKey = KnownSettings.ToDotNotation(key);
-                    SetNestedValue(result, dotNotationKey.Split('.'), value);
+                    // Check if this is a list represented as comma-separated values
+                    if (value.Contains(","))
+                    {
+                        // Convert comma-separated string to List<string>
+                        var listValue = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                            .Select(v => v.Trim())
+                                            .ToList();
+                        
+                        // Convert from flat format to hierarchical format
+                        var dotNotationKey = KnownSettings.ToDotNotation(key);
+                        SetNestedValue(result, dotNotationKey.Split('.'), listValue);
+                    }
+                    else
+                    {
+                        // Convert from flat format to hierarchical format
+                        var dotNotationKey = KnownSettings.ToDotNotation(key);
+                        SetNestedValue(result, dotNotationKey.Split('.'), value);
+                    }
                 }
             }
         }

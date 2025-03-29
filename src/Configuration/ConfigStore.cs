@@ -263,15 +263,17 @@ public class ConfigStore
     {
         EnsureLoaded();
         var configValue = GetFromConfig(key, configFile);
+
         List<string> list = configValue.AsList();
-        
         if (!list.Contains(value))
         {
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; adding '{value}' to '{key}' list");
             list.Add(value);
             Set(key, list, configFile, save);
             return true;
         }
-        
+
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; '{value}' already exists in '{key}' list");        
         return false;
     }
 
@@ -296,10 +298,12 @@ public class ConfigStore
         List<string> list = configValue.AsList();
         if (list.Remove(value))
         {
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.RemoveFromList; removed '{value}' from '{key}' list");
             Set(key, list, configFile, save);
             return true;
         }
         
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.RemoveFromList; '{value}' not found in '{key}' list");
         return false;
     }
 
