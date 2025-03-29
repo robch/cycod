@@ -38,7 +38,12 @@ public class ConfigValue
     /// Gets the source of this configuration value.
     /// </summary>
     public ConfigSource Source { get; }
-    
+
+    /// <summary>
+    /// Gets the configuration file associated with this value, if any.
+    /// </summary>
+    public ConfigFile? File { get; internal set; }
+
     /// <summary>
     /// Gets whether this value should be treated as a secret.
     /// </summary>
@@ -130,8 +135,18 @@ public class ConfigValue
         return new List<string>();
     }
 
-    public bool IsNullOrEmpty()
+    public bool IsNotFound()
     {
+        return Source == ConfigSource.NotFound;
+    }
+
+    public bool IsNotFoundNullOrEmpty()
+    {
+        if (Source == ConfigSource.NotFound)
+        {
+            return true;
+        }
+
         if (_value == null)
         {
             return true;

@@ -163,15 +163,30 @@ public class GitHubCopilotHelper
     /// <summary>
     /// Saves the GitHub token to the configuration
     /// </summary>
-    public void SaveGitHubTokenToConfig(string token)
+    public void SaveGitHubTokenToConfig(string token, ConfigFileScope scope = ConfigFileScope.Local, string? configFileName = null)
     {
         var configStore = ConfigStore.Instance;
-        configStore.Set("GitHub.Token", token, ConfigFileScope.User, true);
+
+        var saveInFile = scope == ConfigFileScope.FileName;
+        if (saveInFile) configStore.Set("GitHub.Token", token, configFileName!);
+
+        var saveInKnownScope = scope == ConfigFileScope.Global || scope == ConfigFileScope.User || scope == ConfigFileScope.Local;
+        if (saveInKnownScope) configStore.Set("GitHub.Token", token, scope, true);
+
+        var invalid = !saveInFile && !saveInKnownScope;
+        if (invalid)
+        {
+            throw new ArgumentException($"Invalid scope: {scope}. Use FileName, Global, User, or Local.");
+        }
         
-        ConsoleHelpers.WriteLine("GitHub token saved to user configuration", ConsoleColor.Green, overrideQuiet: true);
+        var scopeName = scope.ToString().ToLowerInvariant();
+        ConsoleHelpers.WriteLine(
+            scope == ConfigFileScope.FileName
+                ? $"GitHub token saved to {scopeName} configuration file: {configFileName}"
+                : $"GitHub token saved to {scopeName} configuration",
+            ConsoleColor.Green,
+            overrideQuiet: true);
     }
-
-
 
     // Response classes for JSON deserialization
     private class DeviceCodeResponse

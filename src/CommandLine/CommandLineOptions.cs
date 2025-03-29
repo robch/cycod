@@ -265,6 +265,7 @@ public class CommandLineOptions
             TryParseHelpCommandOptions(commandLineOptions, command as HelpCommand, args, ref i, arg) ||
             TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
             TryParseChatCommandOptions(commandLineOptions, command as ChatCommand, args, ref i, arg) ||
+            TryParseGitHubLoginCommandOptions(command as GitHubLoginCommand, args, ref i, arg) ||
             TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
@@ -451,25 +452,29 @@ public class CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var configPath = ValidateOkFileName(max1Arg.FirstOrDefault());
             ConfigStore.Instance.LoadConfigFile(configPath);
-            command.ConfigFileName = configPath;
             command.Scope = ConfigFileScope.FileName;
+            command.ConfigFileName = configPath;
             i += max1Arg.Count();
         }
         else if (arg == "--global" || arg == "-g")
         {
             command.Scope = ConfigFileScope.Global;
+            command.ConfigFileName = null;
         }
         else if (arg == "--user" || arg == "-u")
         {
             command.Scope = ConfigFileScope.User;
+            command.ConfigFileName = null;
         }
         else if (arg == "--local" || arg == "-l")
         {
             command.Scope = ConfigFileScope.Local;
+            command.ConfigFileName = null;
         }
         else if (arg == "--any" || arg == "-a")
         {
             command.Scope = ConfigFileScope.Any;
+            command.ConfigFileName = null;
         }
         else
         {
@@ -610,6 +615,52 @@ public class CommandLineOptions
         else if (arg == "--use-copilot-hmac") 
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-hmac");
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseGitHubLoginCommandOptions(GitHubLoginCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--config")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var configPath = ValidateOkFileName(max1Arg.FirstOrDefault());
+            ConfigStore.Instance.LoadConfigFile(configPath);
+            command.Scope = ConfigFileScope.FileName;
+            command.ConfigFileName = configPath;
+            i += max1Arg.Count();
+        }
+        else if (arg == "--global" || arg == "-g")
+        {
+            command.Scope = ConfigFileScope.Global;
+            command.ConfigFileName = null;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.Scope = ConfigFileScope.User;
+            command.ConfigFileName = null;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Scope = ConfigFileScope.Local;
+            command.ConfigFileName = null;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Scope = ConfigFileScope.Any;
+            command.ConfigFileName = null;
         }
         else
         {

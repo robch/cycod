@@ -55,6 +55,7 @@ public class ConfigStore
         var envVarKey = KnownSettings.ToEnvironmentVariable(dotNotationKey);
         if (TryGetFromEnv(envVarKey, out var configValue))
         {
+            ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in environment variable: {envVarKey}");
             return configValue!;
         }
 
@@ -65,10 +66,11 @@ public class ConfigStore
             c.Scope != ConfigFileScope.Global))
         {
             var value = GetFromConfig(dotNotationKey, configFile);
-            if (!value.IsNullOrEmpty())
+            if (!value.IsNotFoundNullOrEmpty())
             {
                 var source = ConfigSourceFromScope(configFile.Scope);
-                return new ConfigValue(value.Value, source, isSecret);
+                ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in specified config file: {configFile.FileName}");
+                return new ConfigValue(value.Value, source, isSecret) { File = configFile };
             }
         }
 
@@ -79,10 +81,11 @@ public class ConfigStore
         if (localConfigFile != null)
         {
             var value = GetFromConfig(dotNotationKey, localConfigFile);
-            if (!value.IsNullOrEmpty())
+            if (!value.IsNotFoundNullOrEmpty())
             {
                 var source = ConfigSourceFromScope(localConfigFile.Scope);
-                return new ConfigValue(value.Value, source, isSecret);
+                ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in local config file: {localConfigFile.FileName}");
+                return new ConfigValue(value.Value, source, isSecret) { File = localConfigFile };
             }
         }
         
@@ -91,10 +94,11 @@ public class ConfigStore
         if (userConfigFile != null)
         {
             var value = GetFromConfig(dotNotationKey, userConfigFile);
-            if (!value.IsNullOrEmpty())
+            if (!value.IsNotFoundNullOrEmpty())
             {
                 var source = ConfigSourceFromScope(userConfigFile.Scope);
-                return new ConfigValue(value.Value, source, isSecret);
+                ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in user config file: {userConfigFile.FileName}");
+                return new ConfigValue(value.Value, source, isSecret) { File = userConfigFile };
             }
         }
         
@@ -103,19 +107,29 @@ public class ConfigStore
         if (globalConfigFile != null)
         {
             var value = GetFromConfig(dotNotationKey, globalConfigFile);
-            if (!value.IsNullOrEmpty())
+            if (!value.IsNotFoundNullOrEmpty())
             {
                 var source = ConfigSourceFromScope(globalConfigFile.Scope);
-                return new ConfigValue(value.Value, source, isSecret);
+                ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in global config file: {globalConfigFile.FileName}");
+                return new ConfigValue(value.Value, source, isSecret) { File = globalConfigFile };
             }
         }
         
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.Get; no value found for '{key}'");
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; no value found for '{key}'");
         return new ConfigValue();
+    }
+
+    public ConfigValue GetFromFileName(string key, string fileName)
+    {
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        configFile ??= ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        return GetFromConfig(key, configFile);
     }
 
     public ConfigValue GetFromScope(string key, ConfigFileScope scope)
     {
+        if (scope == ConfigFileScope.Any) return GetFromAnyScope(key);
+
         var configFile = ConfigFileFromScope(scope);
         return GetFromConfig(key, configFile);
     }
@@ -137,7 +151,7 @@ public class ConfigStore
 
             if (foundInScope)
             {
-                var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret);
+                var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret) { File = configFile };
                 var displayValue = configValue.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; Found '{dotNotationKey}' in {configFile.FileName} setting: {displayValue}");
                 return configValue;
@@ -146,6 +160,13 @@ public class ConfigStore
 
         ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; no config file found for {key}");
         return new ConfigValue();
+    }
+
+    public bool Set(string key, object value, string fileName)
+    {
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        configFile ??= ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        return Set(key, value, configFile, save: true);
     }
 
     public bool Set(string key, object value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
@@ -166,6 +187,13 @@ public class ConfigStore
         if (save) configFile.Save();
 
         return true;
+    }
+
+    public bool Clear(string key, string fileName, bool save = true)
+    {
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        configFile ??= ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        return Clear(key, configFile, save);
     }
 
     public bool Clear(string key, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
@@ -218,6 +246,13 @@ public class ConfigStore
         return false;
     }
 
+    public bool AddToList(string key, string value, string fileName, bool save = true)
+    {
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        configFile ??= ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        return AddToList(key, value, configFile, save);
+    }
+
     public bool AddToList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)
     {
         var configFile = ConfigFileFromScope(scope, forceCreate: true)!;
@@ -238,6 +273,13 @@ public class ConfigStore
         }
         
         return false;
+    }
+
+    public bool RemoveFromList(string key, string value, string fileName, bool save = true)
+    {
+        var configFile = _configFiles.FirstOrDefault(c => c.FileName.Equals(fileName, StringComparison.OrdinalIgnoreCase));
+        configFile ??= ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
+        return RemoveFromList(key, value, configFile, save);
     }
 
     public bool RemoveFromList(string key, string value, ConfigFileScope scope = ConfigFileScope.Local, bool save = true)

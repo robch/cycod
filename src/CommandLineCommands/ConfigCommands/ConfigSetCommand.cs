@@ -16,29 +16,14 @@ class ConfigSetCommand : ConfigBaseCommand
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        var scope = GetConfigScope();
-        
-        // Cannot set to 'Any' scope
-        if (scope == ConfigFileScope.Any)
-        {
-            throw new CommandLineException("Error: Cannot set configuration to 'Any' scope. Please specify --global, --user, or use local scope (default).");
-        }
-        
-        tasks.Add(Task.FromResult(ExecuteSet(Key, Value, scope)));
+        tasks.Add(Task.FromResult(ExecuteSet(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
         return tasks;
     }
 
-    private int ExecuteSet(string? key, string? value, ConfigFileScope scope)
+    private int ExecuteSet(string? key, string? value, ConfigFileScope scope, string? configFileName)
     {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new CommandLineException($"Error: No key specified.");
-        }
-
-        if (value == null)
-        {
-            throw new CommandLineException($"Error: No value specified.");
-        }
+        if (string.IsNullOrWhiteSpace(key)) throw new CommandLineException($"Error: No key specified.");
+        if (value == null) throw new CommandLineException($"Error: No value specified.");
 
         // Try to parse as a list if the value is enclosed in brackets
         if (value.StartsWith("[") && value.EndsWith("]"))
@@ -55,13 +40,23 @@ class ConfigSetCommand : ConfigBaseCommand
                 }
             }
             
-            _configStore.Set(key, listValue, scope, true);
+            var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
+            if (isFileNameScope) _configStore.Set(key, listValue, configFileName!);
+            if (!isFileNameScope) _configStore.Set(key, listValue, scope, true);
+
             ConfigDisplayHelpers.DisplayList(key, listValue);
         }
         else
         {
-            _configStore.Set(key, value, scope, true);
-            ConsoleHelpers.WriteLine($"{key}: {value}", overrideQuiet: true);
+            var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
+            if (isFileNameScope) _configStore.Set(key, value, configFileName!);
+            if (!isFileNameScope) _configStore.Set(key, value, scope, true);
+
+            var configValue = isFileNameScope
+                ? _configStore.GetFromFileName(key, configFileName!)
+                : _configStore.GetFromScope(key, scope);
+
+            ConfigDisplayHelpers.DisplayConfigValue(key, configValue, showLocation: true);
         }
 
         return 0;

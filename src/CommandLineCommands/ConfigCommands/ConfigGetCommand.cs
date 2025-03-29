@@ -15,22 +15,24 @@ class ConfigGetCommand : ConfigBaseCommand
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteGet(Key, GetConfigScope())));
+        tasks.Add(Task.FromResult(ExecuteGet(Key, Scope ?? ConfigFileScope.Any, ConfigFileName)));
         return tasks;
     }
 
-    private int ExecuteGet(string? key, ConfigFileScope scope)
+    private int ExecuteGet(string? key, ConfigFileScope scope, string? configFileName)
     {
+        ConsoleHelpers.WriteDebugLine($"ExecuteGet; key: {key}; scope: {scope}; configFileName: {configFileName}");
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new CommandLineException("Error: No key specified.");
         }
 
-        var value = scope == ConfigFileScope.Any
-            ? _configStore.GetFromAnyScope(key)
+        var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
+        var value = isFileNameScope
+            ? _configStore.GetFromFileName(key, configFileName!)
             : _configStore.GetFromScope(key, scope);
 
-        ConfigDisplayHelpers.DisplayConfigValue(key, value);
+        ConfigDisplayHelpers.DisplayConfigValue(key, value, showLocation: true);
         return 0;
     }
 }

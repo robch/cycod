@@ -15,7 +15,7 @@ public class EnvironmentHelpers
         var configStore = ConfigStore.Instance;
         var configValue = configStore.GetFromAnyScope(variable);
 
-        var foundInConfigStore = !configValue.IsNullOrEmpty();
+        var foundInConfigStore = !configValue.IsNotFoundNullOrEmpty();
         if (foundInConfigStore) return configValue.AsString();
 
         return null;

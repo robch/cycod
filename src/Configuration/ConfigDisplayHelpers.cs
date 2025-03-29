@@ -44,8 +44,25 @@ public static class ConfigDisplayHelpers
         }
     }
     
-    public static void DisplayConfigValue(string key, ConfigValue value, int indentLevel = 2)
+    public static void DisplayConfigValue(string key, ConfigValue value, int indentLevel = 2, bool showLocation = false)
     {
+        if (showLocation)
+        {
+            var location = value.Source switch
+            {
+                ConfigSource.CommandLine => "Command line (specified)",
+                ConfigSource.EnvironmentVariable => "Environment variable (specified)",
+                ConfigSource.ConfigFileName => $"{value.File?.FileName} (specified)",
+                ConfigSource.LocalConfig => $"{value.File?.FileName} (local)",
+                ConfigSource.UserConfig => $"{value.File?.FileName} (user)",
+                ConfigSource.GlobalConfig => $"{value.File?.FileName} (global)",
+                _ => null
+            };
+
+            showLocation = !string.IsNullOrEmpty(location);
+            if (showLocation) Console.WriteLine($"LOCATION: {location}\n");
+        }
+
         var indent = new string(' ', indentLevel);
         
         // If it's a list type in memory (actual List objects)
@@ -59,9 +76,9 @@ public static class ConfigDisplayHelpers
         // Get value to display, obfuscating if it's a secret
         var displayValue = value.IsSecret
             ? value.AsObfuscated() ?? "(empty)"
-            : !value.IsNullOrEmpty()
+            : !value.IsNotFoundNullOrEmpty()
                 ? value.Value?.ToString() ?? "(null)"
-                : "(not found)";
+                : "(not found or empty)";
                             
         ConsoleHelpers.WriteLine($"{indent}{key}: {displayValue}", overrideQuiet: true);
     }

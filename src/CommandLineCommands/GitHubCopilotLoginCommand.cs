@@ -3,8 +3,13 @@ using System.Threading.Tasks;
 
 class GitHubLoginCommand : Command
 {
+    public string? ConfigFileName { get; internal set; }
+    public ConfigFileScope Scope { get; internal set; }
+
     public GitHubLoginCommand()
     {
+        Scope = ConfigFileScope.Local;
+        ConfigFileName = null;
     }
 
     override public bool IsEmpty()
@@ -23,7 +28,7 @@ class GitHubLoginCommand : Command
         
         var helper = new GitHubCopilotHelper();
         var githubToken = await helper.GetGitHubTokenAsync();
-        helper.SaveGitHubTokenToConfig(githubToken);
+        helper.SaveGitHubTokenToConfig(githubToken, Scope, ConfigFileName);
         
         ConsoleHelpers.WriteLine("GitHub login successful! You can now use chatx with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
             

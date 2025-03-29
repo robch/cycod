@@ -15,12 +15,13 @@ class ConfigRemoveCommand : ConfigBaseCommand
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteRemove(Key, Value, GetConfigScope())));
+        tasks.Add(Task.FromResult(ExecuteRemove(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
         return tasks;
     }
 
-    private int ExecuteRemove(string? key, string? value, ConfigFileScope scope)
+    private int ExecuteRemove(string? key, string? value, ConfigFileScope scope, string? configFileName)
     {
+        ConsoleHelpers.WriteDebugLine($"ExecuteRemove; key: {key}; value: {value}; scope: {scope}; configFileName: {configFileName}");
         if (string.IsNullOrWhiteSpace(key))
         {
             throw new CommandLineException($"Error: No key specified.");
@@ -31,9 +32,14 @@ class ConfigRemoveCommand : ConfigBaseCommand
             throw new CommandLineException($"Error: No value specified.");
         }
 
-        _configStore.RemoveFromList(key, value, scope, true);
+        var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
+        if (isFileNameScope) _configStore.RemoveFromList(key, value, configFileName!);
+        if (!isFileNameScope) _configStore.RemoveFromList(key, value, scope, true);
 
-        var listValue = _configStore.GetFromScope(key, scope).AsList();
+        var listValue = isFileNameScope
+            ? _configStore.GetFromFileName(key, configFileName!).AsList()
+            : _configStore.GetFromScope(key, scope).AsList();
+
         ConsoleHelpers.WriteLine(listValue.Count > 0
             ? $"{key}:\n" + $"  - {string.Join("\n  - ", listValue)}"
             : $"{key}: (empty list)",

@@ -12,17 +12,15 @@ class ConfigListCommand : ConfigBaseCommand
 
     public ConfigListCommand() : base()
     {
-        // Default to Any scope, which shows settings from all scopes
         Scope = ConfigFileScope.Any;
     }
 
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        var scope = GetConfigScope();
-        tasks.Add(Task.FromResult(scope == ConfigFileScope.FileName
+        tasks.Add(Task.FromResult(Scope == ConfigFileScope.FileName
             ? ExecuteList(this.ConfigFileName!)
-            : ExecuteList(scope)));
+            : ExecuteList(Scope ?? ConfigFileScope.Any)));
         return tasks;
     }
 

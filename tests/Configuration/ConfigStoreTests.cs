@@ -143,7 +143,7 @@ namespace ChatX.Tests.Configuration
 
             // Assert
             Assert.IsTrue(result);
-            Assert.IsTrue(value.IsNullOrEmpty());
+            Assert.IsTrue(value.IsNotFoundNullOrEmpty());
         }
     }
 }

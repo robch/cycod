@@ -15,25 +15,23 @@ class ConfigAddCommand : ConfigBaseCommand
     public List<Task<int>> Execute(bool interactive)
     {
         var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteAdd(Key, Value, GetConfigScope())));
+        tasks.Add(Task.FromResult(ExecuteAdd(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
         return tasks;
     }
 
-    private int ExecuteAdd(string? key, string? value, ConfigFileScope scope)
+    private int ExecuteAdd(string? key, string? value, ConfigFileScope scope, string? configFileName)
     {
-        if (string.IsNullOrWhiteSpace(key))
-        {
-            throw new CommandLineException($"Error: No key specified.");
-        }
+        if (string.IsNullOrWhiteSpace(key)) throw new CommandLineException($"Error: No key specified.");
+        if (value == null) throw new CommandLineException($"Error: No value specified.");
 
-        if (value == null)
-        {
-            throw new CommandLineException($"Error: No value specified.");
-        }
+        var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
+        if (isFileNameScope) _configStore.AddToList(key, value, configFileName!);
+        if (!isFileNameScope) _configStore.AddToList(key, value, scope, true);
 
-        _configStore.AddToList(key, value, scope, true);
+        var listValue = isFileNameScope
+            ? _configStore.GetFromFileName(key, configFileName!).AsList()
+            : _configStore.GetFromScope(key, scope).AsList();
 
-        var listValue = _configStore.GetFromScope(key, scope).AsList();
         ConsoleHelpers.WriteLine(listValue.Count > 0
             ? $"{key}:\n" + $"- {string.Join("\n- ", listValue)}"
             : $"{key}: (empty list)",
