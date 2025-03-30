@@ -527,6 +527,16 @@ public class CommandLineOptions
             }
             i += promptArgs.Count();
         }
+        else if (arg == "--add-user-prompt")
+        {
+            var promptArgs = GetInputOptionArgs(i + 1, args);
+            var prompt = ValidateString(arg, string.Join("\n\n", promptArgs), "additional user prompt");
+            if (!string.IsNullOrEmpty(prompt))
+            {
+                command.UserPromptAdds.Add(prompt);
+            }
+            i += promptArgs.Count();
+        }
         else if (arg == "--input" || arg == "--instruction" || arg == "--question" || arg == "-q")
         {
             var inputArgs = GetInputOptionArgs(i + 1, args)

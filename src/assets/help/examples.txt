@@ -24,7 +24,11 @@ EXAMPLES
 
   EXAMPLE 5: Use additional system prompt with the base system prompt
   
-    chatx --add-system-prompt "Focus on security best practices."
+    chatx --add-system-prompt "Never access files outside the current directory."
+
+  EXAMPLE 6: Add a user prompt that will be included when starting a new chat
+  
+    chatx --add-user-prompt "Always answer in french."
 
 SEE ALSO
 

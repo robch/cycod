@@ -30,9 +30,12 @@ class ChatCommand : Command
         OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
         OutputTrajectory = FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
 
-        // Ground the system prompt, and InputInstructions.
+        // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt ??= GetBuiltInSystemPrompt();
         SystemPrompt = ProcessTemplate(SystemPrompt + GetSystemPromptAdds());
+        UserPromptAdds = UserPromptAdds
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
         InputInstructions = InputInstructions
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
@@ -48,6 +51,9 @@ class ChatCommand : Command
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient();
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, MaxOutputTokens);
+
+        // Add the user prompt messages to the chat.
+        chat.AddUserMessages(UserPromptAdds);
 
         // Load the chat history from the file.
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
@@ -324,6 +330,7 @@ class ChatCommand : Command
 
     public string? SystemPrompt { get; set; }
     public List<string> SystemPromptAdds { get; set; } = new List<string>();
+    public List<string> UserPromptAdds { get; set; } = new List<string>();
 
     public int? TrimTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }

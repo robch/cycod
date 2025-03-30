@@ -41,6 +41,8 @@ These options control the chat interaction:
 | Option | Description |
 |--------|-------------|
 | `--system-prompt <prompt>` | Set a custom system prompt for the AI |
+| `--add-system-prompt <text>` | Add text to the system prompt (can be used multiple times) |
+| `--add-user-prompt <text>` | Add a user prompt that gets inserted when chat history is cleared (can be used multiple times) |
 | `--input <text>` | Provide a single input/question to the AI |
 | `--question <text>` | Alias for `--interactive false --quiet --input` |
 | `--instruction <text>` | Alias for `--input` |
@@ -98,6 +100,14 @@ chatx
 ```bash
 chatx --system-prompt "You are an expert Linux system administrator who gives concise answers."
 ```
+
+### Adding User Prompts That Persist Through Chat Clearing
+
+```bash
+chatx --add-user-prompt "Remember that I prefer code examples with extensive comments."
+```
+
+This user prompt will be automatically inserted when starting a new chat or when using the /clear command.
 
 ### Asking a Specific Question
 

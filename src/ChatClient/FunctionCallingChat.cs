@@ -26,6 +26,25 @@ public class FunctionCallingChat
     {
         _messages.Clear();
         _messages.Add(ChatMessage.CreateSystemMessage(_systemPrompt));
+
+        foreach (var userMessage in _userMessageAdds)
+        {
+            _messages.Add(ChatMessage.CreateUserMessage(userMessage));
+        }
+    }
+    
+    public void AddUserMessage(string userMessage)
+    {
+        _userMessageAdds.Add(userMessage);
+        _messages.Add(ChatMessage.CreateUserMessage(userMessage));
+    }
+    
+    public void AddUserMessages(IEnumerable<string> userMessages)
+    {
+        foreach (var userMessage in userMessages)
+        {
+            AddUserMessage(userMessage);
+        }
     }
 
     public void LoadChatHistory(string fileName)
@@ -89,6 +108,8 @@ public class FunctionCallingChat
     }
 
     private readonly string _systemPrompt;
+    private readonly List<string> _userMessageAdds = new();
+
     private readonly FunctionFactory _functionFactory;
     private readonly FunctionCallContext _functionCallContext;
     private readonly ChatCompletionOptions _options;
