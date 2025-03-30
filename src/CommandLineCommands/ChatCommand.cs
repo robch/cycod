@@ -108,7 +108,7 @@ class ChatCommand : Command
         return joined.Trim(new char[] { '\n', '\r', ' ' });
     }
 
-    private static bool TryHandleChatCommand(FunctionCallingChat chat, string userPrompt)
+    private bool TryHandleChatCommand(FunctionCallingChat chat, string userPrompt)
     {
         if (userPrompt == "/save")
         {
@@ -118,22 +118,34 @@ class ChatCommand : Command
         {
             return ClearChatHistory(chat);
         }
+        else if (userPrompt == "/cost")
+        {
+            return ShowCost();
+        }
 
         return false;
     }
 
-    private static bool ClearChatHistory(FunctionCallingChat chat)
+    private bool ClearChatHistory(FunctionCallingChat chat)
     {
         chat.ClearChatHistory();
-        ConsoleHelpers.WriteLine("\nCleared chat history.\n");
+        _totalTokensIn = 0;
+        _totalTokensOut = 0;
+        ConsoleHelpers.WriteLine("Cleared chat history.\n", ConsoleColor.Yellow, overrideQuiet: true);
         return true;
     }
 
-    private static bool SaveChatHistory(FunctionCallingChat chat)
+    private bool SaveChatHistory(FunctionCallingChat chat)
     {
-        ConsoleHelpers.Write("\nSaving chat-history.jsonl ...");
+        ConsoleHelpers.Write("Saving chat-history.jsonl ...", ConsoleColor.Yellow, overrideQuiet: true);
         chat.SaveChatHistoryToFile("chat-history.jsonl");
-        ConsoleHelpers.WriteLine("Saved!\n");
+        ConsoleHelpers.WriteLine("Saved!\n", ConsoleColor.Yellow, overrideQuiet: true);
+        return true;
+    }
+
+    private bool ShowCost()
+    {
+        ConsoleHelpers.WriteLine($"Tokens: {_totalTokensIn} in, {_totalTokensOut} out\n", ConsoleColor.Yellow, overrideQuiet: true);
         return true;
     }
 
@@ -229,6 +241,18 @@ class ChatCommand : Command
 
     private void HandleStreamingChatCompletionUpdate(StreamingChatCompletionUpdate update)
     {
+        var inTokens = update.Usage?.InputTokenCount ?? 0;
+        var outTokens = update.Usage?.OutputTokenCount ?? 0;
+        if (inTokens > 0 || outTokens > 0)
+        {
+            _totalTokensIn += inTokens;
+            _totalTokensOut += outTokens;
+            if (ConsoleHelpers.IsVerbose())
+            {
+                ConsoleHelpers.WriteLine($"\nTokens: {inTokens} in ({_totalTokensIn} total), {outTokens} out ({_totalTokensOut} total)", ConsoleColor.DarkYellow);
+            }
+        }
+
         var text = string.Join("", update.ContentUpdate
             .Where(x => x.Kind == ChatMessageContentPartKind.Text)
             .Select(x => x.Text)
@@ -346,4 +370,7 @@ class ChatCommand : Command
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
+
+    private int _totalTokensIn = 0;
+    private int _totalTokensOut = 0;
 }

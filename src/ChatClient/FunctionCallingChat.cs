@@ -85,8 +85,8 @@ public class FunctionCallingChat
                     content = $"{content}\nWARNING: Content filtered!";
                 }
 
-                if (string.IsNullOrEmpty(content))
-                    continue;
+                // if (string.IsNullOrEmpty(content))
+                //     continue;
 
                 responseContent += content;
                 contentToReturn += content;
