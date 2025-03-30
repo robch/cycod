@@ -22,6 +22,10 @@ EXAMPLES
   
     chatx --question "What time is it?" --output-trajectory trajectory.md
 
+  EXAMPLE 5: Use additional system prompt with the base system prompt
+  
+    chatx --add-system-prompt "Focus on security best practices."
+
 SEE ALSO
 
   chatx help options

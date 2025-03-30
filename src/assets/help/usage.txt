@@ -42,6 +42,10 @@ EXAMPLES
   
     echo "What is the capital of France?" | chatx
 
+  EXAMPLE 8: Customize system prompt with additions
+  
+    chatx --add-system-prompt "Answer in a casual, friendly tone." "Include examples in your responses."
+
 SEE ALSO
 
   chatx help

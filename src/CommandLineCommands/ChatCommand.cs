@@ -31,8 +31,8 @@ class ChatCommand : Command
         OutputTrajectory = FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
 
         // Ground the system prompt, and InputInstructions.
-        SystemPrompt ??= EnvironmentHelpers.FindEnvVar("OPENAI_SYSTEM_PROMPT") ?? GetBuiltInSystemPrompt();
-        SystemPrompt = ProcessTemplate(SystemPrompt);
+        SystemPrompt ??= GetBuiltInSystemPrompt();
+        SystemPrompt = ProcessTemplate(SystemPrompt + GetSystemPromptAdds());
         InputInstructions = InputInstructions
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
@@ -91,6 +91,15 @@ class ChatCommand : Command
         }
 
         return "You are a helpful AI assistant.";
+    }
+
+    private string GetSystemPromptAdds()
+    {
+        var processedAdds = SystemPromptAdds
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
+        var joined = string.Join("\n\n", new[] { SystemPrompt }.Concat(processedAdds));
+        return joined.Trim(new char[] { '\n', '\r', ' ' });
     }
 
     private static bool TryHandleChatCommand(FunctionCallingChat chat, string userPrompt)
@@ -314,6 +323,7 @@ class ChatCommand : Command
     }
 
     public string? SystemPrompt { get; set; }
+    public List<string> SystemPromptAdds { get; set; } = new List<string>();
 
     public int? TrimTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }

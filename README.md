@@ -103,7 +103,6 @@ ChatX supports a flexible configuration system with multiple scopes (global, use
 #### OpenAI API
 - `OPENAI_API_KEY`: Your OpenAI API key
 - `OPENAI_CHAT_MODEL_NAME`: Model name to use (default: gpt-4o)
-- `OPENAI_SYSTEM_PROMPT`: Default system prompt if not specified
 
 #### Azure OpenAI API
 - `AZURE_OPENAI_API_KEY`: Your Azure OpenAI API key

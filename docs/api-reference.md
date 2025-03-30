@@ -34,7 +34,7 @@ static class ChatClientFactory {
 // Main chat client class that handles communication with AI models
 class FunctionCallingChat {
     // Constructor
-    public FunctionCallingChat(ChatClient openAIClient, string openAISystemPrompt, FunctionFactory factory);
+    public FunctionCallingChat(ChatClient openAIClient, string systemPrompt, FunctionFactory factory);
     
     // Clears the chat history
     public void ClearChatHistory();

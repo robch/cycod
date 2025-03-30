@@ -18,7 +18,6 @@ public static class KnownSettings
     // OpenAI settings
     public const string OpenAIApiKey = "OpenAI.ApiKey";
     public const string OpenAIChatModelName = "OpenAI.ChatModelName";
-    public const string OpenAISystemPrompt = "OpenAI.SystemPrompt";
     
     // GitHub settings
     public const string GitHubToken = "GitHub.Token";
@@ -73,7 +72,6 @@ public static class KnownSettings
         // OpenAI mappings
         { OpenAIApiKey, "OPENAI_API_KEY" },
         { OpenAIChatModelName, "OPENAI_CHAT_MODEL_NAME" },
-        { OpenAISystemPrompt, "OPENAI_SYSTEM_PROMPT" },
         
         // GitHub mappings
         { GitHubToken, "GITHUB_TOKEN" },
@@ -103,7 +101,6 @@ public static class KnownSettings
         // OpenAI mappings
         { OpenAIApiKey, "--openai-api-key" },
         { OpenAIChatModelName, "--openai-chat-model-name" },
-        { OpenAISystemPrompt, "--openai-system-prompt" },
         
         // GitHub mappings
         { GitHubToken, "--github-token" },
@@ -149,8 +146,7 @@ public static class KnownSettings
     public static readonly HashSet<string> OpenAISettings = new(StringComparer.OrdinalIgnoreCase)
     {
         OpenAIApiKey,
-        OpenAIChatModelName,
-        OpenAISystemPrompt
+        OpenAIChatModelName
     };
     
     /// <summary>

@@ -1,7 +1,8 @@
 USAGE: chatx [...]
 
   MODEL INPUTS
-    --system-prompt "PROMPT"              Load system prompt for the AI model (default: "You are a helpful assistant.")
+    --system-prompt "PROMPT"              Replace system prompt given to AI model
+    --add-system-prompt "TEXT"            Add text to the system prompt (can be used multiple times)
 
     --input-chat-history [FILE]           Load chat history from the specified JSONL fil
     --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
@@ -44,7 +45,6 @@ USAGE: chatx [...]
   OPENAI OPTIONS
     --openai-api-key KEY                  Use a specific API key
     --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
-    --openai-system-prompt PROMPT         Use a specific system prompt w/ OpenAI
 
   CONFIGURATION
     --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files

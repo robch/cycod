@@ -513,8 +513,18 @@ public class CommandLineOptions
         else if (arg == "--system-prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
-            var prompt = ValidateString(arg, string.Join("\n", promptArgs), "system prompt");
+            var prompt = ValidateString(arg, string.Join("\n\n", promptArgs), "system prompt");
             command.SystemPrompt = prompt;
+            i += promptArgs.Count();
+        }
+        else if (arg == "--add-system-prompt")
+        {
+            var promptArgs = GetInputOptionArgs(i + 1, args);
+            var prompt = ValidateString(arg, string.Join("\n\n", promptArgs), "additional system prompt");
+            if (!string.IsNullOrEmpty(prompt))
+            {
+                command.SystemPromptAdds.Add(prompt);
+            }
             i += promptArgs.Count();
         }
         else if (arg == "--input" || arg == "--instruction" || arg == "--question" || arg == "-q")

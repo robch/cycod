@@ -50,12 +50,10 @@ OPENAI_CHAT_MODEL_NAME=gpt-4o
 # Windows
 set OPENAI_API_KEY=your_api_key_here
 set OPENAI_CHAT_MODEL_NAME=gpt-4o
-set OPENAI_SYSTEM_PROMPT="You are a helpful AI assistant with expertise in programming."
 
 # Linux/macOS
 export OPENAI_API_KEY=your_api_key_here
 export OPENAI_CHAT_MODEL_NAME=gpt-4o
-export OPENAI_SYSTEM_PROMPT="You are a helpful AI assistant with expertise in programming."
 ```
 
 ### Azure OpenAI API
