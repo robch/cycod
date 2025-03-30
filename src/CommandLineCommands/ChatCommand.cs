@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using OpenAI.Chat;
 
 class ChatCommand : Command
@@ -222,7 +223,7 @@ class ChatCommand : Command
 
     private void HandleFunctionCallCompleted(string name, string args, string? result)
     {
-        DisplayFunctionResult(name, args, result);
+        DisplayFunctionCall(name, args, result);
     }
 
     private void DisplayUserPrompt()
@@ -250,7 +251,7 @@ class ChatCommand : Command
         _asssistantResponseNeedsLF = !text.EndsWith("\n");
     }
 
-    private void DisplayFunctionResult(string name, string args, string? result)
+    private void EnsureLineFeeds()
     {
         if (_asssistantResponseNeedsLF)
         {
@@ -258,7 +259,39 @@ class ChatCommand : Command
             ConsoleHelpers.Write(oneLineFeedOrTwo, overrideQuiet: true);
             _asssistantResponseNeedsLF = false;
         }
-        
+    }
+
+    private void DisplayFunctionCall(string name, string args, string? result)
+    {
+        EnsureLineFeeds();
+        switch (name)
+        {
+            case "Think":
+                DisplayThinkFunctionCall(args, result);
+                break;
+
+            default:
+                DisplayGenericFunctionCall(name, args, result);
+                break;
+        }
+    }
+    
+    private void DisplayThinkFunctionCall(string args, string? result)
+    {
+        var thought = JsonHelpers.GetJsonPropertyValue(args, "thought", args);
+        var hasThought = !string.IsNullOrEmpty(thought);
+        var hasResult = !string.IsNullOrEmpty(result);
+
+        if (hasThought && !hasResult) ConsoleHelpers.WriteLine($"\n[THINKING]\n{thought}", ConsoleColor.DarkCyan);
+        if (hasResult)
+        {
+            ConsoleHelpers.WriteLine($"\n{result}", ConsoleColor.DarkGray);
+            DisplayAssistantLabel();
+        }
+    }
+    
+    private void DisplayGenericFunctionCall(string name, string args, string? result)
+    {
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
         if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
