@@ -46,7 +46,7 @@ class ConfigListCommand : ConfigBaseCommand
             if (isAnyScope) Console.WriteLine();
         }
         
-        if (isAnyScope || scope == ConfigFileScope.User)
+        if (isAnyScope || scope == ConfigFileScope.Local)
         {
             DisplayConfigSettings(ConfigFileScope.Local);
             if (isAnyScope) Console.WriteLine();
