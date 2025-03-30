@@ -6,6 +6,11 @@ class ConfigClearCommand : ConfigBaseCommand
 {
     public string? Key { get; set; }
 
+    public override bool IsEmpty()
+    {
+        return string.IsNullOrWhiteSpace(Key);
+    }
+
     public override string GetCommandName()
     {
         return "config clear";

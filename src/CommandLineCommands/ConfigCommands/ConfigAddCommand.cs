@@ -7,6 +7,11 @@ class ConfigAddCommand : ConfigBaseCommand
     public string? Key { get; set; }
     public string? Value { get; set; }
 
+    public override bool IsEmpty()
+    {
+        return string.IsNullOrWhiteSpace(Key) || Value == null;
+    }
+
     public override string GetCommandName()
     {
         return "config add";
