@@ -6,7 +6,7 @@ class HelpHelpers
 {
     public static IEnumerable<string> GetHelpTopics()
     {
-        var allResourceNames = FileHelpers.GetEmbeddedStreamFileNames();
+        var allResourceNames = EmbeddedFileHelpers.GetEmbeddedStreamFileNames();
 
         var helpPrefix = $"{Program.Name}.help.";
         var helpTopics = allResourceNames
@@ -22,12 +22,12 @@ class HelpHelpers
 
     public static bool HelpTopicExists(string topic)
     {
-        return FileHelpers.EmbeddedStreamExists($"help.{topic}.txt");
+        return EmbeddedFileHelpers.EmbeddedStreamExists($"help.{topic}.txt");
     }
 
     public static string? GetHelpTopicText(string topic)
     {
-        return FileHelpers.ReadEmbeddedStream($"help.{topic}.txt");
+        return EmbeddedFileHelpers.ReadEmbeddedStream($"help.{topic}.txt");
     }
 
     public static void DisplayUsage(string command)

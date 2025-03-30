@@ -90,9 +90,9 @@ class ChatCommand : Command
 
     private string GetBuiltInSystemPrompt()
     {
-        if (FileHelpers.EmbeddedStreamExists("prompts.system.md"))
+        if (EmbeddedFileHelpers.EmbeddedStreamExists("prompts.system.md"))
         {
-            var text = FileHelpers.ReadEmbeddedStream("prompts.system.md")!;
+            var text = EmbeddedFileHelpers.ReadEmbeddedStream("prompts.system.md")!;
             return ProcessTemplate(text);
         }
 
