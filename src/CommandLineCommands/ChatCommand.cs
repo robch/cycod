@@ -32,7 +32,7 @@ class ChatCommand : Command
 
         // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt ??= GetBuiltInSystemPrompt();
-        SystemPrompt = ProcessTemplate(SystemPrompt + GetSystemPromptAdds());
+        SystemPrompt = ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
         UserPromptAdds = UserPromptAdds
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
@@ -104,7 +104,7 @@ class ChatCommand : Command
         var processedAdds = SystemPromptAdds
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
-        var joined = string.Join("\n\n", new[] { SystemPrompt }.Concat(processedAdds));
+        var joined = string.Join("\n\n", processedAdds);
         return joined.Trim(new char[] { '\n', '\r', ' ' });
     }
 
