@@ -122,13 +122,12 @@ public class CommandLineOptions
 
     private static string ExpandedAtFileInput(string input)
     {
-        if (!input.StartsWith("@")) throw new ArgumentException("Not an @ file input");
+        if (!input.StartsWith("@"))
+        {
+            throw new ArgumentException("Not an @ file input");
+        }
 
-        var fileName = input.Substring(1);
-        var fileNameOk = fileName == "-" || File.Exists(fileName);
-        return fileNameOk
-            ? FileHelpers.ReadAllText(fileName)
-            : input;
+        return AtFileHelpers.ExpandAtFileValue(input);
     }
 
     private static CommandLineOptions ParseInputOptions(IEnumerable<string> allInputs)

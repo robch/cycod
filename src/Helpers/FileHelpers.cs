@@ -158,17 +158,4 @@ public class FileHelpers
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();
     }
-
-    public static string ExpandAtFileValue(string atFileValue, INamedValues? values = null)
-    {
-        if (atFileValue.StartsWith("@") && FileHelpers.FileExists(atFileValue[1..]))
-        {
-            return FileHelpers.ReadAllText(atFileValue[1..]);
-        }
-        else if (atFileValue.StartsWith("@") && ConsoleHelpers.IsStandardInputReference(atFileValue[1..]))
-        {
-            return string.Join('\n', ConsoleHelpers.GetAllLinesFromStdin());
-        }
-        return atFileValue;
-    }
 }

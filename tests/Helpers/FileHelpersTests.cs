@@ -182,11 +182,63 @@ public class FileHelpersTests
         var value = "just a string";
         
         // Act
-        var result = FileHelpers.ExpandAtFileValue(value);
+        var result = AtFileHelpers.ExpandAtFileValue(value);
         
         // Assert
         Assert.AreEqual(value, result);
     }
 
     #endregion
+    [TestMethod]
+    public void ExpandAtFileValue_ConfigStoreValue_ReturnsConfigValue()
+    {
+        try
+        {
+            // Arrange
+            var key = "TestConfigKey";
+            var value = "TestConfigValue";
+            ConfigStore.Instance.SetFromCommandLine(key, value);
+            var atValue = $"@{key}";
+            
+            // Act
+            var result = AtFileHelpers.ExpandAtFileValue(atValue);
+            
+            // Assert
+            Assert.AreEqual(value, result);
+        }
+        finally
+        {
+            // Clean up - avoid affecting other tests
+            ConfigStore.Instance.SetFromCommandLine("TestConfigKey", string.Empty);
+        }
+    }
+
+    [TestMethod]
+    public void ExpandAtFileValue_WithNamedValues_TakesValueFromNamedValuesFirst()
+    {
+        try
+        {
+            // Arrange
+            var key = "TestKey";
+            var configValue = "ConfigValue";
+            var namedValue = "NamedValue";
+            
+            ConfigStore.Instance.SetFromCommandLine(key, configValue);
+            var values = new TemplateVariables();
+            values.Set(key, namedValue);
+            
+            var atValue = $"@{key}";
+            
+            // Act
+            var result = AtFileHelpers.ExpandAtFileValue(atValue, values);
+            
+            // Assert
+            Assert.AreEqual(namedValue, result, "Should use the named values first");
+        }
+        finally
+        {
+            // Clean up
+            ConfigStore.Instance.SetFromCommandLine("TestKey", string.Empty);
+        }
+    }
 }

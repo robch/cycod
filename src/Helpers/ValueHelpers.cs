@@ -112,7 +112,7 @@ public static class ValueHelpers
             str = name;
         }
 
-        str = expandAtFile ? FileHelpers.ExpandAtFileValue($"@{str}", values) : str;
+        str = expandAtFile ? AtFileHelpers.ExpandAtFileValue($"@{str}", values) : str;
         sb.Remove(start, name.Length + cchPrefix + 1 + (expandAtFile ? 1 : 0));
         sb.Insert(start, str);
         return 0;
