@@ -41,7 +41,7 @@ jobs:
       if: always()  # Upload test results even if tests fail
       with:
         name: test-results
-        path: ./TestResults
+        path: ./TestResults/*.trx
     
     - name: Publish test results
       uses: dorny/test-reporter@v1
