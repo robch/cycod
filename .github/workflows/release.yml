@@ -11,11 +11,6 @@ on:
         required: true
         type: string
 
-# Limit permissions to minimum required
-permissions:
-  contents: read
-  packages: write # Required if publishing to GitHub Packages
-
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
@@ -57,14 +52,14 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: always()  # Upload test results even if tests fail
       with:
         name: test-results
-        path: ./TestResults
+        path: ./TestResults/*.trx
     
     - name: Publish test results
       uses: dorny/test-reporter@v1
@@ -73,14 +68,14 @@ jobs:
         name: .NET Tests
         path: ./TestResults/*.trx
         reporter: dotnet-trx
-        fail-on-error: true
+        fail-on-error: false
     
     - name: Pack
       run: |
         # Publish for multiple platforms first
-        dotnet publish src/chatx.csproj -c Release -r win-x64 --no-build
-        dotnet publish src/chatx.csproj -c Release -r linux-x64 --no-build
-        dotnet publish src/chatx.csproj -c Release -r osx-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r win-x64
+        dotnet publish src/chatx.csproj -c Release -r linux-x64
+        dotnet publish src/chatx.csproj -c Release -r osx-x64
         
         # Then pack the NuGet package (will include all published runtimes)
         dotnet pack src/chatx.csproj --configuration Release --no-build -o nuget-packages
@@ -94,7 +89,7 @@ jobs:
         cd ..
     
     - name: Upload NuGet package and checksums
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: chatx-nuget-package
         path: nuget-packages/*

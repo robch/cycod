@@ -27,6 +27,26 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 
 - .NET 8.0 SDK or later
 
+### Installing as a .NET Tool
+
+Once published to NuGet, ChatX can be installed globally:
+
+```bash
+dotnet tool install --global ChatX
+```
+
+Or locally in your current directory:
+
+```bash
+dotnet tool install --local ChatX
+```
+
+After installation, you can run ChatX directly from your terminal:
+
+```bash
+chatx --input "Hello, how can you help me?"
+```
+
 ### Building from Source
 
 1. Clone this repository:

@@ -13,6 +13,22 @@ Before you begin, ensure you have:
 
 ## Installation
 
+### Installing as a .NET Tool
+
+The easiest way to install ChatX is as a .NET global tool:
+
+```bash
+dotnet tool install --global ChatX
+```
+
+This will make the `chatx` command available in your terminal. If you prefer a local installation that's only available in the current directory:
+
+```bash
+dotnet tool install --local ChatX
+```
+
+Note: Local tools require you to run them through the .NET CLI: `dotnet chatx`
+
 ### Building from Source
 
 1. Clone the repository:
