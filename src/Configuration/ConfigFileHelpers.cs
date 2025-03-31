@@ -84,9 +84,35 @@ public static class ConfigFileHelpers
 
     private static string GetGlobalScopeDirectory()
     {
+        var parent = GetGlobalScopeParentDirectory();
+        var configDir = Path.Combine(parent, CONFIG_DIR_NAME);
+        ConsoleHelpers.WriteDebugLine($"Global config directory: {configDir}");
+        return configDir;
+    }
+
+    private static string GetGlobalScopeParentDirectory()
+    {
         var isLinuxOrMac = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
-        var parent = isLinuxOrMac ? $"/etc" : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData));
-        return Path.Combine(parent, CONFIG_DIR_NAME);
+        if (isLinuxOrMac)
+        {
+            var xdgDataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
+            if (!string.IsNullOrEmpty(xdgDataHome))
+            {
+                ConsoleHelpers.WriteDebugLine($"On Linux/Mac... using XDG_DATA_HOME: {xdgDataHome}");
+                return xdgDataHome;
+            }
+            else
+            {
+                var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var homeLocalShareDir = Path.Combine(homeDir, ".local", "share");
+                ConsoleHelpers.WriteDebugLine($"On Linux/Mac... using HOME/.local/share: {homeLocalShareDir}");
+                return homeLocalShareDir;
+            }
+        }
+
+        var commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+        ConsoleHelpers.WriteDebugLine($"On Windows... using CommonApplicationData: {commonAppData}");
+        return commonAppData;
     }
 
     private static string GetUserScopeDirectory()
