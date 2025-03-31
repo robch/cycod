@@ -29,6 +29,12 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
+    - name: Publish for multiple platforms (verification)
+      run: |
+        dotnet publish src/chatx.csproj -c Release -r win-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r linux-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r osx-x64 --no-build
+    
     - name: Test
       run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
@@ -52,4 +58,8 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: chatx-build
-        path: src/bin/Release/net8.0/
+        path: |
+          src/bin/Release/net8.0/
+          src/bin/Release/net8.0/win-x64/publish/
+          src/bin/Release/net8.0/linux-x64/publish/
+          src/bin/Release/net8.0/osx-x64/publish/

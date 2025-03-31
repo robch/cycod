@@ -76,7 +76,14 @@ jobs:
         fail-on-error: true
     
     - name: Pack
-      run: dotnet pack src/chatx.csproj --configuration Release --no-build -o nuget-packages
+      run: |
+        # Publish for multiple platforms first
+        dotnet publish src/chatx.csproj -c Release -r win-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r linux-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r osx-x64 --no-build
+        
+        # Then pack the NuGet package (will include all published runtimes)
+        dotnet pack src/chatx.csproj --configuration Release --no-build -o nuget-packages
     
     - name: Generate package checksums
       run: |

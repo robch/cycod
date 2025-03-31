@@ -11,6 +11,9 @@
     <FileVersion>1.0.0</FileVersion>
     <InformationalVersion>1.0.0</InformationalVersion>
     
+    <!-- Cross-platform support -->
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    
     <!-- NuGet Package Properties -->
     <PackageId>ChatX</PackageId>
     <Authors>Rob Chambers</Authors>
