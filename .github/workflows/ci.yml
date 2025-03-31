@@ -5,9 +5,9 @@ on:
     # Run at midnight UTC every day
     - cron: '0 0 * * *'
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
   workflow_dispatch:
     # Allow manual triggering
 
