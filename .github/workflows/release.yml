@@ -3,11 +3,11 @@ name: Release
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+-*'  # Matches version tags like 1.0.0-20250330
+      - '[0-9]+.[0-9]+.[0-9]+*'  # Matches version tags like 1.0.0, 1.0.0-20250330, 1.0.0-alpha-20250330.1
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version number (format: X.Y.Z-YYYYMMDD)'
+        description: 'Version number (e.g. 1.0.0, 1.0.0-20250330, 1.0.0-alpha-20250330.1)'
         required: true
         type: string
 
@@ -36,14 +36,35 @@ jobs:
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
         fi
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "::set-output name=version::$VERSION"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
     
     - name: Update version in project file
       run: |
+        # Keep original version for Version and InformationalVersion (supports SemVer with pre-release tags)
         sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/chatx.csproj
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.VERSION }}<\/AssemblyVersion>/" src/chatx.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.VERSION }}<\/FileVersion>/" src/chatx.csproj
         sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/chatx.csproj
+        
+        # Convert version to numeric format for AssemblyVersion and FileVersion
+        # Replace any non-numeric sections with dots to create a valid numeric version
+        NUMERIC_VERSION=$(echo ${{ env.VERSION }} | sed -E 's/[^0-9]+/./g' | sed -E 's/\.+/./g' | sed -E 's/^\.//g' | sed -E 's/\.$//g')
+        echo "NUMERIC_VERSION=$NUMERIC_VERSION" >> $GITHUB_ENV
+        
+        # If we don't have 4 parts (major.minor.build.revision), add zeros to make it 4 parts
+        VERSION_PARTS=$(echo $NUMERIC_VERSION | tr '.' '\n' | wc -l)
+        if [ $VERSION_PARTS -eq 1 ]; then
+          NUMERIC_VERSION="$NUMERIC_VERSION.0.0.0"
+        elif [ $VERSION_PARTS -eq 2 ]; then
+          NUMERIC_VERSION="$NUMERIC_VERSION.0.0"
+        elif [ $VERSION_PARTS -eq 3 ]; then
+          NUMERIC_VERSION="$NUMERIC_VERSION.0"
+        elif [ $VERSION_PARTS -gt 4 ]; then
+          # If more than 4 parts, only keep the first 4
+          NUMERIC_VERSION=$(echo $NUMERIC_VERSION | awk -F'.' '{print $1"."$2"."$3"."$4}')
+        fi
+        
+        echo "Using numeric version: $NUMERIC_VERSION for AssemblyVersion and FileVersion"
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$NUMERIC_VERSION<\/AssemblyVersion>/" src/chatx.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$NUMERIC_VERSION<\/FileVersion>/" src/chatx.csproj
     
     - name: Restore dependencies
       run: dotnet restore
