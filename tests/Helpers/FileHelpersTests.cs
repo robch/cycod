@@ -66,22 +66,33 @@ public class FileHelpersTests
     [TestMethod]
     public void GetFileNameFromTemplate_FilePathPlaceholder_ReturnsDirectoryName()
     {
+        var isMacOrLinux = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
+
         // Arrange
-        var fileName = "C:\\path\\to\\file.txt";
+        var fileName = isMacOrLinux
+            ? "/Users/user/path/to/file.txt"
+            : "C:\\path\\to\\file.txt";
         var template = "{filePath}";
 
         // Act
         var result = FileHelpers.GetFileNameFromTemplate(fileName, template);
 
         // Assert
-        Assert.AreEqual("C:\\path\\to", result);
+        var check = isMacOrLinux
+            ? "/Users/user/path/to"
+            : "C:\\path\\to";
+        Assert.AreEqual(check, result);
     }
 
     [TestMethod]
     public void GetFileNameFromTemplate_FileBasePlaceholder_ReturnsFileNameWithoutExtension()
     {
+        var isMacOrLinux = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
+
         // Arrange
-        var fileName = "C:\\path\\to\\file.txt";
+        var fileName = isMacOrLinux
+            ? "/Users/user/path/to/file.txt"
+            : "C:\\path\\to\\file.txt";
         var template = "{fileBase}";
 
         // Act
@@ -94,8 +105,12 @@ public class FileHelpersTests
     [TestMethod]
     public void GetFileNameFromTemplate_FileExtPlaceholder_ReturnsExtensionWithoutDot()
     {
+        var isMacOrLinux = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
+
         // Arrange
-        var fileName = "C:\\path\\to\\file.txt";
+        var fileName = isMacOrLinux
+            ? "/Users/user/path/to/file.txt"
+            : "C:\\path\\to\\file.txt";
         var template = "{fileExt}";
 
         // Act
@@ -108,8 +123,12 @@ public class FileHelpersTests
     [TestMethod]
     public void GetFileNameFromTemplate_ComplexTemplate_ReturnsCorrectlyFormattedString()
     {
+        var isMacOrLinux = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
+
         // Arrange
-        var fileName = "C:\\path\\to\\file.txt";
+        var fileName = isMacOrLinux
+            ? "/Users/user/path/to/file.txt"
+            : "C:\\path\\to\\file.txt";
         var template = "backup-{fileBase}-{timeStamp}.{fileExt}";
 
         // Act
@@ -130,8 +149,12 @@ public class FileHelpersTests
     [TestMethod]
     public void GetFileNameFromTemplate_TemplateWithTrailingSlashes_TrimsSlashes()
     {
+        var isMacOrLinux = Environment.OSVersion.Platform == PlatformID.Unix || Environment.OSVersion.Platform == PlatformID.MacOSX;
+
         // Arrange
-        var fileName = "C:\\path\\to\\file.txt";
+        var fileName = isMacOrLinux
+            ? "/Users/user/path/to/file.txt"
+            : "C:\\path\\to\\file.txt";
         var template = "{fileBase}/////";
 
         // Act
