@@ -95,7 +95,7 @@ public class FileHelpers
             .Replace("{timeStamp}", timeStamp)
             .Replace("{timestamp}", timeStamp)
             .Replace("{time}", time)
-            .Trim(' ', '/', '\\');
+            .TrimEnd(' ', '/', '\\');
     }
 
     public static string ReadAllText(string fileName)
