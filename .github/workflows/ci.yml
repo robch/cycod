@@ -11,11 +11,6 @@ on:
   workflow_dispatch:
     # Allow manual triggering
 
-# Limit permissions to minimum required
-permissions:
-  contents: read
-  actions: write  # Adding write permission for actions
-
 jobs:
   build:
     runs-on: ubuntu-latest
