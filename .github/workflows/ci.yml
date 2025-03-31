@@ -31,12 +31,12 @@ jobs:
     
     - name: Publish for multiple platforms (verification)
       run: |
-        dotnet publish src/chatx.csproj -c Release -r win-x64 --no-build
-        dotnet publish src/chatx.csproj -c Release -r linux-x64 --no-build
-        dotnet publish src/chatx.csproj -c Release -r osx-x64 --no-build
+        dotnet publish src/chatx.csproj -c Release -r win-x64
+        dotnet publish src/chatx.csproj -c Release -r linux-x64
+        dotnet publish src/chatx.csproj -c Release -r osx-x64
     
     - name: Test
-      run: dotnet test --configuration Release --no-build --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
