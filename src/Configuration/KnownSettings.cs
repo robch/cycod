@@ -32,6 +32,8 @@ public static class KnownSettings
     // Application settings
     public const string AppMaxTokens = "App.MaxTokens";
     public const string AppPreferredProvider = "App.PreferredProvider";
+    public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
+    public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
     
     #endregion
     
@@ -85,7 +87,9 @@ public static class KnownSettings
         
         // Application settings
         { AppMaxTokens, "APP_MAX_TOKENS" },
-        { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" }
+        { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" },
+        { AppAutoSaveChatHistory, "CHATX_AUTO_SAVE_CHAT_HISTORY" },
+        { AppAutoSaveTrajectory, "CHATX_AUTO_SAVE_TRAJECTORY" }
     };
     
     /// <summary>
@@ -113,7 +117,9 @@ public static class KnownSettings
         { CopilotEditorVersion, "--copilot-editor-version" },
         
         // Application settings
-        { AppMaxTokens, "--max-tokens" }
+        { AppMaxTokens, "--max-tokens" },
+        { AppAutoSaveChatHistory, "--auto-save-chat-history" },
+        { AppAutoSaveTrajectory, "--auto-save-trajectory" }
     };
     
     /// <summary>
@@ -175,7 +181,9 @@ public static class KnownSettings
     public static readonly HashSet<string> AppSettings = new(StringComparer.OrdinalIgnoreCase)
     {
         AppMaxTokens,
-        AppPreferredProvider
+        AppPreferredProvider,
+        AppAutoSaveChatHistory,
+        AppAutoSaveTrajectory
     };
     
     #endregion

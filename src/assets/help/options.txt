@@ -18,7 +18,7 @@ USAGE: chatx [...]
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates fal
 
-  CHAT HISTORY
+  CHAT HISTORY                            (see: chatx help chat history)
     --output-chat-history [FILE]          Save chat history to the specified file (default: "chat-history-{time}.jsonl")
     --output-trajectory [FILE]            Save chat history in human readable trajectory format (default: "trajectory-{time}.md
 

@@ -25,20 +25,15 @@ class ChatCommand : Command
         var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
         if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
 
-        // Ground the filenames (in case they're templatized)
-        InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
-        OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
-        OutputTrajectory = FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
+        // Ground the filenames (in case they're templatized, or auto-save is enabled).
+        InputChatHistory = GroundInputChatHistoryFileName();
+        OutputChatHistory = GroundOutputChatHistoryFileName();
+        OutputTrajectory = GroundOutputTrajectoryFileName();
 
         // Ground the system prompt, added user messages, and InputInstructions.
-        SystemPrompt ??= GetBuiltInSystemPrompt();
-        SystemPrompt = ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
-        UserPromptAdds = UserPromptAdds
-            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
-            .ToList();
-        InputInstructions = InputInstructions
-            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
-            .ToList();
+        SystemPrompt = GroundSystemPrompt();
+        UserPromptAdds = GroundUserPromptAdds();
+        InputInstructions = GroundInputInstructions();
 
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
@@ -86,6 +81,64 @@ class ChatCommand : Command
         }
 
         return new List<Task<int>>() { Task.FromResult(0) };
+    }
+
+    private string GroundSystemPrompt()
+    {
+        SystemPrompt ??= GetBuiltInSystemPrompt();
+        return ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+    }
+
+    private List<string> GroundUserPromptAdds()
+    {
+        return UserPromptAdds
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
+    }
+
+    private List<string> GroundInputInstructions()
+    {
+        return InputInstructions
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
+    }
+
+    private string? GroundInputChatHistoryFileName()
+    {
+        return FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
+    }
+
+    private string? GroundOutputChatHistoryFileName()
+    {
+        var userSpecified = !string.IsNullOrEmpty(OutputChatHistory);
+        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
+        if (shouldAutoSave)
+        {
+            var historyDir = EnsureHistoryDirectory();
+            OutputChatHistory = Path.Combine(historyDir, "chat-history-{time}.jsonl");
+        }
+
+        return FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
+    }
+
+    private string? GroundOutputTrajectoryFileName()
+    {
+        var userSpecified = !string.IsNullOrEmpty(OutputTrajectory);
+        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
+        if (shouldAutoSave)
+        {
+            var historyDir = EnsureHistoryDirectory();
+            OutputTrajectory = Path.Combine(historyDir, "trajectory-{time}.jsonl");
+        }
+
+        return FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
+    }
+
+    private string EnsureHistoryDirectory()
+    {
+        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
+        var historyDir = Path.Combine(userScopeDir!, "history");
+        return DirectoryHelpers.EnsureDirectoryExists(historyDir);
     }
 
     private string GetBuiltInSystemPrompt()

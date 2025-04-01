@@ -54,3 +54,4 @@ SEE ALSO
   chatx help provider
   chatx help config
   chatx help github login
+  chatx help chat history
