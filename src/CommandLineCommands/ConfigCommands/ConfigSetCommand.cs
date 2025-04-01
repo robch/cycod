@@ -18,11 +18,10 @@ class ConfigSetCommand : ConfigBaseCommand
         return "config set";
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteSet(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
-        return tasks;
+        var result = ExecuteSet(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
+        return Task.FromResult(result);
     }
 
     private int ExecuteSet(string? key, string? value, ConfigFileScope scope, string? configFileName)

@@ -39,7 +39,7 @@ public class ChatCommand : Command
         return clone;
     }
 
-    public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
+    public async Task<int> ExecuteAsync(bool interactive)
     {
         // Transfer known settings to the command if not already set
         var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
@@ -79,7 +79,7 @@ public class ChatCommand : Command
         if (!interactive && InputInstructions.Count == 0)
         {
             ConsoleHelpers.WriteWarning("\nNo input instructions provided. Exiting.");
-            return new List<Task<int>>() { Task.FromResult(1) };
+            return 1;
         }
 
         while (true)
@@ -101,7 +101,7 @@ public class ChatCommand : Command
             ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
         }
 
-        return new List<Task<int>>() { Task.FromResult(0) };
+        return 0;
     }
 
     private string GroundSystemPrompt()

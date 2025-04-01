@@ -69,8 +69,15 @@ public class Program
             return 0;
         }
 
-        var threadCountMax = commandLineOptions.Commands.Max(x => x.ThreadCount);
+        var threadCountMax = commandLineOptions.ThreadCount;
         var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
+
+        var isTruelyInteractive = commandLineOptions.Interactive && !Console.IsInputRedirected;
+        if (isTruelyInteractive && parallelism > 1)
+        {
+            ConsoleHelpers.WriteDebugLine($"Max 1 thread in truly interactive mode");
+            parallelism = 1;
+        }
 
         var allTasks = new List<Task<int>>();
         var throttler = new SemaphoreSlim(parallelism);
@@ -78,21 +85,34 @@ public class Program
         var commands = ForEachVarHelpers.ExpandForEachVars(commandLineOptions.Commands).ToList();
         foreach (var command in commands)
         {
-            var tasksThisCommand = command switch
+            throttler.Wait();
+
+            var needDelayForTemplateFileNameUniqueness = !isTruelyInteractive;
+            if (needDelayForTemplateFileNameUniqueness)
             {
-                ChatCommand chatCommand => await chatCommand.ExecuteAsync(commandLineOptions.Interactive),
+                var delay = TimeSpan.FromMilliseconds(10);
+                await Task.Delay(delay);
+            }
+
+            var startedTask = command switch
+            {
+                ChatCommand chatCommand => chatCommand.ExecuteAsync(commandLineOptions.Interactive),
                 VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
-                GitHubLoginCommand loginCommand => await loginCommand.ExecuteAsync(commandLineOptions.Interactive),
+                GitHubLoginCommand loginCommand => loginCommand.ExecuteAsync(commandLineOptions.Interactive),
                 ConfigListCommand configListCommand => configListCommand.Execute(commandLineOptions.Interactive),
                 ConfigGetCommand configGetCommand => configGetCommand.Execute(commandLineOptions.Interactive),
                 ConfigSetCommand configSetCommand => configSetCommand.Execute(commandLineOptions.Interactive),
                 ConfigClearCommand configClearCommand => configClearCommand.Execute(commandLineOptions.Interactive),
                 ConfigAddCommand configAddCommand => configAddCommand.Execute(commandLineOptions.Interactive),
                 ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(commandLineOptions.Interactive),
-                _ => new List<Task<int>>()
+                _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 
-            allTasks.AddRange(tasksThisCommand);
+            allTasks.Add(startedTask.ContinueWith(t =>
+            {
+                throttler.Release();
+                return t.Result;
+            }));
         }
 
         await Task.WhenAll(allTasks.ToArray());

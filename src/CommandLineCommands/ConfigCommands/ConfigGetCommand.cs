@@ -17,11 +17,10 @@ class ConfigGetCommand : ConfigBaseCommand
         return "config get";
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteGet(Key, Scope ?? ConfigFileScope.Any, ConfigFileName)));
-        return tasks;
+        var result = ExecuteGet(Key, Scope ?? ConfigFileScope.Any, ConfigFileName);
+        return Task.FromResult(result);
     }
 
     private int ExecuteGet(string? key, ConfigFileScope scope, string? configFileName)

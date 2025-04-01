@@ -17,11 +17,10 @@ class ConfigRemoveCommand : ConfigBaseCommand
         return "config remove";
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteRemove(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
-        return tasks;
+        var result = ExecuteRemove(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
+        return Task.FromResult(result);
     }
 
     private int ExecuteRemove(string? key, string? value, ConfigFileScope scope, string? configFileName)

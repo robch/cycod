@@ -15,9 +15,9 @@ class VersionCommand : Command
         return false;
     }
 
-    public List<Task<int>> ExecuteAsync(bool interactive)
+    public Task<int> ExecuteAsync(bool interactive)
     {
         Console.WriteLine($"Version: {VersionInfo.GetVersion()}");
-        return new List<Task<int>> { Task.FromResult(0) };
+        return Task.FromResult(0);
     }
 }

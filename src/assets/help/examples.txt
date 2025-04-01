@@ -42,6 +42,10 @@ EXAMPLES
   
     chatx --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
 
+  EXAMPLE 11: Process multiple commands in parallel with threads
+  
+    chatx --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
+
 SEE ALSO
 
   chatx help options

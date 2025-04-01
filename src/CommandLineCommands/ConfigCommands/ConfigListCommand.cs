@@ -15,13 +15,12 @@ class ConfigListCommand : ConfigBaseCommand
         Scope = ConfigFileScope.Any;
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(Scope == ConfigFileScope.FileName
+        var result = Scope == ConfigFileScope.FileName
             ? ExecuteList(this.ConfigFileName!)
-            : ExecuteList(Scope ?? ConfigFileScope.Any)));
-        return tasks;
+            : ExecuteList(Scope ?? ConfigFileScope.Any);
+        return Task.FromResult(result);
     }
 
     private int ExecuteList(string configFileName)

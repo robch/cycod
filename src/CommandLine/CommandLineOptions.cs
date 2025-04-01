@@ -23,6 +23,8 @@ public class CommandLineOptions
 
         AllOptions = new string[0];
         SaveAliasName = null;
+
+        ThreadCount = 0;
     }
 
     public bool Interactive;
@@ -34,6 +36,7 @@ public class CommandLineOptions
     public string HelpTopic;
     public bool ExpandHelpTopics;
 
+    public int ThreadCount { get; private set; }
     public List<Command> Commands;
 
     public string[] AllOptions;
@@ -392,6 +395,11 @@ public class CommandLineOptions
             var configFiles = GetInputOptionArgs(i + 1, args);
             ConfigStore.Instance.LoadConfigFiles(ValidateFilesExist(configFiles));
             i += configFiles.Count();
+        }
+        else if (arg == "--threads")
+        {
+            var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            commandLineOptions.ThreadCount = ValidateInt(arg, countStr, "thread count");
         }
         else
         {
