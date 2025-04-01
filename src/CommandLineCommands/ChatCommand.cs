@@ -1,6 +1,6 @@
 using OpenAI.Chat;
 
-class ChatCommand : Command
+public class ChatCommand : Command
 {
     public ChatCommand()
     {
@@ -14,6 +14,29 @@ class ChatCommand : Command
     override public string GetCommandName()
     {
         return "";
+    }
+
+    public ChatCommand Clone()
+    {
+        var clone = new ChatCommand();
+        
+        // Copy all properties
+        clone.SystemPrompt = this.SystemPrompt;
+        clone.SystemPromptAdds = new List<string>(this.SystemPromptAdds);
+        clone.UserPromptAdds = new List<string>(this.UserPromptAdds);
+        clone.TrimTokenTarget = this.TrimTokenTarget;
+        clone.MaxOutputTokens = this.MaxOutputTokens;
+        clone.LoadMostRecentChatHistory = this.LoadMostRecentChatHistory;
+        clone.InputChatHistory = this.InputChatHistory;
+        clone.OutputChatHistory = this.OutputChatHistory;
+        clone.OutputTrajectory = this.OutputTrajectory;
+        clone.InputInstructions = new List<string>(this.InputInstructions);
+        clone.UseTemplates = this.UseTemplates;
+        
+        // Deep copy variables dictionary
+        clone.Variables = new Dictionary<string, string>(this.Variables);
+        
+        return clone;
     }
 
     public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
@@ -349,7 +372,7 @@ class ChatCommand : Command
 
     private void DisplayUserPrompt()
     {
-        ConsoleHelpers.Write("User: ", ConsoleColor.Green);
+        ConsoleHelpers.Write("\rUser: ", ConsoleColor.Green);
         Console.ForegroundColor = ConsoleColor.White;
     }
 
@@ -450,6 +473,7 @@ class ChatCommand : Command
     public bool UseTemplates = true;
 
     public Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
+    public List<ForEachVariable> ForEachVariables { get; set; } = new List<ForEachVariable>();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

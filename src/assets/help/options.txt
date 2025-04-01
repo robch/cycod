@@ -57,6 +57,11 @@ USAGE: chatx [...]
     --save-alias ALIAS                    Save current options as an alias
     --{ALIAS}                             Use options saved under the specified alias name
 
+  VARIABLES
+    --var NAME=VALUE                      Set a variable for template substitution
+    --foreach var NAME in VALUE1 [...]    Define a loop variable with multiple values (expands to multiple commands)
+    --foreach var NAME in @FILE           Define a loop variable with values from a file (one per line)
+
   ADDITIONAL OPTIONS
     --interactive TRUE/FALSE              Allow interactive use (default: true, unless stdin redirected)
     --debug                               Turn on diagnostics/debug outputs

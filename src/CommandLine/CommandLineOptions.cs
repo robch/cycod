@@ -499,6 +499,13 @@ public class CommandLineOptions
             ConfigStore.Instance.SetFromCommandLine($"Var.{assignment.Item1}", assignment.Item2);
             i += max1Arg.Count();
         }
+        else if (arg == "--foreach")
+        {
+            var foreachArgs = GetInputOptionArgs(i + 1, args).ToArray();
+            var foreachVariable = ForEachVarHelpers.ParseForeachVarOption(foreachArgs, out var skipCount);
+            command.ForEachVariables.Add(foreachVariable);
+            i += skipCount;
+        }
         else if (arg == "--use-templates")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);

@@ -32,9 +32,10 @@ Hello, John!
 Variables can come from:
 
 1. Command line arguments (using `--var NAME=VALUE`)
-2. Environment variables
-3. Special built-in variables
-4. Variables set within templates
+2. Foreach loop variables (using `--foreach var NAME in VALUES...`)
+3. Environment variables
+4. Special built-in variables
+5. Variables set within templates
 
 ### Special Variables
 
@@ -306,6 +307,37 @@ Then use it with:
 ```bash
 chatx --my-coding-assistant --var language=python
 ```
+
+## Loop Variables with Foreach
+
+You can define loop variables that expand a command into multiple commands, each with a different value:
+
+```bash
+chatx --foreach var x in 1 2 3 --input "The value of x is {x}"
+```
+
+This will execute three separate chat commands, each with a different value of `x`.
+
+You can also read values from a file (one per line):
+
+```bash
+chatx --foreach var name in @names.txt --input "Hello, {name}!"
+```
+
+When multiple foreach variables are defined, they create a Cartesian product (all combinations):
+
+```bash
+chatx --foreach var x in 1 2 3 --foreach var y in a b c --input "{x} + {y}"
+```
+
+This will execute 9 separate commands with all combinations of x and y: (1,a), (1,b), (1,c), (2,a), etc.
+
+Loop variables can be used in all template contexts, including:
+
+- System prompts
+- User prompts
+- Input instructions
+- File paths
 
 ## Technical Details
 

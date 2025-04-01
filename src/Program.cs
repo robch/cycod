@@ -75,7 +75,8 @@ public class Program
         var allTasks = new List<Task<int>>();
         var throttler = new SemaphoreSlim(parallelism);
 
-        foreach (var command in commandLineOptions.Commands)
+        var commands = ForEachVarHelpers.ExpandForEachVars(commandLineOptions.Commands).ToList();
+        foreach (var command in commands)
         {
             var tasksThisCommand = command switch
             {

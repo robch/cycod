@@ -33,6 +33,14 @@ EXAMPLES
   EXAMPLE 8: Add a user prompt that will be included when starting a new chat
   
     chatx --add-user-prompt "Always answer in french."
+    
+  EXAMPLE 9: Use foreach variables to run multiple versions of a command
+  
+    chatx --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
+    
+  EXAMPLE 10: Combine multiple foreach variables (creates all combinations)
+  
+    chatx --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
 
 SEE ALSO
 
