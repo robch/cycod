@@ -33,10 +33,9 @@ public class CodeExplorationHelperFunctions
     public async Task<string> FindFilesContainingPattern(
         [HelperFunctionParameterDescription("File glob patterns to search")] string[] filePatterns,
         [HelperFunctionParameterDescription("Regex pattern that must exist somewhere in the files")] string contentPattern,
-        [HelperFunctionParameterDescription("File glob patterns to exclude")] string[]? excludePatterns = null,
-        [HelperFunctionParameterDescription("Maximum number of files to return")] int maxFiles = 10)
+        [HelperFunctionParameterDescription("File glob patterns to exclude")] string[]? excludePatterns = null)
     {
-        return await _mdxWrapper.ExecuteFindFilesContainingPatternCommand(filePatterns, contentPattern, excludePatterns, maxFiles);
+        return await _mdxWrapper.ExecuteFindFilesContainingPatternCommand(filePatterns, contentPattern, excludePatterns);
     }
     
     #endregion
