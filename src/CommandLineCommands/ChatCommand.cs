@@ -133,7 +133,7 @@ class ChatCommand : Command
             .OrderByDescending(f => new FileInfo(f).LastWriteTime)
             .FirstOrDefault();
 
-        ConsoleHelpers.WriteDebugLine($"Most recent chat history: {mostRecent}");
+        ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ConsoleColor.DarkGray);
         return mostRecent;
     }
 
