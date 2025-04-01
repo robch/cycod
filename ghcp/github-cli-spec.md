@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-The AI-assisted development landscape has evolved into three distinct approaches: deeply integrated IDE experiences, autonomous agents that work independently on issues, and terminal-based coding assistants. While GitHub Copilot has revolutionized the IDE experience and Project Padawan is advancing autonomous issue resolution, a comprehensive terminal-based AI assistant represents the critical third leg of this strategy.
+The AI-assisted development landscape has evolved into three distinct approaches: deeply interactive IDE experiences, autonomous agents that work independently on issues, and terminal-based coding assistants. While GitHub Copilot has revolutionized the IDE experience and Project Padawan is advancing autonomous issue resolution, a comprehensive terminal-based AI assistant represents the critical third leg of this strategy.
 
 This paper outlines a vision for GitHub Copilot CLI, a next-generation Terminal Development Environment that would exceed the capabilities of Claude Code and other terminal-based coding assistants. Beyond simple code generation, GitHub Copilot CLI would empower developers with unprecedented context-gathering capabilities, putting them in control of how and when AI assistance is leveraged while providing powerful tools that surpass what's available in today's IDEs.
 
