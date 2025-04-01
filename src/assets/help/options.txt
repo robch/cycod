@@ -5,7 +5,8 @@ USAGE: chatx [...]
     --add-system-prompt "TEXT"            Add text to the system prompt, to re-inforce critical instructions
     --add-user-prompt "TEXT"              Add user prompt(s), prepended to the first input/question/instruction
 
-    --input-chat-history [FILE]           Load chat history from the specified JSONL fil
+    --input-chat-history [FILE]           Load chat history from the specified JSONL file
+    --continue                            Continue the most recent chat history
 
     --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
     --question ...                        Alias for --interactive false --quiet --input

@@ -73,6 +73,18 @@ To continue a previous conversation, you can load a chat history using the `--in
 chatx --input-chat-history "my-project-chat.jsonl"
 ```
 
+Alternatively, you can use the `--continue` option to automatically load the most recent chat history file:
+
+```bash
+chatx --continue
+```
+
+This will search for the most recent chat history file (matching the pattern "chat-history-*.jsonl") in both:
+1. The user-scoped history folder (where auto-saved histories are stored)
+2. The current directory
+
+You can use this to quickly pick up where you left off without having to remember the full filename.
+
 This loads all messages from the specified file and provides them as context to the AI assistant, allowing the conversation to continue as if it had never ended.
 
 ## Combining History Operations

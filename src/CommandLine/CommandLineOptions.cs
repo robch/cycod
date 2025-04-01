@@ -592,7 +592,13 @@ public class CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var inputChatHistory = ValidateFileExists(max1Arg.FirstOrDefault());
             command.InputChatHistory = inputChatHistory;
+            command.LoadMostRecentChatHistory = false;
             i += max1Arg.Count();
+        }
+        else if (arg == "--continue")
+        {
+            command.LoadMostRecentChatHistory = true;
+            command.InputChatHistory = null;
         }
         else if (arg == "--output-chat-history")
         {

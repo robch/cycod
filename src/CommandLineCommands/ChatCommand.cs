@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Text.Json;
 using OpenAI.Chat;
 
 class ChatCommand : Command
@@ -105,7 +103,38 @@ class ChatCommand : Command
 
     private string? GroundInputChatHistoryFileName()
     {
+        var mostRecentChatHistoryFileName = LoadMostRecentChatHistory
+            ? FindMostRecentChatHistoryFile()
+            : null;
+
+        var mostRecentChatHistoryFileExists = FileHelpers.FileExists(mostRecentChatHistoryFileName);
+        if (mostRecentChatHistoryFileExists)
+        {
+            InputChatHistory = mostRecentChatHistoryFileName;
+        }
+
         return FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
+    }
+
+    private string? FindMostRecentChatHistoryFile()
+    {
+        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
+        var userScopeHistoryDir = Path.Combine(userScopeDir!, "history");
+        var userChatHistoryFiles = Directory.Exists(userScopeHistoryDir)
+            ? Directory.GetFiles(userScopeHistoryDir, "chat-history-*.jsonl")
+            : Array.Empty<string>();
+
+        var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history-*.jsonl");
+
+        var files = userChatHistoryFiles.ToList()
+            .Concat(localFiles).ToList()
+            .OrderByDescending(f => new FileInfo(f).LastWriteTime);
+        var mostRecent = files
+            .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+            .FirstOrDefault();
+
+        ConsoleHelpers.WriteDebugLine($"Most recent chat history: {mostRecent}");
+        return mostRecent;
     }
 
     private string? GroundOutputChatHistoryFileName()
@@ -412,6 +441,7 @@ class ChatCommand : Command
     public int? TrimTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }
 
+    public bool LoadMostRecentChatHistory = false;
     public string? InputChatHistory;
     public string? OutputChatHistory;
     public string? OutputTrajectory;
