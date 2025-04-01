@@ -5,4 +5,5 @@ src/obj/
 tests/**/bin/
 tests/**/obj/
 
-.env
+.chatx/scratch/
+.chatx/trajectories/
