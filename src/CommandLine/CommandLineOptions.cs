@@ -62,33 +62,7 @@ public class CommandLineOptions
 
     public List<string> SaveAlias(string aliasName)
     {
-        var filesSaved = new List<string>();
-        var aliasDirectory = FindAliasDirectory(create: true)!;
-        var fileName = Path.Combine(aliasDirectory, aliasName + ".alias");
-
-        var options = AllOptions
-            .Where(x => x != "--save-alias" && x != aliasName)
-            .Select(x => SingleLineOrNewAtFile(x, fileName, ref filesSaved));
-
-        var asMultiLineString = string.Join('\n', options);
-        FileHelpers.WriteAllText(fileName, asMultiLineString);
-
-        filesSaved.Insert(0, fileName);
-        return filesSaved;
-    }
-
-    private string SingleLineOrNewAtFile(string text, string baseFileName, ref List<string> additionalFiles)
-    {
-        var isMultiLine = text.Contains('\n') || text.Contains('\r');
-        if (!isMultiLine) return text;
-
-        var additionalFileCount = additionalFiles.Count + 1;
-        var additionalFileName = FileHelpers.GetFileNameFromTemplate(baseFileName, "{filepath}/{filebase}-" + additionalFileCount + "{fileext}")!;
-        additionalFiles.Add(additionalFileName);
-
-        FileHelpers.WriteAllText(additionalFileName, text);
-
-        return "@" + additionalFileName;
+        return AliasFileHelpers.SaveAlias(aliasName, AllOptions);
     }
 
     private static IEnumerable<string> ExpandedInputsFromCommandLine(string[] args)
@@ -203,7 +177,7 @@ public class CommandLineOptions
         return false;
     }
 
-    private static bool TryParseInputOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string arg)
+    public static bool TryParseInputOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string arg)
     {
         var isEndOfCommand = arg == "--" && command != null && !command.IsEmpty();
         if (isEndOfCommand)
@@ -729,23 +703,7 @@ public class CommandLineOptions
 
     private static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string alias)
     {
-        var aliasDirectory = FindAliasDirectory(create: false) ?? ".";
-        var aliasFilePath = Path.Combine(aliasDirectory, $"{alias}.alias");
-
-        if (File.Exists(aliasFilePath))
-        {
-            var aliasArgs = File.ReadAllLines(aliasFilePath);
-            for (var j = 0; j < aliasArgs.Length; j++)
-            {
-                var parsed = TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
-                if (!parsed)
-                {
-                    throw InvalidArgException(command, aliasArgs[j]);
-                }
-            }
-            return true;
-        }
-        return false;
+        return AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, alias);
     }
 
     private static IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue)
@@ -897,12 +855,6 @@ public class CommandLineOptions
             : DirectoryHelpers.FindDirectorySearchParents(".chatx", "profiles");
     }
 
-    private static string? FindAliasDirectory(bool create = false)
-    {
-        return create
-            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "aliases")
-            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "aliases");
-    }
 
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
     private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";

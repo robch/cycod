@@ -152,24 +152,7 @@ public class Program
 
     private static void DisplaySavedAliasFiles(List<string> filesSaved)
     {
-        var firstFileSaved = filesSaved.First();
-        var additionalFiles = filesSaved.Skip(1).ToList();
-
-        ConsoleHelpers.WriteLine($"Saved: {firstFileSaved}\n");
-
-        var hasAdditionalFiles = additionalFiles.Any();
-        if (hasAdditionalFiles)
-        {
-            foreach (var additionalFile in additionalFiles)
-            {
-                ConsoleHelpers.WriteLine($"  and: {additionalFile}");
-            }
-         
-            ConsoleHelpers.WriteLine();
-        }
-
-        var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.WriteLine($"USAGE: {Program.Name} [...] --" + aliasName);
+        AliasFileHelpers.DisplaySavedAliasFiles(filesSaved);
     }
 
     private static string[] ProcessDirectives(string[] args)
