@@ -35,7 +35,28 @@ public static class ForEachVarHelpers
             ? variableArgs[0].Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
             : variableArgs;
 
+        int start = 0, end = 0;
+        var treatAsIntRangeSeparatedByTwoDots = values.Length == 1 && IsIntRangeSeparatedByTwoDots(values[0], out start, out end);
+        if (treatAsIntRangeSeparatedByTwoDots)
+        {
+            values = Enumerable.Range(start, end - start + 1).Select(i => i.ToString()).ToArray();
+        }
+
         return new ForEachVariable(varName, values.ToList());
+    }
+
+    private static bool IsIntRangeSeparatedByTwoDots(string v, out int start, out int end)
+    {
+        start = end = 0;
+
+        var parts = v.Split("..");
+        if (parts.Length != 2) return false;
+
+        start = int.Parse(parts[0]);
+        end = int.Parse(parts[1]);
+        if (start > end) return false;
+
+        return true;
     }
 
     private static IEnumerable<Command> ExpandChatCommand(ChatCommand chatCommand)

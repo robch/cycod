@@ -512,6 +512,7 @@ public class CommandLineOptions
             var foreachArgs = GetInputOptionArgs(i + 1, args).ToArray();
             var foreachVariable = ForEachVarHelpers.ParseForeachVarOption(foreachArgs, out var skipCount);
             command.ForEachVariables.Add(foreachVariable);
+            commandLineOptions.Interactive = false;
             i += skipCount;
         }
         else if (arg == "--use-templates")
