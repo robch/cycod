@@ -1,8 +1,6 @@
-using System.Diagnostics;
-using System.Text.Json;
 using OpenAI.Chat;
 
-class ChatCommand : Command
+public class ChatCommand : Command
 {
     public ChatCommand()
     {
@@ -18,27 +16,45 @@ class ChatCommand : Command
         return "";
     }
 
-    public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
+    public ChatCommand Clone()
+    {
+        var clone = new ChatCommand();
+        
+        // Copy all properties
+        clone.SystemPrompt = this.SystemPrompt;
+        clone.SystemPromptAdds = new List<string>(this.SystemPromptAdds);
+        clone.UserPromptAdds = new List<string>(this.UserPromptAdds);
+        clone.TrimTokenTarget = this.TrimTokenTarget;
+        clone.MaxOutputTokens = this.MaxOutputTokens;
+        clone.LoadMostRecentChatHistory = this.LoadMostRecentChatHistory;
+        clone.InputChatHistory = this.InputChatHistory;
+        clone.OutputChatHistory = this.OutputChatHistory;
+        clone.OutputTrajectory = this.OutputTrajectory;
+        clone.InputInstructions = new List<string>(this.InputInstructions);
+        clone.UseTemplates = this.UseTemplates;
+        
+        // Deep copy variables dictionary
+        clone.Variables = new Dictionary<string, string>(this.Variables);
+        
+        return clone;
+    }
+
+    public async Task<int> ExecuteAsync(bool interactive)
     {
         // Transfer known settings to the command if not already set
         var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
         var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
         if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
 
-        // Ground the filenames (in case they're templatized)
-        InputChatHistory = FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
-        OutputChatHistory = FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
-        OutputTrajectory = FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
+        // Ground the filenames (in case they're templatized, or auto-save is enabled).
+        InputChatHistory = GroundInputChatHistoryFileName();
+        OutputChatHistory = GroundOutputChatHistoryFileName();
+        OutputTrajectory = GroundOutputTrajectoryFileName();
 
         // Ground the system prompt, added user messages, and InputInstructions.
-        SystemPrompt ??= GetBuiltInSystemPrompt();
-        SystemPrompt = ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
-        UserPromptAdds = UserPromptAdds
-            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
-            .ToList();
-        InputInstructions = InputInstructions
-            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
-            .ToList();
+        SystemPrompt = GroundSystemPrompt();
+        UserPromptAdds = GroundUserPromptAdds();
+        InputInstructions = GroundInputInstructions();
 
         // Create the function factory and add functions.
         var factory = new FunctionFactory();
@@ -63,7 +79,7 @@ class ChatCommand : Command
         if (!interactive && InputInstructions.Count == 0)
         {
             ConsoleHelpers.WriteWarning("\nNo input instructions provided. Exiting.");
-            return new List<Task<int>>() { Task.FromResult(1) };
+            return 1;
         }
 
         while (true)
@@ -85,7 +101,96 @@ class ChatCommand : Command
             ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
         }
 
-        return new List<Task<int>>() { Task.FromResult(0) };
+        return 0;
+    }
+
+    private string GroundSystemPrompt()
+    {
+        SystemPrompt ??= GetBuiltInSystemPrompt();
+        return ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+    }
+
+    private List<string> GroundUserPromptAdds()
+    {
+        return UserPromptAdds
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
+    }
+
+    private List<string> GroundInputInstructions()
+    {
+        return InputInstructions
+            .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .ToList();
+    }
+
+    private string? GroundInputChatHistoryFileName()
+    {
+        var mostRecentChatHistoryFileName = LoadMostRecentChatHistory
+            ? FindMostRecentChatHistoryFile()
+            : null;
+
+        var mostRecentChatHistoryFileExists = FileHelpers.FileExists(mostRecentChatHistoryFileName);
+        if (mostRecentChatHistoryFileExists)
+        {
+            InputChatHistory = mostRecentChatHistoryFileName;
+        }
+
+        return FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
+    }
+
+    private string? FindMostRecentChatHistoryFile()
+    {
+        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
+        var userScopeHistoryDir = Path.Combine(userScopeDir!, "history");
+        var userChatHistoryFiles = Directory.Exists(userScopeHistoryDir)
+            ? Directory.GetFiles(userScopeHistoryDir, "chat-history-*.jsonl")
+            : Array.Empty<string>();
+
+        var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history-*.jsonl");
+
+        var files = userChatHistoryFiles.ToList()
+            .Concat(localFiles).ToList()
+            .OrderByDescending(f => new FileInfo(f).LastWriteTime);
+        var mostRecent = files
+            .OrderByDescending(f => new FileInfo(f).LastWriteTime)
+            .FirstOrDefault();
+
+        ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ConsoleColor.DarkGray);
+        return mostRecent;
+    }
+
+    private string? GroundOutputChatHistoryFileName()
+    {
+        var userSpecified = !string.IsNullOrEmpty(OutputChatHistory);
+        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
+        if (shouldAutoSave)
+        {
+            var historyDir = EnsureHistoryDirectory();
+            OutputChatHistory = Path.Combine(historyDir, "chat-history-{time}.jsonl");
+        }
+
+        return FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
+    }
+
+    private string? GroundOutputTrajectoryFileName()
+    {
+        var userSpecified = !string.IsNullOrEmpty(OutputTrajectory);
+        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
+        if (shouldAutoSave)
+        {
+            var historyDir = EnsureHistoryDirectory();
+            OutputTrajectory = Path.Combine(historyDir, "trajectory-{time}.jsonl");
+        }
+
+        return FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
+    }
+
+    private string EnsureHistoryDirectory()
+    {
+        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
+        var historyDir = Path.Combine(userScopeDir!, "history");
+        return DirectoryHelpers.EnsureDirectoryExists(historyDir);
     }
 
     private string GetBuiltInSystemPrompt()
@@ -267,7 +372,7 @@ class ChatCommand : Command
 
     private void DisplayUserPrompt()
     {
-        ConsoleHelpers.Write("User: ", ConsoleColor.Green);
+        ConsoleHelpers.Write("\rUser: ", ConsoleColor.Green);
         Console.ForegroundColor = ConsoleColor.White;
     }
 
@@ -359,6 +464,7 @@ class ChatCommand : Command
     public int? TrimTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }
 
+    public bool LoadMostRecentChatHistory = false;
     public string? InputChatHistory;
     public string? OutputChatHistory;
     public string? OutputTrajectory;
@@ -367,6 +473,7 @@ class ChatCommand : Command
     public bool UseTemplates = true;
 
     public Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
+    public List<ForEachVariable> ForEachVariables { get; set; } = new List<ForEachVariable>();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

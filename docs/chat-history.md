@@ -8,13 +8,42 @@ Chat histories in ChatX are stored in JSONL (JSON Lines) format, where each line
 
 ## Saving Chat History
 
-You can save your chat history to a file using the `--output-chat-history` option:
+### Automatic Saving
+
+By default, ChatX automatically saves your chat history and trajectory files to the `history` directory under your user profile:
+
+- Windows: `%USERPROFILE%\.chatx\history\`
+- Mac/Linux: `~/.chatx/history/`
+
+Files are saved with default names in the format:
+- Chat history: `chat-history-{time}.jsonl`
+- Trajectory: `trajectory-{time}.jsonl`
+
+You can disable this feature using the config commands:
+
+```bash
+chatx config set App.AutoSaveChatHistory false
+chatx config set App.AutoSaveTrajectory false
+```
+
+To re-enable automatic saving:
+
+```bash
+chatx config set App.AutoSaveChatHistory true
+chatx config set App.AutoSaveTrajectory true
+```
+
+### Manual Saving with CLI Options
+
+You can also explicitly specify where to save your chat history using the `--output-chat-history` option:
 
 ```bash
 chatx --output-chat-history "my-project-chat.jsonl"
 ```
 
 If no filename is specified, ChatX uses a default template: `chat-history-{time}.jsonl`, where `{time}` is replaced with the current date and time.
+
+When you explicitly provide an output path with the CLI option, it takes precedence over the automatic saving setting.
 
 ### Filename Templates
 
@@ -43,6 +72,18 @@ To continue a previous conversation, you can load a chat history using the `--in
 ```bash
 chatx --input-chat-history "my-project-chat.jsonl"
 ```
+
+Alternatively, you can use the `--continue` option to automatically load the most recent chat history file:
+
+```bash
+chatx --continue
+```
+
+This will search for the most recent chat history file (matching the pattern "chat-history-*.jsonl") in both:
+1. The user-scoped history folder (where auto-saved histories are stored)
+2. The current directory
+
+You can use this to quickly pick up where you left off without having to remember the full filename.
 
 This loads all messages from the specified file and provides them as context to the AI assistant, allowing the conversation to continue as if it had never ended.
 
@@ -152,6 +193,8 @@ In addition to JSONL-formatted chat history, ChatX can also save your conversati
 ```bash
 chatx --output-trajectory "conversation.md"
 ```
+
+Alternatively, you can rely on the automatic saving feature (enabled by default) which saves trajectory files to your user profile's `.chatx/history` directory.
 
 ### Understanding Trajectory Format
 

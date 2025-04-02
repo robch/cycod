@@ -50,6 +50,7 @@ These options control the chat interaction:
 | `--questions <text...>` | Alias for `--interactive false --quiet --inputs` |
 | `--instructions <text...>` | Alias for `--inputs` |
 | `--input-chat-history <file>` | Load previous chat history from a JSONL file |
+| `--continue` | Continue the most recent chat history (auto-finds latest chat history file) |
 | `--output-chat-history <file>` | Save chat history to a JSONL file |
 | `--output-trajectory <file>` | Save chat history in a more readable trajectory format |
 | `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |

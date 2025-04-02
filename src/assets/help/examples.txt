@@ -10,25 +10,41 @@ EXAMPLES
 
     chatx --inputs "What's today's date?" "show me a calendar for this month"
     
-  EXAMPLE 3: Save chat history in JSONL format
+  EXAMPLE 3: Continue the most recent chat history
+
+    chatx --continue --question "Next month?"
+
+  EXAMPLE 4: Save chat history in JSONL format
 
     chatx --question "Tell me a joke" --output-chat-history chat-history.jsonl
 
-  EXAMPLE 3: Continue chat, after loading chat history from a JSONL file
+  EXAMPLE 5: Continue chat, after loading chat history from a JSONL file
 
     chatx --input-chat-history chat-history.jsonl --question "Tell me another"
 
-  EXAMPLE 4: Save chat history in human readable trajectory format
+  EXAMPLE 6: Save chat history in human readable trajectory format
   
     chatx --question "What time is it?" --output-trajectory trajectory.md
 
-  EXAMPLE 5: Use additional system prompt with the base system prompt
+  EXAMPLE 7: Use additional system prompt with the base system prompt
   
     chatx --add-system-prompt "Never access files outside the current directory."
 
-  EXAMPLE 6: Add a user prompt that will be included when starting a new chat
+  EXAMPLE 8: Add a user prompt that will be included when starting a new chat
   
     chatx --add-user-prompt "Always answer in french."
+    
+  EXAMPLE 9: Use foreach variables to run multiple versions of a command
+  
+    chatx --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
+    
+  EXAMPLE 10: Combine multiple foreach variables (creates all combinations)
+  
+    chatx --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
+
+  EXAMPLE 11: Process multiple commands in parallel with threads
+  
+    chatx --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
 
 SEE ALSO
 

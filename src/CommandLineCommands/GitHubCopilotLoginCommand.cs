@@ -22,7 +22,7 @@ class GitHubLoginCommand : Command
         return "github login";
     }
 
-    public async Task<List<Task<int>>> ExecuteAsync(bool interactive)
+    public async Task<int> ExecuteAsync(bool interactive)
     {
         ConsoleHelpers.WriteDebugLine("Initiating GitHub login...");
         
@@ -32,6 +32,6 @@ class GitHubLoginCommand : Command
         
         ConsoleHelpers.WriteLine("GitHub login successful! You can now use chatx with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
             
-        return new List<Task<int>>() { Task.FromResult(0) };
+        return 0;
     }
 }

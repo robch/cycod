@@ -1,0 +1,67 @@
+CHATX CHAT HISTORY
+
+  ChatX provides two ways to save your conversation history:
+
+  1. Chat History (JSONL format) - Machine-readable format for reloading context
+  2. Trajectory (formatted text) - Human-readable format for reviewing conversations
+
+AUTOMATIC SAVING
+
+  By default, ChatX automatically saves both your chat history and trajectory
+  files to a 'history' directory under your user profile:
+
+    - Windows: %USERPROFILE%\.chatx\history\
+    - Mac/Linux: ~/.chatx/history\
+
+  Files are saved with timestamp-based names:
+    - Chat history: chat-history-{time}.jsonl
+    - Trajectory: trajectory-{time}.jsonl
+
+MANAGE AUTO-SAVING
+
+  You can disable automatic saving using the config command with the appropriate scope:
+
+  DISABLE FOR THE CURRENT DIRECTORY ONLY (LOCAL SCOPE):
+    chatx config set App.AutoSaveChatHistory false --local
+    chatx config set App.AutoSaveTrajectory false --local
+
+  DISABLE FOR ALL DIRECTORIES FOR CURRENT USER (USER SCOPE):
+    chatx config set App.AutoSaveChatHistory false --user
+    chatx config set App.AutoSaveTrajectory false --user
+
+  DISABLE FOR ALL USERS ON THIS COMPUTER (GLOBAL SCOPE):
+    chatx config set App.AutoSaveChatHistory false --global
+    chatx config set App.AutoSaveTrajectory false --global
+
+  To re-enable automatic saving, use the same commands with 'true' instead of 'false'.
+
+  CHOOSING THE RIGHT SCOPE:
+    - Use --local when you want privacy only for a specific project
+    - Use --user when you want to disable history for all your projects
+    - Use --global when managing a shared system or setting company policy
+
+  VERIFY YOUR SETTINGS:
+    chatx config get App.AutoSaveChatHistory
+    chatx config get App.AutoSaveTrajectory
+
+MANUAL SAVING
+
+  You can also specify output paths explicitly using CLI options:
+
+    --output-chat-history <path>    Save chat history to specified file
+    --output-trajectory <path>      Save trajectory to specified file
+
+  When you provide these options, they take precedence over automatic saving.
+
+LOADING HISTORY
+
+  To continue a previous conversation, load a chat history using:
+
+    --input-chat-history <path>     Load chat history from specified file
+    --continue                      Continue the most recent chat history
+
+SEE ALSO
+
+  chatx help
+  chatx help config
+  chatx help options

@@ -17,11 +17,10 @@ class ConfigAddCommand : ConfigBaseCommand
         return "config add";
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteAdd(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName)));
-        return tasks;
+        var result = ExecuteAdd(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
+        return Task.FromResult(result);
     }
 
     private int ExecuteAdd(string? key, string? value, ConfigFileScope scope, string? configFileName)

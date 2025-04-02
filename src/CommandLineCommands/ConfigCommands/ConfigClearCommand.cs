@@ -16,11 +16,10 @@ class ConfigClearCommand : ConfigBaseCommand
         return "config clear";
     }
 
-    public List<Task<int>> Execute(bool interactive)
+    public Task<int> Execute(bool interactive)
     {
-        var tasks = new List<Task<int>>();
-        tasks.Add(Task.FromResult(ExecuteClear(Key, Scope ?? ConfigFileScope.Local, ConfigFileName)));
-        return tasks;
+        var result = ExecuteClear(Key, Scope ?? ConfigFileScope.Local, ConfigFileName);
+        return Task.FromResult(result);
     }
 
     private int ExecuteClear(string? key, ConfigFileScope scope, string? configFileName)

@@ -23,6 +23,8 @@ public class CommandLineOptions
 
         AllOptions = new string[0];
         SaveAliasName = null;
+
+        ThreadCount = 0;
     }
 
     public bool Interactive;
@@ -34,6 +36,7 @@ public class CommandLineOptions
     public string HelpTopic;
     public bool ExpandHelpTopics;
 
+    public int ThreadCount { get; private set; }
     public List<Command> Commands;
 
     public string[] AllOptions;
@@ -393,6 +396,11 @@ public class CommandLineOptions
             ConfigStore.Instance.LoadConfigFiles(ValidateFilesExist(configFiles));
             i += configFiles.Count();
         }
+        else if (arg == "--threads")
+        {
+            var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            commandLineOptions.ThreadCount = ValidateInt(arg, countStr, "thread count");
+        }
         else
         {
             parsed = false;
@@ -499,6 +507,13 @@ public class CommandLineOptions
             ConfigStore.Instance.SetFromCommandLine($"Var.{assignment.Item1}", assignment.Item2);
             i += max1Arg.Count();
         }
+        else if (arg == "--foreach")
+        {
+            var foreachArgs = GetInputOptionArgs(i + 1, args).ToArray();
+            var foreachVariable = ForEachVarHelpers.ParseForeachVarOption(foreachArgs, out var skipCount);
+            command.ForEachVariables.Add(foreachVariable);
+            i += skipCount;
+        }
         else if (arg == "--use-templates")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -592,7 +607,13 @@ public class CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var inputChatHistory = ValidateFileExists(max1Arg.FirstOrDefault());
             command.InputChatHistory = inputChatHistory;
+            command.LoadMostRecentChatHistory = false;
             i += max1Arg.Count();
+        }
+        else if (arg == "--continue")
+        {
+            command.LoadMostRecentChatHistory = true;
+            command.InputChatHistory = null;
         }
         else if (arg == "--output-chat-history")
         {

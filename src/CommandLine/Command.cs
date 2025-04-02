@@ -8,11 +8,8 @@ abstract public class Command
 {
     public Command()
     {
-        ThreadCount = 0;
     }
 
     abstract public bool IsEmpty();
     abstract public string GetCommandName();
-
-    public int ThreadCount;
 }

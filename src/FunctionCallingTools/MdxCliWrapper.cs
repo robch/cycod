@@ -123,7 +123,15 @@ public class MdxCliWrapper
             contextLines, 
             processingInstructions);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        var output = await ExecuteMdxCommandAsync(arguments);
+        var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
+        var wasntRecursive = !contentPattern.Contains("**");
+        if (noFilesFound && wasntRecursive)
+        {
+            output = $"{output}\n\n<You may want to try using '**' in your content pattern to search recursively.>";
+        }
+
+        return output;
     }
     
     /// <summary>
@@ -189,17 +197,23 @@ public class MdxCliWrapper
         string[] filePatterns,
         string contentPattern,
         string[]? excludePatterns = null,
-        int maxFiles = 10,
         string? processingInstructions = null)
     {
         var arguments = BuildFindFilesContainingPatternArguments(
             filePatterns, 
             contentPattern, 
             excludePatterns,
-            maxFiles,
             processingInstructions);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        var output = await ExecuteMdxCommandAsync(arguments);
+        var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
+        var wasntRecursive = !contentPattern.Contains("**");
+        if (noFilesFound && wasntRecursive)
+        {
+            output = $"{output}\n\n<You may want to try using '**' in your content pattern to search recursively.>";
+        }
+
+        return output;
     }
     
     /// <summary>
@@ -209,7 +223,6 @@ public class MdxCliWrapper
         string[] filePatterns,
         string contentPattern,
         string[]? excludePatterns = null,
-        int maxFiles = 10,
         string? processingInstructions = null)
     {
         var sb = new StringBuilder();
@@ -230,22 +243,10 @@ public class MdxCliWrapper
             }
         }
         
-        // Use file-contains which matches files with content but returns whole files
-        sb.Append($"--file-contains {EscapeArgument(contentPattern)} ");
-        
-        // Add max files limit using custom instructions
-        var limitInstruction = maxFiles > 0 
-            ? $"Limit to the first {maxFiles} files. " 
-            : "";
-        
-        // Combine with any user-provided processing instructions
-        var combinedInstructions = !string.IsNullOrEmpty(processingInstructions)
-            ? limitInstruction + processingInstructions
-            : limitInstruction + "Format as markdown with file names as headers.";
-            
-        if (!string.IsNullOrEmpty(combinedInstructions))
+        // Add processing instructions
+        if (!string.IsNullOrEmpty(processingInstructions))
         {
-            sb.Append($"--instructions {EscapeArgument(combinedInstructions)} ");
+            sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
         }
         
         return sb.ToString().Trim();
