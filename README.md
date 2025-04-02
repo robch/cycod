@@ -19,7 +19,8 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 - **Chat History**: Load and save chat histories for later reference
 - **Command Aliases**: Create shortcuts for frequently used command configurations
 - **Token Management**: Automatically manages token usage for long conversations
-- **Chat Commands**: Special commands like `/clear` during chat sessions
+- **Chat Commands**: Special commands like `/clear`, `/save`, `/cost` during chat sessions
+  - MDX integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
 
 ## Installation
 
@@ -83,6 +84,8 @@ chatx [options]
 - `--trim-token-target <n>`: Set a target for trimming chat history when it gets too large
 - `--interactive`: Control whether to enter interactive mode (default: true)
 - `--save-alias <name>`: Save the current command options as a named alias
+- `--foreach var <name> in <values>`: Define a loop variable with multiple values
+- `--foreach var <name> in <start>..<end>`: Define a loop variable with a numeric range
 - `--help`: Display help information
 
 ### Examples
@@ -179,7 +182,27 @@ For more detailed documentation, see:
 - [Function Calling](docs/function-calling.md)
 - [Creating Aliases](docs/aliases.md)
 - [Chat History](docs/chat-history.md)
+- [Slash Commands](#chat-commands) - Special commands during chat sessions
 
 ## License
 
 Copyright(c) 2025, Rob Chambers. All rights reserved.
+
+## Chat Commands
+
+ChatX supports several slash commands that can be used during interactive chat sessions:
+
+### Basic Commands
+- `/clear` - Clear the current chat history
+- `/save` - Save the current chat history to a file
+- `/cost` - Show token usage and estimated cost of the session
+
+### MDX Integration Commands
+- `/file <pattern>` - Search files matching pattern
+- `/files <pattern>` - List files matching pattern
+- `/find <pattern>` - Find occurrences of pattern in files
+- `/search <query>` - Search the web for the given query
+- `/get <url>` - Get and display content from a URL
+- `/run <command>` - Run a command and display the result
+
+These MDX integration commands require the [MDX](https://github.com/robch/mdx) tool to be installed and available on your system.

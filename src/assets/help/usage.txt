@@ -55,3 +55,4 @@ SEE ALSO
   chatx help config
   chatx help github login
   chatx help chat history
+  chatx help slash commands

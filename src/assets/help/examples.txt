@@ -42,9 +42,22 @@ EXAMPLES
   
     chatx --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
 
-  EXAMPLE 11: Process multiple commands in parallel with threads
+  EXAMPLE 11: Use numeric range with foreach
+  
+    chatx --foreach var day in 1..7 --input "What day of the week is day {day}?"
+
+  EXAMPLE 12: Process multiple commands in parallel with threads
   
     chatx --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
+
+  EXAMPLE 13: Using slash commands in interactive mode
+  
+    chatx
+    > What are the largest files in this directory?
+    Assistant: You can find the largest files using the following command...
+    > /files *.cs
+    > /find "class Program"
+    > /search Python best practices
 
 SEE ALSO
 

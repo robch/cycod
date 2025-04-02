@@ -60,6 +60,22 @@ LOADING HISTORY
     --input-chat-history <path>     Load chat history from specified file
     --continue                      Continue the most recent chat history
 
+TOKEN MANAGEMENT
+
+  ChatX automatically manages token usage for long conversations:
+
+    --trim-token-target <number>    Set a target for maximum tokens (default: 160000)
+
+  When loading or continuing chat histories, ChatX will automatically trim the
+  history to stay under the token target. This prevents errors from exceeding
+  model context limits while preserving the most relevant conversation parts.
+
+  ChatX optimizes this by:
+  - Trimming before loading chat histories
+  - Trimming during the conversation as needed
+  - Preserving essential context while removing less important details
+  - Focusing on keeping the most recent messages intact
+
 SEE ALSO
 
   chatx help

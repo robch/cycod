@@ -61,6 +61,7 @@ USAGE: chatx [...]
     --var NAME=VALUE                      Set a variable for template substitution
     --foreach var NAME in VALUE1 [...]    Define a loop variable with multiple values (expands to multiple commands)
     --foreach var NAME in @FILE           Define a loop variable with values from a file (one per line)
+    --foreach var NAME in #..#            Define a loop variable with a numeric range (e.g., 1..5)
 
   ADDITIONAL OPTIONS
     --interactive TRUE/FALSE              Allow interactive use (default: true, unless stdin redirected)

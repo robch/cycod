@@ -112,6 +112,16 @@ The `--trim-token-target` option sets a target token count. When the history app
 
 When reducing tool call content, ChatX will replace it with a "...snip..." indicator to maintain the conversational flow while reducing token usage.
 
+### When Token Trimming Occurs
+
+ChatX performs token trimming at several key moments:
+
+1. When loading chat history from a file (via `--input-chat-history`)
+2. When adding user messages to the conversation
+3. Before sending the conversation to the AI model
+
+This proactive approach ensures that your conversation never exceeds the model's token limits, preventing errors while preserving the most important context.
+
 ### How Token Trimming Works
 
 The token trimming process:
