@@ -61,10 +61,10 @@ public class Program
         var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
         if (shouldSaveAlias)
         {
-            var filesSaved = commandLineOptions.SaveAlias(commandLineOptions.SaveAliasName!);
+            var filesSaved = AliasFileHelpers.SaveAlias(commandLineOptions.SaveAliasName!, commandLineOptions.AllOptions);
 
             DisplayBanner();
-            DisplaySavedAliasFiles(filesSaved);
+            AliasFileHelpers.DisplaySavedAliasFiles(filesSaved);
 
             return 0;
         }
@@ -152,7 +152,7 @@ public class Program
 
     private static void DisplaySavedAliasFiles(List<string> filesSaved)
     {
-        AliasFileHelpers.DisplaySavedAliasFiles(filesSaved);
+        ;
     }
 
     private static string[] ProcessDirectives(string[] args)

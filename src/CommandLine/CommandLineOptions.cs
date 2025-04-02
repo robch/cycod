@@ -1,11 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Data.SqlTypes;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-
 public class CommandLineOptions
 {
     public CommandLineOptions()
@@ -58,11 +50,6 @@ public class CommandLineOptions
             ex = e;
             return false;
         }
-    }
-
-    public List<string> SaveAlias(string aliasName)
-    {
-        return AliasFileHelpers.SaveAlias(aliasName, AllOptions);
     }
 
     private static IEnumerable<string> ExpandedInputsFromCommandLine(string[] args)
@@ -192,7 +179,7 @@ public class CommandLineOptions
         {
             if (arg.StartsWith("--"))
             {
-                var parsedAsAlias = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+                var parsedAsAlias = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
                 if (parsedAsAlias) return true;
             }
 
@@ -262,7 +249,7 @@ public class CommandLineOptions
         }
         else if (arg.StartsWith("--"))
         {
-            parsedOption = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+            parsedOption = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
         }
         else if (command is HelpCommand helpCommand)
         {
@@ -361,7 +348,7 @@ public class CommandLineOptions
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var profileName = ValidateString(arg, max1Arg.FirstOrDefault(), "profile name");
-            LoadProfile(profileName!);
+            ProfileFileHelpers.LoadProfile(profileName!);
             i += max1Arg.Count();
         }
         else if (arg == "--config")
@@ -701,11 +688,6 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string alias)
-    {
-        return AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, alias);
-    }
-
     private static IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue)
     {
         for (int i = startAt; i < args.Length && i - startAt < max; i++)
@@ -818,43 +800,6 @@ public class CommandLineOptions
         var ex = new CommandLineException(message);
         return ex;
     }
-
-    private static void LoadProfile(string profileName)
-    {
-        if (string.IsNullOrEmpty(profileName))
-        {
-            throw new CommandLineException("Profile name cannot be empty.");
-        }
-        
-        var profilesDirectory = FindProfilesDirectory(create: false);
-        var yamlProfile = profilesDirectory != null
-            ? Path.Combine(profilesDirectory, $"{profileName}.yaml")
-            : Path.Combine(Directory.GetCurrentDirectory(), $"{profileName}.yaml");
-        var iniProfile = profilesDirectory != null
-            ? Path.Combine(profilesDirectory, profileName)
-            : Path.Combine(Directory.GetCurrentDirectory(), profileName);
-
-        var yamlProfileOk = FileHelpers.FileExists(yamlProfile);
-        var iniProfileOk = FileHelpers.FileExists(iniProfile);
-        var profileOk = yamlProfileOk || iniProfileOk;
-
-        if (!profileOk)
-        {
-            throw new CommandLineException($"Profile '{profileName}' not found at path; checked:\n- {yamlProfile}\n- {iniProfile}");
-        }
-        
-        var profile = yamlProfileOk ? yamlProfile : iniProfile;
-        ConsoleHelpers.WriteDebugLine($"Loading profile from {profile}");
-        ConfigStore.Instance.LoadConfigFile(profile);
-    }
-    
-    private static string? FindProfilesDirectory(bool create = false)
-    {
-        return create
-            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "profiles")
-            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "profiles");
-    }
-
 
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
     private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";
