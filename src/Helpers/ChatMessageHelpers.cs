@@ -68,6 +68,22 @@ public static class OpenAIChatHelpers
         return isTooBig;
     }
 
+    public static bool TryTrimToTarget(this IList<ChatMessage> messages, int trimTokenTarget)
+    {
+        if (trimTokenTarget <= 0) return false;
+
+        const int whenTrimmingToolContentTarget = 10;
+        const string snippedIndicator = "...snip...";
+
+        if (messages.IsTooBig(trimTokenTarget))
+        {
+            messages.ReduceToolCallContent(trimTokenTarget, whenTrimmingToolContentTarget, snippedIndicator);
+            return true;
+        }
+
+        return false;
+    }
+
     public static void ReduceToolCallContent(this IList<ChatMessage> messages, int trimTokenTarget, int maxToolCallContentTokens, string replaceToolCallContentWith)
     {
         // If the total size of the messages is not too big, we don't need to do anything

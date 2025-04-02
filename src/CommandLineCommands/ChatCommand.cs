@@ -73,7 +73,7 @@ public class ChatCommand : Command
 
         // Load the chat history from the file.
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
-        if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!);
+        if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget);
 
         // Check to make sure we're either in interactive mode, or have input instructions.
         if (!interactive && InputInstructions.Count == 0)
@@ -321,17 +321,7 @@ public class ChatCommand : Command
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
-        var tokenTarget = TrimTokenTarget.HasValue
-            ? TrimTokenTarget.Value
-            : 160000;
-
-        const int whenTrimmingToolContentTarget = 10;
-        const string snippedIndicator = "...snip...";
-
-        if (messages.IsTooBig(tokenTarget))
-        {
-            messages.ReduceToolCallContent(tokenTarget, whenTrimmingToolContentTarget, snippedIndicator);
-        }
+        messages.TryTrimToTarget(TrimTokenTarget ?? DefaultTrimTokenTarget);
 
         if (OutputChatHistory != null)
         {
@@ -480,4 +470,6 @@ public class ChatCommand : Command
 
     private int _totalTokensIn = 0;
     private int _totalTokensOut = 0;
+
+    private const int DefaultTrimTokenTarget = 160000;
 }
