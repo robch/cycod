@@ -5,7 +5,31 @@ All notable changes to the ChatX project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2025-01-01
+## [1.0.0-alpha-20250402] - 2025-04-02
+
+### Added
+- Slash Commands:
+  - Added new slash commands (/find, /file, /files, /get, /search) that integrate with MDX functionality
+  - These provide convenient shortcuts for common operations like file searching and web content retrieval
+- Range Support for --foreach:
+  - Added support for numeric ranges in --foreach using the #..# syntax
+  - Example: --foreach i in 1..5 will iterate over values 1, 2, 3, 4, 5
+- Token Trimming:
+  - Added functionality to trim tokens to a target limit
+  - Ensures chat history doesn't exceed token limits, particularly important when using --input-chat-history
+
+### Changed
+- Behavior Changes:
+  - Force non-interactive mode when using --foreach to ensure proper batch processing
+- Code Refactoring:
+  - Refactored profile methods into ProfileFileHelpers.cs for better organization
+  - Refactored alias methods into AliasFileHelpers.cs for better organization
+
+### Documentation
+- Updated documentation for slash commands, foreach ranges, and token trimming features
+- Added --prerelease flag for dotnet install instructions in README
+
+## [1.0.0-alpha-20250401.2] - 2025-04-01
 
 ### Added
 - Initial release of ChatX
