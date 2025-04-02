@@ -33,23 +33,38 @@ public class FunctionCallingChat
         }
     }
     
-    public void AddUserMessage(string userMessage)
+    public void AddUserMessage(string userMessage, int tokenTrimTarget = 0)
     {
         _userMessageAdds.Add(userMessage);
         _messages.Add(ChatMessage.CreateUserMessage(userMessage));
+
+        if (tokenTrimTarget > 0)
+        {
+            _messages.TryTrimToTarget(tokenTrimTarget);
+        }
     }
     
-    public void AddUserMessages(IEnumerable<string> userMessages)
+    public void AddUserMessages(IEnumerable<string> userMessages, int tokenTrimTarget = 0)
     {
         foreach (var userMessage in userMessages)
         {
             AddUserMessage(userMessage);
         }
+
+        if (tokenTrimTarget > 0)
+        {
+            _messages.TryTrimToTarget(tokenTrimTarget);
+        }
     }
 
-    public void LoadChatHistory(string fileName)
+    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0)
     {
         _messages.ReadChatHistoryFromFile(fileName);
+
+        if (tokenTrimTarget > 0)
+        {
+            _messages.TryTrimToTarget(tokenTrimTarget);
+        }
     }
 
     public void SaveChatHistoryToFile(string fileName)
