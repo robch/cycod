@@ -108,17 +108,28 @@ public class Program
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 
-            allTasks.Add(startedTask.ContinueWith(t =>
-            {
-                throttler.Release();
-                return t.Result;
-            }));
+            allTasks.Add(WrapRunAndRelease(throttler, startedTask));
         }
 
         await Task.WhenAll(allTasks.ToArray());
         ConsoleHelpers.DisplayStatusErase();
 
         return 0;
+    }
+
+    private static Task<int> WrapRunAndRelease(SemaphoreSlim throttler, Task<int> startedTask)
+    {
+        return Task.Run(async () =>
+        {
+            try
+            {
+                return await startedTask;
+            }
+            finally
+            {
+                throttler.Release();
+            }
+        });
     }
 
     private static void DisplayBanner()
