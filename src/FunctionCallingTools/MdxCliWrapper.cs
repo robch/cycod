@@ -15,7 +15,7 @@ public class MdxCliWrapper
     /// <param name="arguments">The arguments to pass to the MDX command</param>
     /// <param name="timeoutMs">Timeout in milliseconds</param>
     /// <returns>The command output as a string</returns>
-    private async Task<string> ExecuteMdxCommandAsync(string arguments, int timeoutMs = 120000)
+    public async Task<string> ExecuteMdxCommandAsync(string arguments, int timeoutMs = 120000)
     {
         try
         {

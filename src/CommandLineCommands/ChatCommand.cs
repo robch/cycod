@@ -1,4 +1,9 @@
 using OpenAI.Chat;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 public class ChatCommand : Command
 {
@@ -90,7 +95,7 @@ public class ChatCommand : Command
                 : ReadLineOrSimulateInput(InputInstructions, "exit");
             if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
 
-            var handled = TryHandleChatCommand(chat, userPrompt);
+            var handled = await TryHandleChatCommandAsync(chat, userPrompt);
             if (handled) continue;
 
             DisplayAssistantLabel();
@@ -213,7 +218,7 @@ public class ChatCommand : Command
         return joined.Trim(new char[] { '\n', '\r', ' ' });
     }
 
-    private bool TryHandleChatCommand(FunctionCallingChat chat, string userPrompt)
+    private async Task<bool> TryHandleChatCommandAsync(FunctionCallingChat chat, string userPrompt)
     {
         if (userPrompt == "/save")
         {
@@ -227,8 +232,25 @@ public class ChatCommand : Command
         {
             return ShowCost();
         }
+        
+        if (_chatCommandHandler.IsCommand(userPrompt))
+        {
+            return await HandleSlashCommand(chat, userPrompt);
+        }
 
         return false;
+    }
+
+    private async Task<bool> HandleSlashCommand(FunctionCallingChat chat, string userPrompt)
+    {
+        var userFunctionName = _chatCommandHandler.GetCommandName(userPrompt);
+        DisplayUserFunctionCall(userFunctionName, null);
+
+        var result = await _chatCommandHandler.HandleCommand(userPrompt);
+        if (result != null) chat.AddUserMessage(result);
+
+        DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
+        return true;
     }
 
     private bool ClearChatHistory(FunctionCallingChat chat)
@@ -357,13 +379,25 @@ public class ChatCommand : Command
 
     private void HandleFunctionCallCompleted(string name, string args, string? result)
     {
-        DisplayFunctionCall(name, args, result);
+        DisplayAssistantFunctionCall(name, args, result);
     }
 
     private void DisplayUserPrompt()
     {
         ConsoleHelpers.Write("\rUser: ", ConsoleColor.Green);
         Console.ForegroundColor = ConsoleColor.White;
+    }
+
+    private void DisplayUserFunctionCall(string userFunctionName, string? result)
+    {
+        ConsoleHelpers.Write($"\ruser-function: {userFunctionName} => ", ConsoleColor.DarkGray);
+
+        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
+        if (result != null)
+        {
+            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            DisplayUserPrompt();
+        }
     }
 
     private void DisplayAssistantLabel()
@@ -395,22 +429,22 @@ public class ChatCommand : Command
         }
     }
 
-    private void DisplayFunctionCall(string name, string args, string? result)
+    private void DisplayAssistantFunctionCall(string name, string args, string? result)
     {
         EnsureLineFeeds();
         switch (name)
         {
             case "Think":
-                DisplayThinkFunctionCall(args, result);
+                DisplayAssistantThinkFunctionCall(args, result);
                 break;
 
             default:
-                DisplayGenericFunctionCall(name, args, result);
+                DisplayGenericAssistantFunctionCall(name, args, result);
                 break;
         }
     }
     
-    private void DisplayThinkFunctionCall(string args, string? result)
+    private void DisplayAssistantThinkFunctionCall(string args, string? result)
     {
         var thought = JsonHelpers.GetJsonPropertyValue(args, "thought", args);
         var hasThought = !string.IsNullOrEmpty(thought);
@@ -424,7 +458,7 @@ public class ChatCommand : Command
         }
     }
     
-    private void DisplayGenericFunctionCall(string name, string args, string? result)
+    private void DisplayGenericAssistantFunctionCall(string name, string args, string? result)
     {
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
@@ -468,8 +502,9 @@ public class ChatCommand : Command
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 
+    private SlashCommandHandler _chatCommandHandler = new();
     private int _totalTokensIn = 0;
     private int _totalTokensOut = 0;
-
+ 
     private const int DefaultTrimTokenTarget = 160000;
 }
