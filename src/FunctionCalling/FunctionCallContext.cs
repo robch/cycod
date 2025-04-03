@@ -61,6 +61,12 @@ public class FunctionCallContext
             if (!ok) return false;
 
             result ??= string.Empty;
+            if (result.Length >= MaximumToolCallResultLength)
+            {
+                ConsoleHelpers.WriteDebugLine($"Tool call result is too long, truncating to {MaximumToolCallResultLength} characters.");
+                result = result.Substring(0, MaximumToolCallResultLength) + "<...truncated...use line ranges to see more...>";
+            }
+
             if (funcionCallback != null) funcionCallback(functionName, functionArguments, result);
 
             _messages.Add(new ToolChatMessage(toolCall.Id, result));
@@ -78,6 +84,8 @@ public class FunctionCallContext
     private FunctionFactory _functionFactory;
     private IList<ChatMessage> _messages;
     private StreamingChatToolCallsBuilder _toolCallsBuilder = new();
+
+    private const int MaximumToolCallResultLength = 200000;
 }
 
 public class StreamingChatToolCallsBuilder
