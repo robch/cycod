@@ -1,0 +1,39 @@
+CHATX PROMPT GET
+
+  Display the content of a specific prompt.
+
+USAGE: chatx prompt get PROMPT_NAME [--scope]
+
+OPTIONS
+
+  PROMPT_NAME      The name of the prompt to display
+
+  SCOPE OPTIONS
+
+    --global, -g    Look only in global scope (all users)
+    --user, -u      Look only in user scope (current user)
+    --local, -l     Look only in local scope (current directory)
+    --any, -a       Look in all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Display a prompt from any scope
+
+    chatx prompt get myPrompt
+
+  EXAMPLE 2: Display a prompt only if it exists in the user scope
+
+    chatx prompt get myPrompt --user
+
+NOTES
+
+  When a prompt is found, the command displays:
+  - The prompt name
+  - The file location and scope
+  - The prompt content
+  - Usage example for the prompt in chat
+
+SEE ALSO
+
+  chatx help prompt
+  chatx help prompts

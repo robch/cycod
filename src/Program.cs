@@ -67,7 +67,7 @@ public class Program
                 commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
 
             DisplayBanner();
-            AliasFileHelpers.DisplaySavedAliasFiles(filesSaved);
+            AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
 
             return 0;
         }
@@ -111,6 +111,10 @@ public class Program
                 AliasListCommand aliasListCommand => aliasListCommand.Execute(commandLineOptions.Interactive),
                 AliasGetCommand aliasGetCommand => aliasGetCommand.Execute(commandLineOptions.Interactive),
                 AliasDeleteCommand aliasDeleteCommand => aliasDeleteCommand.Execute(commandLineOptions.Interactive),
+                PromptListCommand promptListCommand => promptListCommand.Execute(commandLineOptions.Interactive),
+                PromptGetCommand promptGetCommand => promptGetCommand.Execute(commandLineOptions.Interactive),
+                PromptDeleteCommand promptDeleteCommand => promptDeleteCommand.Execute(commandLineOptions.Interactive),
+                PromptCreateCommand promptCreateCommand => promptCreateCommand.Execute(commandLineOptions.Interactive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 

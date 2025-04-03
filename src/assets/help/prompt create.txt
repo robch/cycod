@@ -1,0 +1,44 @@
+CHATX PROMPT CREATE
+
+  Create a new custom prompt.
+
+USAGE: chatx prompt create PROMPT_NAME PROMPT_TEXT [--scope]
+
+OPTIONS
+
+  PROMPT_NAME      The name for the new prompt (used as /PROMPT_NAME in chat)
+  PROMPT_TEXT      The content of the prompt
+
+  SCOPE OPTIONS
+
+    --global, -g    Create in global scope (all users)
+    --user, -u      Create in user scope (current user)
+    --local, -l     Create in local scope (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Create a simple prompt in local scope
+
+    chatx prompt create summarize "Please summarize the following text in three bullet points:"
+
+  EXAMPLE 2: Create a prompt in user scope (available in all directories)
+
+    chatx prompt create explain "Explain the following like I'm five:" --user
+
+  EXAMPLE 3: Create a prompt with multiline text
+
+    chatx prompt create translate "Translate the following text to Spanish:
+    Then format the translation with bullet points for each sentence.
+    Finally, provide pronunciation tips."
+
+NOTES
+
+  - Prompt names cannot contain spaces or special characters
+  - Leading slashes (/) will be automatically removed from prompt names
+  - Once created, prompts can be used in chat by typing /PROMPT_NAME
+  - Prompts cannot be created if a prompt with the same name already exists
+
+SEE ALSO
+
+  chatx help prompt
+  chatx help prompts

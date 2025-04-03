@@ -1,0 +1,32 @@
+CHATX PROMPT COMMANDS
+
+  These commands allow you to manage custom CHATX prompts.
+
+USAGE: chatx prompt list [--scope]
+   OR: chatx prompt get PROMPT_NAME [--scope]
+   OR: chatx prompt delete PROMPT_NAME [--scope]
+   OR: chatx prompt create PROMPT_NAME PROMPT_TEXT [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include prompts from all scopes (default for 'list' and 'get' commands)
+
+COMMANDS
+
+    list            List all available prompts
+    get             Display the content of a specific prompt
+    delete          Delete a prompt
+    create          Create a new prompt
+
+SEE ALSO
+
+  chatx help prompt list
+  chatx help prompt get
+  chatx help prompt delete
+  chatx help prompt create
+  chatx help prompts

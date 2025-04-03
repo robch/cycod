@@ -17,6 +17,10 @@ public class MdxCliWrapper
     /// <returns>The command output as a string</returns>
     public async Task<string> ExecuteMdxCommandAsync(string arguments, int timeoutMs = 120000)
     {
+        var stdoutBuffer = new StringBuilder();
+        var stderrBuffer = new StringBuilder();
+        var mergedBuffer = new StringBuilder();
+
         try
         {
             var process = new Process
@@ -37,10 +41,6 @@ public class MdxCliWrapper
             {
                 ConsoleHelpers.WriteLine($"Executing MDX command: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
             }
-
-            var stdoutBuffer = new StringBuilder();
-            var stderrBuffer = new StringBuilder();
-            var mergedBuffer = new StringBuilder();
 
             process.OutputDataReceived += (sender, e) => {
                 if (e.Data != null)
@@ -100,6 +100,20 @@ public class MdxCliWrapper
         {
             return $"<mdx command exited with error: {ex.Message}>";
         }
+        finally 
+        {
+            if (ConsoleHelpers.IsVerbose())
+            {
+                var baseFileName = FileHelpers.GetFileNameFromTemplate("mdx_command.txt", "mdx-debug-{time}");
+                Thread.Sleep(10); // Wait a bit, so template filename w/ time doesn't conflict with anything else
+
+                ConsoleHelpers.WriteLine($"ExecuteMdxCommandAsync inputs/outputs: {baseFileName}-*", ConsoleColor.DarkMagenta, overrideQuiet: true);
+                FileHelpers.WriteAllText($"{baseFileName}-command.txt", $"mdx {arguments}");
+                FileHelpers.WriteAllText($"{baseFileName}-stdout.txt", stdoutBuffer.ToString());
+                FileHelpers.WriteAllText($"{baseFileName}-stderr.txt", stderrBuffer.ToString());
+                FileHelpers.WriteAllText($"{baseFileName}-merged.txt", mergedBuffer.ToString());
+            }
+        }
     }
 
     #region Search Codebase Methods
@@ -128,7 +142,7 @@ public class MdxCliWrapper
         var wasntRecursive = !contentPattern.Contains("**");
         if (noFilesFound && wasntRecursive)
         {
-            output = $"{output}\n\n<You may want to try using '**' in your content pattern to search recursively.>";
+            output = $"{output}\n\n<You may want to try using '**' in your file pattern to search recursively.>";
         }
 
         return output;
@@ -241,6 +255,12 @@ public class MdxCliWrapper
             {
                 sb.Append($"{EscapeArgument(pattern)} ");
             }
+        }
+        
+        // Add content pattern for searching within files
+        if (!string.IsNullOrEmpty(contentPattern))
+        {
+            sb.Append($"--contains {EscapeArgument(contentPattern)} ");
         }
         
         // Add processing instructions

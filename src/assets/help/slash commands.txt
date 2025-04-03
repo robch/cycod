@@ -1,24 +1,61 @@
-SLASH COMMANDS
+CHATX SLASH COMMANDS
 
-During an interactive chat session, you can use slash commands to quickly access various functions:
+  During an interactive chat session, you can use slash commands to quickly 
+  access various functions without exiting your conversation.
 
-  /clear                    Clear the current chat history
-  /save                     Save the current chat history to a file
-  /cost                     Show the token usage and estimated cost of this session
+BUILT-IN COMMANDS
 
-MDX Integration Commands:
-  /file <pattern>           Search files matching pattern
-  /files <pattern>          List files matching pattern
-  /find <pattern>           Find occurrences of pattern in files
-  /search <query>           Search the web for the given query
-  /get <url>                Get and display content from a URL
-  /run <command>            Run a command and display the result
+  SESSION MANAGEMENT
 
-Example uses:
-  /file *.cs                List all C# files in current directory
-  /find "class Program"     Find occurrences of "class Program" in files
-  /search python lists      Search the web for information about Python lists
-  /get https://example.com  Display the content of example.com
+    /clear                  Clear the current chat history
+    /save                   Save the current chat history to a file
+    /cost                   Show token usage and estimated cost of this session
 
-Note: The MDX integration commands require MDX to be installed and available.
-For more information about MDX, visit: https://github.com/robch/mdx
+  CUSTOM PROMPTS
+
+    /<promptname>           Insert a custom prompt into the chat
+
+  MDX INTEGRATION
+
+    /file <pattern>         Search files matching pattern
+    /files <pattern>        List files matching pattern
+    /find <pattern>         Find occurrences of pattern in files
+    /search <query>         Search the web for the given query
+    /get <url>              Get and display content from a URL
+    /run <command>          Run a command and display the result
+
+EXAMPLES
+
+  EXAMPLE 1: Clear the current chat session
+
+    /clear
+
+  EXAMPLE 2: Search for files in the current directory
+
+    /file *.cs              List all C# files in current directory
+
+  EXAMPLE 3: Find text within files
+
+    /find "class Program"   Find occurrences of "class Program" in files
+
+  EXAMPLE 4: Use the web search integration
+
+    /search python lists    Search the web for information about Python lists
+
+  EXAMPLE 5: Insert a custom prompt (if defined)
+
+    /translate              Insert a custom "translate" prompt
+
+NOTES
+
+  - The MDX integration commands require MDX to be installed and available.
+    For more information about MDX, visit: https://github.com/robch/mdx
+
+  - Custom prompts can be created using the prompt create command.
+    Example: chatx prompt create summarize "Please summarize this text:"
+
+SEE ALSO
+
+  chatx help prompts
+  chatx help prompt create
+  chatx help prompt list

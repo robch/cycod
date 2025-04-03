@@ -1,9 +1,5 @@
 using OpenAI.Chat;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
 
 public class ChatCommand : Command
 {
@@ -165,6 +161,10 @@ public class ChatCommand : Command
         {
             return HandleShowCostCommand();
         }
+        else if (userPrompt == "/help")
+        {
+            return HandleHelpCommand();
+        }
         
         if (_chatCommandHandler.IsCommand(userPrompt))
         {
@@ -206,6 +206,108 @@ public class ChatCommand : Command
     private bool HandleShowCostCommand()
     {
         ConsoleHelpers.WriteLine($"Tokens: {_totalTokensIn} in, {_totalTokensOut} out\n", ConsoleColor.Yellow, overrideQuiet: true);
+        return true;
+    }
+
+    private bool HandleHelpCommand()
+    {
+        var helpBuilder = new StringBuilder();
+        
+        // Built-in chat commands
+        helpBuilder.AppendLine("BUILT-IN");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /save     Save chat history to file");
+        helpBuilder.AppendLine("  /clear    Clear chat history");
+        helpBuilder.AppendLine("  /cost     Show token usage statistics");
+        helpBuilder.AppendLine("  /help     Show this help message");
+        helpBuilder.AppendLine();
+        
+        // MDX integration commands
+        helpBuilder.AppendLine("EXTERNAL");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /files    List files matching pattern");
+        helpBuilder.AppendLine("  /file     Get contents of a file");
+        helpBuilder.AppendLine("  /find     Find content in files");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /search   Search the web");
+        helpBuilder.AppendLine("  /get      Get content from URL");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /run      Run a command");
+        helpBuilder.AppendLine();
+        
+        // User-defined prompts
+        helpBuilder.AppendLine("PROMPTS");
+        helpBuilder.AppendLine();
+        
+        // Get all scopes for prompt files
+        bool foundPrompts = false;
+        foreach (var scope in new[] { ConfigFileScope.Local, ConfigFileScope.User, ConfigFileScope.Global })
+        {
+            var promptDir = PromptFileHelpers.FindPromptDirectoryInScope(scope);
+            if (promptDir == null || !Directory.Exists(promptDir)) continue;
+            
+            var promptNames = Directory.GetFiles(promptDir, "*.prompt")
+                .OrderBy(file => Path.GetFileNameWithoutExtension(file))
+                .ToList();
+                
+            if (promptNames.Count == 0) continue;
+            
+            foundPrompts = true;
+            helpBuilder.AppendLine($"  LOCATION: {promptDir} ({scope.ToString().ToLower()})");
+            helpBuilder.AppendLine();
+
+            var indent = new string(' ', 4);
+            var indentContent = new string(' ', 8);
+
+            foreach (var name in promptNames)
+            {
+                var promptName = Path.GetFileNameWithoutExtension(name);
+                helpBuilder.AppendLine($"{indent}/{promptName}\n");
+
+                var promptText = PromptFileHelpers.GetPromptText(promptName, scope)!;
+                var promptLines = promptText
+                    .Split(new[] { '\n', '\r' }, StringSplitOptions.None)
+                    .Select(line => line.Trim());
+
+                if (promptLines.Count() == 0)
+                {
+                    helpBuilder.AppendLine($"{indentContent}(empty)\n");
+                }
+                else
+                {
+                    var linesToShow = promptLines
+                        .Take(MaxPromptLinesInHelp)
+                        .Select(line => line.Trim())
+                        .Select(line => line.Length > MaxPromptWidthInHelp ? line.Substring(0, MaxPromptWidthInHelp - 3) + "..." : line)
+                        .Select(line => indentContent + line)
+                        .ToList();
+
+                    while (linesToShow.Count > 0 && string.IsNullOrWhiteSpace(linesToShow.Last()))
+                    {
+                        linesToShow.RemoveAt(linesToShow.Count - 1);
+                    }
+
+                    var showCount = linesToShow.Count;
+                    var totalCount = promptLines.Count();
+                    var merged = string.Join("\n", linesToShow) + (totalCount > MaxPromptLinesInHelp
+                        ? $"\n{indentContent}... ({totalCount - showCount} more lines)"
+                        : "");
+                    helpBuilder.AppendLine(merged);
+                    helpBuilder.AppendLine();
+                }
+            }
+            
+            helpBuilder.AppendLine();
+        }
+        
+        if (!foundPrompts)
+        {
+            helpBuilder.AppendLine("  No custom prompts found.");
+            helpBuilder.AppendLine();
+        }
+        
+        var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
+        ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
         return true;
     }
 
@@ -438,6 +540,7 @@ public class ChatCommand : Command
     private SlashCommandHandler _chatCommandHandler = new();
     private int _totalTokensIn = 0;
     private int _totalTokensOut = 0;
- 
+    private const int MaxPromptLinesInHelp = 2;
+    private const int MaxPromptWidthInHelp = 60;
     private const int DefaultTrimTokenTarget = 160000;
 }

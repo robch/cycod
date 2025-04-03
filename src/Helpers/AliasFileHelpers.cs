@@ -88,6 +88,17 @@ public static class AliasFileHelpers
         return aliasFilePath;
     }
 
+    public static string? FindAliasInScope(string aliasName, ConfigFileScope scope)
+    {
+        var aliasFileName = $"{aliasName}.alias";
+        var aliasFilePath = ScopeFileHelpers.FindFileInScope(aliasFileName, "aliases", scope);
+
+        ConsoleHelpers.WriteDebugLine(aliasFilePath != null
+            ? $"FindAliasInScope; found alias in scope: {aliasFilePath}"
+            : $"FindAliasInScope; alias NOT FOUND in scope: {aliasName}");
+        return aliasFilePath;
+    }
+
     /// <summary>
     /// Attempts to parse an alias from the command line
     /// </summary>
@@ -114,31 +125,5 @@ public static class AliasFileHelpers
             return true;
         }
         return false;
-    }
-
-    /// <summary>
-    /// Displays information about saved alias files
-    /// </summary>
-    /// <param name="filesSaved">List of saved files</param>
-    public static void DisplaySavedAliasFiles(List<string> filesSaved)
-    {
-        var firstFileSaved = filesSaved.First();
-        var additionalFiles = filesSaved.Skip(1).ToList();
-
-        ConsoleHelpers.WriteLine($"Saved: {firstFileSaved}\n");
-
-        var hasAdditionalFiles = additionalFiles.Any();
-        if (hasAdditionalFiles)
-        {
-            foreach (var additionalFile in additionalFiles)
-            {
-                ConsoleHelpers.WriteLine($"  and: {additionalFile}");
-            }
-         
-            ConsoleHelpers.WriteLine();
-        }
-
-        var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.WriteLine($"USAGE: {Program.Name} [...] --" + aliasName);
     }
 }

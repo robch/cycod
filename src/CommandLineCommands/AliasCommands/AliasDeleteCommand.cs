@@ -45,12 +45,6 @@ class AliasDeleteCommand : AliasBaseCommand
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
     public Task<int> Execute(bool interactive)
     {
-        if (string.IsNullOrWhiteSpace(AliasName))
-        {
-            ConsoleHelpers.WriteErrorLine("Error: Alias name is required.");
-            return Task.FromResult(1);
-        }
-
         var result = ExecuteDelete(AliasName, Scope ?? ConfigFileScope.Any);
         return Task.FromResult(result);
     }
@@ -61,31 +55,25 @@ class AliasDeleteCommand : AliasBaseCommand
     /// <param name="aliasName">The name of the alias to delete.</param>
     /// <param name="scope">The scope to look in.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    private int ExecuteDelete(string aliasName, ConfigFileScope scope)
+    private int ExecuteDelete(string? aliasName, ConfigFileScope scope)
     {
-        string? aliasFilePath = null;
-
-        if (scope == ConfigFileScope.Any)
+        ConsoleHelpers.WriteDebugLine($"ExecuteDelete; aliasName: {aliasName}; scope: {scope}");
+        if (string.IsNullOrWhiteSpace(aliasName))
         {
-            aliasFilePath = AliasFileHelpers.FindAliasFile(aliasName);
+            throw new CommandLineException($"Error: No alias name specified.");
         }
-        else
-        {
-            var aliasDir = AliasFileHelpers.FindAliasDirectoryInScope(scope);
-            if (aliasDir != null)
-            {
-                var potentialFilePath = Path.Combine(aliasDir, $"{aliasName}.alias");
-                if (File.Exists(potentialFilePath))
-                {
-                    aliasFilePath = potentialFilePath;
-                }
-            }
-        }
+        
+        var isAnyScope = scope == ConfigFileScope.Any;
+        var aliasFilePath = isAnyScope
+            ? AliasFileHelpers.FindAliasFile(aliasName)
+            : AliasFileHelpers.FindAliasInScope(aliasName, scope);
 
-        if (aliasFilePath == null || !File.Exists(aliasFilePath))
+        var fileNotFound = aliasFilePath == null || !File.Exists(aliasFilePath);
+        if (fileNotFound)
         {
-            ConsoleHelpers.WriteErrorLine($"Error: Alias '{aliasName}' not found in specified scope.");
-            return 1;
+            throw new CommandLineException(isAnyScope
+                ? $"Error: Alias '{aliasName}' not found in any scope."
+                : $"Error: Alias '{aliasName}' not found in specified scope.");
         }
 
         // Check for additional files that might be referenced (multiline content)
@@ -97,7 +85,7 @@ class AliasDeleteCommand : AliasBaseCommand
         try
         {
             // Delete the main alias file
-            File.Delete(aliasFilePath);
+            File.Delete(aliasFilePath!);
             ConsoleHelpers.WriteLine($"Deleted: {aliasFilePath}");
 
             // Delete any additional files if they exist

@@ -85,7 +85,7 @@ public class FunctionCallContext
     private IList<ChatMessage> _messages;
     private StreamingChatToolCallsBuilder _toolCallsBuilder = new();
 
-    private const int MaximumToolCallResultLength = 200000;
+    private const int MaximumToolCallResultLength = 100000;
 }
 
 public class StreamingChatToolCallsBuilder

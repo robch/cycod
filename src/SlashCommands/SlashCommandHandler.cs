@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -42,7 +44,17 @@ public class SlashCommandHandler
         }
 
         var commandName = ExtractCommandName(commandWithArgs);
-        return _commandHandlers.ContainsKey(commandName);
+        
+        // Check if it's a built-in command
+        if (_commandHandlers.ContainsKey(commandName))
+        {
+            return true;
+        }
+        
+        // Check if it's a custom prompt
+        var promptName = commandName.TrimStart('/');
+        var promptFile = PromptFileHelpers.FindPromptFile(promptName);
+        return promptFile != null;
     }
     
     /// <summary>
@@ -65,6 +77,7 @@ public class SlashCommandHandler
         var command = ExtractCommandName(userPrompt);
         var arguments = ExtractArguments(userPrompt);
         
+        // First check built-in commands
         if (_commandHandlers.TryGetValue(command, out var handler))
         {
             try
@@ -75,6 +88,14 @@ public class SlashCommandHandler
             {
                 return $"Error executing slash command: {ex.Message}";
             }
+        }
+        
+        // Then check custom prompts
+        var promptName = command.TrimStart('/');
+        var promptText = PromptFileHelpers.GetPromptText(promptName);
+        if (promptText != null)
+        {
+            return promptText;
         }
         
         return $"Unknown command: {command}";

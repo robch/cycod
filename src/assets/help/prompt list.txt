@@ -1,0 +1,29 @@
+CHATX PROMPT LIST
+
+  List all available prompts across all scopes or in a specific scope.
+
+USAGE: chatx prompt list [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    List only global prompts (all users)
+    --user, -u      List only user prompts (current user)
+    --local, -l     List only local prompts (current directory)
+    --any, -a       List prompts from all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: List all prompts from all scopes
+
+    chatx prompt list
+
+  EXAMPLE 2: List only user prompts
+
+    chatx prompt list --user
+
+SEE ALSO
+
+  chatx help prompt
+  chatx help prompts

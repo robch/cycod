@@ -1,0 +1,38 @@
+CHATX PROMPT DELETE
+
+  Delete a specific prompt.
+
+USAGE: chatx prompt delete PROMPT_NAME [--scope]
+
+OPTIONS
+
+  PROMPT_NAME      The name of the prompt to delete
+
+  SCOPE OPTIONS
+
+    --global, -g    Delete only from global scope (all users)
+    --user, -u      Delete only from user scope (current user)
+    --local, -l     Delete only from local scope (current directory)
+    --any, -a       Delete from any scope where found (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Delete a prompt from any scope
+
+    chatx prompt delete myPrompt
+
+  EXAMPLE 2: Delete a prompt only if it exists in the user scope
+
+    chatx prompt delete myPrompt --user
+
+NOTES
+
+  When a prompt is found and deleted, the command:
+  - Deletes the main prompt file
+  - Deletes any referenced files (if the prompt uses external content)
+  - Displays the paths of all deleted files
+
+SEE ALSO
+
+  chatx help prompt
+  chatx help prompts

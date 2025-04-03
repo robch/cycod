@@ -5,14 +5,14 @@ using System.Linq;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Command to list all available aliases.
+/// Command to list all available prompts.
 /// </summary>
-class AliasListCommand : AliasBaseCommand
+class PromptListCommand : PromptBaseCommand
 {
     /// <summary>
     /// Constructor initializes with default scope of Any.
     /// </summary>
-    public AliasListCommand() : base()
+    public PromptListCommand() : base()
     {
         Scope = ConfigFileScope.Any;
     }
@@ -23,7 +23,7 @@ class AliasListCommand : AliasBaseCommand
     /// <returns>The command name.</returns>
     public override string GetCommandName()
     {
-        return "alias list";
+        return "prompt list";
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ class AliasListCommand : AliasBaseCommand
     /// <summary>
     /// Execute the list command for the specified scope.
     /// </summary>
-    /// <param name="scope">The scope to list aliases for.</param>
+    /// <param name="scope">The scope to list prompts for.</param>
     /// <returns>Exit code, 0 for success.</returns>
     private int ExecuteList(ConfigFileScope scope)
     {
@@ -48,19 +48,19 @@ class AliasListCommand : AliasBaseCommand
 
         if (isAnyScope || scope == ConfigFileScope.Global)
         {
-            AliasDisplayHelpers.DisplayAliases(ConfigFileScope.Global);
+            PromptDisplayHelpers.DisplayPrompts(ConfigFileScope.Global);
             if (isAnyScope) Console.WriteLine();
         }
 
         if (isAnyScope || scope == ConfigFileScope.User)
         {
-            AliasDisplayHelpers.DisplayAliases(ConfigFileScope.User);
+            PromptDisplayHelpers.DisplayPrompts(ConfigFileScope.User);
             if (isAnyScope) Console.WriteLine();
         }
 
         if (isAnyScope || scope == ConfigFileScope.Local)
         {
-            AliasDisplayHelpers.DisplayAliases(ConfigFileScope.Local);
+            PromptDisplayHelpers.DisplayPrompts(ConfigFileScope.Local);
         }
 
         return 0;
