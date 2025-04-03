@@ -4,17 +4,35 @@ Aliases in ChatX allow you to save frequently used command configurations as sho
 
 ## How Aliases Work
 
-Aliases are stored as plain text files in a `.chatx/aliases` directory, either in your home directory or in the current working directory. Each alias file contains the command line options that should be applied when the alias is used.
+Aliases are stored as plain text files in an `aliases` directory within the ChatX configuration folders. Aliases can be stored in three different scopes:
+
+1. **Local scope** - stored in the `.chatx/aliases` directory of the current working directory
+2. **User scope** - stored in the user's ChatX configuration directory (`~/.chatx/aliases` on Unix, `%USERPROFILE%\.chatx\aliases` on Windows)
+3. **Global scope** - stored in the system-wide ChatX configuration directory
+
+When looking for an alias, ChatX searches in the local scope first, then the user scope, and finally the global scope.
 
 ## Creating an Alias
 
-To create an alias, use the `--save-alias` option followed by a name for your alias:
+To create an alias, use one of the following options followed by a name for your alias:
+
+- `--save-alias` or `--save-local-alias` - Save in the local scope (current directory)
+- `--save-user-alias` - Save in the user scope (available to the current user in any directory)
+- `--save-global-alias` - Save in the global scope (available to all users)
+
+Example:
 
 ```bash
 chatx --system-prompt "You are an expert Python programmer who gives concise code examples." --save-alias python-helper
 ```
 
-This will save all the command line options (except `--save-alias` itself) to an alias named `python-helper`. The alias will be stored in a file in the `.chatx/aliases` directory.
+This will save all the command line options (except the save-alias option itself) to an alias named `python-helper` in the local scope.
+
+To save an alias in the user scope:
+
+```bash
+chatx --system-prompt "You are an expert Python programmer who gives concise code examples." --save-user-alias python-helper
+```
 
 ## Using an Alias
 
@@ -34,10 +52,16 @@ This will apply all the options stored in the `python-helper` alias (in this cas
 chatx --system-prompt "You are an expert Linux system administrator. Provide clear and concise answers to technical questions about Linux systems." --save-alias linux-admin
 ```
 
-### Creating a Workflow Alias
+### Creating a User-Scoped Workflow Alias
 
 ```bash
-chatx --system-prompt "You are an assistant focused on helping with Git operations and best practices." --save-alias git-helper
+chatx --system-prompt "You are an assistant focused on helping with Git operations and best practices." --save-user-alias git-helper
+```
+
+### Creating a Global Alias for All Users
+
+```bash
+chatx --system-prompt "You are a technical documentation writer who creates clear and thorough explanations." --save-global-alias tech-writer
 ```
 
 ### Combining Aliases with Additional Options
@@ -52,11 +76,11 @@ chatx --tech-writer --input "Write documentation for a REST API endpoint that cr
 
 ## Managing Aliases
 
-Aliases are stored as plain text files in the `.chatx/aliases` directory. You can edit these files directly if needed, or simply create a new alias with the same name to overwrite an existing one.
+Aliases are stored as plain text files in the appropriate `aliases` directory based on the scope where they were saved. You can edit these files directly if needed, or simply create a new alias with the same name to overwrite an existing one.
 
 ## Technical Details
 
-- Alias files are stored in `.chatx/aliases/`
+- Alias files are stored in `aliases/` within the appropriate configuration directory for the selected scope
 - Each alias is stored in a file named `<alias-name>.alias`
 - Multi-line inputs in aliases are handled properly
 - Aliases cannot be nested (an alias cannot reference another alias)

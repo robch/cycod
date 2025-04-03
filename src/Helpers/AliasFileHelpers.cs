@@ -6,31 +6,43 @@ using System.Linq;
 public static class AliasFileHelpers
 {
     /// <summary>
-    /// Finds the alias directory in the current or parent directories
+    /// Finds the alias directory in the specified scope.
     /// </summary>
+    /// <param name="scope">The scope to search in</param>
     /// <param name="create">Whether to create the directory if it doesn't exist</param>
     /// <returns>The path to the alias directory, or null if not found</returns>
-    public static string? FindAliasDirectory(bool create = false)
+    public static string? FindAliasDirectoryInScope(ConfigFileScope scope, bool create = false)
     {
         return create
-            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "aliases")
-            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "aliases");
+            ? ScopeFileHelpers.EnsureDirectoryInScope("aliases", scope)
+            : ScopeFileHelpers.FindDirectoryInScope("aliases", scope);
     }
 
     /// <summary>
-    /// Saves an alias with the provided options to a file
+    /// Saves an alias with the provided options to a file in the specified scope.
     /// </summary>
     /// <param name="aliasName">Name of the alias</param>
     /// <param name="allOptions">Command-line options to save in the alias</param>
+    /// <param name="scope">The scope to save the alias to</param>
     /// <returns>List of saved file paths</returns>
-    public static List<string> SaveAlias(string aliasName, string[] allOptions)
+    public static List<string> SaveAlias(string aliasName, string[] allOptions, ConfigFileScope scope = ConfigFileScope.Local)
     {
         var filesSaved = new List<string>();
-        var aliasDirectory = FindAliasDirectory(create: true)!;
+        
+        // Filter options to exclude scope-related save options
+        var optionsToFilter = new[] { 
+            "--save-alias", 
+            "--save-local-alias", 
+            "--save-user-alias", 
+            "--save-global-alias", 
+            aliasName 
+        };
+        
+        var aliasDirectory = FindAliasDirectoryInScope(scope, create: true)!;
         var fileName = Path.Combine(aliasDirectory, aliasName + ".alias");
 
         var options = allOptions
-            .Where(x => x != "--save-alias" && x != aliasName)
+            .Where(x => !optionsToFilter.Contains(x))
             .Select(x => SingleLineOrNewAtFile(x, fileName, ref filesSaved));
 
         var asMultiLineString = string.Join('\n', options);
@@ -60,6 +72,21 @@ public static class AliasFileHelpers
 
         return "@" + additionalFileName;
     }
+    /// <summary>
+    /// Finds an alias file across all scopes (local, user, global) with optional parent directory search.
+    /// </summary>
+    /// <param name="aliasName">The name of the alias to find</param>
+    /// <returns>The full path to the alias file if found, null otherwise</returns>
+    public static string? FindAliasFile(string aliasName)
+    {
+        var aliasFileName = $"{aliasName}.alias";
+        var aliasFilePath = ScopeFileHelpers.FindFileInAnyScope(aliasFileName, "aliases", searchParents: true);
+
+        ConsoleHelpers.WriteDebugLine(aliasFilePath != null
+            ? $"FindAliasFile; found alias in scope: {aliasFilePath}"
+            : $"FindAliasFile; alias NOT FOUND in any scope: {aliasName}");
+        return aliasFilePath;
+    }
 
     /// <summary>
     /// Attempts to parse an alias from the command line
@@ -72,10 +99,8 @@ public static class AliasFileHelpers
     /// <returns>True if alias was found and parsed, false otherwise</returns>
     public static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int currentIndex, string alias)
     {
-        var aliasDirectory = FindAliasDirectory(create: false) ?? ".";
-        var aliasFilePath = Path.Combine(aliasDirectory, $"{alias}.alias");
-
-        if (File.Exists(aliasFilePath))
+        var aliasFilePath = FindAliasFile(alias);
+        if (aliasFilePath != null && File.Exists(aliasFilePath))
         {
             var aliasArgs = File.ReadAllLines(aliasFilePath);
             for (var j = 0; j < aliasArgs.Length; j++)

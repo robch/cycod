@@ -61,7 +61,10 @@ public class Program
         var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
         if (shouldSaveAlias)
         {
-            var filesSaved = AliasFileHelpers.SaveAlias(commandLineOptions.SaveAliasName!, commandLineOptions.AllOptions);
+            var filesSaved = AliasFileHelpers.SaveAlias(
+                commandLineOptions.SaveAliasName!,
+                commandLineOptions.AllOptions,
+                commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
 
             DisplayBanner();
             AliasFileHelpers.DisplaySavedAliasFiles(filesSaved);

@@ -3,19 +3,29 @@ CHATX ALIASES
   Use aliases to save and reuse sets of options for common commands.
 
 USAGE: chatx [...] --save-alias ALIAS
+   OR: chatx [...] --save-local-alias ALIAS
+   OR: chatx [...] --save-user-alias ALIAS
+   OR: chatx [...] --save-global-alias ALIAS
    OR: chatx [...] --ALIAS
 
 OPTIONS
 
   SAVING ALIASES
 
-    --save-alias ALIAS    Save the current options under the specified alias name.
-                          Example: chatx --question "What time is it?" --save-alias get-time
+    --save-alias ALIAS          Same as --save-local-alias
+    --save-local-alias ALIAS    Save the current options under the specified alias name in the local scope
+    --save-user-alias ALIAS     Save the current options under the specified alias name in the user scope
+    --save-global-alias ALIAS   Save the current options under the specified alias name in the global scope
 
   USING ALIASES
 
-    --ALIAS               Use the options saved under the specified alias name.
-                          Example: chatx --get-time
+    --ALIAS                     Use the options saved under the specified alias name.
+                                Example: chatx --get-time
+
+  SCOPE SEARCH ORDER
+  
+    When looking for an alias, ChatX searches in the local scope first, then the user scope,
+    and finally the global scope.
 
 SEE ALSO
 

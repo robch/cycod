@@ -53,8 +53,11 @@ USAGE: chatx [...]
     --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
     --profile NAME                        Load a specific profile's configuration from .chatx/profiles/NAME.yaml
       
-  ALIASES      
-    --save-alias ALIAS                    Save current options as an alias
+  ALIASES                                 (see: chatx help aliases)
+    --save-alias ALIAS                    Same as --save-local-alias
+    --save-local-alias ALIAS              Save current options as an alias in local scope
+    --save-user-alias ALIAS               Save current options as an alias in user scope
+    --save-global-alias ALIAS             Save current options as an alias in global scope
     --{ALIAS}                             Use options saved under the specified alias name
 
   VARIABLES

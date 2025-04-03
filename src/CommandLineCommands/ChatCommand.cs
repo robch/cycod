@@ -52,9 +52,9 @@ public class ChatCommand : Command
         if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
-        InputChatHistory = GroundInputChatHistoryFileName();
-        OutputChatHistory = GroundOutputChatHistoryFileName();
-        OutputTrajectory = GroundOutputTrajectoryFileName();
+        InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory);
+        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory);
+        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory);
 
         // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt = GroundSystemPrompt();
@@ -129,75 +129,7 @@ public class ChatCommand : Command
             .ToList();
     }
 
-    private string? GroundInputChatHistoryFileName()
-    {
-        var mostRecentChatHistoryFileName = LoadMostRecentChatHistory
-            ? FindMostRecentChatHistoryFile()
-            : null;
 
-        var mostRecentChatHistoryFileExists = FileHelpers.FileExists(mostRecentChatHistoryFileName);
-        if (mostRecentChatHistoryFileExists)
-        {
-            InputChatHistory = mostRecentChatHistoryFileName;
-        }
-
-        return FileHelpers.GetFileNameFromTemplate(InputChatHistory ?? "chat-history.jsonl", InputChatHistory);
-    }
-
-    private string? FindMostRecentChatHistoryFile()
-    {
-        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
-        var userScopeHistoryDir = Path.Combine(userScopeDir!, "history");
-        var userChatHistoryFiles = Directory.Exists(userScopeHistoryDir)
-            ? Directory.GetFiles(userScopeHistoryDir, "chat-history*.jsonl")
-            : Array.Empty<string>();
-
-        var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history*.jsonl");
-
-        var files = userChatHistoryFiles.ToList()
-            .Concat(localFiles).ToList()
-            .OrderByDescending(f => {
-                var fi = new FileInfo(f);
-                return $"{fi.LastWriteTime.ToFileTime()} {fi.Name}";
-            });
-        var mostRecent = files.FirstOrDefault();
-
-        ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ConsoleColor.DarkGray);
-        return mostRecent;
-    }
-
-    private string? GroundOutputChatHistoryFileName()
-    {
-        var userSpecified = !string.IsNullOrEmpty(OutputChatHistory);
-        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
-        if (shouldAutoSave)
-        {
-            var historyDir = EnsureHistoryDirectory();
-            OutputChatHistory = Path.Combine(historyDir, "chat-history-{time}.jsonl");
-        }
-
-        return FileHelpers.GetFileNameFromTemplate(OutputChatHistory ?? "chat-history.jsonl", OutputChatHistory);
-    }
-
-    private string? GroundOutputTrajectoryFileName()
-    {
-        var userSpecified = !string.IsNullOrEmpty(OutputTrajectory);
-        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
-        if (shouldAutoSave)
-        {
-            var historyDir = EnsureHistoryDirectory();
-            OutputTrajectory = Path.Combine(historyDir, "trajectory-{time}.jsonl");
-        }
-
-        return FileHelpers.GetFileNameFromTemplate(OutputTrajectory ?? "trajectory.jsonl", OutputTrajectory);
-    }
-
-    private string EnsureHistoryDirectory()
-    {
-        var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
-        var historyDir = Path.Combine(userScopeDir!, "history");
-        return DirectoryHelpers.EnsureDirectoryExists(historyDir);
-    }
 
     private string GetBuiltInSystemPrompt()
     {
@@ -223,15 +155,15 @@ public class ChatCommand : Command
     {
         if (userPrompt == "/save")
         {
-            return SaveChatHistory(chat);
+            return HandleSaveChatHistoryCommand(chat);
         }
         else if (userPrompt == "/clear")
         {
-            return ClearChatHistory(chat);
+            return HandleClearChatHistoryCommand(chat);
         }
         else if (userPrompt == "/cost")
         {
-            return ShowCost();
+            return HandleShowCostCommand();
         }
         
         if (_chatCommandHandler.IsCommand(userPrompt))
@@ -254,7 +186,7 @@ public class ChatCommand : Command
         return true;
     }
 
-    private bool ClearChatHistory(FunctionCallingChat chat)
+    private bool HandleClearChatHistoryCommand(FunctionCallingChat chat)
     {
         chat.ClearChatHistory();
         _totalTokensIn = 0;
@@ -263,7 +195,7 @@ public class ChatCommand : Command
         return true;
     }
 
-    private bool SaveChatHistory(FunctionCallingChat chat)
+    private bool HandleSaveChatHistoryCommand(FunctionCallingChat chat)
     {
         ConsoleHelpers.Write("Saving chat-history.jsonl ...", ConsoleColor.Yellow, overrideQuiet: true);
         chat.SaveChatHistoryToFile("chat-history.jsonl");
@@ -271,7 +203,7 @@ public class ChatCommand : Command
         return true;
     }
 
-    private bool ShowCost()
+    private bool HandleShowCostCommand()
     {
         ConsoleHelpers.WriteLine($"Tokens: {_totalTokensIn} in, {_totalTokensOut} out\n", ConsoleColor.Yellow, overrideQuiet: true);
         return true;

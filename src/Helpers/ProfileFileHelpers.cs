@@ -15,37 +15,44 @@ public static class ProfileFileHelpers
             throw new CommandLineException("Profile name cannot be empty.");
         }
         
-        var profilesDirectory = FindProfilesDirectory(create: false);
-        var yamlProfile = profilesDirectory != null
-            ? Path.Combine(profilesDirectory, $"{profileName}.yaml")
-            : Path.Combine(Directory.GetCurrentDirectory(), $"{profileName}.yaml");
-        var iniProfile = profilesDirectory != null
-            ? Path.Combine(profilesDirectory, profileName)
-            : Path.Combine(Directory.GetCurrentDirectory(), profileName);
-
-        var yamlProfileOk = FileHelpers.FileExists(yamlProfile);
-        var iniProfileOk = FileHelpers.FileExists(iniProfile);
-        var profileOk = yamlProfileOk || iniProfileOk;
-
-        if (!profileOk)
+        var profilePath = FindProfileFile(profileName);
+        if (profilePath == null)
         {
-            throw new CommandLineException($"Profile '{profileName}' not found at path; checked:\n- {yamlProfile}\n- {iniProfile}");
+            throw new CommandLineException($"Profile '{profileName}' not found in any scope or parent directories.");
         }
         
-        var profile = yamlProfileOk ? yamlProfile : iniProfile;
-        ConsoleHelpers.WriteDebugLine($"Loading profile from {profile}");
-        ConfigStore.Instance.LoadConfigFile(profile);
+        ConsoleHelpers.WriteDebugLine($"Loading profile from {profilePath}");
+        ConfigStore.Instance.LoadConfigFile(profilePath);
     }
     
     /// <summary>
-    /// Finds the profiles directory in the parent directories.
+    /// Finds a profile file by name across all scopes and optionally parent directories.
     /// </summary>
-    /// <param name="create">If true, creates the directory if it doesn't exist</param>
+    /// <param name="profileName">The name of the profile to find</param>
+    /// <returns>The path to the profile file if found, null otherwise</returns>
+    public static string? FindProfileFile(string profileName)
+    {
+        var yamlFileName = $"{profileName}.yaml";
+        var yamlProfilePath = ScopeFileHelpers.FindFileInAnyScope(yamlFileName, "profiles", searchParents: true);
+        if (yamlProfilePath != null)
+        {
+            return yamlProfilePath;
+        }
+
+        var bareFileNameNoExt = $"{profileName}";
+        return ScopeFileHelpers.FindFileInAnyScope(bareFileNameNoExt, "profiles", searchParents: true);
+    }
+    
+    /// <summary>
+    /// Finds the profiles directory in the specified scope.
+    /// </summary>
+    /// <param name="scope">The scope to search in</param>
+    /// <param name="create">Whether to create the directory if it doesn't exist</param>
     /// <returns>The path to the profiles directory, or null if not found</returns>
-    public static string? FindProfilesDirectory(bool create = false)
+    public static string? FindProfilesDirectoryInScope(ConfigFileScope scope, bool create = false)
     {
         return create
-            ? DirectoryHelpers.FindOrCreateDirectorySearchParents(".chatx", "profiles")
-            : DirectoryHelpers.FindDirectorySearchParents(".chatx", "profiles");
+            ? ScopeFileHelpers.EnsureDirectoryInScope("profiles", scope)
+            : ScopeFileHelpers.FindDirectoryInScope("profiles", scope);
     }
 }

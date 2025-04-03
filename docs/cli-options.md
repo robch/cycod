@@ -31,7 +31,10 @@ These options apply to the overall behavior of ChatX:
 | `--quiet` | Suppress non-essential output |
 | `--interactive <true/false>` | Control whether to enter interactive mode (default: true) |
 | `--no-templates` | Disable template processing in input |
-| `--save-alias <name>` | Save the current command options as a named alias |
+| `--save-alias <n>` | Save the current command options as a named alias in the local scope |
+| `--save-local-alias <n>` | Same as `--save-alias`, saves in the local scope |
+| `--save-user-alias <n>` | Save the current command options as a named alias in the user scope |
+| `--save-global-alias <n>` | Save the current command options as a named alias in the global scope |
 | `--help` | Display help information |
 
 ## Chat Options
@@ -67,7 +70,7 @@ These options control which AI provider to use:
 | `--use-copilot` | Use GitHub Copilot (either token or HMAC) |
 | `--use-copilot-token` | Use GitHub Copilot with token authentication |
 | `--use-copilot-hmac` | Use GitHub Copilot with HMAC authentication |
-| `--profile <name>` | Load a named profile from `.chatx/profiles/<name>.yaml` |
+| `--profile <n>` | Load a named profile from `.chatx/profiles/<n>.yaml` |
 
 ## Configuration Options
 
