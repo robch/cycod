@@ -1,0 +1,33 @@
+CHATX ALIAS GET
+
+  Display the content of a specific alias.
+
+USAGE: chatx alias get ALIAS_NAME [--scope]
+
+ARGUMENTS
+
+  ALIAS_NAME        The name of the alias to view.
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Look for the alias in global scope (all users)
+    --user, -u      Look for the alias in user scope (current user)
+    --local, -l     Look for the alias in local scope (current directory)
+    --any, -a       Look for the alias in any scope (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Get an alias from any scope
+
+    chatx alias get my-alias
+
+  EXAMPLE 2: Get an alias from user scope
+
+    chatx alias get my-alias --user
+
+SEE ALSO
+
+  chatx help alias
+  chatx help aliases

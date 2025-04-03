@@ -79,3 +79,4 @@ SEE ALSO
   chatx help examples
   chatx help provider
   chatx help config
+  chatx help alias

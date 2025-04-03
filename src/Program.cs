@@ -108,6 +108,9 @@ public class Program
                 ConfigClearCommand configClearCommand => configClearCommand.Execute(commandLineOptions.Interactive),
                 ConfigAddCommand configAddCommand => configAddCommand.Execute(commandLineOptions.Interactive),
                 ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(commandLineOptions.Interactive),
+                AliasListCommand aliasListCommand => aliasListCommand.Execute(commandLineOptions.Interactive),
+                AliasGetCommand aliasGetCommand => aliasGetCommand.Execute(commandLineOptions.Interactive),
+                AliasDeleteCommand aliasDeleteCommand => aliasDeleteCommand.Execute(commandLineOptions.Interactive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 

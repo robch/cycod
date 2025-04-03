@@ -194,7 +194,7 @@ public class CommandLineOptions
                 _ => $"{name1} {name2}".Trim()
             };
 
-            var partialCommandNeedsHelp = commandName == "config" || commandName == "github";
+            var partialCommandNeedsHelp = commandName == "config" || commandName == "github" || commandName == "alias";
             if (partialCommandNeedsHelp)
             {
                 command = new HelpCommand();
@@ -213,6 +213,9 @@ public class CommandLineOptions
                 "config clear" => new ConfigClearCommand(),
                 "config add" => new ConfigAddCommand(),
                 "config remove" => new ConfigRemoveCommand(),
+                "alias list" => new AliasListCommand(),
+                "alias get" => new AliasGetCommand(),
+                "alias delete" => new AliasDeleteCommand(),
                 _ => new ChatCommand()
             };
 
@@ -231,6 +234,7 @@ public class CommandLineOptions
             TryParseChatCommandOptions(commandLineOptions, command as ChatCommand, args, ref i, arg) ||
             TryParseGitHubLoginCommandOptions(command as GitHubLoginCommand, args, ref i, arg) ||
             TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
+            TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
@@ -305,6 +309,16 @@ public class CommandLineOptions
                 configRemoveCommand.Value = arg;
                 parsedOption = true;
             }
+        }
+        else if (command is AliasGetCommand aliasGetCommand && string.IsNullOrEmpty(aliasGetCommand.AliasName))
+        {
+            aliasGetCommand.AliasName = arg;
+            parsedOption = true;
+        }
+        else if (command is AliasDeleteCommand aliasDeleteCommand && string.IsNullOrEmpty(aliasDeleteCommand.AliasName))
+        {
+            aliasDeleteCommand.AliasName = arg;
+            parsedOption = true;
         }
 
         return parsedOption;
@@ -461,6 +475,39 @@ public class CommandLineOptions
         {
             command.Scope = ConfigFileScope.Any;
             command.ConfigFileName = null;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseAliasCommandOptions(AliasBaseCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--global" || arg == "-g")
+        {
+            command.Scope = ConfigFileScope.Global;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.Scope = ConfigFileScope.User;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Scope = ConfigFileScope.Local;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Scope = ConfigFileScope.Any;
         }
         else
         {
