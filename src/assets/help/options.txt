@@ -5,9 +5,6 @@ USAGE: chatx [...]
     --add-system-prompt "TEXT"            Add text to the system prompt, to re-inforce critical instructions
     --add-user-prompt "TEXT"              Add user prompt(s), prepended to the first input/question/instruction
 
-    --input-chat-history [FILE]           Load chat history from the specified JSONL file
-    --continue                            Continue the most recent chat history
-
     --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
     --question ...                        Alias for --interactive false --quiet --input
     --instruction ...                     Alias for --inp
@@ -20,8 +17,11 @@ USAGE: chatx [...]
     --no-templates                        Alias for --use-templates fal
 
   CHAT HISTORY                            (see: chatx help chat history)
-    --output-chat-history [FILE]          Save chat history to the specified file (default: "chat-history-{time}.jsonl")
-    --output-trajectory [FILE]            Save chat history in human readable trajectory format (default: "trajectory-{time}.md
+    --continue                            Continue the most recent chat history
+    --chat-history [FILE]                 Load from and save to the same JSONL file
+    --input-chat-history [FILE]           Load chat history from the specified JSONL file
+    --output-chat-history [FILE]          Save chat history to the specified file
+    --output-trajectory [FILE]            Save chat history in human readable trajectory format
 
   MODEL OPTIONS
     --max-tokens TOKENS                   AI model should output no more than TOKENS

@@ -564,6 +564,15 @@ public class CommandLineOptions
 
             i += inputArgs.Count();
         }
+        else if (arg == "--chat-history")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var chatHistory = max1Arg.FirstOrDefault() ?? DefaultSimpleChatHistoryFileName;
+            command.InputChatHistory = !FileHelpers.FileExists(chatHistory) ? command.InputChatHistory : chatHistory;
+            command.OutputChatHistory = chatHistory;
+            command.LoadMostRecentChatHistory = false;
+            i += max1Arg.Count();
+        }
         else if (arg == "--input-chat-history")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -801,6 +810,7 @@ public class CommandLineOptions
         return ex;
     }
 
+    private const string DefaultSimpleChatHistoryFileName = "chat-history.jsonl";
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
     private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";
 }

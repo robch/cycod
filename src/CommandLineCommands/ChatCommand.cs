@@ -149,17 +149,18 @@ public class ChatCommand : Command
         var userScopeDir = ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User);
         var userScopeHistoryDir = Path.Combine(userScopeDir!, "history");
         var userChatHistoryFiles = Directory.Exists(userScopeHistoryDir)
-            ? Directory.GetFiles(userScopeHistoryDir, "chat-history-*.jsonl")
+            ? Directory.GetFiles(userScopeHistoryDir, "chat-history*.jsonl")
             : Array.Empty<string>();
 
-        var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history-*.jsonl");
+        var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history*.jsonl");
 
         var files = userChatHistoryFiles.ToList()
             .Concat(localFiles).ToList()
-            .OrderByDescending(f => new FileInfo(f).LastWriteTime);
-        var mostRecent = files
-            .OrderByDescending(f => new FileInfo(f).LastWriteTime)
-            .FirstOrDefault();
+            .OrderByDescending(f => {
+                var fi = new FileInfo(f);
+                return $"{fi.LastWriteTime.ToFileTime()} {fi.Name}";
+            });
+        var mostRecent = files.FirstOrDefault();
 
         ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ConsoleColor.DarkGray);
         return mostRecent;
