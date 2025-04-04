@@ -91,10 +91,8 @@ class PromptCreateCommand : PromptBaseCommand
             }
             
             // Save the prompt
-            var filesSaved = PromptFileHelpers.SavePrompt(promptName, promptText, scope);
-            
-            // Display information about the saved files
-            PromptDisplayHelpers.DisplaySavedPromptFiles(filesSaved);
+            var fileName = PromptFileHelpers.SavePrompt(promptName, promptText, scope);
+            PromptDisplayHelpers.DisplaySavedPromptFile(fileName);
             
             return 0;
         }

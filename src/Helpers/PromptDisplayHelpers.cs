@@ -54,7 +54,7 @@ public static class PromptDisplayHelpers
             .ToList();
 
         // Display the prompts with location header
-        CommonDisplayHelpers.DisplayItemList(locationDisplay, promptNames, "/");
+        CommonDisplayHelpers.DisplayItemList(locationDisplay, promptNames);
     }
 
     /// <summary>
@@ -74,8 +74,9 @@ public static class PromptDisplayHelpers
     /// Displays information about saved prompt files.
     /// </summary>
     /// <param name="filesSaved">List of saved files</param>
-    public static void DisplaySavedPromptFiles(List<string> filesSaved)
+    public static void DisplaySavedPromptFile(string fileName)
     {
-        CommonDisplayHelpers.DisplaySavedFiles(filesSaved, "/{name} (in chat)");
+        var wrappedList = new List<string> { fileName };
+        CommonDisplayHelpers.DisplaySavedFiles(wrappedList, "/{name} (in chat)");
     }
 }

@@ -65,7 +65,7 @@ public static class AliasFileHelpers
         if (!isMultiLine) return text;
 
         var additionalFileCount = additionalFiles.Count + 1;
-        var additionalFileName = FileHelpers.GetFileNameFromTemplate(baseFileName, "{filepath}/{filebase}-" + additionalFileCount + "{fileext}")!;
+        var additionalFileName = FileHelpers.GetFileNameFromTemplate(baseFileName, "{filepath}/{filebase}-{fileext}-" + additionalFileCount + ".txt")!;
         additionalFiles.Add(additionalFileName);
 
         FileHelpers.WriteAllText(additionalFileName, text);

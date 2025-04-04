@@ -63,57 +63,21 @@ class PromptGetCommand : PromptBaseCommand
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
     private int ExecuteGet(string promptName, ConfigFileScope scope)
     {
-        string? promptFilePath = null;
+        ConsoleHelpers.WriteDebugLine($"ExecuteGet; promptName: {promptName}; scope: {scope}");
 
-        if (scope == ConfigFileScope.Any)
-        {
-            promptFilePath = PromptFileHelpers.FindPromptFile(promptName);
-        }
-        else
-        {
-            var promptDir = PromptFileHelpers.FindPromptDirectoryInScope(scope);
-            if (promptDir != null)
-            {
-                var potentialFilePath = Path.Combine(promptDir, $"{promptName}.prompt");
-                if (File.Exists(potentialFilePath))
-                {
-                    promptFilePath = potentialFilePath;
-                }
-            }
-        }
-
+        var promptFilePath = PromptFileHelpers.FindPromptFile(promptName);
         if (promptFilePath == null || !File.Exists(promptFilePath))
         {
-            ConsoleHelpers.WriteErrorLine($"Error: Prompt '{promptName}' not found in specified scope.");
+            ConsoleHelpers.WriteErrorLine(scope == ConfigFileScope.Any
+                ? $"Error: Prompt '{promptName}' not found in any scope."
+                : $"Error: Prompt '{promptName}' not found in {scope} scope.");
             return 1;
-        }
-
-        // Determine the scope from the file path
-        var fileScope = ConfigFileScope.Local; // Default
-        if (promptFilePath.Contains(ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.Global) ?? ""))
-        {
-            fileScope = ConfigFileScope.Global;
-        }
-        else if (promptFilePath.Contains(ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User) ?? ""))
-        {
-            fileScope = ConfigFileScope.User;
         }
 
         // Read and display the prompt content
         var content = File.ReadAllText(promptFilePath);
-        
-        // If content starts with @ symbol, it's a reference to another file
-        if (content.StartsWith('@'))
-        {
-            var referencedFilePath = content.Substring(1);
-            if (File.Exists(referencedFilePath))
-            {
-                content = File.ReadAllText(referencedFilePath);
-            }
-        }
-        
-        // Display the prompt using the standardized method
-        PromptDisplayHelpers.DisplayPrompt(promptName, promptFilePath, fileScope, content);
+        var foundInScope = ScopeFileHelpers.GetScopeFromPath(promptFilePath!);
+        PromptDisplayHelpers.DisplayPrompt(promptName, promptFilePath, foundInScope, content);
 
         return 0;
     }

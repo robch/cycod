@@ -28,41 +28,13 @@ public static class PromptFileHelpers
     /// <param name="promptText">Text to save in the prompt</param>
     /// <param name="scope">The scope to save the prompt to</param>
     /// <returns>List of saved file paths</returns>
-    public static List<string> SavePrompt(string promptName, string promptText, ConfigFileScope scope = ConfigFileScope.Local)
+    public static string SavePrompt(string promptName, string promptText, ConfigFileScope scope = ConfigFileScope.Local)
     {
-        var filesSaved = new List<string>();
-        
         var promptDirectory = FindPromptDirectoryInScope(scope, create: true)!;
         var fileName = Path.Combine(promptDirectory, promptName + ".prompt");
+        FileHelpers.WriteAllText(fileName, promptText);
 
-        // If the prompt text contains newlines, handle multiline storage
-        var processedText = SingleLineOrNewAtFile(promptText, fileName, ref filesSaved);
-        
-        FileHelpers.WriteAllText(fileName, processedText);
-
-        filesSaved.Insert(0, fileName);
-        return filesSaved;
-    }
-
-    /// <summary>
-    /// Handles multiline text by saving it to a separate file if needed
-    /// </summary>
-    /// <param name="text">The text to process</param>
-    /// <param name="baseFileName">Base file name for additional files</param>
-    /// <param name="additionalFiles">Reference to list of additional files</param>
-    /// <returns>Single line text or @filename reference</returns>
-    private static string SingleLineOrNewAtFile(string text, string baseFileName, ref List<string> additionalFiles)
-    {
-        var isMultiLine = text.Contains('\n') || text.Contains('\r');
-        if (!isMultiLine) return text;
-
-        var additionalFileCount = additionalFiles.Count + 1;
-        var additionalFileName = FileHelpers.GetFileNameFromTemplate(baseFileName, "{filepath}/{filebase}-" + additionalFileCount + "{fileext}")!;
-        additionalFiles.Add(additionalFileName);
-
-        FileHelpers.WriteAllText(additionalFileName, text);
-
-        return "@" + additionalFileName;
+        return fileName;
     }
 
     /// <summary>

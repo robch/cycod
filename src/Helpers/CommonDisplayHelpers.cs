@@ -42,23 +42,20 @@ public static class CommonDisplayHelpers
     /// <param name="items">List of item names to display</param>
     /// <param name="itemPrefix">Optional prefix to add before each item (e.g., "/" for prompts)</param>
     /// <param name="indentLevel">Indentation level</param>
-    public static void DisplayItemList(string locationHeader, List<string> items, string itemPrefix = "", int indentLevel = DefaultIndentLevel)
+    public static void DisplayItemList(string locationHeader, List<string> items, int indentLevel = DefaultIndentLevel)
     {
-        // Display location header
         WriteLocationHeader(locationHeader);
         
-        var indent = new string(' ', indentLevel);
-        
-        // Display items or "No items found" message
         if (items.Count == 0)
         {
+            var indent = new string(' ', indentLevel);
             ConsoleHelpers.WriteLine($"{indent}No items found in this scope", overrideQuiet: true);
             return;
         }
 
         foreach (var item in items)
         {
-            ConsoleHelpers.WriteLine($"{indent}{itemPrefix}{item}", overrideQuiet: true);
+            DisplayItem(item, indentLevel: indentLevel);
         }
     }
 
@@ -79,9 +76,12 @@ public static class CommonDisplayHelpers
         int indentLevel = 0)
     {
         // Display location
-        ConsoleHelpers.WriteLine(IndentContent($"LOCATION: {location}", indentLevel), overrideQuiet: true);
-        ConsoleHelpers.WriteLine(overrideQuiet: true);
-        indentLevel += 2;
+        if (!string.IsNullOrWhiteSpace(location))
+        {
+            ConsoleHelpers.WriteLine(IndentContent($"LOCATION: {location}", indentLevel), overrideQuiet: true);
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            indentLevel += 2;
+        }
 
         // Display item name
         ConsoleHelpers.WriteLine(IndentContent(name, indentLevel), overrideQuiet: true);
@@ -91,8 +91,8 @@ public static class CommonDisplayHelpers
         if (value != null)
         {
             var content = limitValue
-                ? TruncateContent(value, indentLevel)
-                : IndentContent(value, indentLevel);
+                ? TruncateContent(value, indentLevel: indentLevel)
+                : IndentContent(value, indentLevel: indentLevel);
             ConsoleHelpers.WriteLine($"\n{content}", overrideQuiet: true);
         }
     }
