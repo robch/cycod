@@ -71,9 +71,10 @@ class AliasDeleteCommand : AliasBaseCommand
         var fileNotFound = aliasFilePath == null || !File.Exists(aliasFilePath);
         if (fileNotFound)
         {
-            throw new CommandLineException(isAnyScope
+            ConsoleHelpers.WriteErrorLine(isAnyScope
                 ? $"Error: Alias '{aliasName}' not found in any scope."
                 : $"Error: Alias '{aliasName}' not found in specified scope.");
+            return 1;
         }
 
         // Check for additional files that might be referenced (multiline content)

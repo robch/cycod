@@ -246,55 +246,37 @@ public class ChatCommand : Command
             var promptDir = PromptFileHelpers.FindPromptDirectoryInScope(scope);
             if (promptDir == null || !Directory.Exists(promptDir)) continue;
             
-            var promptNames = Directory.GetFiles(promptDir, "*.prompt")
+            var promptFiles = Directory.GetFiles(promptDir, "*.prompt")
                 .OrderBy(file => Path.GetFileNameWithoutExtension(file))
                 .ToList();
                 
-            if (promptNames.Count == 0) continue;
+            if (promptFiles.Count == 0) continue;
             
             foundPrompts = true;
-            helpBuilder.AppendLine($"  LOCATION: {promptDir} ({scope.ToString().ToLower()})");
+            
+            // Format location header consistently
+            var locationDisplay = CommonDisplayHelpers.FormatLocationHeader(promptDir, scope);
+            helpBuilder.AppendLine($"  LOCATION: {locationDisplay}");
             helpBuilder.AppendLine();
 
             var indent = new string(' ', 4);
-            var indentContent = new string(' ', 8);
-
-            foreach (var name in promptNames)
+            
+            foreach (var promptFile in promptFiles)
             {
-                var promptName = Path.GetFileNameWithoutExtension(name);
-                helpBuilder.AppendLine($"{indent}/{promptName}\n");
+                var promptName = Path.GetFileNameWithoutExtension(promptFile);
+                helpBuilder.AppendLine($"{indent}/{promptName}");
+                helpBuilder.AppendLine();
 
+                // Get prompt content and truncate it for preview
                 var promptText = PromptFileHelpers.GetPromptText(promptName, scope)!;
-                var promptLines = promptText
-                    .Split(new[] { '\n', '\r' }, StringSplitOptions.None)
-                    .Select(line => line.Trim());
-
-                if (promptLines.Count() == 0)
-                {
-                    helpBuilder.AppendLine($"{indentContent}(empty)\n");
-                }
-                else
-                {
-                    var linesToShow = promptLines
-                        .Take(MaxPromptLinesInHelp)
-                        .Select(line => line.Trim())
-                        .Select(line => line.Length > MaxPromptWidthInHelp ? line.Substring(0, MaxPromptWidthInHelp - 3) + "..." : line)
-                        .Select(line => indentContent + line)
-                        .ToList();
-
-                    while (linesToShow.Count > 0 && string.IsNullOrWhiteSpace(linesToShow.Last()))
-                    {
-                        linesToShow.RemoveAt(linesToShow.Count - 1);
-                    }
-
-                    var showCount = linesToShow.Count;
-                    var totalCount = promptLines.Count();
-                    var merged = string.Join("\n", linesToShow) + (totalCount > MaxPromptLinesInHelp
-                        ? $"\n{indentContent}... ({totalCount - showCount} more lines)"
-                        : "");
-                    helpBuilder.AppendLine(merged);
-                    helpBuilder.AppendLine();
-                }
+                var truncatedContent = CommonDisplayHelpers.TruncateContent(
+                    promptText, 
+                    CommonDisplayHelpers.DefaultMaxContentLines, 
+                    CommonDisplayHelpers.DefaultMaxContentWidth, 
+                    8);  // deeper indentation for content
+                
+                helpBuilder.AppendLine(truncatedContent);
+                helpBuilder.AppendLine();
             }
             
             helpBuilder.AppendLine();
@@ -540,7 +522,5 @@ public class ChatCommand : Command
     private SlashCommandHandler _chatCommandHandler = new();
     private int _totalTokensIn = 0;
     private int _totalTokensOut = 0;
-    private const int MaxPromptLinesInHelp = 2;
-    private const int MaxPromptWidthInHelp = 60;
     private const int DefaultTrimTokenTarget = 160000;
 }

@@ -63,34 +63,14 @@ class PromptDeleteCommand : PromptBaseCommand
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
     private int ExecuteDelete(string promptName, ConfigFileScope scope)
     {
-        // Remove leading slash if someone added it (for consistency)
-        if (promptName.StartsWith('/'))
-        {
-            promptName = promptName.Substring(1);
-        }
-        
-        string? promptFilePath = null;
+        ConsoleHelpers.WriteDebugLine($"ExecuteDelete; promptName: {promptName}; scope: {scope}");
 
-        if (scope == ConfigFileScope.Any)
-        {
-            promptFilePath = PromptFileHelpers.FindPromptFile(promptName);
-        }
-        else
-        {
-            var promptDir = PromptFileHelpers.FindPromptDirectoryInScope(scope);
-            if (promptDir != null)
-            {
-                var potentialFilePath = Path.Combine(promptDir, $"{promptName}.prompt");
-                if (File.Exists(potentialFilePath))
-                {
-                    promptFilePath = potentialFilePath;
-                }
-            }
-        }
-
+        var promptFilePath = PromptFileHelpers.FindPromptFile(promptName, scope);
         if (promptFilePath == null || !File.Exists(promptFilePath))
         {
-            ConsoleHelpers.WriteErrorLine($"Error: Prompt '{promptName}' not found in specified scope.");
+            ConsoleHelpers.WriteErrorLine(scope == ConfigFileScope.Any
+                ? $"Error: Prompt '{promptName}' not found in any scope."
+                : $"Error: Prompt '{promptName}' not found in {scope} scope.");
             return 1;
         }
 

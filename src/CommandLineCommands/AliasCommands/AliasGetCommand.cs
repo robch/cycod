@@ -63,53 +63,26 @@ class AliasGetCommand : AliasBaseCommand
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
     private int ExecuteGet(string aliasName, ConfigFileScope scope)
     {
-        string? aliasFilePath = null;
+        ConsoleHelpers.WriteDebugLine($"ExecuteGet; aliasName: {aliasName}; scope: {scope}");
 
-        if (scope == ConfigFileScope.Any)
-        {
-            aliasFilePath = AliasFileHelpers.FindAliasFile(aliasName);
-        }
-        else
-        {
-            var aliasDir = AliasFileHelpers.FindAliasDirectoryInScope(scope);
-            if (aliasDir != null)
-            {
-                var potentialFilePath = Path.Combine(aliasDir, $"{aliasName}.alias");
-                if (File.Exists(potentialFilePath))
-                {
-                    aliasFilePath = potentialFilePath;
-                }
-            }
-        }
+        var isAnyScope = scope == ConfigFileScope.Any;
+        var aliasFilePath = isAnyScope
+            ? AliasFileHelpers.FindAliasFile(aliasName)
+            : AliasFileHelpers.FindAliasInScope(aliasName, scope);
 
-        if (aliasFilePath == null || !File.Exists(aliasFilePath))
+        var fileNotFound = aliasFilePath == null || !File.Exists(aliasFilePath);
+        if (fileNotFound)
         {
-            ConsoleHelpers.WriteErrorLine($"Error: Alias '{aliasName}' not found in specified scope.");
+            ConsoleHelpers.WriteErrorLine(isAnyScope
+                ? $"Error: Alias '{aliasName}' not found in any scope."
+                : $"Error: Alias '{aliasName}' not found in specified scope.");
             return 1;
         }
-
-        // Determine the scope from the file path
-        var fileScope = ConfigFileScope.Local; // Default
-        if (aliasFilePath.Contains(ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.Global) ?? ""))
-        {
-            fileScope = ConfigFileScope.Global;
-        }
-        else if (aliasFilePath.Contains(ConfigFileHelpers.GetScopeDirectoryPath(ConfigFileScope.User) ?? ""))
-        {
-            fileScope = ConfigFileScope.User;
-        }
-
-        ConsoleHelpers.WriteLine($"ALIAS: {aliasName}");
-        ConsoleHelpers.WriteLine($"LOCATION: {aliasFilePath} ({fileScope.ToString().ToLowerInvariant()})");
-        Console.WriteLine();
-
-        // Read and display the alias content
-        var content = File.ReadAllText(aliasFilePath);
-        ConsoleHelpers.WriteLine(content);
-        Console.WriteLine();
         
-        // Show usage example
-        ConsoleHelpers.WriteLine($"USAGE: {Program.Name} [...] --{aliasName}");
+        // Display the alias using the standardized method
+        var content = FileHelpers.ReadAllText(aliasFilePath!);
+        var foundInScope = ScopeFileHelpers.GetScopeFromPath(aliasFilePath!);
+        AliasDisplayHelpers.DisplayAlias(aliasName, content, aliasFilePath!, foundInScope);
 
         return 0;
     }

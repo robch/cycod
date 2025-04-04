@@ -4,16 +4,16 @@ using System.Linq;
 
 public static class ConfigDisplayHelpers
 {
-    public static void DisplayConfigSettings(string? location, Dictionary<string, ConfigValue> config, int indentLevel = 2)
+    public static void DisplayConfigSettings(string? location, Dictionary<string, ConfigValue> config, int indentLevel = CommonDisplayHelpers.DefaultIndentLevel)
     {
         if (location != null)
         {
-            Console.WriteLine($"LOCATION: {location}\n");
+            CommonDisplayHelpers.WriteLocationHeader(location);
         }
 
         if (config.Count == 0)
         {
-            Console.WriteLine($"{new string(' ', indentLevel)}No configuration settings found.");
+            ConsoleHelpers.WriteLine($"{new string(' ', indentLevel)}No configuration settings found.", overrideQuiet: true);
             return;
         }
 
@@ -30,7 +30,7 @@ public static class ConfigDisplayHelpers
             {
                 if (hasDisplayedNonDotted)
                 {
-                    Console.WriteLine();
+                    ConsoleHelpers.WriteLine("", overrideQuiet: true);
                 }
                 hasDisplayedDotted = true;
             }
@@ -44,7 +44,7 @@ public static class ConfigDisplayHelpers
         }
     }
     
-    public static void DisplayConfigValue(string key, ConfigValue value, int indentLevel = 2, bool showLocation = false)
+    public static void DisplayConfigValue(string key, ConfigValue value, int indentLevel = CommonDisplayHelpers.DefaultIndentLevel, bool showLocation = false)
     {
         if (showLocation)
         {
@@ -60,7 +60,10 @@ public static class ConfigDisplayHelpers
             };
 
             showLocation = !string.IsNullOrEmpty(location);
-            if (showLocation) Console.WriteLine($"LOCATION: {location}\n");
+            if (showLocation) 
+            {
+                CommonDisplayHelpers.WriteLocationHeader(location!);
+            }
         }
 
         var indent = new string(' ', indentLevel);
@@ -83,7 +86,7 @@ public static class ConfigDisplayHelpers
         ConsoleHelpers.WriteLine($"{indent}{key}: {displayValue}", overrideQuiet: true);
     }
     
-    public static void DisplayList(string key, List<string> list, int indentLevel = 2)
+    public static void DisplayList(string key, List<string> list, int indentLevel = CommonDisplayHelpers.DefaultIndentLevel)
     {
         var keyIndent = new string(' ', indentLevel);
         var valueIndent = new string(' ', indentLevel + 2);

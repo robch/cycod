@@ -18,13 +18,13 @@ public static class AliasDisplayHelpers
         var aliasPath = AliasFileHelpers.FindAliasDirectoryInScope(scope);
         if (aliasPath != null)
         {
-            return $"{aliasPath} ({scope.ToString().ToLower()})";
+            return CommonDisplayHelpers.FormatLocationHeader(aliasPath, scope);
         }
         
         var scopeDir = ConfigFileHelpers.GetScopeDirectoryPath(scope);
         if (scopeDir == null) return null;
 
-        return $"{Path.Combine(scopeDir, "aliases")} ({scope.ToString().ToLower()})";
+        return CommonDisplayHelpers.FormatLocationHeader(Path.Combine(scopeDir, "aliases"), scope);
     }
 
     /// <summary>
@@ -37,9 +37,6 @@ public static class AliasDisplayHelpers
         var locationDisplay = GetLocationDisplayName(scope);
         if (locationDisplay == null) return;
         
-        ConsoleHelpers.WriteLine($"LOCATION: {locationDisplay}");
-        Console.WriteLine();
-
         // Find the directory to check for aliases
         var aliasDir = AliasFileHelpers.FindAliasDirectoryInScope(scope);
         
@@ -52,7 +49,25 @@ public static class AliasDisplayHelpers
                 .ToList();
         }
 
-        DisplayAliasFiles(aliasFiles);
+        var aliasNames = aliasFiles
+            .Select(file => Path.GetFileNameWithoutExtension(file))
+            .ToList();
+
+        // Display the aliases with location header
+        CommonDisplayHelpers.DisplayItemList(locationDisplay, aliasNames);
+    }
+
+    /// <summary>
+    /// Displays a single alias with content.
+    /// </summary>
+    /// <param name="name">Name of the alias</param>
+    /// <param name="fileName">File path of the alias</param>
+    /// <param name="scope">Scope of the alias</param>
+    /// <param name="content">Content of the alias</param>
+    public static void DisplayAlias(string name, string content, string fileName, ConfigFileScope scope)
+    {
+        var location = CommonDisplayHelpers.FormatLocationHeader(fileName, scope);
+        CommonDisplayHelpers.DisplayItem(name, content, location);
     }
 
     /// <summary>
@@ -60,20 +75,20 @@ public static class AliasDisplayHelpers
     /// </summary>
     /// <param name="aliasFiles">The list of alias files to display</param>
     /// <param name="indentLevel">The level of indentation for display</param>
-    public static void DisplayAliasFiles(List<string> aliasFiles, int indentLevel = 2)
+    public static void DisplayAliasFiles(List<string> aliasFiles, int indentLevel = CommonDisplayHelpers.DefaultIndentLevel)
     {
         var indent = new string(' ', indentLevel);
         
         if (aliasFiles.Count == 0)
         {
-            ConsoleHelpers.WriteLine($"{indent}No aliases found in this scope");
+            ConsoleHelpers.WriteLine($"{indent}No aliases found in this scope", overrideQuiet: true);
             return;
         }
 
         foreach (var aliasFile in aliasFiles)
         {
             var aliasName = Path.GetFileNameWithoutExtension(aliasFile);
-            ConsoleHelpers.WriteLine($"{indent}{aliasName}");
+            ConsoleHelpers.WriteLine($"{indent}{aliasName}", overrideQuiet: true);
         }
     }
 
@@ -83,23 +98,6 @@ public static class AliasDisplayHelpers
     /// <param name="filesSaved">List of saved files</param>
     public static void DisplaySavedAliasFiles(List<string> filesSaved)
     {
-        var firstFileSaved = filesSaved.First();
-        var additionalFiles = filesSaved.Skip(1).ToList();
-
-        ConsoleHelpers.WriteLine($"Saved: {firstFileSaved}\n");
-
-        var hasAdditionalFiles = additionalFiles.Any();
-        if (hasAdditionalFiles)
-        {
-            foreach (var additionalFile in additionalFiles)
-            {
-                ConsoleHelpers.WriteLine($"  and: {additionalFile}");
-            }
-         
-            ConsoleHelpers.WriteLine();
-        }
-
-        var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.WriteLine($"USAGE: {Program.Name} [...] --" + aliasName);
+        CommonDisplayHelpers.DisplaySavedFiles(filesSaved, $"{Program.Name} [...] --{{name}}");
     }
 }

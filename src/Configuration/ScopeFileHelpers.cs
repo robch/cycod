@@ -8,6 +8,14 @@ using System.Linq;
 /// </summary>
 public static class ScopeFileHelpers
 {
+    public static ConfigFileScope GetScopeFromPath(string path)
+    {
+        if (path.Contains(ConfigFileHelpers.GetGlobalScopeDirectory())) return ConfigFileScope.Global;
+        if (path.Contains(ConfigFileHelpers.GetUserScopeDirectory())) return ConfigFileScope.User;
+        if (path.Contains(ConfigFileHelpers.GetLocalScopeDirectory())) return ConfigFileScope.Local;
+        return ConfigFileScope.FileName;
+    }
+
     /// <summary>
     /// Finds a file in a specific scope's subdirectory.
     /// </summary>

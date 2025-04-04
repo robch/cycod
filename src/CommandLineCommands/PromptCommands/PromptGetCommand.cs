@@ -99,10 +99,6 @@ class PromptGetCommand : PromptBaseCommand
             fileScope = ConfigFileScope.User;
         }
 
-        ConsoleHelpers.WriteLine($"PROMPT: {promptName}");
-        ConsoleHelpers.WriteLine($"LOCATION: {promptFilePath} ({fileScope.ToString().ToLowerInvariant()})");
-        Console.WriteLine();
-
         // Read and display the prompt content
         var content = File.ReadAllText(promptFilePath);
         
@@ -116,11 +112,8 @@ class PromptGetCommand : PromptBaseCommand
             }
         }
         
-        ConsoleHelpers.WriteLine(content);
-        Console.WriteLine();
-        
-        // Show usage example
-        ConsoleHelpers.WriteLine($"USAGE: /{promptName} (in chat)");
+        // Display the prompt using the standardized method
+        PromptDisplayHelpers.DisplayPrompt(promptName, promptFilePath, fileScope, content);
 
         return 0;
     }

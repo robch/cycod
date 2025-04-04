@@ -66,28 +66,29 @@ public static class ConfigFileHelpers
         return $"{defaultPath} ({scope.ToString().ToLower()})";
     }
     
-    private static string? GetYamlConfigFileName(ConfigFileScope scope)
-    {
-        var path = GetScopeDirectoryPath(scope);
-        return path != null
-            ? Path.Combine(path, YAML_CONFIG_NAME)
-            : null;
-    }
-
-    private static string? GetIniConfigFileName(ConfigFileScope scope)
-    {
-        var path = GetScopeDirectoryPath(scope);
-        return path != null
-            ? Path.Combine(path, INI_CONFIG_NAME)
-            : null;
-    }
-
-    private static string GetGlobalScopeDirectory()
+    public static string GetGlobalScopeDirectory()
     {
         var parent = GetGlobalScopeParentDirectory();
         var configDir = Path.Combine(parent, CONFIG_DIR_NAME);
         ConsoleHelpers.WriteDebugLine($"Global config directory: {configDir}");
         return configDir;
+    }
+
+    public static string GetUserScopeDirectory()
+    {
+        var parent = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        return Path.Combine(parent, CONFIG_DIR_NAME);
+    }
+
+    public static string GetLocalScopeDirectory()
+    {
+        var existingYamlFile = FileHelpers.FindFileSearchParents(CONFIG_DIR_NAME, YAML_CONFIG_NAME);
+        if (existingYamlFile != null) return Path.GetDirectoryName(existingYamlFile)!;
+
+        var existingIniFile = FileHelpers.FindFileSearchParents(CONFIG_DIR_NAME, INI_CONFIG_NAME);
+        if (existingIniFile != null) return Path.GetDirectoryName(existingIniFile)!;
+
+        return Path.Combine(Directory.GetCurrentDirectory(), CONFIG_DIR_NAME);
     }
 
     private static string GetGlobalScopeParentDirectory()
@@ -115,21 +116,20 @@ public static class ConfigFileHelpers
         return commonAppData;
     }
 
-    private static string GetUserScopeDirectory()
+    private static string? GetYamlConfigFileName(ConfigFileScope scope)
     {
-        var parent = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        return Path.Combine(parent, CONFIG_DIR_NAME);
+        var path = GetScopeDirectoryPath(scope);
+        return path != null
+            ? Path.Combine(path, YAML_CONFIG_NAME)
+            : null;
     }
 
-    private static string GetLocalScopeDirectory()
+    private static string? GetIniConfigFileName(ConfigFileScope scope)
     {
-        var existingYamlFile = FileHelpers.FindFileSearchParents(CONFIG_DIR_NAME, YAML_CONFIG_NAME);
-        if (existingYamlFile != null) return Path.GetDirectoryName(existingYamlFile)!;
-
-        var existingIniFile = FileHelpers.FindFileSearchParents(CONFIG_DIR_NAME, INI_CONFIG_NAME);
-        if (existingIniFile != null) return Path.GetDirectoryName(existingIniFile)!;
-
-        return Path.Combine(Directory.GetCurrentDirectory(), CONFIG_DIR_NAME);
+        var path = GetScopeDirectoryPath(scope);
+        return path != null
+            ? Path.Combine(path, INI_CONFIG_NAME)
+            : null;
     }
 
     private const string CONFIG_DIR_NAME = $".{Program.Name}";

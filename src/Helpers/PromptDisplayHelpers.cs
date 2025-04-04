@@ -18,13 +18,13 @@ public static class PromptDisplayHelpers
         var promptPath = PromptFileHelpers.FindPromptDirectoryInScope(scope);
         if (promptPath != null)
         {
-            return $"{promptPath} ({scope.ToString().ToLower()})";
+            return CommonDisplayHelpers.FormatLocationHeader(promptPath, scope);
         }
         
         var scopeDir = ConfigFileHelpers.GetScopeDirectoryPath(scope);
         if (scopeDir == null) return null;
 
-        return $"{Path.Combine(scopeDir, "prompts")} ({scope.ToString().ToLower()})";
+        return CommonDisplayHelpers.FormatLocationHeader(Path.Combine(scopeDir, "prompts"), scope);
     }
 
     /// <summary>
@@ -37,9 +37,6 @@ public static class PromptDisplayHelpers
         var locationDisplay = GetLocationDisplayName(scope);
         if (locationDisplay == null) return;
         
-        ConsoleHelpers.WriteLine($"LOCATION: {locationDisplay}");
-        Console.WriteLine();
-
         // Find the directory to check for prompts
         var promptDir = PromptFileHelpers.FindPromptDirectoryInScope(scope);
         
@@ -52,29 +49,25 @@ public static class PromptDisplayHelpers
                 .ToList();
         }
 
-        DisplayPromptFiles(promptFiles);
+        var promptNames = promptFiles
+            .Select(file => Path.GetFileNameWithoutExtension(file))
+            .ToList();
+
+        // Display the prompts with location header
+        CommonDisplayHelpers.DisplayItemList(locationDisplay, promptNames, "/");
     }
 
     /// <summary>
-    /// Displays a list of prompt files.
+    /// Displays a single prompt with content preview.
     /// </summary>
-    /// <param name="promptFiles">The list of prompt files to display</param>
-    /// <param name="indentLevel">The level of indentation for display</param>
-    public static void DisplayPromptFiles(List<string> promptFiles, int indentLevel = 2)
+    /// <param name="name">Name of the prompt</param>
+    /// <param name="promptFilePath">File path of the prompt</param>
+    /// <param name="scope">Scope of the prompt</param>
+    /// <param name="content">Content of the prompt</param>
+    public static void DisplayPrompt(string name, string promptFilePath, ConfigFileScope scope, string content)
     {
-        var indent = new string(' ', indentLevel);
-        
-        if (promptFiles.Count == 0)
-        {
-            ConsoleHelpers.WriteLine($"{indent}No prompts found in this scope");
-            return;
-        }
-
-        foreach (var promptFile in promptFiles)
-        {
-            var promptName = Path.GetFileNameWithoutExtension(promptFile);
-            ConsoleHelpers.WriteLine($"{indent}/{promptName}");
-        }
+        var location = CommonDisplayHelpers.FormatLocationHeader(promptFilePath, scope);
+        CommonDisplayHelpers.DisplayItem(name, content, location, limitValue: true);
     }
 
     /// <summary>
@@ -83,23 +76,6 @@ public static class PromptDisplayHelpers
     /// <param name="filesSaved">List of saved files</param>
     public static void DisplaySavedPromptFiles(List<string> filesSaved)
     {
-        var firstFileSaved = filesSaved.First();
-        var additionalFiles = filesSaved.Skip(1).ToList();
-
-        ConsoleHelpers.WriteLine($"Saved: {firstFileSaved}\n");
-
-        var hasAdditionalFiles = additionalFiles.Any();
-        if (hasAdditionalFiles)
-        {
-            foreach (var additionalFile in additionalFiles)
-            {
-                ConsoleHelpers.WriteLine($"  and: {additionalFile}");
-            }
-         
-            ConsoleHelpers.WriteLine();
-        }
-
-        var promptName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.WriteLine($"USAGE: /{promptName} (in chat)");
+        CommonDisplayHelpers.DisplaySavedFiles(filesSaved, "/{name} (in chat)");
     }
 }
