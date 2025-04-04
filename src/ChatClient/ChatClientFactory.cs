@@ -1,5 +1,6 @@
 using Azure;
 using Azure.AI.OpenAI;
+using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
 using System.ClientModel;
@@ -7,28 +8,31 @@ using System.ClientModel.Primitives;
 
 public static class ChatClientFactory
 {
-    public static ChatClient CreateAzureOpenAIChatClientWithApiKey()
+    public static IChatClient CreateAzureOpenAIChatClientWithApiKey()
     {
         var deployment = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT") ?? throw new EnvVarSettingException("AZURE_OPENAI_CHAT_DEPLOYMENT is not set.");
         var endpoint = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT") ?? throw new EnvVarSettingException("AZURE_OPENAI_ENDPOINT is not set.");
         var apiKey = EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY") ?? throw new EnvVarSettingException("AZURE_OPENAI_API_KEY is not set.");
 
         var client = new AzureOpenAIClient(new Uri(endpoint), new AzureKeyCredential(apiKey), InitAzureOpenAIClientOptions());
+        var chatClient = client.GetChatClient(deployment);
 
         ConsoleHelpers.WriteDebugLine("Using Azure OpenAI API key for authentication");
-        return client.GetChatClient(deployment);
+        return chatClient.AsChatClient();
     }
 
-    public static ChatClient CreateOpenAIChatClientWithApiKey()
+    public static IChatClient CreateOpenAIChatClientWithApiKey()
     {
         var model = EnvironmentHelpers.FindEnvVar("OPENAI_CHAT_MODEL_NAME") ?? "gpt-4o";
         var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new EnvVarSettingException("OPENAI_API_KEY is not set.");
 
+        var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions());
+        
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
-        return new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions());
+        return chatClient.AsChatClient();
     }
 
-    public static ChatClient CreateCopilotChatClientWithGitHubToken()
+    public static IChatClient CreateCopilotChatClientWithGitHubToken()
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
@@ -53,11 +57,13 @@ public static class ChatClientFactory
         var impersonateVsCodeEditor = !integrationIdOk;
         if (impersonateVsCodeEditor) options.AddPolicy(new CustomHeaderPolicy("Editor-Version", editorVersion), PipelinePosition.BeforeTransport);
 
+        var chatClient = new ChatClient(model, new ApiKeyCredential(" "), options);
+        
         ConsoleHelpers.WriteDebugLine("Using GitHub Copilot token for authentication");
-        return new ChatClient(model, new ApiKeyCredential(" "), options);
+        return chatClient.AsChatClient();
     }
 
-    public static ChatClient CreateCopilotChatClientWithHmacKey()
+    public static IChatClient CreateCopilotChatClientWithHmacKey()
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
@@ -68,11 +74,13 @@ public static class ChatClientFactory
         options.AddPolicy(new CustomHeaderPolicy("Request-HMAC", HMACHelper.Encode(hmacKey)), PipelinePosition.BeforeTransport);
         options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId), PipelinePosition.BeforeTransport);
 
+        var chatClient = new ChatClient(model, new ApiKeyCredential(" "), options);
+        
         ConsoleHelpers.WriteDebugLine("Using HMAC for Copilot authentication");
-        return new ChatClient(model, new ApiKeyCredential(" "), options);
+        return chatClient.AsChatClient();
     }
 
-    private static ChatClient? TryCreateChatClientFromPreferredProvider()
+    private static IChatClient? TryCreateChatClientFromPreferredProvider()
     {
         // Check for explicit provider preference from configuration or environment variables
         var preferredProvider = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreferredProvider).AsString()?.ToLowerInvariant();
@@ -107,7 +115,7 @@ public static class ChatClientFactory
         return null;
     }
     
-    private static ChatClient? TryCreateChatClientFromEnv()
+    private static IChatClient? TryCreateChatClientFromEnv()
     {
         ConsoleHelpers.WriteDebugLine("Creating chat client from environment variables...");
 
@@ -134,7 +142,7 @@ public static class ChatClientFactory
         return null;
     }
 
-    public static ChatClient CreateChatClient()
+    public static IChatClient CreateChatClient()
     {
         // First try to create client from preferred provider
         var client = TryCreateChatClientFromPreferredProvider();
@@ -202,6 +210,7 @@ public static class ChatClientFactory
 
     private static ClientPipelineOptions InitPipelineOptionsPolicies(ClientPipelineOptions options)
     {
+        options.AddPolicy(new CustomJsonPropertyRemovalPolicy("tool_choice"), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
         return options;

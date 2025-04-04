@@ -4,9 +4,8 @@
 //
 
 using System.Text;
-using OpenAI.Chat;
 using System.Text.Json;
-using System.ClientModel.Primitives;
+using Microsoft.Extensions.AI;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 
@@ -19,47 +18,44 @@ public static class TrajectoryFormatter
     {
         var sb = new StringBuilder();
 
-        var messageContent = string.Join("", message.Content
-            .Where(x => x.Kind == ChatMessageContentPartKind.Text)
+        var messageContent = string.Join("", message.Contents
+            .Where(x => x is TextContent)
+            .Cast<TextContent>()
             .Select(x => x.Text));
         var hasContent = !string.IsNullOrWhiteSpace(messageContent);
 
-        var isUserMessage = message is UserChatMessage;
+        var isUserMessage = message.Role == ChatRole.User;
         if (isUserMessage && hasContent)
         {
             sb.Append(FormatMessage("user", messageContent));
         }
 
-        var assistantMessage = message as AssistantChatMessage;
+        var assistantMessage = message.Role == ChatRole.Assistant ? message : null;
         var isAssistantMessage = assistantMessage != null && hasContent;
         if (isAssistantMessage)
         {
             sb.Append(FormatMessage("assistant", messageContent));
-            var toolCalls = assistantMessage!.ToolCalls;
+            var toolCalls = assistantMessage!.Contents
+                .Where(x => x is FunctionCallContent)
+                .Cast<FunctionCallContent>()
+                .ToList();
             var hasToolCalls = toolCalls != null && toolCalls.Count > 0;
             if (hasToolCalls)
             {
                 foreach (var toolCall in toolCalls!)
                 {
-                    var functionName = toolCall.FunctionName;
-                    var functionArguments = toolCall.FunctionArguments.ToArray().Length > 0
-                        ? toolCall.FunctionArguments.ToString()
-                        : "{}";
+                    var functionName = toolCall.Name;
+                    var functionArguments = toolCall?.Arguments?.Count > 0
+                        ? toolCall!.Arguments
+                        : new Dictionary<string, object?>();
                     sb.Append(FormatToolCall(functionName, functionArguments));
                 }
             }
         }
 
-        var toolMessage = message as ToolChatMessage;
+        var toolMessage = message.Role == ChatRole.Tool ? message : null;
         var isToolMessage = toolMessage != null && hasContent;
         if (isToolMessage)
-        {
-            sb.Append(FormatToolResult(messageContent));
-        }
-
-        var functionMessage = message as FunctionChatMessage;
-        var isFunctionMessage = functionMessage != null && hasContent;
-        if (isFunctionMessage)
         {
             sb.Append(FormatToolResult(messageContent));
         }
@@ -70,30 +66,22 @@ public static class TrajectoryFormatter
     /// <summary>
     /// Format a tool call and its parameters into XML format
     /// </summary>
-    private static string FormatToolCall(string functionName, string arguments)
+    private static string FormatToolCall(string functionName, IDictionary<string, object?> arguments)
     {
         var sb = new StringBuilder();
         sb.AppendLine("<function_calls>");
         sb.AppendLine($"<invoke name=\"{EscapeXml(functionName)}\">");
 
-        // Parse arguments as JSON and add each parameter
         try
         {
-            var argsDoc = JsonDocument.Parse(arguments);
-            foreach (var property in argsDoc.RootElement.EnumerateObject())
+            foreach (var kvp in arguments)
             {
-                var value = property.Value.ValueKind == JsonValueKind.String 
-                    ? property.Value.GetString() 
-                    : property.Value.ToString();
-                
-                var escapedValue = EscapeXml(value ?? string.Empty);
-                sb.AppendLine($"<parameter name=\"{EscapeXml(property.Name)}\">{SurroundMultiLineWithLFs(escapedValue)}</parameter>");
+                var escapedValue = EscapeXml(kvp.Value?.ToString() ?? string.Empty);
+                sb.AppendLine($"<parameter name=\"{EscapeXml(kvp.Key)}\">{SurroundMultiLineWithLFs(escapedValue)}</parameter>");
             }
         }
-        catch (JsonException)
+        catch (Exception)
         {
-            // If parsing fails, add the whole arguments string as is
-            sb.AppendLine($"<parameter name=\"arguments\">{EscapeXml(arguments)}</parameter>");
         }
 
         sb.AppendLine("</invoke>");

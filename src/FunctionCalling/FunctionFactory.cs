@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using OpenAI.Assistants;
 using OpenAI.Chat;
+using Microsoft.Extensions.AI;
 
 #pragma warning disable CS0618 // Type or member is obsolete
 #pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
@@ -85,9 +86,17 @@ public class FunctionFactory
             var funcDescriptionAttrib = attributes[0] as HelperFunctionDescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
+            var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);
+            _aIFunctions.Add(aiFunction);
+
             var json = GetMethodParametersJsonSchema(method);
             _functions.TryAdd(method, (ChatTool.CreateFunctionTool(method.Name, funcDescription, new BinaryData(json)), instance));
         }
+    }
+
+    public IEnumerable<AITool> GetAITools()
+    {
+        return _aIFunctions.Select(x => x as AITool);
     }
 
     public IEnumerable<ChatTool> GetChatTools()
@@ -473,6 +482,6 @@ public class FunctionFactory
     }
 
     private readonly Dictionary<MethodInfo, (ChatTool Tool, object? Instance)> _functions = new();
-
+    private List<AIFunction> _aIFunctions = new List<AIFunction>();
 }
 

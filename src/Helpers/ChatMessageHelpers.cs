@@ -5,12 +5,10 @@
 
 using System.Text;
 using System.Text.Json;
-using System.ClientModel.Primitives;
-using OpenAI.Chat;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.AI;
 
-#pragma warning disable CS0618 // Type or member is obsolete
-
-public static class OpenAIChatHelpers
+public static class AIExtensionsChatHelpers
 {
     public static void SaveChatHistoryToFile(this IList<ChatMessage> messages, string fileName)
     {
@@ -40,7 +38,7 @@ public static class OpenAIChatHelpers
             var message = MessageFromJson(line);
             if (message == null) continue;
 
-            var isSystemMessage = message is SystemChatMessage;
+            var isSystemMessage = message.Role == ChatRole.System;
             if (isSystemMessage) messages.Clear();
 
             messages.Add(message);
@@ -90,7 +88,7 @@ public static class OpenAIChatHelpers
         if (!messages.IsTooBig(trimTokenTarget)) return;
 
         // If assistant messages, there also won't be any tool calls
-        var lastAssistantMessage = messages.LastOrDefault(x => x is AssistantChatMessage);
+        var lastAssistantMessage = messages.LastOrDefault(x => x.Role == ChatRole.Assistant);
         if (lastAssistantMessage == null) return;
 
         // We're going to focus on the messages before the last assistant message
@@ -100,21 +98,25 @@ public static class OpenAIChatHelpers
         // if the content is too big
         for (int i = 0; i < lastAssistantMessageIndex; i++)
         {
-            var toolChatMessage = messages[i] as ToolChatMessage;
+            var toolChatMessage = messages[i].Role == ChatRole.Tool
+                ? messages[i]
+                : null;
             if (toolChatMessage != null && IsTooBig(toolChatMessage, maxToolCallContentTokens))
             {
                 ConsoleHelpers.WriteDebugLine($"Tool call content is too big, replacing with: {replaceToolCallContentWith}");
-                messages[i] = new ToolChatMessage(toolChatMessage!.ToolCallId, replaceToolCallContentWith);
+                messages[i] = new ChatMessage(ChatRole.Tool, replaceToolCallContentWith);
             }
         }
 
     }
 
-    private static bool IsTooBig(ToolChatMessage toolChatMessage, int maxToolCallContentTokens)
+    private static bool IsTooBig(ChatMessage toolChatMessage, int maxToolCallContentTokens)
     {
-        var content = string.Join("", toolChatMessage.Content
-            .Where(x => x.Kind == ChatMessageContentPartKind.Text)
+        var content = string.Join("", toolChatMessage.Contents
+            .Where(x => x is TextContent)
+            .Cast<TextContent>()
             .Select(x => x.Text));
+        if (string.IsNullOrEmpty(content)) return false;
 
         var isTooBig = content.Length > maxToolCallContentTokens;
         ConsoleHelpers.WriteDebugLine($"Tool call content size: {content.Length}, max size: {maxToolCallContentTokens}, is too big: {isTooBig}");
@@ -122,41 +124,24 @@ public static class OpenAIChatHelpers
         return isTooBig;
     }
 
+    private static JsonSerializerOptions _jsonlOptions = new JsonSerializerOptions
+    {
+        WriteIndented = false,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+    };
+
     private static string? JsonFromMessage(ChatMessage message)
     {
-        return message switch
-        {
-            UserChatMessage userMessage => ModelReaderWriter.Write(userMessage, ModelReaderWriterOptions.Json).ToString(),
-            AssistantChatMessage assistantMessage => ModelReaderWriter.Write(assistantMessage, ModelReaderWriterOptions.Json).ToString(),
-            FunctionChatMessage functionMessage => ModelReaderWriter.Write(functionMessage, ModelReaderWriterOptions.Json).ToString(),
-            SystemChatMessage systemMessage => ModelReaderWriter.Write(systemMessage, ModelReaderWriterOptions.Json).ToString(),
-            ToolChatMessage toolMessage => ModelReaderWriter.Write(toolMessage, ModelReaderWriterOptions.Json).ToString(),
-            _ => null
-        };
+        return JsonSerializer.Serialize(message, _jsonlOptions);
     }
 
     private static ChatMessage? MessageFromJson(string line)
     {
         try
         {
-            var jsonObject = JsonDocument.Parse(line);
-            if (!jsonObject.RootElement.TryGetProperty("role", out var roleObj))
-            {
-                return null;
-            }
-
-            var role = roleObj.GetString();
-            var type = role?.ToLowerInvariant() switch
-            {
-                "user" => typeof(UserChatMessage),
-                "assistant" => typeof(AssistantChatMessage),
-                "function" => typeof(FunctionChatMessage),
-                "system" => typeof(SystemChatMessage),
-                "tool" => typeof(ToolChatMessage),
-                _ => throw new Exception($"Unknown chat role {role}")
-            };
-
-            return ModelReaderWriter.Read(BinaryData.FromString(line), type, ModelReaderWriterOptions.Json) as ChatMessage;
+            return JsonSerializer.Deserialize<ChatMessage>(line, AIJsonUtilities.DefaultOptions);
         }
         catch (Exception ex)
         {

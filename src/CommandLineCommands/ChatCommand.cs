@@ -1,4 +1,4 @@
-using OpenAI.Chat;
+using Microsoft.Extensions.AI;
 using System.Text;
 
 public class ChatCommand : Command
@@ -297,7 +297,7 @@ public class ChatCommand : Command
         FunctionCallingChat chat,
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
-        Action<StreamingChatCompletionUpdate>? streamingCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
@@ -307,9 +307,9 @@ public class ChatCommand : Command
         try
         {
             var response = await chat.CompleteChatStreamingAsync(userPrompt,
-                (messages) => HandleUpdateMessages(messages),
-                (update) => HandleStreamingChatCompletionUpdate(update),
-                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                (messages) => messageCallback?.Invoke(messages),
+                (update) => streamingCallback?.Invoke(update),
+                (name, args, result) => functionCallCallback?.Invoke(name, args, result));
 
             return response;
         }
@@ -373,10 +373,14 @@ public class ChatCommand : Command
         }
     }
 
-    private void HandleStreamingChatCompletionUpdate(StreamingChatCompletionUpdate update)
+    private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
-        var inTokens = update.Usage?.InputTokenCount ?? 0;
-        var outTokens = update.Usage?.OutputTokenCount ?? 0;
+        var usageUpdate = update.Contents
+            .Where(x => x is UsageContent)
+            .Cast<UsageContent>()
+            .FirstOrDefault();
+        var inTokens = usageUpdate?.Details.InputTokenCount ?? 0;
+        var outTokens = usageUpdate?.Details.OutputTokenCount ?? 0;
         if (inTokens > 0 || outTokens > 0)
         {
             _totalTokensIn += inTokens;
@@ -387,8 +391,9 @@ public class ChatCommand : Command
             }
         }
 
-        var text = string.Join("", update.ContentUpdate
-            .Where(x => x.Kind == ChatMessageContentPartKind.Text)
+        var text = string.Join("", update.Contents
+            .Where(x => x is TextContent)
+            .Cast<TextContent>()
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
@@ -520,7 +525,7 @@ public class ChatCommand : Command
     private bool _asssistantResponseNeedsLF = false;
 
     private SlashCommandHandler _chatCommandHandler = new();
-    private int _totalTokensIn = 0;
-    private int _totalTokensOut = 0;
+    private long _totalTokensIn = 0;
+    private long _totalTokensOut = 0;
     private const int DefaultTrimTokenTarget = 160000;
 }
