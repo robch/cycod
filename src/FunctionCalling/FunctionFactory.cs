@@ -7,8 +7,8 @@ using System.Reflection;
 using System.Collections;
 using System.Text;
 using System.Text.Json;
-using OpenAI.Assistants;
-using OpenAI.Chat;
+using OpenAI.Assistants; // TODO: Remove this
+using OpenAI.Chat; // TODO: Swap this to use Microsoft.Extensions.AI...
 using Microsoft.Extensions.AI;
 
 #pragma warning disable CS0618 // Type or member is obsolete
