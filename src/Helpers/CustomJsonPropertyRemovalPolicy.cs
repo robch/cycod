@@ -46,7 +46,6 @@ public class CustomJsonPropertyRemovalPolicy : PipelinePolicy
     {
         try
         {
-            ConsoleHelpers.WriteErrorLine($"Removing '{_propertyName}' property from request JSON payload");
             // Get the content as string for initial check
             using MemoryStream contentStream = new();
             message?.Request?.Content?.WriteTo(contentStream);
@@ -70,8 +69,6 @@ public class CustomJsonPropertyRemovalPolicy : PipelinePolicy
                         var data = BinaryData.FromString(modifiedContent);
                         var newContent = BinaryContent.Create(data);
                         message!.Request.Content = newContent;
-                        
-                        ConsoleHelpers.WriteDebugLine($"Removed '{_propertyName}' property from request JSON payload");
                     }
                 }
             }

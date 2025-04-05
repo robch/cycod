@@ -211,6 +211,7 @@ public static class ChatClientFactory
     private static ClientPipelineOptions InitPipelineOptionsPolicies(ClientPipelineOptions options)
     {
         options.AddPolicy(new CustomJsonPropertyRemovalPolicy("tool_choice"), PipelinePosition.PerCall);
+        options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
         return options;
