@@ -8,6 +8,7 @@ using System.Collections;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.AI;
+using System.ComponentModel;
 
 public class FunctionFactory
 {
@@ -75,10 +76,10 @@ public class FunctionFactory
 
     public void AddFunction(MethodInfo method, object? instance = null)
     {
-        var attributes = method.GetCustomAttributes(typeof(HelperFunctionDescriptionAttribute), false);
+        var attributes = method.GetCustomAttributes(typeof(DescriptionAttribute), false);
         if (attributes.Length > 0)
         {
-            var funcDescriptionAttrib = attributes[0] as HelperFunctionDescriptionAttribute;
+            var funcDescriptionAttrib = attributes[0] as DescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
             var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);

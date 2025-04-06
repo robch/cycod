@@ -1,7 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.ComponentModel;
 
 /// <summary>
 /// Provides file and directory editing functionality similar to the TypeScript str_replace_editor tool.
@@ -9,8 +6,8 @@ using System.Linq;
 /// </summary>
 public class StrReplaceEditorHelperFunctions
 {
-    [HelperFunctionDescription("Returns a list of non-hidden files and directories up to 2 levels deep.")]
-    public string ListFiles([HelperFunctionParameterDescription("Absolute or relative path to directory.")] string path)
+    [Description("Returns a list of non-hidden files and directories up to 2 levels deep.")]
+    public string ListFiles([Description("Absolute or relative path to directory.")] string path)
     {
         if (Directory.Exists(path))
         {
@@ -38,12 +35,12 @@ public class StrReplaceEditorHelperFunctions
         }
     }
 
-    [HelperFunctionDescription("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
+    [Description("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
     public string ViewFile(
-        [HelperFunctionParameterDescription("Absolute or relative path to file or directory.")] string path,
-        [HelperFunctionParameterDescription("Optional start line number (1-indexed) to view.")] int? startLine = null,
-        [HelperFunctionParameterDescription("Optional end line number. Use -1 to view all remaining lines.")] int? endLine = null,
-        [HelperFunctionParameterDescription("Optional flag to view the file with line numbers.")] bool lineNumbers = false)
+        [Description("Absolute or relative path to file or directory.")] string path,
+        [Description("Optional start line number (1-indexed) to view.")] int? startLine = null,
+        [Description("Optional end line number. Use -1 to view all remaining lines.")] int? endLine = null,
+        [Description("Optional flag to view the file with line numbers.")] bool lineNumbers = false)
     {
         if (!Directory.Exists(path) && File.Exists(path))
         {
@@ -76,10 +73,10 @@ public class StrReplaceEditorHelperFunctions
         }
     }
 
-    [HelperFunctionDescription("Creates a new file at the specified path with the given content. The `create` command cannot be used if the file already exists.")]
+    [Description("Creates a new file at the specified path with the given content. The `create` command cannot be used if the file already exists.")]
     public string CreateFile(
-        [HelperFunctionParameterDescription("Absolute or relative path to file.")] string path,
-        [HelperFunctionParameterDescription("Content to be written to the file.")] string fileText)
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Content to be written to the file.")] string fileText)
     {
         if (File.Exists(path))
         {
@@ -90,11 +87,11 @@ public class StrReplaceEditorHelperFunctions
         return $"Created file {path} with {fileText.Length} characters.";
     }
 
-    [HelperFunctionDescription("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
+    [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
     public string StrReplace(
-        [HelperFunctionParameterDescription("Absolute or relative path to file.")] string path,
-        [HelperFunctionParameterDescription("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
-        [HelperFunctionParameterDescription("New string content that will replace the old string.")] string newStr)
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
+        [Description("New string content that will replace the old string.")] string newStr)
     {
         if (!File.Exists(path))
         {
@@ -119,11 +116,11 @@ public class StrReplaceEditorHelperFunctions
         return $"File {path} updated: replaced 1 occurrence of specified text.";
     }
 
-    [HelperFunctionDescription("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
+    [Description("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
     public string Insert(
-        [HelperFunctionParameterDescription("Absolute path to file.")] string path,
-        [HelperFunctionParameterDescription("Line number (1-indexed) after which to insert the new string.")] int insertLine,
-        [HelperFunctionParameterDescription("The string to insert into the file.")] string newStr)
+        [Description("Absolute path to file.")] string path,
+        [Description("Line number (1-indexed) after which to insert the new string.")] int insertLine,
+        [Description("The string to insert into the file.")] string newStr)
     {
         if (!File.Exists(path))
         {
@@ -147,9 +144,9 @@ public class StrReplaceEditorHelperFunctions
         return $"Inserted {newStr.Length} characters at line {insertLine} in {path}.";
     }
 
-    [HelperFunctionDescription("Reverts the last edit made to the file at `path`, undoing the last change if available.")]
+    [Description("Reverts the last edit made to the file at `path`, undoing the last change if available.")]
     public string UndoEdit(
-        [HelperFunctionParameterDescription("Absolute path to file.")] string path)
+        [Description("Absolute path to file.")] string path)
     {
         if (!EditHistory.ContainsKey(path))
         {

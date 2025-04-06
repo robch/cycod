@@ -3,18 +3,18 @@
 // Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
 //
 
-using System;
+using System.ComponentModel;
 
 public class DateAndTimeHelperFunctions
 {
-    [HelperFunctionDescription("Gets the current date.")]
+    [Description("Gets the current date.")]
     public string GetCurrentDate()
     {
         var date = DateTime.Now;
         return $"{date.Year}-{date.Month}-{date.Day}";
     }
 
-    [HelperFunctionDescription("Gets the current time.")]
+    [Description("Gets the current time.")]
     public string GetCurrentTime()
     {
         var date = DateTime.Now;
