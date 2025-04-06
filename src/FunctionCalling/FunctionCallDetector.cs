@@ -58,17 +58,17 @@ public class FunctionCallDetector
     /// Gets all complete function calls that have been accumulated
     /// </summary>
     /// <returns>A list of complete function calls</returns>
-    public List<CompleteFunctionCall> GetReadyToCallFunctionCalls()
+    public List<ReadyToCallFunctionCall> GetReadyToCallFunctionCalls()
     {
         ConsoleHelpers.WriteDebugLine("Getting ready to call function calls...");
-        var result = new List<CompleteFunctionCall>();
+        var result = new List<ReadyToCallFunctionCall>();
         foreach (var call in _partialCalls.Values)
         {
             if (!string.IsNullOrEmpty(call.Name))
             {
                 var arguments = call.ArgumentsBuilder?.ToString() ?? "{}";
                 ConsoleHelpers.WriteDebugLine($"Function call ready to call: {call.Name} with arguments: {call.ArgumentsBuilder}");
-                result.Add(new CompleteFunctionCall
+                result.Add(new ReadyToCallFunctionCall
                 {
                     Name = call.Name,
                     CallId = call.CallId,
@@ -86,7 +86,7 @@ public class FunctionCallDetector
     /// </summary>
     /// <param name="call">The complete function call</param>
     /// <returns>A FunctionCallContent</returns>
-    public FunctionCallContent CreateFunctionCallContent(CompleteFunctionCall call)
+    public FunctionCallContent CreateFunctionCallContent(ReadyToCallFunctionCall call)
     {
         // Parse the arguments from JSON string to dictionary
         var arguments = JsonSerializer.Deserialize<Dictionary<string, object?>>(call.Arguments);
@@ -124,10 +124,28 @@ public class FunctionCallDetector
     /// <summary>
     /// Represents a complete function call
     /// </summary>
-    public class CompleteFunctionCall
+    public class ReadyToCallFunctionCall
     {
         public string CallId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string Arguments { get; set; } = string.Empty;
+    }
+
+}
+
+public static class ReadyToCallFunctionCallExtensions
+{
+    public static FunctionCallContent AsAIContent(this FunctionCallDetector.ReadyToCallFunctionCall call)
+    {
+        var arguments = JsonSerializer.Deserialize<Dictionary<string, object?>>(call.Arguments);
+        return new FunctionCallContent(call.CallId, call.Name, arguments);
+    }
+
+    public static IList<AIContent> AsAIContentList(this List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls)
+    {
+        return readyToCallFunctionCalls
+            .Select(call => call.AsAIContent())
+            .Cast<AIContent>()
+            .ToList();
     }
 }

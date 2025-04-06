@@ -110,46 +110,9 @@ public class FunctionCallingChat
                 streamingCallback?.Invoke(update);
             }
 
-            if (_functionCallDetector.HasFunctionCalls())
+            if (TryCallFunctions(responseContent, functionCallCallback, messageCallback))
             {
-                // TODO: Refactor into separate function(s)
-                var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
-                ConsoleHelpers.WriteDebugLine($"Function calls ready: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
-
-                var assistantToolCalls = readyToCallFunctionCalls
-                    .Select(call => new FunctionCallContent(
-                        call.CallId,
-                        call.Name,
-                        JsonSerializer.Deserialize<Dictionary<string, object?>>(call.Arguments)))
-                    .Cast<AIContent>()
-                    .ToList();
-                _messages.Add(new ChatMessage(ChatRole.Assistant, assistantToolCalls));
-                messageCallback?.Invoke(_messages);
-
-                ConsoleHelpers.WriteDebugLine($"Calling functions: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
-                var functionResultContents = new List<FunctionResultContent>();
-                foreach (var functionCall in readyToCallFunctionCalls)
-                {
-                    functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
-
-                    ConsoleHelpers.WriteDebugLine($"Calling function: {functionCall.Name} with arguments: {functionCall.Arguments}");
-                    var functionResult = _functionFactory.TryCallFunction(functionCall.Name, functionCall.Arguments, out var functionResponse)
-                        ? functionResponse ?? "Function call succeeded"
-                        : "Function not found or failed to execute";
-                    ConsoleHelpers.WriteDebugLine($"Function call result: {functionResult}");
-
-                    functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
-                    functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
-                }
-
-                var toolMessageContent = new List<AIContent>();
-                toolMessageContent.Add(new TextContent(responseContent));
-                toolMessageContent.AddRange(functionResultContents);
-
                 _functionCallDetector.Clear();
-                _messages.Add(new ChatMessage(ChatRole.Tool, toolMessageContent));
-                messageCallback?.Invoke(_messages);
-
                 continue;
             }
 
@@ -158,6 +121,51 @@ public class FunctionCallingChat
 
             return contentToReturn;
         }
+    }
+
+    private bool TryCallFunctions(string responseContent, Action<string, string, string?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
+    {
+        var noFunctionsToCall = !_functionCallDetector.HasFunctionCalls();
+        if (noFunctionsToCall) return false;
+        
+        var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
+
+        var assistentContent = readyToCallFunctionCalls
+            .AsAIContentList()
+            .Prepend(new TextContent(responseContent))
+            .ToList();
+        _messages.Add(new ChatMessage(ChatRole.Assistant, assistentContent));
+        messageCallback?.Invoke(_messages);
+
+        var functionResultContents = CallFunctions(readyToCallFunctionCalls, functionCallCallback);
+        var toolContent = functionResultContents.Cast<AIContent>().ToList();
+
+        _messages.Add(new ChatMessage(ChatRole.Tool, toolContent));
+        messageCallback?.Invoke(_messages);
+
+        return true;
+    }
+
+    private List<FunctionResultContent> CallFunctions(List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls, Action<string, string, string?>? functionCallCallback)
+    {
+        ConsoleHelpers.WriteDebugLine($"Calling functions: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
+
+        var functionResultContents = new List<FunctionResultContent>();
+        foreach (var functionCall in readyToCallFunctionCalls)
+        {
+            functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
+
+            ConsoleHelpers.WriteDebugLine($"Calling function: {functionCall.Name} with arguments: {functionCall.Arguments}");
+            var functionResult = _functionFactory.TryCallFunction(functionCall.Name, functionCall.Arguments, out var functionResponse)
+                ? functionResponse ?? "Function call succeeded"
+                : "Function not found or failed to execute";
+            ConsoleHelpers.WriteDebugLine($"Function call result: {functionResult}");
+
+            functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
+            functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
+        }
+
+        return functionResultContents;
     }
 
     private readonly string _systemPrompt;
