@@ -61,9 +61,9 @@ public class FunctionCallingChat
         }
     }
 
-    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0)
+    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.ReadChatHistoryFromFile(fileName);
+        _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
 
         if (tokenTrimTarget > 0)
         {
@@ -71,9 +71,9 @@ public class FunctionCallingChat
         }
     }
 
-    public void SaveChatHistoryToFile(string fileName)
+    public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.SaveChatHistoryToFile(fileName);
+        _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat);
     }
 
     public async Task<string> CompleteChatStreamingAsync(

@@ -74,7 +74,7 @@ public class ChatCommand : Command
 
         // Load the chat history from the file.
         var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
-        if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget);
+        if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
 
         // Check to make sure we're either in interactive mode, or have input instructions.
         if (!interactive && InputInstructions.Count == 0)
@@ -198,7 +198,7 @@ public class ChatCommand : Command
     private bool HandleSaveChatHistoryCommand(FunctionCallingChat chat)
     {
         ConsoleHelpers.Write("Saving chat-history.jsonl ...", ConsoleColor.Yellow, overrideQuiet: true);
-        chat.SaveChatHistoryToFile("chat-history.jsonl");
+        chat.SaveChatHistoryToFile("chat-history.jsonl", useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         ConsoleHelpers.WriteLine("Saved!\n", ConsoleColor.Yellow, overrideQuiet: true);
         return true;
     }
@@ -316,7 +316,7 @@ public class ChatCommand : Command
         catch (Exception)
         {
             var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
-            chat.SaveChatHistoryToFile(fileName);
+            chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
 
             ConsoleHelpers.Write("\n\n", overrideQuiet: true);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
@@ -364,7 +364,7 @@ public class ChatCommand : Command
 
         if (OutputChatHistory != null)
         {
-            messages.SaveChatHistoryToFile(OutputChatHistory);
+            messages.SaveChatHistoryToFile(OutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         }
         
         if (OutputTrajectory != null && messages.Count > 0)
