@@ -109,7 +109,7 @@ public class FunctionFactory
         return _functions.Select(x => x.Value.Function);
     }
 
-    public bool TryCallFunction(string functionName, string functionArguments, out string? result)
+    public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
     {
         result = null;
         if (!string.IsNullOrEmpty(functionName) && !string.IsNullOrEmpty(functionArguments))

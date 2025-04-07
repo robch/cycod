@@ -56,11 +56,13 @@ namespace chatx.FunctionCalling
         /// <param name="clientName">The name of the client, used as a prefix for tool names.</param>
         public void AddMcpClientTool(McpClientTool tool, string clientName)
         {
-            string toolKey = $"{clientName}_{tool.Name}";
-            _mcpTools[toolKey] = tool;
+            var newName = $"{clientName}_{tool.Name}";
+            var withNewName = tool.WithName(newName);
 
-            ConsoleHelpers.WriteDebugLine($"Adding tool '{tool.Name}' from MCP server '{clientName}' as {toolKey}");
-            base.AddFunction(tool);
+            _mcpTools[newName] = withNewName;
+
+            ConsoleHelpers.WriteDebugLine($"Adding tool '{tool.Name}' from MCP server '{clientName}' as {newName}");
+            base.AddFunction(withNewName);
         }
         
         /// <summary>
@@ -77,39 +79,55 @@ namespace chatx.FunctionCalling
         }
         
         /// <summary>
-        /// Method that acts as a proxy for calling MCP tools
+        /// Overrides the TryCallFunction method to handle MCP client tools.
         /// </summary>
-        /// <param name="toolName">The name of the tool to call</param>
-        /// <param name="argumentsJson">The arguments as JSON</param>
-        public async Task<string> CallMcpToolMethodAsync(string toolName, string argumentsJson)
+        /// <param name="functionName">The name of the function to call.</param>
+        /// <param name="functionArguments">The arguments for the function call as a JSON string.</param>
+        /// <param name="result">The result of the function call, if successful.</param>
+        /// <returns>True if the function was found and called successfully, false otherwise.</returns>
+        public override bool TryCallFunction(string functionName, string functionArguments, out string? result)
         {
-            try
+            result = null;
+
+            if (!string.IsNullOrEmpty(functionName) && _mcpTools.TryGetValue(functionName, out var tool))
             {
-                // Find the tool
-                if (_mcpTools.TryGetValue(toolName, out var tool))
+                ConsoleHelpers.WriteDebugLine($"Found MCP tool '{functionName}'");
+                try
                 {
-                    var arguments = JsonSerializer.Deserialize<Dictionary<string, object?>>(argumentsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    var arguments = JsonSerializer.Deserialize<Dictionary<string, object?>>(functionArguments, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     arguments ??= new Dictionary<string, object?>();
                     
-                    var clientName = toolName.Split('_')[0];
+                    var clientName = functionName.Split('_')[0];
+                    var toolName = functionName.Substring(clientName.Length + 1);
                     if (_mcpClients.TryGetValue(clientName, out var client))
                     {
-                        var result = await client.CallToolAsync(tool.Name, arguments);
-                        var asText = string.Join('\n', result.Content
+                        ConsoleHelpers.WriteDebugLine($"Calling MCP tool '{toolName}' on client '{clientName}'");
+                        var response = Task.Run(async () => await client.CallToolAsync(toolName, arguments)).Result;
+                        ConsoleHelpers.WriteDebugLine(response.IsError
+                            ? $"MCP tool '{toolName}' on `{clientName}` resulted in ERROR!"
+                            : $"MCP tool '{toolName}' on `{clientName}` resulted in SUCCESS!");
+
+                        result = string.Join('\n', response.Content
                             .Where(c => !string.IsNullOrEmpty(c.Text))
-                            .Select(c => c.Text));
-                        return asText ?? "(no text response)";
+                            .Select(c => c.Text))
+                            ?? "(no text response)";
+
+                        ConsoleHelpers.WriteDebugLine($"MCP tool '{functionName}' returned: {result}");
+                        return true;
                     }
                     
-                    return $"Error: MCP client not found for tool {toolName}";
+                    result = $"Error: MCP client not found for tool {functionName}";
+                    return false;
                 }
-                
-                return $"Error: MCP tool {toolName} not found";
+                catch (Exception ex)
+                {
+                    result = $"Error calling MCP tool: {ex.Message}";
+                    return false;
+                }
             }
-            catch (Exception ex)
-            {
-                return $"Error calling MCP tool: {ex.Message}";
-            }
+
+            // If not an MCP tool, use the base implementation
+            return base.TryCallFunction(functionName, functionArguments, out result);
         }
 
         /// <summary>
