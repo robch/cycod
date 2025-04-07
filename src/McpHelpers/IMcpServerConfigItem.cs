@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 /// <summary>
 /// Interface for MCP server configuration items
 /// </summary>

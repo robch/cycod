@@ -1,12 +1,6 @@
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace chatx.FunctionCalling
 {
@@ -15,9 +9,6 @@ namespace chatx.FunctionCalling
     /// </summary>
     public class McpFunctionFactory : FunctionFactory
     {
-        private readonly Dictionary<string, IMcpClient> _mcpClients = new();
-        private readonly Dictionary<string, McpClientTool> _mcpTools = new();
-
         /// <summary>
         /// Creates a new McpFunctionFactory.
         /// </summary>
@@ -63,19 +54,6 @@ namespace chatx.FunctionCalling
 
             ConsoleHelpers.WriteDebugLine($"Adding tool '{tool.Name}' from MCP server '{clientName}' as {newName}");
             base.AddFunction(withNewName);
-        }
-        
-        /// <summary>
-        /// Gets the list of AITools, including MCP tools.
-        /// </summary>
-        /// <returns>A collection of AITool instances.</returns>
-        public new IEnumerable<AITool> GetAITools()
-        {
-            // Get base tools
-            var baseTools = base.GetAITools();
-            
-            // Add MCP tools
-            return baseTools.Concat(_mcpTools.Values);
         }
         
         /// <summary>
@@ -150,5 +128,9 @@ namespace chatx.FunctionCalling
             _mcpClients.Clear();
             _mcpTools.Clear();
         }
-    }
+ 
+        private readonly Dictionary<string, IMcpClient> _mcpClients = new();
+        private readonly Dictionary<string, McpClientTool> _mcpTools = new();
+
+   }
 }
