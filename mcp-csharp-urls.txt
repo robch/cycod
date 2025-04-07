@@ -1,2 +1,0 @@
-https://www.nuget.org/packages/ModelContextProtocol
-https://github.com/modelcontextprotocol/csharp-sdk
