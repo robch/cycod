@@ -1,3 +1,9 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+
 public class CommandLineOptions
 {
     public CommandLineOptions()
@@ -194,7 +200,7 @@ public class CommandLineOptions
                 _ => $"{name1} {name2}".Trim()
             };
 
-            var partialCommandNeedsHelp = commandName == "config" || commandName == "github" || commandName == "alias" || commandName == "prompt";
+            var partialCommandNeedsHelp = commandName == "config" || commandName == "github" || commandName == "alias" || commandName == "prompt" || commandName == "mcp";
             if (partialCommandNeedsHelp)
             {
                 command = new HelpCommand();
@@ -220,6 +226,10 @@ public class CommandLineOptions
                 "prompt get" => new PromptGetCommand(),
                 "prompt create" => new PromptCreateCommand(),
                 "prompt delete" => new PromptDeleteCommand(),
+                "mcp list" => new McpListCommand(),
+                "mcp get" => new McpGetCommand(),
+                "mcp add" => new McpAddCommand(),
+                "mcp remove" => new McpRemoveCommand(),
                 _ => new ChatCommand()
             };
 
@@ -240,6 +250,7 @@ public class CommandLineOptions
             TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
             TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
             TryParsePromptCommandOptions(command as PromptBaseCommand, args, ref i, arg) ||
+            TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
@@ -343,6 +354,21 @@ public class CommandLineOptions
         else if (command is PromptGetCommand getCommand && string.IsNullOrEmpty(getCommand.PromptName))
         {
             getCommand.PromptName = arg;
+            parsedOption = true;
+        }
+        else if (command is McpGetCommand mcpGetCommand && string.IsNullOrEmpty(mcpGetCommand.Name))
+        {
+            mcpGetCommand.Name = arg;
+            parsedOption = true;
+        }
+        else if (command is McpAddCommand mcpAddCommand && string.IsNullOrEmpty(mcpAddCommand.Name))
+        {
+            mcpAddCommand.Name = arg;
+            parsedOption = true;
+        }
+        else if (command is McpRemoveCommand mcpRemoveCommand && string.IsNullOrEmpty(mcpRemoveCommand.Name))
+        {
+            mcpRemoveCommand.Name = arg;
             parsedOption = true;
         }
 
@@ -566,6 +592,69 @@ public class CommandLineOptions
         else if (arg == "--any" || arg == "-a")
         {
             command.Scope = ConfigFileScope.Any;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private static bool TryParseMcpCommandOptions(McpBaseCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--global" || arg == "-g")
+        {
+            command.Scope = ConfigFileScope.Global;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.Scope = ConfigFileScope.User;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Scope = ConfigFileScope.Local;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Scope = ConfigFileScope.Any;
+        }
+        else if (command is McpAddCommand cmdAddCommand && arg == "--command")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var cmdValue = ValidateString(arg, max1Arg.FirstOrDefault(), "command");
+            cmdAddCommand.Command = cmdValue;
+            cmdAddCommand.Transport = "stdio";
+            i += max1Arg.Count();
+        }
+        else if (command is McpAddCommand urlAddCommand && arg == "--url")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var urlValue = ValidateString(arg, max1Arg.FirstOrDefault(), "url");
+            urlAddCommand.Url = urlValue;
+            urlAddCommand.Transport = "sse";
+            i += max1Arg.Count();
+        }
+        else if (command is McpAddCommand argsAddCommand && arg == "--arg")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var argValue = ValidateString(arg, max1Arg.FirstOrDefault(), "argument");
+            argsAddCommand.Args.Add(argValue!);
+            i += max1Arg.Count();
+        }
+        else if (command is McpAddCommand envAddCommand && (arg == "--env" || arg == "-e"))
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var env = ValidateString(arg, max1Arg.FirstOrDefault(), "environment variable");
+            envAddCommand.EnvironmentVars.Add(env!);
+            i += max1Arg.Count();
         }
         else
         {

@@ -1,4 +1,10 @@
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class Program
 {
@@ -115,6 +121,10 @@ public class Program
                 PromptGetCommand promptGetCommand => promptGetCommand.Execute(commandLineOptions.Interactive),
                 PromptDeleteCommand promptDeleteCommand => promptDeleteCommand.Execute(commandLineOptions.Interactive),
                 PromptCreateCommand promptCreateCommand => promptCreateCommand.Execute(commandLineOptions.Interactive),
+                McpListCommand mcpListCommand => mcpListCommand.Execute(commandLineOptions.Interactive),
+                McpGetCommand mcpGetCommand => mcpGetCommand.Execute(commandLineOptions.Interactive),
+                McpAddCommand mcpAddCommand => mcpAddCommand.Execute(commandLineOptions.Interactive),
+                McpRemoveCommand mcpRemoveCommand => mcpRemoveCommand.Execute(commandLineOptions.Interactive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 

@@ -57,6 +57,7 @@ public static class TrajectoryFormatter
         var isToolMessage = toolMessage != null && hasContent;
         if (isToolMessage)
         {
+            // TODO: Seems like the trajectory file isn't getting the results now that we're using M.E.AI for IChatClient
             sb.Append(FormatToolResult(messageContent));
         }
 
