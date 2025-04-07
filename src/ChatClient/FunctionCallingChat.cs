@@ -1,42 +1,47 @@
-using OpenAI.Chat;
+using Microsoft.Extensions.AI;
+using System.Text.Json;
+using chatx.FunctionCalling;
 
-public class FunctionCallingChat
+public class FunctionCallingChat : IAsyncDisposable
 {
-    public FunctionCallingChat(ChatClient openAIClient, string systemPrompt, FunctionFactory factory, int? maxOutputTokens = null)
+    public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
         _functionFactory = factory;
-        _chatClient = openAIClient;
+        _functionCallDetector = new FunctionCallDetector();
+
+        var useMicrosoftExtensionsAIFunctionCalling = false; // Can't use this for now; (1) doesn't work with copilot w/ all models, (2) functionCallCallback not available
+        _chatClient = useMicrosoftExtensionsAIFunctionCalling
+            ? chatClient.AsBuilder().UseFunctionInvocation().Build()
+            : chatClient;
 
         _messages = new List<ChatMessage>();
-        _options = new ChatCompletionOptions();
-
-        if (maxOutputTokens.HasValue) _options.MaxOutputTokenCount = maxOutputTokens.Value;
-
-        foreach (var tool in _functionFactory.GetChatTools())
+        _options = new ChatOptions()
         {
-            _options.Tools.Add(tool);
-        }
+            Tools = _functionFactory.GetAITools().ToList(),
+            ToolMode = null
+        };
 
-        _functionCallContext = new FunctionCallContext(_functionFactory, _messages);
+        if (maxOutputTokens.HasValue) _options.MaxOutputTokens = maxOutputTokens.Value;
+
         ClearChatHistory();
     }
 
     public void ClearChatHistory()
     {
         _messages.Clear();
-        _messages.Add(ChatMessage.CreateSystemMessage(_systemPrompt));
+        _messages.Add(new ChatMessage(ChatRole.System, _systemPrompt));
 
         foreach (var userMessage in _userMessageAdds)
         {
-            _messages.Add(ChatMessage.CreateUserMessage(userMessage));
+            _messages.Add(new ChatMessage(ChatRole.User, userMessage));
         }
     }
     
     public void AddUserMessage(string userMessage, int tokenTrimTarget = 0)
     {
         _userMessageAdds.Add(userMessage);
-        _messages.Add(ChatMessage.CreateUserMessage(userMessage));
+        _messages.Add(new ChatMessage(ChatRole.User, userMessage));
 
         if (tokenTrimTarget > 0)
         {
@@ -57,9 +62,9 @@ public class FunctionCallingChat
         }
     }
 
-    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0)
+    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.ReadChatHistoryFromFile(fileName);
+        _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
 
         if (tokenTrimTarget > 0)
         {
@@ -67,32 +72,32 @@ public class FunctionCallingChat
         }
     }
 
-    public void SaveChatHistoryToFile(string fileName)
+    public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.SaveChatHistoryToFile(fileName);
+        _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat);
     }
 
     public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
-        Action<StreamingChatCompletionUpdate>? streamingCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
-        _messages.Add(ChatMessage.CreateUserMessage(userPrompt));
-        if (messageCallback != null) messageCallback(_messages);
+        _messages.Add(new ChatMessage(ChatRole.User, userPrompt));
+        messageCallback?.Invoke(_messages);
 
         var contentToReturn = string.Empty;
         while (true)
         {
             var responseContent = string.Empty;
-            var response = _chatClient.CompleteChatStreamingAsync(_messages, _options);
-            await foreach (var update in response)
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(_messages, _options))
             {
-                _functionCallContext.CheckForUpdate(update);
+                _functionCallDetector.CheckForFunctionCall(update);
 
-                var content = string.Join("", update.ContentUpdate
-                    .Where(x => x.Kind == ChatMessageContentPartKind.Text)
-                    .Select(x => x.Text)
+                var content = string.Join("", update.Contents
+                    .Where(c => c is TextContent)
+                    .Cast<TextContent>()
+                    .Select(c => c.Text)
                     .ToList());
 
                 if (update.FinishReason == ChatFinishReason.ContentFilter)
@@ -100,25 +105,78 @@ public class FunctionCallingChat
                     content = $"{content}\nWARNING: Content filtered!";
                 }
 
-                // if (string.IsNullOrEmpty(content))
-                //     continue;
-
                 responseContent += content;
                 contentToReturn += content;
 
                 streamingCallback?.Invoke(update);
             }
 
-            if (_functionCallContext.TryCallFunctions(responseContent, functionCallCallback, messageCallback))
+            if (TryCallFunctions(responseContent, functionCallCallback, messageCallback))
             {
-                _functionCallContext.Clear();
+                _functionCallDetector.Clear();
                 continue;
             }
 
-            _messages.Add(ChatMessage.CreateAssistantMessage(responseContent));
-            if (messageCallback != null) messageCallback(_messages);
+            _messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
+            messageCallback?.Invoke(_messages);
 
             return contentToReturn;
+        }
+    }
+
+    private bool TryCallFunctions(string responseContent, Action<string, string, string?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
+    {
+        var noFunctionsToCall = !_functionCallDetector.HasFunctionCalls();
+        if (noFunctionsToCall) return false;
+        
+        var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
+
+        var assistentContent = readyToCallFunctionCalls
+            .AsAIContentList()
+            .Prepend(new TextContent(responseContent))
+            .ToList();
+        _messages.Add(new ChatMessage(ChatRole.Assistant, assistentContent));
+        messageCallback?.Invoke(_messages);
+
+        var functionResultContents = CallFunctions(readyToCallFunctionCalls, functionCallCallback);
+        var toolContent = functionResultContents.Cast<AIContent>().ToList();
+
+        _messages.Add(new ChatMessage(ChatRole.Tool, toolContent));
+        messageCallback?.Invoke(_messages);
+
+        return true;
+    }
+
+    private List<FunctionResultContent> CallFunctions(List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls, Action<string, string, string?>? functionCallCallback)
+    {
+        ConsoleHelpers.WriteDebugLine($"Calling functions: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
+
+        var functionResultContents = new List<FunctionResultContent>();
+        foreach (var functionCall in readyToCallFunctionCalls)
+        {
+            functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
+
+            ConsoleHelpers.WriteDebugLine($"Calling function: {functionCall.Name} with arguments: {functionCall.Arguments}");
+            var functionResult = _functionFactory.TryCallFunction(functionCall.Name, functionCall.Arguments, out var functionResponse)
+                ? functionResponse ?? "Function call succeeded"
+                : "Function not found or failed to execute";
+            ConsoleHelpers.WriteDebugLine($"Function call result: {functionResult}");
+
+            functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
+            functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
+        }
+
+        return functionResultContents;
+    }
+
+    /// <summary>
+    /// Disposes the function factory and any associated resources.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_functionFactory is McpFunctionFactory mcpFactory)
+        {
+            await mcpFactory.DisposeAsync();
         }
     }
 
@@ -126,8 +184,8 @@ public class FunctionCallingChat
     private readonly List<string> _userMessageAdds = new();
 
     private readonly FunctionFactory _functionFactory;
-    private readonly FunctionCallContext _functionCallContext;
-    private readonly ChatCompletionOptions _options;
-    private readonly ChatClient _chatClient;
-    private readonly List<ChatMessage> _messages;
+    private readonly FunctionCallDetector _functionCallDetector;
+    private readonly ChatOptions _options;
+    private readonly IChatClient _chatClient;
+    private List<ChatMessage> _messages;
 }

@@ -1,0 +1,37 @@
+CHATX MCP REMOVE
+
+  Delete a Model Context Protocol (MCP) server configuration.
+
+USAGE: chatx mcp remove SERVER_NAME [--scope]
+
+OPTIONS
+
+  SERVER_NAME       The name of the MCP server to remove
+
+  SCOPE OPTIONS
+
+    --global, -g    Remove only from global scope (all users)
+    --user, -u      Remove only from user scope (current user)
+    --local, -l     Remove only from local scope (current directory)
+    --any, -a       Look in all scopes and remove the first match (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Remove an MCP server from any scope
+
+    chatx mcp remove unused-server
+
+  EXAMPLE 2: Remove an MCP server only from the user scope
+
+    chatx mcp remove postgres-server --user
+
+NOTES
+
+  The removal is permanent and cannot be undone.
+  If using the --any option, the command will remove the first matching MCP server
+  found when searching in this order: local, user, global.
+
+SEE ALSO
+
+  chatx help mcp
+  chatx help mcp list

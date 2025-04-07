@@ -7,11 +7,8 @@ using System.Reflection;
 using System.Collections;
 using System.Text;
 using System.Text.Json;
-using OpenAI.Assistants;
-using OpenAI.Chat;
-
-#pragma warning disable CS0618 // Type or member is obsolete
-#pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+using Microsoft.Extensions.AI;
+using System.ComponentModel;
 
 public class FunctionFactory
 {
@@ -79,36 +76,48 @@ public class FunctionFactory
 
     public void AddFunction(MethodInfo method, object? instance = null)
     {
-        var attributes = method.GetCustomAttributes(typeof(HelperFunctionDescriptionAttribute), false);
+        var attributes = method.GetCustomAttributes(typeof(DescriptionAttribute), false);
         if (attributes.Length > 0)
         {
-            var funcDescriptionAttrib = attributes[0] as HelperFunctionDescriptionAttribute;
+            var funcDescriptionAttrib = attributes[0] as DescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
-            var json = GetMethodParametersJsonSchema(method);
-            _functions.TryAdd(method, (ChatTool.CreateFunctionTool(method.Name, funcDescription, new BinaryData(json)), instance));
+            var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);
+            AddFunction(aiFunction, method, instance);
         }
     }
 
-    public IEnumerable<ChatTool> GetChatTools()
+    public void AddFunction(AIFunction aiFunction)
     {
-        return _functions.Values.Select(x => x.Tool);
+        var methodInfo = typeof(AIFunction).GetMethod(nameof(AIFunction.InvokeAsync), BindingFlags.Instance | BindingFlags.Public);
+        AddFunction(aiFunction, methodInfo!, aiFunction);
     }
 
-    public IEnumerable< ToolDefinition> GetToolDefinitions()
+    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null)
     {
-        return GetChatTools().Select(x => ToolDefinition.CreateFunction(x.FunctionName, x.FunctionDescription, x.FunctionParameters));
+        const int shortDescriptionMacCch = 50;
+        var shortDescription = aiFunction.Description.Length > shortDescriptionMacCch
+            ? aiFunction.Description.Substring(0, shortDescriptionMacCch) + "..."
+            : aiFunction.Description;
+
+        ConsoleHelpers.WriteDebugLine($"Adding function '{aiFunction.Name}' - {shortDescription}");
+        _functions.TryAdd(method, (aiFunction, instance));
     }
 
-    public bool TryCallFunction(string functionName, string functionArguments, out string? result)
+    public IEnumerable<AITool> GetAITools()
+    {
+        return _functions.Select(x => x.Value.Function);
+    }
+
+    public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
     {
         result = null;
         if (!string.IsNullOrEmpty(functionName) && !string.IsNullOrEmpty(functionArguments))
         {
-            var function = _functions.FirstOrDefault(x => x.Value.Tool.FunctionName == functionName);
+            var function = _functions.FirstOrDefault(x => x.Value.Function.Name == functionName);
             if (function.Key != null)
             {
-                result = CallFunction(function.Key, function.Value.Tool, functionArguments, function.Value.Instance);
+                result = CallFunction(function.Key, function.Value.Function, functionArguments, function.Value.Instance);
                 return true;
             }
         }
@@ -124,7 +133,7 @@ public class FunctionFactory
         return newFactory;
     }
 
-    private static string? CallFunction(MethodInfo methodInfo, ChatTool chatTool, string argumentsAsJson, object? instance)
+    private static string? CallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
     {
         var parsed = JsonDocument.Parse(argumentsAsJson).RootElement;
         var arguments = new List<object?>();
@@ -331,121 +340,6 @@ public class FunctionFactory
         return collection!;
     }
 
-    private static string GetMethodParametersJsonSchema(MethodInfo method)
-    {
-        using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = false });
-        writer.WriteStartObject();
-
-        var requiredParameters = new List<string>();
-
-        writer.WriteString("type", "object");
-        writer.WriteStartObject("properties");
-        foreach (var parameter in method.GetParameters())
-        {
-            if (parameter.Name == null) continue;
-
-            if (!parameter.IsOptional)
-            {
-                requiredParameters.Add(parameter.Name);
-            }
-
-            writer.WritePropertyName(parameter.Name);
-            WriteJsonSchemaForParameterWithDescription(writer, parameter);
-        }
-        writer.WriteEndObject();
-
-        writer.WriteStartArray("required");
-        foreach (var requiredParameter in requiredParameters)
-        {
-            writer.WriteStringValue(requiredParameter);
-        }
-        writer.WriteEndArray();
-
-        writer.WriteEndObject();
-        writer.Flush();
-
-        return Encoding.UTF8.GetString(stream.ToArray());
-    }
-
-    private static void WriteJsonSchemaForParameterWithDescription(Utf8JsonWriter writer, ParameterInfo parameter)
-    {
-        WriteJsonSchemaType(writer, parameter.ParameterType, GetParameterDescription(parameter));
-    }
-
-    private static string GetParameterDescription(ParameterInfo parameter)
-    {
-        var attributes = parameter.GetCustomAttributes(typeof(HelperFunctionParameterDescriptionAttribute), false);
-        var paramDescriptionAttrib = attributes.Length > 0 ? (attributes[0] as HelperFunctionParameterDescriptionAttribute) : null;
-        return paramDescriptionAttrib?.Description ?? $"The {parameter.Name} parameter";
-    }
-
-    private static void WriteJsonSchemaType(Utf8JsonWriter writer, Type t, string? parameterDescription = null)
-    {
-        if (IsJsonArrayEquivalentType(t))
-        {
-            WriteJsonArraySchemaType(writer, t, parameterDescription);
-        }
-        else
-        {
-            WriteJsonPrimitiveSchemaType(writer, t, parameterDescription);
-        }
-    }
-
-    private static void WriteJsonArraySchemaType(Utf8JsonWriter writer, Type containerType, string? parameterDescription = null)
-    {
-        writer.WriteStartObject();
-        writer.WriteString("type", "array");
-
-        writer.WritePropertyName("items");
-        WriteJsonArrayItemSchemaType(writer, containerType);
-
-        if (!string.IsNullOrEmpty(parameterDescription))
-        {
-            writer.WriteString("description", parameterDescription);
-        }
-
-        writer.WriteEndObject();
-    }
-
-    private static void WriteJsonArrayItemSchemaType(Utf8JsonWriter writer, Type containerType)
-    {
-        WriteJsonSchemaType(writer, containerType.IsArray
-            ? containerType.GetElementType()!
-            : containerType.GetGenericArguments()[0]);
-    }
-
-    private static void WriteJsonPrimitiveSchemaType(Utf8JsonWriter writer, Type primativeType, string? parameterDescription = null)
-    {
-        writer.WriteStartObject();
-        writer.WriteString("type", GetJsonTypeFromPrimitiveType(primativeType));
-
-        if (!string.IsNullOrEmpty(parameterDescription))
-        {
-            writer.WriteString("description", parameterDescription);
-        }
-
-        writer.WriteEndObject();
-    }
-
-    private static string GetJsonTypeFromPrimitiveType(Type primativeType)
-    {
-        return Type.GetTypeCode(primativeType) switch
-        {
-            TypeCode.Boolean => "boolean",
-            TypeCode.Byte or TypeCode.SByte or TypeCode.Int16 or TypeCode.Int32 or TypeCode.Int64 or
-            TypeCode.UInt16 or TypeCode.UInt32 or TypeCode.UInt64 => "integer",
-            TypeCode.Decimal or TypeCode.Double or TypeCode.Single => "number",
-            TypeCode.String => "string",
-            _ => "string"
-        };
-    }
-
-    private static bool IsJsonArrayEquivalentType(Type t)
-    {
-        return IsArrayType(t) || IsTuppleType(t) || IsGenericListOrEquivalentType(t);
-    }
-
     private static bool IsArrayType(Type t)
     {
         return t.IsArray;
@@ -472,7 +366,6 @@ public class FunctionFactory
         return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 
-    private readonly Dictionary<MethodInfo, (ChatTool Tool, object? Instance)> _functions = new();
-
+    private readonly Dictionary<MethodInfo, (AIFunction Function, object? Instance)> _functions = new();
 }
 

@@ -1,4 +1,3 @@
-using OpenAI;
 using System.ClientModel.Primitives;
 
 // Custom pipeline policy that injects a custom header into each request

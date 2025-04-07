@@ -3,6 +3,7 @@
 if "%1" == "alias" goto DoAlias
 if "%1" == "prompt" goto DoPrompt
 if "%1" == "config" goto DoConfig
+if "%1" == "mcp" goto DoMcp
 
 :DoPrompt
 chatx help topics --expand | mdx run "chatx prompt create test-prompt @-"
@@ -56,5 +57,20 @@ echo.
 mdx run "chatx config get foobar"
 echo.
 if "%1" == "config" goto end
+
+:DoMcp
+mdx run "chatx mcp add test-mcp --command echo --arg test-mcp"
+echo.
+mdx run "chatx mcp list"
+echo.
+mdx run "chatx mcp get test-mcp"
+echo.
+mdx run "chatx mcp remove test-mcp"
+echo.
+mdx run "chatx mcp list"
+echo.
+mdx run "chatx mcp get test-mcp"
+echo.
+if "%1" == "mcp" goto end
 
 :end

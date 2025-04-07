@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using OpenAI.Chat;
 
 /// <summary>
 /// Provides methods for working with chat history files.
