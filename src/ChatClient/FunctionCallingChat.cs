@@ -1,7 +1,8 @@
 using Microsoft.Extensions.AI;
 using System.Text.Json;
+using chatx.FunctionCalling;
 
-public class FunctionCallingChat
+public class FunctionCallingChat : IAsyncDisposable
 {
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, int? maxOutputTokens = null)
     {
@@ -166,6 +167,17 @@ public class FunctionCallingChat
         }
 
         return functionResultContents;
+    }
+
+    /// <summary>
+    /// Disposes the function factory and any associated resources.
+    /// </summary>
+    public async ValueTask DisposeAsync()
+    {
+        if (_functionFactory is McpFunctionFactory mcpFactory)
+        {
+            await mcpFactory.DisposeAsync();
+        }
     }
 
     private readonly string _systemPrompt;

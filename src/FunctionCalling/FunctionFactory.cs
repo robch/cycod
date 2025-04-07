@@ -83,8 +83,25 @@ public class FunctionFactory
             var funcDescription = funcDescriptionAttrib!.Description;
 
             var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);
-            _functions.TryAdd(method, (aiFunction, instance));
+            AddFunction(aiFunction, method, instance);
         }
+    }
+
+    public void AddFunction(AIFunction aiFunction)
+    {
+        var methodInfo = typeof(AIFunction).GetMethod(nameof(AIFunction.InvokeAsync), BindingFlags.Instance | BindingFlags.Public);
+        AddFunction(aiFunction, methodInfo!, aiFunction);
+    }
+
+    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null)
+    {
+        const int shortDescriptionMacCch = 50;
+        var shortDescription = aiFunction.Description.Length > shortDescriptionMacCch
+            ? aiFunction.Description.Substring(0, shortDescriptionMacCch) + "..."
+            : aiFunction.Description;
+
+        ConsoleHelpers.WriteDebugLine($"Adding function '{aiFunction.Name}' - {shortDescription}");
+        _functions.TryAdd(method, (aiFunction, instance));
     }
 
     public IEnumerable<AITool> GetAITools()

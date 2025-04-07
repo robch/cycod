@@ -1,5 +1,11 @@
 using Microsoft.Extensions.AI;
 using System.Text;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using chatx.FunctionCalling;
+using chatx.McpHelpers;
+using ModelContextProtocol.Client;
 
 public class ChatCommand : Command
 {
@@ -58,51 +64,68 @@ public class ChatCommand : Command
         InputInstructions = GroundInputInstructions();
 
         // Create the function factory and add functions.
-        var factory = new FunctionFactory();
+        var factory = new McpFunctionFactory();
         factory.AddFunctions(new DateAndTimeHelperFunctions());
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
+        
+        // Add MCP functions if any are configured
+        await AddMcpFunctions(factory);
         factory.AddFunctions(new CodeExplorationHelperFunctions());
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient();
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, MaxOutputTokens);
 
-        // Add the user prompt messages to the chat.
-        chat.AddUserMessages(UserPromptAdds);
-
-        // Load the chat history from the file.
-        var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
-        if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-
-        // Check to make sure we're either in interactive mode, or have input instructions.
-        if (!interactive && InputInstructions.Count == 0)
+        try
         {
-            ConsoleHelpers.WriteWarning("\nNo input instructions provided. Exiting.");
-            return 1;
-        }
+            // Add the user prompt messages to the chat.
+            chat.AddUserMessages(UserPromptAdds);
 
-        while (true)
+            // Load the chat history from the file.
+            var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
+            if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+
+            // Check to make sure we're either in interactive mode, or have input instructions.
+            if (!interactive && InputInstructions.Count == 0)
+            {
+                ConsoleHelpers.WriteWarning("\nNo input instructions provided. Exiting.");
+                return 1;
+            }
+
+            while (true)
+            {
+                DisplayUserPrompt();
+                var userPrompt = interactive && !Console.IsInputRedirected
+                    ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
+                    : ReadLineOrSimulateInput(InputInstructions, "exit");
+                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
+
+                var handled = await TryHandleChatCommandAsync(chat, userPrompt);
+                if (handled) continue;
+
+                DisplayAssistantLabel();
+                var response = await CompleteChatStreamingAsync(chat, userPrompt,
+                    (messages) => HandleUpdateMessages(messages),
+                    (update) => HandleStreamingChatCompletionUpdate(update),
+                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+            }
+
+            return 0;
+        }
+        finally
         {
-            DisplayUserPrompt();
-            var userPrompt = interactive && !Console.IsInputRedirected
-                ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
-                : ReadLineOrSimulateInput(InputInstructions, "exit");
-            if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
-
-            var handled = await TryHandleChatCommandAsync(chat, userPrompt);
-            if (handled) continue;
-
-            DisplayAssistantLabel();
-            var response = await CompleteChatStreamingAsync(chat, userPrompt,
-                (messages) => HandleUpdateMessages(messages),
-                (update) => HandleStreamingChatCompletionUpdate(update),
-                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-            ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+            // Clean up resources
+            await chat.DisposeAsync();
+            
+            // If we have an MCP function factory, dispose its resources too
+            if (factory is McpFunctionFactory mcpFactory)
+            {
+                await mcpFactory.DisposeAsync();
+            }
         }
-
-        return 0;
     }
 
     private string GroundSystemPrompt()
@@ -220,6 +243,12 @@ public class ChatCommand : Command
         helpBuilder.AppendLine("  /clear    Clear chat history");
         helpBuilder.AppendLine("  /cost     Show token usage statistics");
         helpBuilder.AppendLine("  /help     Show this help message");
+        helpBuilder.AppendLine();
+        
+        // Tool integration commands
+        helpBuilder.AppendLine("TOOLS");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /mcp      Manage MCP servers (see 'chatx help mcp')");
         helpBuilder.AppendLine();
         
         // MDX integration commands
@@ -528,4 +557,43 @@ public class ChatCommand : Command
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
     private const int DefaultTrimTokenTarget = 160000;
+
+    /// <summary>
+    /// Adds MCP functions from configured MCP servers to the function factory.
+    /// </summary>
+    /// <param name="factory">The McpFunctionFactory to add functions to.</param>
+    private async Task AddMcpFunctions(McpFunctionFactory factory)
+    {
+        try
+        {
+            // Create clients for all configured MCP servers
+            var clients = await McpClientManager.CreateAllClientsAsync();
+            if (clients.Count == 0)
+            {
+                return; // No configured MCP servers
+            }
+
+            Console.WriteLine($"Found {clients.Count} MCP server(s)");
+            
+            // Add tools from each client
+            foreach (var clientEntry in clients)
+            {
+                var serverName = clientEntry.Key;
+                var client = clientEntry.Value;
+
+                try
+                {
+                    await factory.AddMcpClientToolsAsync(client, serverName);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading MCP functions: {ex.Message}");
+        }
+    }
 }
