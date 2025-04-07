@@ -149,7 +149,11 @@ public static class AIExtensionsChatHelpers
             if (toolChatMessage != null && IsTooBig(toolChatMessage, maxToolCallContentTokens))
             {
                 ConsoleHelpers.WriteDebugLine($"Tool call content is too big, replacing with: {replaceToolCallContentWith}");
-                messages[i] = new ChatMessage(ChatRole.Tool, replaceToolCallContentWith);
+                messages[i] = new ChatMessage(ChatRole.Tool, toolChatMessage.Contents
+                    .Select(x => x is FunctionResultContent result
+                        ? new FunctionResultContent(result.CallId, replaceToolCallContentWith)
+                        : x)
+                    .ToList());
             }
         }
 
@@ -158,9 +162,9 @@ public static class AIExtensionsChatHelpers
     private static bool IsTooBig(ChatMessage toolChatMessage, int maxToolCallContentTokens)
     {
         var content = string.Join("", toolChatMessage.Contents
-            .Where(x => x is TextContent)
-            .Cast<TextContent>()
-            .Select(x => x.Text));
+            .Where(x => x is FunctionResultContent)
+            .Cast<FunctionResultContent>()
+            .Select(x => x.Result));
         if (string.IsNullOrEmpty(content)) return false;
 
         var isTooBig = content.Length > maxToolCallContentTokens;
