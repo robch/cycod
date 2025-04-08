@@ -79,6 +79,55 @@ public static class AIExtensionsChatHelpers
         messages.AddRange(newMessages);
     }
 
+    /// <summary>
+    /// Scans through chat messages and fixes any dangling tool call IDs by inserting dummy tool messages.
+    /// </summary>
+    /// <param name="messages">The list of chat messages to fix.</param>
+    public static void FixDanglingToolCalls(this List<ChatMessage> messages)
+    {
+        for (int i = 0; i < messages.Count; i++)
+        {
+            var message = messages[i];
+            if (message.Role != ChatRole.Assistant) continue;
+            
+            var functionCallContents = message.Contents
+                .OfType<FunctionCallContent>()
+                .ToList();
+            if (!functionCallContents.Any()) continue;
+            
+            foreach (var functionCall in functionCallContents)
+            {
+                bool foundMatchingToolMessage = false;
+                for (int j = i + 1; j < messages.Count; j++)
+                {
+                    var nextMessage = messages[j];
+                    var notChatToolMessage = nextMessage.Role != ChatRole.Tool;
+                    if (notChatToolMessage) break;
+                    
+                    var hasMatchingToolContent = nextMessage.Contents
+                        .OfType<FunctionResultContent>()
+                        .Any(c => c.CallId == functionCall.CallId);
+                    if (hasMatchingToolContent)
+                    {
+                        foundMatchingToolMessage = true;
+                        break;
+                    }
+                }
+                
+                if (!foundMatchingToolMessage)
+                {
+                    ConsoleHelpers.WriteDebugLine($"Found dangling tool call ID {functionCall.CallId} for function {functionCall.Name}, adding dummy tool message");
+                    
+                    var dummyResult = $"{{\"result\": \"...unknown; tool not called...\"}}";
+                    var dummyToolContent = new FunctionResultContent(functionCall.CallId, dummyResult);
+                    messages.Insert(i + 1, new ChatMessage(ChatRole.Tool, new List<AIContent> { dummyToolContent }));
+
+                    i++;
+                }
+            }
+        }
+    }
+
     public static void AppendMessageToTrajectoryFile(this ChatMessage message, string? fileName)
     {
         if (string.IsNullOrEmpty(fileName)) return;

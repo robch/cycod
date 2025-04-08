@@ -65,6 +65,7 @@ public class FunctionCallingChat : IAsyncDisposable
     public void LoadChatHistory(string fileName, int tokenTrimTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        _messages.FixDanglingToolCalls();
 
         if (tokenTrimTarget > 0)
         {
