@@ -172,9 +172,9 @@ public class ChatCommand : Command
 
     private async Task<bool> TryHandleChatCommandAsync(FunctionCallingChat chat, string userPrompt)
     {
-        if (userPrompt == "/save")
+        if (userPrompt.StartsWith("/save"))
         {
-            return HandleSaveChatHistoryCommand(chat);
+            return HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
         }
         else if (userPrompt == "/clear")
         {
@@ -218,11 +218,15 @@ public class ChatCommand : Command
         return true;
     }
 
-    private bool HandleSaveChatHistoryCommand(FunctionCallingChat chat)
+    private bool HandleSaveChatHistoryCommand(FunctionCallingChat chat, string? fileName = null)
     {
-        ConsoleHelpers.Write("Saving chat-history.jsonl ...", ConsoleColor.Yellow, overrideQuiet: true);
-        chat.SaveChatHistoryToFile("chat-history.jsonl", useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        var useDefaultFileName = string.IsNullOrEmpty(fileName);
+        if (useDefaultFileName) fileName = "chat-history.jsonl";
+
+        ConsoleHelpers.Write($"Saving {fileName} ...", ConsoleColor.Yellow, overrideQuiet: true);
+        chat.SaveChatHistoryToFile(fileName!, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         ConsoleHelpers.WriteLine("Saved!\n", ConsoleColor.Yellow, overrideQuiet: true);
+
         return true;
     }
 
