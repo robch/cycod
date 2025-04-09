@@ -6,3 +6,4 @@ tests/**/bin/
 tests/**/obj/
 
 .chatx/scratch/
+website/site/
