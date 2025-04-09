@@ -1,0 +1,127 @@
+site_name: CHATX Documentation
+repo_url: https://github.com/robch/chatx
+
+theme:
+  logo: assets/chatx.png
+  name: material
+  icon:
+    annotation: material/arrow-right-circle 
+  features:
+  - navigation.tabs
+  - navigation.sections
+  - navigation.footer
+  - navigation.indexes
+  - navigation.top
+  - search.suggest
+  - search.highlight
+  - content.tabs.link
+  - content.code.annotation
+  - content.code.copy
+  language: en
+  palette:
+  - scheme: default
+    toggle: 
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+    primary: black
+    accent: indigo
+  - scheme: slate
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+    primary: black
+    accent: indigo
+
+extra_css:
+  - assets/extra.css
+  - assets/cli-toggle.css
+
+extra_javascript:
+  - js/cli-toggle.js
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/robch/chatx
+
+validation:
+  links:
+    absolute_links: relative_to_docs
+    anchors: warn
+    unrecognized_links: warn
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower      
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["docs", "docs/snippets", "snippets"]
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - md_in_html
+
+copyright: |
+  &copy; 2025 <a href="https://github.com/robch/" target="_blank" rel="noopener">Rob Chambers</a>
+
+nav:
+  - HOME: index.md
+  - GETTING STARTED:
+    - Installation: getting-started.md
+  - PROVIDERS:
+    - OpenAI: providers/openai.md
+    - Azure OpenAI: providers/azure-openai.md
+    - GitHub Copilot: providers/github-copilot.md
+  - USAGE:
+    - Chat Basics: usage/basics.md
+    - Chat History: usage/chat-history.md 
+    - Configuration: usage/configuration.md
+  - ADVANCED:
+    - Aliases: advanced/aliases.md
+    - Custom Prompts: advanced/prompts.md
+    - Profiles: advanced/profiles.md
+    - MCP: advanced/mcp.md
+  - REFERENCE:
+    - chatx:
+      - reference/cli/index.md
+      - alias:
+        - reference/cli/alias/index.md
+        - list: reference/cli/alias/list.md
+        - get: reference/cli/alias/get.md
+        - delete: reference/cli/alias/delete.md
+      - config:
+        - reference/cli/config/index.md
+        - list: reference/cli/config/list.md
+        - get: reference/cli/config/get.md
+        - set: reference/cli/config/set.md
+        - clear: reference/cli/config/clear.md
+        - add: reference/cli/config/add.md
+        - remove: reference/cli/config/remove.md
+      - prompt:
+        - reference/cli/prompt/index.md
+        - list: reference/cli/prompt/list.md
+        - get: reference/cli/prompt/get.md
+        - create: reference/cli/prompt/create.md
+        - delete: reference/cli/prompt/delete.md
+      - mcp:
+        - reference/cli/mcp/index.md
+        - list: reference/cli/mcp/list.md
+        - get: reference/cli/mcp/get.md
+        - add: reference/cli/mcp/add.md
+        - remove: reference/cli/mcp/remove.md
+      - github:
+        - login: reference/cli/github/login.md
