@@ -148,7 +148,37 @@ public class SlashCommandHandler
     /// </summary>
     private async Task<string> HandleRunCommand(string arguments)
     {
-        return await _mdxWrapper.ExecuteMdxCommandAsync($"run {arguments}");
+        var noInputProvided = string.IsNullOrWhiteSpace(arguments);
+        if (noInputProvided) return "/run requires a command to run.";
+
+        arguments = arguments.Trim();
+
+        var shell = string.Empty;
+        if (arguments.StartsWith("--bash"))
+        {
+            shell = "bash";
+            arguments = arguments.Substring("--bash".Length).Trim();
+        }
+        else if (arguments.StartsWith("--cmd"))
+        {
+            shell = "cmd";
+            arguments = arguments.Substring("--cmd".Length).Trim();
+        }
+        else if (arguments.StartsWith("--powershell"))
+        {
+            shell = "powershell";
+            arguments = arguments.Substring("--powershell".Length).Trim();
+        }
+
+        var shellSpecified = !string.IsNullOrWhiteSpace(shell);
+        var prefixArgsWithShell = shellSpecified ? $"--{shell} " : string.Empty;
+
+        var shouldEscape = !arguments.StartsWith('"') || shellSpecified;
+        arguments = shouldEscape
+            ? _mdxWrapper.EscapeArgument(arguments)
+            : arguments;
+
+        return await _mdxWrapper.ExecuteMdxCommandAsync($"run {prefixArgsWithShell}{arguments}");
     }
 
     private readonly MdxCliWrapper _mdxWrapper;

@@ -116,6 +116,24 @@ public class MdxCliWrapper
         }
     }
 
+    /// <summary>
+    /// Escapes an argument for use in a command line.
+    /// </summary>
+    /// <param name="arg">The argument to escape</param>
+    /// <returns>The escaped argument</returns>
+    public string EscapeArgument(string arg)
+    {
+        var alreadyDoubleQuoted = arg.StartsWith("\"") && arg.EndsWith("\"");
+        if (alreadyDoubleQuoted) return arg;
+
+        var noSpacesOrSlashesOrQuotes = !arg.Contains(" ") && !arg.Contains("\\") && !arg.Contains("\"");
+        if (noSpacesOrSlashesOrQuotes) return arg;
+
+        var escaped = arg.Replace("\\", "\\\\").Replace("\"", "\\\"");
+        var needsDoubleQuotes = escaped.Contains(" ") || escaped.Contains("\\") || escaped.Contains("\"");
+        return needsDoubleQuotes ? $"\"{escaped}\"" : escaped;
+    }
+
     #region Search Codebase Methods
     
     /// <summary>
@@ -510,16 +528,4 @@ public class MdxCliWrapper
     
     #endregion
     
-    private string EscapeArgument(string arg)
-    {
-        var alreadyDoubleQuoted = arg.StartsWith("\"") && arg.EndsWith("\"");
-        if (alreadyDoubleQuoted) return arg;
-
-        var noSpacesOrSlashesOrQuotes = !arg.Contains(" ") && !arg.Contains("\\") && !arg.Contains("\"");
-        if (noSpacesOrSlashesOrQuotes) return arg;
-
-        var escaped = arg.Replace("\\", "\\\\").Replace("\"", "\\\"");
-        var needsDoubleQuotes = escaped.Contains(" ") || escaped.Contains("\\") || escaped.Contains("\"");
-        return needsDoubleQuotes ? $"\"{escaped}\"" : escaped;
-    }
 }
