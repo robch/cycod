@@ -54,11 +54,19 @@ public static class TrajectoryFormatter
         }
 
         var toolMessage = message.Role == ChatRole.Tool ? message : null;
-        var isToolMessage = toolMessage != null && hasContent;
+        var isToolMessage = toolMessage != null;
         if (isToolMessage)
         {
-            // TODO: Seems like the trajectory file isn't getting the results now that we're using M.E.AI for IChatClient
-            sb.Append(FormatToolResult(messageContent));
+            var functionResults = toolMessage!.Contents
+                .Where(x => x is FunctionResultContent)
+                .Cast<FunctionResultContent>()
+                .ToList();
+                
+            foreach (var result in functionResults)
+            {
+                var resultContent = result.Result?.ToString() ?? string.Empty;
+                sb.Append(FormatToolResult(resultContent));
+            }
         }
 
         return sb.ToString();
