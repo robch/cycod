@@ -14,13 +14,23 @@ public static class ChatHistoryFileHelpers
     /// <returns>The full path to the most recent chat history file, or null if none found</returns>
     public static string? FindMostRecentChatHistoryFile()
     {
+        // Find regular chat history files
         var userScopeHistoryFiles = ScopeFileHelpers.FindFilesInScope("chat-history*.jsonl", "history", ConfigFileScope.User);
         var localScopeHistoryFiles = ScopeFileHelpers.FindFilesInScope("chat-history*.jsonl", "history", ConfigFileScope.Local);
         var localFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "chat-history*.jsonl");
+        
+        // Find exception chat history files - these can also be valid to continue from
+        var userScopeExceptionFiles = ScopeFileHelpers.FindFilesInScope("exception-chat-history*.jsonl", "history", ConfigFileScope.User);
+        var localScopeExceptionFiles = ScopeFileHelpers.FindFilesInScope("exception-chat-history*.jsonl", "history", ConfigFileScope.Local);
+        var localExceptionFiles = Directory.GetFiles(Directory.GetCurrentDirectory(), "exception-chat-history*.jsonl");
 
+        // Combine and sort all files by last write time
         var mostRecentFiles = userScopeHistoryFiles
             .Concat(localScopeHistoryFiles)
             .Concat(localFiles)
+            .Concat(userScopeExceptionFiles)
+            .Concat(localScopeExceptionFiles)
+            .Concat(localExceptionFiles)
             .OrderByDescending(f => {
                 var fi = new FileInfo(f);
                 return $"{fi.LastWriteTime.ToFileTime()} {fi.Name}";
