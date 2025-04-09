@@ -31,7 +31,7 @@ Hello, John!
 
 Variables can come from:
 
-1. Command line arguments (using `--var NAME=VALUE`)
+1. Command line arguments (using `--var NAME=VALUE` or `--vars NAME1=VALUE1 NAME2=VALUE2 ...`)
 2. Foreach loop variables (using `--foreach var NAME in VALUES...`)
 3. Environment variables
 4. Special built-in variables
@@ -273,6 +273,12 @@ Body temperature:
 
 ```bash
 chatx --system-prompt "You are helping a user on {os}. Today is {date}." --var name=Alice
+```
+
+You can set multiple variables at once using `--vars`:
+
+```bash
+chatx --system-prompt "Hello {name}, your favorite color is {color} and your age is {age}." --vars name=Alice color=blue age=30
 ```
 
 ### In Input Files

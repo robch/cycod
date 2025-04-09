@@ -681,6 +681,17 @@ public class CommandLineOptions
             ConfigStore.Instance.SetFromCommandLine($"Var.{assignment.Item1}", assignment.Item2);
             i += max1Arg.Count();
         }
+        else if (arg == "--vars")
+        {
+            var varArgs = GetInputOptionArgs(i + 1, args);
+            var assignments = ValidateAssignments(arg, varArgs);
+            foreach (var assignment in assignments)
+            {
+                command.Variables[assignment.Item1] = assignment.Item2;
+                ConfigStore.Instance.SetFromCommandLine($"Var.{assignment.Item1}", assignment.Item2);
+            }
+            i += varArgs.Count();
+        }
         else if (arg == "--foreach")
         {
             var foreachArgs = GetInputOptionArgs(i + 1, args).ToArray();
@@ -955,6 +966,16 @@ public class CommandLineOptions
         }
 
         return (parts[0], parts[1]);
+    }
+
+    private static IEnumerable<(string, string)> ValidateAssignments(string arg, IEnumerable<string> assignments)
+    {
+        if (!assignments.Any())
+        {
+            throw new CommandLineException($"Missing variable assignments for {arg}");
+        }
+
+        return assignments.Select(x => ValidateAssignment(arg, x));
     }
 
     private static string ValidateOkFileName(string? arg)
