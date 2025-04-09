@@ -57,6 +57,7 @@ public class ChatCommand : Command
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory);
         OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory);
         OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory);
+        _trajectoryFile = new TrajectoryFile(OutputTrajectory);
 
         // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt = GroundSystemPrompt();
@@ -97,7 +98,7 @@ public class ChatCommand : Command
             while (true)
             {
                 DisplayUserPrompt();
-                var userPrompt = interactive && !Console.IsInputRedirected
+                var userPrompt = interactive
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
                 if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
@@ -147,8 +148,6 @@ public class ChatCommand : Command
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .ToList();
     }
-
-
 
     private string GetBuiltInSystemPrompt()
     {
@@ -400,10 +399,7 @@ public class ChatCommand : Command
             messages.SaveChatHistoryToFile(OutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         }
         
-        if (OutputTrajectory != null && messages.Count > 0)
-        {
-            messages.Last().AppendMessageToTrajectoryFile(OutputTrajectory);
-        }
+        _trajectoryFile?.AppendMessage(messages.LastOrDefault());
     }
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
@@ -557,15 +553,13 @@ public class ChatCommand : Command
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 
+    private TrajectoryFile? _trajectoryFile;
     private SlashCommandHandler _chatCommandHandler = new();
+
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
     private const int DefaultTrimTokenTarget = 160000;
 
-    /// <summary>
-    /// Adds MCP functions from configured MCP servers to the function factory.
-    /// </summary>
-    /// <param name="factory">The McpFunctionFactory to add functions to.</param>
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
         try

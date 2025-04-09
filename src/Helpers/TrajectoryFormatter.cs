@@ -11,71 +11,17 @@ using Microsoft.Extensions.AI;
 
 public static class TrajectoryFormatter
 {
-    /// <summary>
-    /// Formats a chat message into a trajectory format
-    /// </summary>
-    public static string? FormatMessage(ChatMessage message)
+    public static string FormatUserInput(string? messageContent)
     {
-        var sb = new StringBuilder();
-
-        var messageContent = string.Join("", message.Contents
-            .Where(x => x is TextContent)
-            .Cast<TextContent>()
-            .Select(x => x.Text));
-        var hasContent = !string.IsNullOrWhiteSpace(messageContent);
-
-        var isUserMessage = message.Role == ChatRole.User;
-        if (isUserMessage && hasContent)
-        {
-            sb.Append(FormatMessage("user", messageContent));
-        }
-
-        var assistantMessage = message.Role == ChatRole.Assistant ? message : null;
-        var isAssistantMessage = assistantMessage != null && hasContent;
-        if (isAssistantMessage)
-        {
-            sb.Append(FormatMessage("assistant", messageContent));
-            var toolCalls = assistantMessage!.Contents
-                .Where(x => x is FunctionCallContent)
-                .Cast<FunctionCallContent>()
-                .ToList();
-            var hasToolCalls = toolCalls != null && toolCalls.Count > 0;
-            if (hasToolCalls)
-            {
-                foreach (var toolCall in toolCalls!)
-                {
-                    var functionName = toolCall.Name;
-                    var functionArguments = toolCall?.Arguments?.Count > 0
-                        ? toolCall!.Arguments
-                        : new Dictionary<string, object?>();
-                    sb.Append(FormatToolCall(functionName, functionArguments));
-                }
-            }
-        }
-
-        var toolMessage = message.Role == ChatRole.Tool ? message : null;
-        var isToolMessage = toolMessage != null;
-        if (isToolMessage)
-        {
-            var functionResults = toolMessage!.Contents
-                .Where(x => x is FunctionResultContent)
-                .Cast<FunctionResultContent>()
-                .ToList();
-                
-            foreach (var result in functionResults)
-            {
-                var resultContent = result.Result?.ToString() ?? string.Empty;
-                sb.Append(FormatToolResult(resultContent));
-            }
-        }
-
-        return sb.ToString();
+        return FormatMessage("user", messageContent);
     }
 
-    /// <summary>
-    /// Format a tool call and its parameters into XML format
-    /// </summary>
-    private static string FormatToolCall(string functionName, IDictionary<string, object?> arguments)
+    public static string FormatAssistantOutput(string? messageContent)
+    {
+        return FormatMessage("assistant", messageContent);
+    }
+
+    public static string FormatFunctionCall(string functionName, IDictionary<string, object?>? arguments)
     {
         var sb = new StringBuilder();
         sb.AppendLine("<function_calls>");
@@ -83,6 +29,7 @@ public static class TrajectoryFormatter
 
         try
         {
+            arguments ??= new Dictionary<string, object?>();
             foreach (var kvp in arguments)
             {
                 var escapedValue = EscapeXml(kvp.Value?.ToString() ?? string.Empty);
@@ -98,10 +45,7 @@ public static class TrajectoryFormatter
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Format a tool result into XML format
-    /// </summary>
-    private static string FormatToolResult(string result)
+    public static string FormatFunctionResult(string result)
     {
         var sb = new StringBuilder();
         sb.AppendLine("<function_results>");
@@ -119,10 +63,7 @@ public static class TrajectoryFormatter
         return sb.ToString();
     }
 
-    /// <summary>
-    /// Format an AI message into a trajectory format
-    /// </summary>
-    private static string FormatMessage(string role, string content)
+    private static string FormatMessage(string role, string? content)
     {
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -140,9 +81,6 @@ public static class TrajectoryFormatter
         return $"\n{content.Trim()}\n";
     }
 
-    /// <summary>
-    /// Escapes special characters for XML
-    /// </summary>
     private static string EscapeXml(string text)
     {
         return text
@@ -153,9 +91,6 @@ public static class TrajectoryFormatter
             .Replace("'", "&apos;");
     }
     
-    /// <summary>
-    /// Surrounds multi-line text with line feeds if needed
-    /// </summary>
     private static string SurroundMultiLineWithLFs(string text)
     {
         if (text.Contains('\n') && !text.StartsWith('\n'))

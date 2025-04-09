@@ -81,7 +81,8 @@ public class Program
         var threadCountMax = commandLineOptions.ThreadCount;
         var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
 
-        var isTruelyInteractive = commandLineOptions.Interactive && !Console.IsInputRedirected;
+        var inOrOutRedirected = Console.IsInputRedirected || Console.IsOutputRedirected;
+        var isTruelyInteractive = commandLineOptions.Interactive && !inOrOutRedirected;
         if (isTruelyInteractive && parallelism > 1)
         {
             ConsoleHelpers.WriteDebugLine($"Max 1 thread in truly interactive mode");
@@ -105,26 +106,26 @@ public class Program
 
             var startedTask = command switch
             {
-                ChatCommand chatCommand => chatCommand.ExecuteAsync(commandLineOptions.Interactive),
-                VersionCommand versionCommand => versionCommand.ExecuteAsync(commandLineOptions.Interactive),
-                GitHubLoginCommand loginCommand => loginCommand.ExecuteAsync(commandLineOptions.Interactive),
-                ConfigListCommand configListCommand => configListCommand.Execute(commandLineOptions.Interactive),
-                ConfigGetCommand configGetCommand => configGetCommand.Execute(commandLineOptions.Interactive),
-                ConfigSetCommand configSetCommand => configSetCommand.Execute(commandLineOptions.Interactive),
-                ConfigClearCommand configClearCommand => configClearCommand.Execute(commandLineOptions.Interactive),
-                ConfigAddCommand configAddCommand => configAddCommand.Execute(commandLineOptions.Interactive),
-                ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(commandLineOptions.Interactive),
-                AliasListCommand aliasListCommand => aliasListCommand.Execute(commandLineOptions.Interactive),
-                AliasGetCommand aliasGetCommand => aliasGetCommand.Execute(commandLineOptions.Interactive),
-                AliasDeleteCommand aliasDeleteCommand => aliasDeleteCommand.Execute(commandLineOptions.Interactive),
-                PromptListCommand promptListCommand => promptListCommand.Execute(commandLineOptions.Interactive),
-                PromptGetCommand promptGetCommand => promptGetCommand.Execute(commandLineOptions.Interactive),
-                PromptDeleteCommand promptDeleteCommand => promptDeleteCommand.Execute(commandLineOptions.Interactive),
-                PromptCreateCommand promptCreateCommand => promptCreateCommand.Execute(commandLineOptions.Interactive),
-                McpListCommand mcpListCommand => mcpListCommand.Execute(commandLineOptions.Interactive),
-                McpGetCommand mcpGetCommand => mcpGetCommand.Execute(commandLineOptions.Interactive),
-                McpAddCommand mcpAddCommand => mcpAddCommand.Execute(commandLineOptions.Interactive),
-                McpRemoveCommand mcpRemoveCommand => mcpRemoveCommand.Execute(commandLineOptions.Interactive),
+                ChatCommand chatCommand => chatCommand.ExecuteAsync(isTruelyInteractive),
+                VersionCommand versionCommand => versionCommand.ExecuteAsync(isTruelyInteractive),
+                GitHubLoginCommand loginCommand => loginCommand.ExecuteAsync(isTruelyInteractive),
+                ConfigListCommand configListCommand => configListCommand.Execute(isTruelyInteractive),
+                ConfigGetCommand configGetCommand => configGetCommand.Execute(isTruelyInteractive),
+                ConfigSetCommand configSetCommand => configSetCommand.Execute(isTruelyInteractive),
+                ConfigClearCommand configClearCommand => configClearCommand.Execute(isTruelyInteractive),
+                ConfigAddCommand configAddCommand => configAddCommand.Execute(isTruelyInteractive),
+                ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(isTruelyInteractive),
+                AliasListCommand aliasListCommand => aliasListCommand.Execute(isTruelyInteractive),
+                AliasGetCommand aliasGetCommand => aliasGetCommand.Execute(isTruelyInteractive),
+                AliasDeleteCommand aliasDeleteCommand => aliasDeleteCommand.Execute(isTruelyInteractive),
+                PromptListCommand promptListCommand => promptListCommand.Execute(isTruelyInteractive),
+                PromptGetCommand promptGetCommand => promptGetCommand.Execute(isTruelyInteractive),
+                PromptDeleteCommand promptDeleteCommand => promptDeleteCommand.Execute(isTruelyInteractive),
+                PromptCreateCommand promptCreateCommand => promptCreateCommand.Execute(isTruelyInteractive),
+                McpListCommand mcpListCommand => mcpListCommand.Execute(isTruelyInteractive),
+                McpGetCommand mcpGetCommand => mcpGetCommand.Execute(isTruelyInteractive),
+                McpAddCommand mcpAddCommand => mcpAddCommand.Execute(isTruelyInteractive),
+                McpRemoveCommand mcpRemoveCommand => mcpRemoveCommand.Execute(isTruelyInteractive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 

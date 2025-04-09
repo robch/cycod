@@ -132,7 +132,8 @@ public class CommandLineOptions
         }
 
         var oneChatCommandWithNoInput = commandLineOptions.Commands.Count == 1 && command is ChatCommand chatCommand && chatCommand.InputInstructions.Count == 0;
-        var implictlyUseStdIn = oneChatCommandWithNoInput && Console.IsInputRedirected;
+        var inOrOutRedirected = Console.IsInputRedirected || Console.IsOutputRedirected;
+        var implictlyUseStdIn = oneChatCommandWithNoInput && inOrOutRedirected;
         if (implictlyUseStdIn)
         {
             var stdinLines = ConsoleHelpers.GetAllLinesFromStdin();

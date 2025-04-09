@@ -128,17 +128,6 @@ public static class AIExtensionsChatHelpers
         }
     }
 
-    public static void AppendMessageToTrajectoryFile(this ChatMessage message, string? fileName)
-    {
-        if (string.IsNullOrEmpty(fileName)) return;
-        
-        var trajectoryContent = TrajectoryFormatter.FormatMessage(message);
-        if (!string.IsNullOrEmpty(trajectoryContent))
-        {
-            FileHelpers.AppendAllText(fileName, trajectoryContent);
-        }
-    }
-
     public static bool IsTooBig(this IList<ChatMessage> messages, int trimTokenTarget)
     {
         // Loop thru the messages and get the size of each message
