@@ -71,8 +71,8 @@ markdown_extensions:
   - pymdownx.mark
   - attr_list
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - md_in_html
 
 copyright: |
@@ -100,28 +100,29 @@ nav:
       - reference/cli/index.md
       - alias:
         - reference/cli/alias/index.md
-        - list: reference/cli/alias/list.md
-        - get: reference/cli/alias/get.md
-        - delete: reference/cli/alias/delete.md
+        - List: reference/cli/alias/list.md
+        - Get: reference/cli/alias/get.md
+        - Delete: reference/cli/alias/delete.md
       - config:
         - reference/cli/config/index.md
-        - list: reference/cli/config/list.md
-        - get: reference/cli/config/get.md
-        - set: reference/cli/config/set.md
-        - clear: reference/cli/config/clear.md
-        - add: reference/cli/config/add.md
-        - remove: reference/cli/config/remove.md
+        - List: reference/cli/config/list.md
+        - Get: reference/cli/config/get.md
+        - Set: reference/cli/config/set.md
+        - Clear: reference/cli/config/clear.md
+        - Add: reference/cli/config/add.md
+        - Remove: reference/cli/config/remove.md
       - prompt:
         - reference/cli/prompt/index.md
-        - list: reference/cli/prompt/list.md
-        - get: reference/cli/prompt/get.md
-        - create: reference/cli/prompt/create.md
-        - delete: reference/cli/prompt/delete.md
+        - List: reference/cli/prompt/list.md
+        - Get: reference/cli/prompt/get.md
+        - Create: reference/cli/prompt/create.md
+        - Delete: reference/cli/prompt/delete.md
       - mcp:
         - reference/cli/mcp/index.md
-        - list: reference/cli/mcp/list.md
-        - get: reference/cli/mcp/get.md
-        - add: reference/cli/mcp/add.md
-        - remove: reference/cli/mcp/remove.md
+        - List: reference/cli/mcp/list.md
+        - Get: reference/cli/mcp/get.md
+        - Add: reference/cli/mcp/add.md
+        - Remove: reference/cli/mcp/remove.md
       - github:
-        - login: reference/cli/github/login.md
+        - reference/cli/github/index.md
+        - Login: reference/cli/github/login.md
