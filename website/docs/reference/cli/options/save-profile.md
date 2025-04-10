@@ -88,6 +88,3 @@ openai:
 - [--profile](profile.md) - Load a profile
 - [Profiles](../../../advanced/profiles.md) - Detailed guide on creating and managing profiles
 - [Configuration](../../../usage/configuration.md) - General configuration options
-- [--save-local-profile](save-local-profile.md) - Alias for `--save-profile --local`
-- [--save-user-profile](save-user-profile.md) - Alias for `--save-profile --user`
-- [--save-global-profile](save-global-profile.md) - Alias for `--save-profile --global`

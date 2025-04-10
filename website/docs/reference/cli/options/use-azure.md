@@ -45,5 +45,5 @@ chatx --use-azure \
 - [--use-azure-openai](./use-azure-openai.md) (the full version of this alias)
 - [--use-openai](./use-openai.md) (for using the OpenAI API instead)
 - [--use-copilot](./use-copilot.md) (for using GitHub Copilot instead)
-- [Azure OpenAI Provider Documentation](/providers/azure-openai)
-- [Provider Selection Guide](/providers/index)
+- [Azure OpenAI Provider Documentation](../../../providers/azure-openai.md)
+- [Provider Selection Guide](../../../providers/index.md)

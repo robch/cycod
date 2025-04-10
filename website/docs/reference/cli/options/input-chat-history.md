@@ -70,8 +70,8 @@ chatx --input-chat-history complex-problem.jsonl --use-openai --openai-chat-mode
 
 ## See Also
 
-- [Chat History](../../usage/chat-history.md) - Detailed guide on managing chat history
+- [Chat History](../../../usage/chat-history.md) - Detailed guide on managing chat history
 - [--chat-history](chat-history.md) - Reference for the combined load/save option
 - [--output-chat-history](output-chat-history.md) - Reference for saving chat history
 - [--continue](continue.md) - Reference for continuing recent conversations
-- [Token Management](../../usage/chat-history.md#token-management) - How to manage token usage
+- [Token Management](../../../usage/chat-history.md#token-management) - How to manage token usage

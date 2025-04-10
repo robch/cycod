@@ -199,7 +199,6 @@ If an MCP server is listed but doesn't work:
 Now that you know how to manage and list MCP servers, you can:
 
 - Create [custom MCP servers](../advanced/mcp.md) for your specific needs
-- Learn how to [use MCP servers in chat sessions](../usage/mcp-in-chats.md)
 - Explore how to [pass environment variables](env-variables-mcp.md) to your MCP servers
 
 With effective MCP server management, your AI assistant becomes much more powerful and capable of working with your specific tools and data sources.

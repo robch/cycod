@@ -64,5 +64,5 @@ chatx --use-openai --question "What is the capital of France?"
 
 ## See Also
 
-- [OpenAI Provider Configuration](/providers/openai)
-- [Configuration Guide](/usage/configuration)
+- [OpenAI Provider Configuration](/providers/openai.md)
+- [Configuration Guide](/usage/configuration.md)

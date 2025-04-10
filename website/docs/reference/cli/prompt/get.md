@@ -102,4 +102,4 @@ user@CHAT>
 - [prompt list](list.md) - List all available prompts
 - [prompt create](create.md) - Create a new prompt
 - [prompt delete](delete.md) - Delete a prompt
-- [Custom Prompts Guide](/advanced/prompts/) - Learn more about using custom prompts
+- [Custom Prompts Guide](../../../advanced/prompts.md) - Learn more about using custom prompts

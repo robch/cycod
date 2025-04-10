@@ -28,8 +28,6 @@ First, gather the necessary information from your Azure OpenAI resource:
    - Select "Deployments" from the left menu
    - Note the names of the deployments you want to use
 
-![Azure OpenAI Resource](../assets/images/azure-openai-portal.png)
-
 ### Step 2: Configure ChatX with Azure OpenAI Settings
 
 You can set up Azure OpenAI as your provider in several ways:

@@ -88,4 +88,4 @@ When requesting help on a specific topic, ChatX displays comprehensive informati
 - [config](config/index.md) - Configuration commands
 - [alias](alias/index.md) - Alias commands
 - [prompt](prompt/index.md) - Prompt commands
-- [options](../options/index.md) - Command line options
+- [options](options/index.md) - Command line options

@@ -61,6 +61,6 @@ This adds a user-scoped MCP server that runs `python search.py` in the `./tools`
 
 ## Related
 
-- [`chatx mcp add`](../../mcp/add.md): Add a new MCP server
+- [`chatx mcp add`](../mcp/add.md): Add a new MCP server
 - [`--command`](./command.md): Specify the command to run
 - [`--arg`](./arg.md): Pass arguments to the command

@@ -80,7 +80,7 @@ You can find your Azure OpenAI endpoint in the Azure portal:
 
 ## See Also
 
-- [Azure OpenAI Provider](../../providers/azure-openai.md)
+- [Azure OpenAI Provider](../../../providers/azure-openai.md)
 - [`--azure-openai-api-key`](azure-openai-api-key.md)
 - [`--azure-openai-chat-deployment`](azure-openai-chat-deployment.md)
 - [`--use-azure-openai`](use-azure-openai.md)

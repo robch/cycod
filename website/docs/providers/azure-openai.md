@@ -136,8 +136,6 @@ To find your deployment names:
 3. Select "Deployments" from the left menu
 4. The "Name" column shows your deployment names
 
-![Azure OpenAI Deployments](../assets/images/azure-openai-deployments.png)
-
 Common deployment names are often the model name (like "gpt-4" or "gpt-35-turbo"), but you can choose any name when creating a deployment.
 
 ## Working with Multiple Azure OpenAI Deployments

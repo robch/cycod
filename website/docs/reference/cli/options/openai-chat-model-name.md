@@ -108,5 +108,5 @@ To view token usage and estimated cost for your session, you can use the `/cost`
 
 ## See Also
 
-- [OpenAI Provider Configuration](/providers/openai)
-- [Configuration Guide](/usage/configuration)
+- [OpenAI Provider Configuration](/providers/openai.md)
+- [Configuration Guide](/usage/configuration.md)

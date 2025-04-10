@@ -126,4 +126,4 @@ chatx --profile copilot-hmac --question "Your question"
 - [--use-copilot](./use-copilot.md) (for using Copilot with either authentication method)
 - [--use-openai](./use-openai.md) (for using the OpenAI API instead)
 - [--use-azure-openai](./use-azure-openai.md) (for using the Azure OpenAI API instead)
-- [GitHub Copilot Provider Documentation](/providers/github-copilot)
+- [GitHub Copilot Provider Documentation](/providers/github-copilot.md)

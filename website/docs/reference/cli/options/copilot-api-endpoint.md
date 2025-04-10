@@ -55,5 +55,5 @@ chatx config set copilot.apiEndpoint https://custom-copilot-api.example.com --us
 
 ## See Also
 
-- [GitHub Copilot Provider](../../providers/github-copilot.md)
+- [GitHub Copilot Provider](../../../providers/github-copilot.md)
 - [chatx github login](../github/login.md)

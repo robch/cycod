@@ -50,6 +50,16 @@ chatx --use-azure-openai \
       --interactive
 ```
 
+### Example 4: Using an environment variable (recommended for scripts)
+
+```bash
+# Set the key in an environment variable
+export AZURE_OPENAI_API_KEY="your-api-key"
+
+# Use the environment variable in your command
+chatx --use-azure-openai --azure-openai-api-key "$AZURE_OPENAI_API_KEY" --question "What is Azure OpenAI?"
+```
+
 ## Configuration Alternative
 
 For regular use, it's recommended to store your API key in the CHATX configuration instead of passing it on the command line:
@@ -60,12 +70,24 @@ chatx config set azure.openai.apiKey "your-api-key" --user
 
 This stores the API key in your user configuration, making it available for all CHATX sessions without having to specify it on the command line.
 
+## Configuration Precedence
+
+When CHATX looks for the Azure OpenAI API key, it checks sources in this order:
+
+1. Command-line option (`--azure-openai-api-key`)
+2. Environment variable (`AZURE_OPENAI_API_KEY`)
+3. Configuration files (local, then user, then global scope)
+
+Using the command-line option will override any value set in environment variables or configuration files.
+
 ## Security Considerations
 
-- Avoid including the API key in scripts that might be shared or stored in version control
+- Avoid including the API key directly in scripts that might be shared or stored in version control
 - Consider using environment variables for scripts and CI/CD pipelines
 - Regularly rotate API keys according to your security policies
 - Use the `--user` scope when storing API keys in configuration to keep them private to your user account
+- When using the key in scripts, consider reading it from a secure location like a secret manager
+- Be aware that API keys in command history might be accessible to other users on the system
 
 ## Related Options
 

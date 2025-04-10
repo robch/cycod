@@ -131,6 +131,6 @@ Error: MCP server 'unknown-server' not found in any scope.
 
 ## See Also
 
-- [Managing MCP Servers](../../tutorials/managing-mcp-servers.md)
-- [Using Environment Variables with MCP Servers](../../tutorials/env-variables-mcp.md)
-- [MCP Command Usage](../../tutorials/mcp-command-usage.md)
+- [Managing MCP Servers](../../../tutorials/managing-mcp-servers.md)
+- [Using Environment Variables with MCP Servers](../../../tutorials/env-variables-mcp.md)
+- [MCP Command Usage](../../../tutorials/mcp-command-usage.md)

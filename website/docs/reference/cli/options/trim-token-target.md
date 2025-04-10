@@ -70,4 +70,3 @@ chatx --interactive --trim-token-target 100000
 ## See Also
 
 - [Chat History Usage Guide](../../../usage/chat-history.md): Comprehensive guide on managing chat history
-- [Using Different Models](../../../providers/models.md): Information on context windows for different models

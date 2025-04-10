@@ -65,5 +65,5 @@ chatx --use-copilot --github-token %GITHUB_TOKEN% --question "What is GitHub Cop
 
 ## See Also
 
-- [GitHub Copilot Provider](../../providers/github-copilot.md)
+- [GitHub Copilot Provider](../../../providers/github-copilot.md)
 - [github login](../github/login.md)

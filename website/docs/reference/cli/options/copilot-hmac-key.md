@@ -7,7 +7,7 @@ The `--copilot-hmac-key` option provides an alternative authentication method fo
 When using HMAC authentication, you must also provide a Copilot integration ID using the [`--copilot-integration-id`](copilot-integration-id.md) option or the corresponding environment variable.
 
 !!! note
-    For a complete guide on using HMAC authentication with GitHub Copilot, see the [HMAC Authentication Tutorial](../../tutorials/github-copilot-hmac-auth.md).
+    For a complete guide on using HMAC authentication with GitHub Copilot, see the [HMAC Authentication Tutorial](../../../tutorials/github-copilot-auth.md).
 
 ## Syntax
 
@@ -101,5 +101,5 @@ HMAC keys and integration IDs are typically provided to enterprise customers or 
 
 - [--copilot-integration-id](copilot-integration-id.md)
 - [--use-copilot-hmac](use-copilot-hmac.md)
-- [GitHub Copilot Provider](../../providers/github-copilot.md)
-- [HMAC Authentication Tutorial](../../tutorials/github-copilot-hmac-auth.md)
+- [GitHub Copilot Provider](../../../providers/github-copilot.md)
+- [HMAC Authentication Tutorial](../../../tutorials/github-copilot-auth.md)

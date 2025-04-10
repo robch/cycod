@@ -14,6 +14,12 @@ You can provide one or more instructions to add to the system prompt:
 chatx --add-system-prompt "INSTRUCTION1" "INSTRUCTION2" [other options]
 ```
 
+You can also load system prompt additions from files:
+
+```bash
+chatx --add-system-prompt @file.txt "INSTRUCTION2" [other options]
+```
+
 ## Description
 
 The system prompt is a special set of instructions given to the AI model that defines its behavior, capabilities, and constraints. CHATX comes with a default system prompt that provides general guidance to the model.
@@ -68,6 +74,30 @@ Control the format of responses:
 chatx --add-system-prompt "Format your answers as bullet points." --question "What are the benefits of exercise?"
 ```
 
+### Reading from Files
+
+Load system prompt additions from files:
+
+```bash
+chatx --add-system-prompt @security-constraints.txt @formatting-rules.txt --question "Help me debug this code snippet."
+```
+
+### Combining with Templates and Variables
+
+Use template variables within your system prompt additions:
+
+```bash
+chatx --var role=Python --add-system-prompt "You are a {role} expert. Provide code examples in {role} only." --question "How do I read a file?"
+```
+
+### Using in Interactive Mode
+
+Apply system prompt additions to an interactive session:
+
+```bash
+chatx --add-system-prompt "Always cite your sources." --interactive
+```
+
 ### Combining with Other Options
 
 You can combine `--add-system-prompt` with other options:
@@ -75,6 +105,21 @@ You can combine `--add-system-prompt` with other options:
 ```bash
 chatx --add-system-prompt "Be concise." --add-user-prompt "I need help with coding." --question "How do I sort an array in Python?"
 ```
+
+### Complex Example: Expert Role with File Analysis
+
+```bash
+chatx --add-system-prompt "You are a security expert reviewing code." "Focus on identifying potential security vulnerabilities." "Format your findings in a structured report with severity levels." --question "Review this code: $(cat vulnerable_code.js)"
+```
+
+## When to Use --add-system-prompt vs --system-prompt
+
+| Use `--add-system-prompt` when you want to... | Use `--system-prompt` when you want to... |
+|----------------------------------------------|-------------------------------------------|
+| Keep ChatX's default intelligence and capabilities | Create a completely custom AI personality |
+| Add specific constraints or instructions | Define the AI's entire behavior from scratch |
+| Maintain consistent base behavior with slight modifications | Override default settings entirely |
+| Reinforce critical instructions | Create specialized tools with specific instructions |
 
 ## Best Practices
 

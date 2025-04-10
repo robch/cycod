@@ -77,5 +77,5 @@ chatx --profile openai --question "Your question"
 
 - [--use-azure-openai](./use-azure-openai.md) (for using Azure OpenAI API instead)
 - [--use-copilot](./use-copilot.md) (for using GitHub Copilot instead)
-- [OpenAI Provider Documentation](/providers/openai)
-- [Provider Selection Guide](/providers/index)
+- [OpenAI Provider Documentation](../../../providers/openai.md)
+- [Provider Selection Guide](../../../providers/index.md)

@@ -9,7 +9,7 @@ When using HMAC authentication with GitHub Copilot, this option is required alon
 The integration ID is a unique identifier typically provided by GitHub to enterprise customers, which links your requests to your organization's GitHub Copilot account.
 
 !!! note
-    For a complete guide on using HMAC authentication with GitHub Copilot, including how to obtain and use an integration ID, see the [HMAC Authentication Tutorial](../../tutorials/github-copilot-hmac-auth.md).
+    For a complete guide on using HMAC authentication with GitHub Copilot, including how to obtain and use an integration ID, see the [HMAC Authentication Tutorial](../../../tutorials/github-copilot-auth.md).
 
 ## Syntax
 
@@ -72,5 +72,5 @@ After configuring this setting, you can use GitHub Copilot with HMAC authenticat
 - [--copilot-hmac-key](copilot-hmac-key.md)
 - [--copilot-api-endpoint](copilot-api-endpoint.md)
 - [--copilot-model-name](copilot-model-name.md)
-- [GitHub Copilot Provider](../../providers/github-copilot.md)
-- [HMAC Authentication Tutorial](../../tutorials/github-copilot-hmac-auth.md)
+- [GitHub Copilot Provider](../../../providers/github-copilot.md)
+- [HMAC Authentication Tutorial](../../../tutorials/github-copilot-auth.md)

@@ -110,9 +110,9 @@ public static class ChatHistoryFileHelpers
         if (shouldAutoSave)
         {
             var historyDir = EnsureHistoryDirectory();
-            outputFileName = Path.Combine(historyDir, "trajectory-{time}.jsonl");
+            outputFileName = Path.Combine(historyDir, "trajectory-{time}.md");
         }
 
-        return FileHelpers.GetFileNameFromTemplate(outputFileName ?? "trajectory.jsonl", outputFileName);
+        return FileHelpers.GetFileNameFromTemplate(outputFileName ?? "trajectory.md", outputFileName);
     }
 }

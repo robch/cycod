@@ -58,5 +58,5 @@ If authentication fails or times out, you'll need to run the command again to ge
 
 ## See Also
 
-- [GitHub Copilot Provider](../../providers/github-copilot.md) - Learn more about using GitHub Copilot with ChatX
+- [GitHub Copilot Provider](/providers/github-copilot.md) - Learn more about using GitHub Copilot with ChatX
 - [--use-copilot](../options/use-copilot.md) - Flag to use GitHub Copilot as the AI provider

@@ -75,6 +75,6 @@ chatx --chat-history chat-{date}.jsonl --question "What's the weather like today
 
 ## See Also
 
-- [Chat History](../../usage/chat-history.md) - Detailed guide on managing chat history
-- [Continuing Conversations](../../usage/chat-history.md#continuing-recent-conversations) - Learn about continuing conversations with `--continue`
-- [Token Management](../../usage/chat-history.md#token-management) - How to manage token usage in long conversations
+- [Chat History](../../../usage/chat-history.md) - Detailed guide on managing chat history
+- [Continuing Conversations](../../../usage/chat-history.md#continuing-recent-conversations) - Learn about continuing conversations with `--continue`
+- [Token Management](../../../usage/chat-history.md#token-management) - How to manage token usage in long conversations

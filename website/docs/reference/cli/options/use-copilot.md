@@ -104,5 +104,5 @@ chatx --profile copilot --question "Your question"
 
 - [--use-openai](./use-openai.md) (for using the OpenAI API instead)
 - [--use-azure-openai](./use-azure-openai.md) (for using the Azure OpenAI API instead)
-- [GitHub Copilot Provider Documentation](/providers/github-copilot)
-- [Provider Selection Guide](/providers/index)
+- [GitHub Copilot Provider Documentation](../../../providers/github-copilot.md)
+- [Provider Selection Guide](../../../providers/index.md)

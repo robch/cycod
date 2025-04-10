@@ -100,6 +100,6 @@ chatx mcp add code-analyzer --command "./analyzer" --arg "--verbose" --arg "--no
 
 ## Related
 
-- [`chatx mcp add`](../../mcp/add.md): Add a new MCP server
+- [`chatx mcp add`](../mcp/add.md): Add a new MCP server
 - [`--command`](./command.md): Specify the command to run
 - [`--env`](./env.md): Set environment variables for the command
