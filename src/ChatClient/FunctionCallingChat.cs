@@ -78,6 +78,11 @@ public class FunctionCallingChat : IAsyncDisposable
         _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat);
     }
 
+    public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    {
+        _messages.SaveTrajectoryToFile(fileName, useOpenAIFormat);
+    }
+
     public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,

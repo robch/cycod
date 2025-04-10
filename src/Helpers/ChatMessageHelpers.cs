@@ -79,10 +79,15 @@ public static class AIExtensionsChatHelpers
         messages.AddRange(newMessages);
     }
 
-    /// <summary>
-    /// Scans through chat messages and fixes any dangling tool call IDs by inserting dummy tool messages.
-    /// </summary>
-    /// <param name="messages">The list of chat messages to fix.</param>
+    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    {
+        var trajectoryFile = new TrajectoryFile(fileName);
+        foreach (var message in messages)
+        {
+            trajectoryFile.AppendMessage(message);
+        }
+    }
+
     public static void FixDanglingToolCalls(this List<ChatMessage> messages)
     {
         for (int i = 0; i < messages.Count; i++)

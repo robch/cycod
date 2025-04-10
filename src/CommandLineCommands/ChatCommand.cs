@@ -347,11 +347,7 @@ public class ChatCommand : Command
         }
         catch (Exception)
         {
-            var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
-            chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-
-            ConsoleHelpers.Write("\n\n", overrideQuiet: true);
-            ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+            SaveExceptionHistory(chat);
             throw;
         }
     }
@@ -530,6 +526,28 @@ public class ChatCommand : Command
 
         var variables = new TemplateVariables(Variables);
         return TemplateHelpers.ProcessTemplate(template, variables);
+    }
+
+    private static void SaveExceptionHistory(FunctionCallingChat chat)
+    {
+        ConsoleHelpers.Write("\n\n", overrideQuiet: true);
+        SaveExceptionChatHistory(chat);
+        ConsoleHelpers.Write("\n", overrideQuiet: true);
+        SaveExceptionTrajectory(chat);
+    }
+
+    private static void SaveExceptionChatHistory(FunctionCallingChat chat)
+    {
+        var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
+        chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+    }
+
+    private static void SaveExceptionTrajectory(FunctionCallingChat chat)
+    {
+        var fileName = FileHelpers.GetFileNameFromTemplate("exception-trajectory.md", "{filebase}-{time}.{fileext}")!;
+        chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
     }
 
     public string? SystemPrompt { get; set; }
