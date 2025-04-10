@@ -5,28 +5,27 @@ Authenticates with GitHub to access Copilot features.
 ## Syntax
 
 ```bash
-chatx github login [options]
+chatx github login
 ```
 
 ## Description
 
-The `chatx github login` command initiates the GitHub authentication process to obtain access to GitHub Copilot features. It guides you through the authentication flow, which typically requires a web browser to complete.
+The `chatx github login` command initiates the GitHub device authentication flow to obtain access to GitHub Copilot features. This authentication process is required before you can use ChatX with GitHub Copilot as your AI provider.
 
-## Options
-
-| Option | Description |
-|--------|-------------|
-| `--no-browser` | Don't automatically open the authentication URL in a web browser |
-| `--json`, `-j` | Output results in JSON format |
+The command will:
+1. Generate a device code and verification URL
+2. Prompt you to visit the URL and enter the code
+3. Wait for successful authentication on GitHub
+4. Save the received token to your configuration
 
 ## Authentication Process
 
 1. The command initiates the GitHub device authentication flow
-2. A device code and verification URL are displayed
-3. Your default web browser is automatically opened to the verification URL (unless `--no-browser` is used)
-4. You will be asked to enter the device code on the GitHub website
-5. After authorizing CHATX, GitHub will provide an access token
-6. The token is securely stored in your user configuration for future use
+2. A device code and verification URL are displayed in your terminal
+3. You need to visit the URL in a web browser and enter the displayed code
+4. After entering the code, GitHub will ask for permission to authorize ChatX
+5. Once authorized, the command will automatically receive and save the token
+6. The token is stored in your configuration for future use
 
 ## Examples
 
@@ -36,43 +35,28 @@ Authenticate with GitHub:
 chatx github login
 ```
 
-Authenticate without automatically opening a browser:
-
-```bash
-chatx github login --no-browser
-```
-
 ## Output
 
 The command outputs information about the authentication process:
 
 ```
-To authenticate, visit: https://github.com/login/device
-and enter code: ABCD-1234
-
-Waiting for authentication...
-Successfully authenticated with GitHub.
-GitHub Copilot access is now enabled.
+Please visit https://github.com/login/device and enter code ABCD-1234 to authenticate.
+GitHub authentication successful!
+GitHub login successful! You can now use chatx with GitHub Copilot.
 ```
 
-When using `--json` option, the output includes the authentication status in JSON format:
-
-```json
-{
-  "status": "authenticated",
-  "message": "Successfully authenticated with GitHub"
-}
-```
-
-If authentication fails, an appropriate error message is displayed:
-
-```
-Authentication failed: The device code has expired. Please try again.
-```
+If authentication fails or times out, you'll need to run the command again to generate a new device code.
 
 ## Notes
 
 - The GitHub token is stored securely in your user configuration
 - The token is used for accessing GitHub Copilot features
-- You can check your authentication status with `chatx config get github.token`
-- To log out, use `chatx config clear github.token --user`
+- After authentication, you can use `--use-copilot` to select GitHub Copilot as your AI provider
+- You can check your authentication status with `chatx config get GitHub.Token --any`
+- To log out or revoke access, use `chatx config clear GitHub.Token --user`
+- A valid GitHub Copilot subscription is required to use this feature
+
+## See Also
+
+- [GitHub Copilot Provider](../../providers/github-copilot.md) - Learn more about using GitHub Copilot with ChatX
+- [--use-copilot](../options/use-copilot.md) - Flag to use GitHub Copilot as the AI provider

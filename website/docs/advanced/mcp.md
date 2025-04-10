@@ -34,7 +34,7 @@ To list all available MCP servers:
 chatx mcp list
 ```
 
-To list servers from a specific scope:
+This shows MCP servers from all scopes (equivalent to using `--any`). To list servers from a specific scope:
 
 ```bash title="List user-level MCP servers"
 chatx mcp list --user
@@ -80,11 +80,15 @@ To remove an MCP server:
 chatx mcp remove postgres-server
 ```
 
+This removes the server from the first scope it's found in (equivalent to using `--any`).
+
 To remove from a specific scope:
 
 ```bash title="Remove from user scope"
 chatx mcp remove shared-tool --user
 ```
+
+For detailed instructions on removing MCP servers, including best practices and common scenarios, see our [Removing MCP Servers](../tutorials/removing-mcp-servers.md) tutorial.
 
 ## Using MCP Servers
 
@@ -195,6 +199,60 @@ Set up an MCP server that can process and analyze documents:
 chatx mcp add documents --command ./doc_processor.py --arg --docs-dir --arg "/path/to/documents"
 chatx --use-mcp documents --question "What are the key points from our quarterly report?"
 ```
+
+## Setting Environment Variables for MCP Servers
+
+Environment variables provide a secure and flexible way to configure MCP servers without hardcoding values in scripts. With CHATX, you can set environment variables using the `--env` option when adding an MCP server.
+
+### Basic Usage
+
+Use the `--env` option (or its short form `-e`) with a key-value pair:
+
+```bash title="Setting an environment variable"
+chatx mcp add database --command ./db_server.py --env "DB_PASSWORD=secure123"
+```
+
+You can set multiple environment variables:
+
+```bash title="Setting multiple environment variables"
+chatx mcp add api-server --command ./server.js \
+  --env "PORT=3000" \
+  --env "NODE_ENV=production" \
+  --env "LOG_LEVEL=info"
+```
+
+### Common Use Cases for Environment Variables
+
+1. **API Keys and Authentication**:
+   ```bash
+   chatx mcp add weather --command ./weather.py --env "API_KEY=your_api_key"
+   ```
+
+2. **Configuration Paths**:
+   ```bash
+   chatx mcp add toolkit --command ./toolkit.py --env "CONFIG_PATH=/etc/toolkit/config.json"
+   ```
+
+3. **Feature Flags and Operation Modes**:
+   ```bash
+   chatx mcp add processor --command ./processor.py --env "ENABLE_CACHE=true" --env "DEBUG_MODE=false"
+   ```
+
+4. **Connection Strings**:
+   ```bash
+   chatx mcp add database --command ./db_client.py --env "CONNECTION_STRING=mongodb://localhost:27017"
+   ```
+
+### Environment Variables vs. Command Arguments
+
+For configuration, you can use either environment variables (`--env`) or command arguments (`--arg`). Here's when to use each:
+
+| Use Environment Variables (`--env`) when | Use Command Arguments (`--arg`) when |
+|------------------------------------------|-------------------------------------|
+| Handling sensitive information (passwords, API keys) | Passing standard program options |
+| Configuring the MCP server's runtime environment | Specifying input/output file paths |
+| Setting general configuration values | Using flag arguments (e.g., `--verbose`) |
+| Working with applications that expect ENV configuration | Passing positional arguments |
 
 ## Security Considerations
 

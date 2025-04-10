@@ -64,7 +64,7 @@ To list all available aliases:
 chatx alias list
 ```
 
-This shows aliases from all scopes. To list aliases from a specific scope:
+This shows aliases from all scopes (equivalent to using `--any`). To list aliases from a specific scope:
 
 ```bash title="List user-level aliases"
 chatx alias list --user
@@ -100,13 +100,43 @@ To delete an alias:
 chatx alias delete python-expert
 ```
 
-By default, this will search for the alias in all scopes and delete the first one found. To delete from a specific scope:
+By default, this will search for the alias in all scopes (using `--any`) and delete the first one found. To delete from a specific scope:
 
 ```bash title="Delete user-level alias"
 chatx alias delete python-expert --user
 ```
 
-## Using Aliases with Additional Options
+## Using Aliases
+
+### The `--ALIAS` Syntax
+
+To use a saved alias, simply prefix the alias name with double dashes:
+
+```bash title="Using an alias"
+chatx --time
+chatx --python-expert
+chatx --joke
+```
+
+When you use the `--ALIAS` syntax, ChatX:
+
+1. Searches for the alias in local, user, and global scopes (in that order)
+2. Loads the saved options from the alias file
+3. Applies those options to your current command
+
+For example, if you saved an alias with:
+
+```bash
+chatx --use-openai --add-system-prompt "You are a Python expert." --save-alias python-expert
+```
+
+When you use `chatx --python-expert`, it's equivalent to typing:
+
+```bash
+chatx --use-openai --add-system-prompt "You are a Python expert."
+```
+
+### Using Aliases with Additional Options
 
 You can combine aliases with additional command-line options:
 
@@ -114,7 +144,17 @@ You can combine aliases with additional command-line options:
 chatx --python-expert --question "How do I sort a list in Python?"
 ```
 
-The options given on the command line are merged with those in the alias, with command-line options taking precedence if there are conflicts.
+The options given on the command line are merged with those in the alias, with command-line options taking precedence if there are conflicts. For example:
+
+```bash
+# Save an alias that uses GPT-3.5
+chatx --use-openai --openai-chat-model-name gpt-3.5-turbo --save-alias quick
+
+# Override the model when using the alias
+chatx --quick --openai-chat-model-name gpt-4o --question "Why is the sky blue?"
+```
+
+In this example, the command would use GPT-4o despite the alias specifying GPT-3.5-turbo.
 
 ## Alias Search Order
 
@@ -144,6 +184,16 @@ chatx --add-system-prompt "You are a financial expert. Provide detailed, accurat
 
 ```bash title="Create a language-specific alias"
 chatx --add-system-prompt "You are a JavaScript expert. Always provide code examples using modern ES6+ syntax and explain best practices." --save-user-alias javascript
+```
+
+```bash title="Create a Python expert alias"
+chatx --add-system-prompt "You are a Python expert. Always provide runnable code examples following PEP 8 style guidelines, explain key concepts clearly, and suggest best practices." --save-user-alias python-expert
+```
+
+You can use these aliases with your programming questions:
+
+```bash
+chatx --python-expert --question "How do I handle file operations in Python?"
 ```
 
 ### Creating a Model-Specific Alias

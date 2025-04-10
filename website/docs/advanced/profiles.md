@@ -20,7 +20,7 @@ To use a profile:
 chatx --profile development --question "What is the capital of France?"
 ```
 
-This loads all the settings from the `development` profile before executing the command.
+This loads all the settings from the `development` profile before executing the command. For detailed syntax and examples, see the [--profile option reference](../../reference/cli/options/profile.md).
 
 ### Combining Profiles with Command-Line Options
 
@@ -57,7 +57,7 @@ A more convenient way to create profiles is by using the `--save-profile` option
 chatx --use-openai --openai-chat-model-name gpt-4 --add-system-prompt "You are a helpful assistant." --save-profile gpt4
 ```
 
-This creates a profile with all the specified options.
+This creates a profile with all the specified options. For detailed syntax and examples, see the [--save-profile option reference](../../reference/cli/options/save-profile.md).
 
 ### Profile Scopes
 

@@ -69,7 +69,7 @@ chatx mcp get postgres-server
 Add a new MCP server:
 
 ```bash
-chatx mcp add postgres-server --command "python db_server.py"
+chatx mcp add postgres-server --command "python" --arg "db_server.py" --arg "--verbose"
 ```
 
 Remove an MCP server:

@@ -135,13 +135,16 @@ public class ChatCommand : Command
     private string GroundSystemPrompt()
     {
         SystemPrompt ??= GetBuiltInSystemPrompt();
-        return ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+
+        var processed =  ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+        return _namedValues != null ? processed.ReplaceValues(_namedValues) : processed;
     }
 
     private List<string> GroundUserPromptAdds()
     {
         return UserPromptAdds
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .Select(x => _namedValues != null ? x.ReplaceValues(_namedValues) : x)
             .ToList();
     }
 
@@ -149,6 +152,7 @@ public class ChatCommand : Command
     {
         return InputInstructions
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .Select(x => _namedValues != null ? x.ReplaceValues(_namedValues) : x)
             .ToList();
     }
 

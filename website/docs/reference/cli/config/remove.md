@@ -5,19 +5,21 @@ Removes a value from a list configuration setting.
 ## Syntax
 
 ```bash
-chatx config remove <key> <value> [options]
+chatx config remove <key> <value> [--scope]
 ```
 
 ## Description
 
-The `chatx config remove` command removes a specific value from a configuration setting that stores a list of values. By default, it operates on the local scope.
+The `chatx config remove` command removes a specific value from a configuration setting that stores a list of values. This command is specifically designed for list-type settings where multiple values are stored together, not for single-value settings.
+
+Unlike `config clear` which removes an entire setting, `config remove` only removes a single value from a list while preserving the rest of the list.
 
 ## Arguments
 
 | Argument | Description |
 |----------|-------------|
 | `<key>` | Name of the list configuration setting |
-| `<value>` | Value to remove from the list |
+| `<value>` | Specific value to remove from the list |
 
 ## Options
 
@@ -29,40 +31,88 @@ The `chatx config remove` command removes a specific value from a configuration 
 
 ## Examples
 
-Remove a domain from trusted domains list in local scope:
+Remove a domain from trusted domains list:
 
 ```bash
 chatx config remove app.trustedDomains example.com
 ```
 
-Remove a source from trusted sources in user scope:
+Remove a file extension from allowed file types in user scope:
 
 ```bash
-chatx config remove app.trustedSources github.com --user
+chatx config remove app.allowedFileTypes .exe --user
 ```
 
-Remove a model from allowed models in global scope:
+Disable an experimental feature by removing it from enabled features:
+
+```bash
+chatx config remove app.enabledFeatures beta-ui --user
+```
+
+Remove a model from globally allowed models:
 
 ```bash
 chatx config remove app.allowedModels gpt-3.5-turbo --global
 ```
 
+Remove a source from trusted sources:
+
+```bash
+chatx config remove app.trustedSources github.com --user
+```
+
 ## Output
 
-The command confirms successful removal:
+When successful, the command confirms the removal:
 
 ```
 Value 'example.com' has been removed from setting 'app.trustedDomains' in local scope.
 ```
 
-If the value doesn't exist in the list or the setting doesn't exist, the command indicates this:
+If the value doesn't exist in the list, the command will indicate this:
 
 ```
 Value 'unknown.com' not found in setting 'app.trustedDomains' in local scope.
 ```
 
-or
+If the setting itself doesn't exist, you'll see:
 
 ```
 Setting 'app.unknownSetting' not found in local scope.
 ```
+
+## When to Use
+
+Use `config remove` when you need to:
+
+- Remove a domain from your trusted domains list
+- Remove a file extension from allowed file types
+- Disable an experimental feature by removing it from enabled features
+- Remove an AI model from your allowed models list
+- Remove any item from any list-type configuration setting
+
+For removing entire settings (not just individual list items), use [`config clear`](./clear.md) instead.
+
+## Common List Settings
+
+This command is commonly used with these list-type settings:
+
+| Setting Name | Description |
+|--------------|-------------|
+| `app.trustedDomains` | Domains allowed for external connections |
+| `app.allowedFileTypes` | File extensions ChatX can process |
+| `app.allowedModels` | AI models permitted for use |
+| `app.enabledFeatures` | Experimental features to enable |
+| `app.disabledFeatures` | Features to disable |
+
+## Related Commands
+
+- [`chatx config add`](./add.md) - Add a value to a list setting
+- [`chatx config get`](./get.md) - View the current values in a setting
+- [`chatx config clear`](./clear.md) - Remove an entire setting (not just a single value)
+- [`chatx config set`](./set.md) - Set the value of a single-value setting
+
+## See Also
+
+- [Working with List Settings](../../../usage/config-list-settings.md) - Guide on managing list settings
+- [Configuration](../../../usage/configuration.md) - General configuration guide

@@ -1,6 +1,6 @@
 # prompt get
 
-Retrieves a specific prompt definition.
+Retrieves and displays the content of a specific custom prompt.
 
 ## Syntax
 
@@ -10,7 +10,14 @@ chatx prompt get <prompt-name> [options]
 
 ## Description
 
-The `chatx prompt get` command displays the content of a specified prompt. By default, it searches for the prompt in all scopes.
+The `chatx prompt get` command displays the content and details of a specified prompt. When a prompt is found, the command shows:
+
+- The prompt name
+- The file location and scope
+- The prompt content
+- Usage example for the prompt in chat
+
+By default, it searches for the prompt in all scopes (local, user, and global).
 
 ## Arguments
 
@@ -55,8 +62,11 @@ The command outputs detailed information about the specified prompt:
 ```
 PROMPT: translate
 
-Content: Translate the following text to {language}: {text}
+File:    /Users/username/.chatx/prompts/translate.txt
 Scope:   user
+Content: Translate the following text to {language}: {text}
+
+Example usage in chat: /translate
 ```
 
 When using `--json` option, the output is formatted as JSON:
@@ -64,6 +74,7 @@ When using `--json` option, the output is formatted as JSON:
 ```json
 {
   "name": "translate",
+  "file": "/Users/username/.chatx/prompts/translate.txt",
   "content": "Translate the following text to {language}: {text}",
   "scope": "user"
 }
@@ -74,3 +85,21 @@ If the prompt is not found, the command will display an error message:
 ```
 Error: Prompt 'unknown-prompt' not found in any scope.
 ```
+
+## Usage in Chat Sessions
+
+After viewing the prompt details, you can use it in an interactive chat session by typing a forward slash followed by the prompt name:
+
+```
+user@CHAT> /translate
+Translate the following text to {language}: {text}
+
+user@CHAT> 
+```
+
+## See Also
+
+- [prompt list](list.md) - List all available prompts
+- [prompt create](create.md) - Create a new prompt
+- [prompt delete](delete.md) - Delete a prompt
+- [Custom Prompts Guide](/advanced/prompts/) - Learn more about using custom prompts

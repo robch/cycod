@@ -87,7 +87,7 @@ To list all available prompts:
 chatx prompt list
 ```
 
-To list prompts from a specific scope:
+This shows prompts from all scopes (equivalent to using `--any`). To list prompts from a specific scope:
 
 ```bash title="List user prompts"
 chatx prompt list --user

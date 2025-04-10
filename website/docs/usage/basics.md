@@ -32,11 +32,81 @@ chatx --system-prompt "You are a helpful assistant who speaks French." --questio
 La capitale de la France est Paris.
 ```
 
-To add instructions to the default system prompt instead of replacing it, use `--add-system-prompt`:
+### Adding to the System Prompt
+
+Instead of completely replacing the default system prompt, you can add additional instructions using `--add-system-prompt`. This preserves CHATX's default intelligence while adding your specific requirements:
 
 ```bash title="Add to system prompt"
 chatx --add-system-prompt "Always include examples in your answers." --question "What is an array?"
 ```
+
+You can add multiple instructions by providing multiple arguments:
+
+```bash title="Multiple system prompt additions"
+chatx --add-system-prompt "Answer in a casual, friendly tone." "Include examples in your responses." --question "Explain quantum computing."
+```
+
+#### Common Use Cases for --add-system-prompt
+
+**Controlling Response Format:**
+```bash title="Format control"
+chatx --add-system-prompt "Format your answers as bullet points." --question "What are the benefits of exercise?"
+```
+
+**Adding Security Constraints:**
+```bash title="Security constraint"
+chatx --add-system-prompt "Never access files outside the current directory." --question "List the files in this directory."
+```
+
+**Setting Language Preferences:**
+```bash title="Language preference"
+chatx --add-system-prompt "Respond in Spanish only." --question "What is the weather like today?"
+```
+
+**Personality Adjustment:**
+```bash title="Personality adjustment"
+chatx --add-system-prompt "Respond like a pirate." --question "How do I make a sandwich?"
+```
+
+The `--add-system-prompt` option is ideal when you want to fine-tune the AI's behavior without losing CHATX's built-in capabilities and safeguards.
+
+## User Context with --add-user-prompt
+
+While system prompts define how the AI behaves, user prompts are treated as if they came from you. The `--add-user-prompt` option adds text that's prepended to your first input or question, establishing context before your main query:
+
+```bash title="Add user context"
+chatx --add-user-prompt "I'm working with Python 3.10." --question "How do I use match statements?"
+```
+
+You can add multiple user prompts, which are processed in order:
+
+```bash title="Multiple user prompts"
+chatx --add-user-prompt "I use VS Code." "I'm on Windows 11." --question "How do I set up a Python virtual environment?"
+```
+
+### Common Use Cases for --add-user-prompt
+
+**Setting a Role or Persona:**
+```bash title="Define your role"
+chatx --add-user-prompt "I'm a junior developer learning web development." --question "Explain how CSS flexbox works."
+```
+
+**Providing Background Information:**
+```bash title="Background context"
+chatx --add-user-prompt "I'm troubleshooting a Node.js application." --question "What could cause ECONNREFUSED errors?"
+```
+
+**Language Preference:**
+```bash title="Language preference"
+chatx --add-user-prompt "Please respond in French." --question "What are the top tourist attractions in Paris?"
+```
+
+**Combining with System Prompts:**
+```bash title="Combining prompt types"
+chatx --add-system-prompt "Be concise." --add-user-prompt "I need help with coding." --question "How do I sort an array in Python?"
+```
+
+The key difference between `--add-system-prompt` and `--add-user-prompt` is that system prompts are instructions to the AI about how to behave, while user prompts are treated as content you've already shared, providing context for your actual question.
 
 ## Interactive Chat
 
@@ -157,10 +227,16 @@ For more output details, use the `--verbose` flag:
 chatx --verbose --question "What is the capital of France?"
 ```
 
-For minimal output, use the `--quiet` flag:
+For minimal output that shows only the AI's response and critical messages, use the `--quiet` flag:
 
 ```bash title="Quiet mode"
-chatx --quiet --question "What is the capital of France?"
+chatx --quiet --input "What is the capital of France?"
+```
+
+Note that the `--question` option already includes quiet mode automatically:
+
+```bash title="Question includes quiet mode"
+chatx --question "What is the capital of France?"  # --quiet is implied here
 ```
 
 ## Selecting Providers

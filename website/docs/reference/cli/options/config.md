@@ -1,0 +1,120 @@
+# --config
+
+The `--config` option allows you to load configuration settings from one or more YAML or INI files, giving you a flexible way to manage CHATX settings for different scenarios.
+
+## Syntax
+
+```bash
+chatx --config FILE1 [FILE2 [...]] [other options]
+```
+
+You can provide one or more configuration files:
+
+```bash
+chatx --config config1.yaml config2.ini [other options]
+```
+
+## Description
+
+The `--config` option lets you load CHATX settings from external files instead of using the default configuration files or adding each setting individually on the command line. This is especially useful for:
+
+- Maintaining different configurations for different projects
+- Sharing configuration settings across a team
+- Switching between complex configurations quickly
+- Keeping sensitive information like API keys in separate files
+
+Configuration files can be in YAML or INI format and contain any valid CHATX settings. Settings loaded with `--config` take precedence over the default configuration but can be overridden by options specified directly on the command line.
+
+## Supported File Formats
+
+### YAML Format
+
+```yaml
+app:
+  preferredProvider: azure-openai
+  autoSaveChatHistory: true
+
+openai:
+  chatModelName: gpt-4o
+
+azure:
+  openai:
+    endpoint: https://your-azure-openai-endpoint.com
+    chatDeployment: gpt-4
+```
+
+### INI Format
+
+```ini
+[app]
+preferredProvider = azure-openai
+autoSaveChatHistory = true
+
+[openai]
+chatModelName = gpt-4o
+
+[azure.openai]
+endpoint = https://your-azure-openai-endpoint.com
+chatDeployment = gpt-4
+```
+
+## Examples
+
+### Basic Usage
+
+Load settings from a single configuration file:
+
+```bash
+chatx --config my-project-config.yaml --question "How do I optimize my code?"
+```
+
+### Multiple Configuration Files
+
+Load settings from multiple files (settings from later files override earlier ones):
+
+```bash
+chatx --config base-settings.yaml project-specific.yaml --question "What's new in Python 3.11?"
+```
+
+### Combining with Command-Line Options
+
+Mix configuration files with direct command-line options:
+
+```bash
+chatx --config team-settings.yaml --use-openai --question "Explain Docker containers"
+```
+
+In this example, settings from `team-settings.yaml` are loaded first, but the `--use-openai` option will override any provider preference specified in the configuration file.
+
+### Using Different Formats Together
+
+Mix YAML and INI formats if needed:
+
+```bash
+chatx --config company-settings.yaml personal-settings.ini --question "Summarize this meeting"
+```
+
+### Project-Specific Configuration
+
+Create project-specific configuration files for different use cases:
+
+```bash
+# For development work
+chatx --config dev-settings.yaml --question "Debug this error"
+
+# For content creation
+chatx --config content-settings.yaml --question "Write a blog post about AI"
+```
+
+## Best Practices
+
+1. **Security**: Keep sensitive information like API keys in secure configuration files with appropriate permissions.
+2. **Organization**: Group related settings in different configuration files for better organization.
+3. **Defaults**: Use configuration files for commonly used settings and override specific options via command line as needed.
+4. **Documentation**: Include comments in your YAML/INI files to document what each setting does.
+5. **Version Control**: Consider which configuration files should be included in version control and which should be kept private (like those containing API keys).
+
+## Related Options
+
+- [`--profile`](profile.md): Load a specific profile's configuration from `.chatx/profiles/NAME.yaml`
+- [`config set`](../config/set.md): Set individual configuration values

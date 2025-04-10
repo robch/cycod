@@ -1,0 +1,129 @@
+# --ALIAS Option
+
+The `--ALIAS` option allows you to use previously saved command aliases. It's a powerful shorthand way to invoke a set of pre-configured options with a single parameter.
+
+## Syntax
+
+```bash
+chatx --ALIAS_NAME [additional options]
+```
+
+Where `ALIAS_NAME` is the name of a previously saved alias (without the `--` prefix).
+
+## Description
+
+When you invoke ChatX with the `--ALIAS_NAME` syntax (where `ALIAS_NAME` is the name of your saved alias), ChatX will:
+
+1. Search for the specified alias in local, user, and global scopes (in that order)
+2. Load all saved command options from the alias file
+3. Apply those options to your current command
+4. Continue processing any additional options you provide
+
+This mechanism allows you to create shortcuts for frequently used commands and option combinations, saving you from repeatedly typing the same complex commands.
+
+## How It Works
+
+Unlike most command-line options that are explicitly defined in the application, the `--ALIAS` syntax is recognized dynamically:
+
+1. ChatX receives a command-line option starting with `--` (e.g., `--python-expert`)
+2. If it's not a built-in option, ChatX checks if it's a saved alias
+3. If found, all options stored in the alias are applied to the command
+
+## Alias Resolution
+
+When looking for an alias, ChatX searches in this order:
+
+1. Local scope (`.chatx/aliases` in the current directory)
+2. User scope (`.chatx/aliases` in the user's home directory)
+3. Global scope (system-wide directory available to all users)
+
+This prioritization means a local alias takes precedence over a user alias with the same name, which takes precedence over a global alias.
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Using an alias named "python-expert"
+chatx --python-expert
+```
+
+This would apply all the options that were saved when creating the alias, such as:
+
+```bash
+# What might have been saved in the python-expert alias
+--use-openai --openai-chat-model-name gpt-4o --add-system-prompt "You are an expert Python programmer."
+```
+
+### Real-world Example
+
+Instead of typing this verbose command every time:
+
+```bash
+chatx --use-openai --add-system-prompt "You are an expert code reviewer. Analyze code for bugs, security issues, and performance optimizations." --openai-chat-model-name gpt-4o
+```
+
+You can save it as an alias:
+
+```bash
+chatx --use-openai --add-system-prompt "You are an expert code reviewer. Analyze code for bugs, security issues, and performance optimizations." --openai-chat-model-name gpt-4o --save-alias code-review
+```
+
+And then use it simply as:
+
+```bash
+chatx --code-review --question "Please review this code: [paste code here]"
+```
+
+### Combining with Additional Options
+
+```bash
+# Using the alias and adding a specific question
+chatx --python-expert --question "How do I read JSON files in Python?"
+```
+
+The options specified in the `python-expert` alias will be applied first, followed by the additional `--question` option.
+
+### Working with Files
+
+```bash
+# Using an alias with file operations
+chatx --code-review file1.js file2.js --output-trajectory review-report.md
+```
+
+### Overriding Alias Options
+
+If your alias sets a particular option that you want to override:
+
+```bash
+# If python-expert alias uses gpt-4, but you want to use a different model for this session
+chatx --python-expert --openai-chat-model-name gpt-3.5-turbo --question "Explain list comprehensions"
+```
+
+The `--openai-chat-model-name` option specified in the command line will override the one in the alias.
+
+## Best Practices
+
+### Naming Conventions
+
+- Use descriptive names that indicate the purpose of the alias
+- Use dashes instead of spaces in alias names
+- Consider prefixing aliases with categories (e.g., `py-` for Python-related aliases)
+- Avoid names that match built-in ChatX options to prevent conflicts
+
+### Avoid Naming Conflicts
+
+Be careful not to create aliases with names that match existing ChatX options. For example, creating an alias named `question` would conflict with the `--question` option. If this happens, the built-in option takes precedence.
+
+## Related Commands
+
+- [`--save-alias`](/reference/cli/options/save-alias.md) - Save current options as an alias in local scope
+- [`--save-local-alias`](/reference/cli/options/save-local-alias.md) - Save current options as an alias in local scope
+- [`--save-user-alias`](/reference/cli/options/save-user-alias.md) - Save current options as an alias in user scope
+- [`--save-global-alias`](/reference/cli/options/save-global-alias.md) - Save current options as an alias in global scope
+
+## See Also
+
+- [Managing Aliases](/usage/aliases.md) - Comprehensive guide to working with aliases
+- [alias command](/reference/cli/alias/index.md) - Managing aliases via commands
+- [Understanding Scopes](/usage/scopes.md) - How local, user, and global scopes work

@@ -1,0 +1,81 @@
+chatx help
+chatx version
+chatx github login
+chatx config list
+chatx config get
+chatx config set
+chatx config clear
+chatx config add
+chatx config remove
+chatx alias list
+chatx alias get
+chatx alias delete
+chatx prompt list
+chatx prompt get
+chatx prompt create
+chatx prompt delete
+chatx mcp list
+chatx mcp get
+chatx mcp add
+chatx mcp remove
+--add-system-prompt
+--add-user-prompt
+--ALIAS
+--aliasname
+--any
+--arg
+--azure-openai-api-key
+--azure-openai-chat-deployment
+--azure-openai-endpoint
+--chat-history
+--command
+--config
+--continue
+--copilot-api-endpoint
+--copilot-hmac-key
+--copilot-integration-id
+--copilot-model-name
+--debug
+--env
+--expand
+--foreach
+--get-time
+--github-token
+--global
+--inp
+--inpu
+--input
+--input-chat-history
+--inputs
+--instructions
+--interactive
+--local
+--max-tokens
+--openai-api-key
+--openai-chat-model-name
+--output-chat-history
+--output-trajectory
+--profile
+--python-expert
+--question
+--quiet
+--save-alias
+--save-global-alias
+--save-local-alias
+--save-user-alias
+--scope
+--system-prompt
+--threads
+--trim-token-target
+--url
+--use-azure-open
+--use-azure-openai
+--use-copilot
+--use-copilot-hmac
+--use-copilot-token
+--use-openai
+--user
+--use-templates
+--var
+--vars
+--verbose

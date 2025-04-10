@@ -1,0 +1,103 @@
+# --chat-history
+
+The `--chat-history` option is a convenient way to both load from and save to the same chat history file. It combines the functionality of `--input-chat-history` and `--output-chat-history` into a single option.
+
+## Syntax
+
+```bash
+chatx --chat-history [FILE]
+```
+
+## Parameters
+
+- `FILE`: Optional. Path to the chat history file in JSONL format. If not specified, defaults to `chat-history.jsonl` in the current directory.
+
+## Behavior
+
+When you use `--chat-history [FILE]`:
+
+- If the specified file exists:
+  - Loads the chat history from this file (similar to `--input-chat-history`)
+  - Saves all new messages to the same file (similar to `--output-chat-history`)
+- If the specified file does not exist yet:
+  - Creates a new file when the first message is saved
+  - Does not attempt to load any history (since the file doesn't exist)
+
+This is equivalent to using both `--input-chat-history` and `--output-chat-history` with the same filename.
+
+## Default Values
+
+- When no filename is provided: Defaults to `chat-history.jsonl` in the current directory
+- When a filename template is provided with special placeholders:
+  - `{time}`: Replaced with timestamp (e.g., `20250415123045`)
+  - `{date}`: Replaced with date (e.g., `20250415`)
+  - `{filebase}`: Base name of the file without extension
+  - `{fileext}`: Extension of the file
+
+## Examples
+
+### Basic Usage
+
+```bash
+# Load from and save to "my-project.jsonl"
+chatx --chat-history my-project.jsonl --question "What is ChatX?"
+```
+
+### Continuing a Conversation
+
+```bash
+# First session
+chatx --chat-history project-chat.jsonl --question "How do I structure a Python project?"
+
+# Later session continuing the conversation
+chatx --chat-history project-chat.jsonl --question "How should I organize the test files?"
+```
+
+### With Templates
+
+```bash
+# Use a date-based filename
+chatx --chat-history chat-{date}.jsonl --question "What's the weather like today?"
+
+# This creates a file like "chat-20250415.jsonl"
+```
+
+### In Interactive Mode
+
+```bash
+# Start an interactive session with history saved/loaded from my-chat.jsonl
+chatx --interactive --chat-history my-chat.jsonl
+```
+
+### With Token Management
+
+```bash
+# Specify a token target to manage context length in long conversations
+chatx --chat-history long-conversation.jsonl --trim-token-target 16000 --question "Continue our discussion"
+```
+
+## Related Options
+
+| Option | Description |
+|--------|-------------|
+| `--input-chat-history [FILE]` | Load chat history from the specified JSONL file |
+| `--output-chat-history [FILE]` | Save chat history to the specified file |
+| `--continue` | Continue the most recent chat history |
+| `--trim-token-target [TOKENS]` | Set target for maximum tokens in history |
+| `--output-trajectory [FILE]` | Save a human-readable version of the chat history |
+
+## Notes
+
+- The `--chat-history` option overrides the `--continue` flag if both are specified
+- The specified file must be in JSONL format
+- Chat history files can grow large with extended conversations, but ChatX includes automatic token management
+- This option is ideal for project-specific conversations that you want to continue over time
+
+## See Also
+
+- [Chat History](../../usage/chat-history.md) - Detailed guide on managing chat history
+- [Continuing Conversations](../../usage/chat-history.md#continuing-recent-conversations) - Learn about continuing conversations with `--continue`
+- [Token Management](../../usage/chat-history.md#token-management) - How to manage token usage in long conversations
+- [--continue](./continue.md) - Reference for the continue option
+- [--input-chat-history](./input-chat-history.md) - Reference for loading chat history
+- [--output-chat-history](./output-chat-history.md) - Reference for saving chat history

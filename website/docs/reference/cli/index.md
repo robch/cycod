@@ -30,8 +30,8 @@ These options apply to the main `chatx` command:
 | Option | Description |
 |--------|-------------|
 | `--system-prompt "PROMPT"` | Replace system prompt given to AI model |
-| `--add-system-prompt "TEXT"` | Add text to the system prompt |
-| `--add-user-prompt "TEXT"` | Add user prompt(s), prepended to the first input |
+| [`--add-system-prompt "TEXT"`](options/add-system-prompt.md) | Add text to the system prompt |
+| [`--add-user-prompt "TEXT"`](options/add-user-prompt.md) | Add user prompt(s), prepended to the first input |
 | `--input "LINE"` | Provide input to the AI model |
 | `--question "LINE"` | Alias for `--interactive false --quiet --input` |
 | `--instruction "LINE"` | Alias for `--input` |
@@ -45,11 +45,11 @@ These options apply to the main `chatx` command:
 
 | Option | Description |
 |--------|-------------|
-| `--continue` | Continue the most recent chat history |
-| `--chat-history [FILE]` | Load from and save to the same JSONL file |
-| `--input-chat-history [FILE]` | Load chat history from the specified JSONL file |
-| `--output-chat-history [FILE]` | Save chat history to the specified file |
-| `--output-trajectory [FILE]` | Save chat history in human readable format |
+| [`--continue`](options/continue.md) | Continue the most recent chat history |
+| [`--chat-history [FILE]`](options/chat-history.md) | Load from and save to the same JSONL file |
+| [`--input-chat-history [FILE]`](options/input-chat-history.md) | Load chat history from the specified JSONL file |
+| [`--output-chat-history [FILE]`](options/output-chat-history.md) | Save chat history to the specified file |
+| [`--output-trajectory [FILE]`](options/output-trajectory.md) | Save chat history in human readable format |
 
 ### Model Options
 
@@ -63,6 +63,8 @@ These options apply to the main `chatx` command:
 | Option | Description |
 |--------|-------------|
 | `--use-copilot` | Prefer use of GitHub Copilot |
+| `--use-copilot-token` | Prefer use of GitHub Copilot with token authentication |
+| `--use-copilot-hmac` | Prefer use of GitHub Copilot with HMAC authentication |
 | `--use-openai` | Prefer use of OpenAI API |
 | `--use-azure-openai` | Prefer use of Azure OpenAI API |
 | `--use-azure` | Alias for `--use-azure-openai` |
@@ -71,18 +73,18 @@ These options apply to the main `chatx` command:
 
 | Option | Description |
 |--------|-------------|
-| `--azure-openai-api-key KEY` | Use a specific authentication key |
-| `--azure-openai-endpoint URL` | Use a specific API endpoint |
-| `--azure-openai-chat-deployment NAME` | Use a specific chat model deployment |
+| [`--azure-openai-api-key KEY`](options/azure-openai-api-key.md) | Use a specific authentication key |
+| [`--azure-openai-endpoint URL`](options/azure-openai-endpoint.md) | Use a specific API endpoint |
+| [`--azure-openai-chat-deployment NAME`](options/azure-openai-chat-deployment.md) | Use a specific chat model deployment |
 
 ### Copilot Options
 
 | Option | Description |
 |--------|-------------|
 | `--copilot-model-name NAME` | Use a specific model by name (default: claude-3.7-sonnet) |
-| `--copilot-api-endpoint URL` | Use a specific API endpoint |
-| `--copilot-integration-id ID` | Use a specific integration id |
-| `--copilot-hmac-key KEY` | Use a specific authentication key |
+| `--copilot-api-endpoint URL` | Use a specific API endpoint (default: https://api.githubcopilot.com) |
+| [`--copilot-integration-id ID`](options/copilot-integration-id.md) | Use a specific integration id |
+| [`--copilot-hmac-key KEY`](options/copilot-hmac-key.md) | Use a specific authentication key |
 | `--github-token TOKEN` | Use a specific GitHub authentication token |
 
 ### OpenAI Options
@@ -125,9 +127,9 @@ These options apply to the main `chatx` command:
 |--------|-------------|
 | `--interactive TRUE/FALSE` | Allow interactive use (default: true) |
 | `--threads COUNT` | Number of parallel threads for non-interactive mode |
-| `--debug` | Turn on diagnostics/debug outputs |
-| `--quiet` | Turn off all but the most critical console outputs |
-| `--verbose` | Turn on additional diagnostics/debug outputs |
+| [`--debug`](options/debug.md) | Turn on diagnostics/debug outputs |
+| [`--quiet`](options/quiet.md) | Turn off all but the most critical console outputs |
+| [`--verbose`](options/verbose.md) | Turn on additional diagnostics/debug outputs |
 
 ## Subcommands
 
@@ -185,4 +187,4 @@ Many commands support different scopes for configuration, aliases, prompts, and 
 | `--global`, `-g` | Use global scope (all users) |
 | `--user`, `-u` | Use user scope (current user) |
 | `--local`, `-l` | Use local scope (current directory, default for most commands) |
-| `--any`, `-a` | Include items from all scopes (default for `list` and `get` commands) |
+| [`--any`, `-a`](options/any.md) | Include items from all scopes (default for `list` and `get` commands) |

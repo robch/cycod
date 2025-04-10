@@ -12,6 +12,12 @@ chatx mcp add <server-name> [options]
 
 The `chatx mcp add` command creates a new Model Context Protocol (MCP) server configuration. By default, it creates the configuration in the local scope.
 
+MCP servers can use one of two transport types:
+1. **STDIO transport** - Uses the `--command` parameter to specify a program that communicates via standard input/output
+2. **SSE transport** - Uses the `--url` parameter to specify a Server-Sent Events endpoint URL
+
+You must provide either `--command` (for STDIO) or `--url` (for SSE), but not both.
+
 ## Arguments
 
 | Argument | Description |
@@ -22,7 +28,10 @@ The `chatx mcp add` command creates a new Model Context Protocol (MCP) server co
 
 | Option | Description |
 |--------|-------------|
-| `--command`, `-c` | Command to start the MCP server (required) |
+| `--command`, `-c` | Command to start the MCP server (required for STDIO transport) |
+| `--arg` | Argument to pass to the command (can be used multiple times) |
+| `--env`, `-e` | Environment variable in KEY=VALUE format (can be used multiple times) |
+| `--url` | URL for the SSE endpoint (required for SSE transport) |
 | `--port`, `-p` | Port for the MCP server to listen on (default: auto-assigned) |
 | `--auto-start`, `-a` | Automatically start the server when needed (default: true) |
 | `--working-dir`, `-w` | Working directory for the server process |
@@ -38,10 +47,34 @@ Add a PostgreSQL database MCP server in local scope:
 chatx mcp add postgres-server --command "python db_server.py"
 ```
 
-Add a GitHub tools MCP server in user scope with a specific port:
+Add a GitHub tools MCP server with command-line arguments:
 
 ```bash
-chatx mcp add github-tools --command "node github_tools.js" --port 8766 --user
+chatx mcp add github-tools --command "node" --arg "github_tools.js" --arg "--port=8766"
+```
+
+Add a database MCP server with multiple arguments:
+
+```bash
+chatx mcp add postgres-server --command "/path/to/postgres-mcp-server" --arg "--connection-string" --arg "postgresql://user:pass@localhost:5432/mydb"
+```
+
+Add an MCP server with environment variables:
+
+```bash
+chatx mcp add weather-api --command "/path/to/weather-cli" --env "API_KEY=abc123" --env "CACHE_DIR=/tmp"
+```
+
+Add an SSE MCP server:
+
+```bash
+chatx mcp add sse-backend --url "https://example.com/sse-endpoint"
+```
+
+Add an SSE MCP server in user scope (available across all directories):
+
+```bash
+chatx mcp add shared-api --url "https://api.example.org/mcp-sse" --user
 ```
 
 Add a code search MCP server in global scope that doesn't auto-start:
@@ -70,10 +103,16 @@ If an MCP server with the same name already exists in the specified scope, the c
 Error: MCP server 'postgres-server' already exists in local scope. Use 'mcp remove' first to replace it.
 ```
 
-If the required command option is not provided, the command will display an error:
+If neither the required `--command` nor `--url` option is provided, the command will display an error:
 
 ```
-Error: The --command option is required when adding an MCP server.
+Error: Either --command or --url option is required when adding an MCP server.
+```
+
+If both `--command` and `--url` options are provided at the same time:
+
+```
+Error: Cannot use both --command and --url options. Specify either STDIO transport with --command or SSE transport with --url.
 ```
 
 ## Using MCP Servers

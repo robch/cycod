@@ -10,14 +10,14 @@ chatx config set <key> <value> [options]
 
 ## Description
 
-The `chatx config set` command sets the value of a specified configuration setting. By default, it sets the value in the local scope.
+The `chatx config set` command sets the value of a specified configuration setting. By default, it sets the value in the local scope (current directory). Configuration settings are stored in JSON files and can be used to customize CHATX behavior.
 
 ## Arguments
 
 | Argument | Description |
 |----------|-------------|
-| `<key>` | Name of the configuration setting to set |
-| `<value>` | Value to assign to the setting |
+| `<key>` | Name of the configuration setting to set. Keys use dot notation (e.g., `openai.apiKey`). |
+| `<value>` | Value to assign to the setting. Can be a string, number, boolean, or JSON-compatible value. |
 
 ## Options
 
@@ -29,23 +29,106 @@ The `chatx config set` command sets the value of a specified configuration setti
 
 ## Examples
 
-Set the OpenAI API key in user scope:
+### Provider Configuration
+
+Set OpenAI settings in user scope:
 
 ```bash
 chatx config set openai.apiKey YOUR_API_KEY --user
+chatx config set openai.chatModelName gpt-4o --user
+chatx config set openai.maxTokens 2048 --user
 ```
 
-Set the preferred provider in local scope:
+Set Azure OpenAI settings in user scope:
+
+```bash
+chatx config set azure.openai.endpoint https://example.openai.azure.com --user
+chatx config set azure.openai.apiKey YOUR_AZURE_API_KEY --user
+chatx config set azure.openai.chatDeployment gpt-4-deployment --user
+```
+
+Set GitHub Copilot settings in user scope:
+
+```bash
+chatx config set copilot.modelName claude-3.7-sonnet --user
+```
+
+### Application Preferences
+
+Choose your preferred AI provider:
+
+```bash
+chatx config set app.preferredProvider openai --user
+```
+
+Configure auto-saving features:
+
+```bash
+chatx config set app.autoSaveChatHistory true --user
+chatx config set app.autoSaveTrajectory true --user
+chatx config set app.historyDirectory "C:/Users/username/chat-histories" --user
+```
+
+Set default behavior:
+
+```bash
+chatx config set app.quietMode false --user
+chatx config set app.interactiveMode true --user
+chatx config set app.trimTokenTarget 18000 --user
+```
+
+### Local Project Configuration
+
+Project-specific settings (in local scope):
 
 ```bash
 chatx config set app.preferredProvider azure-openai
+chatx config set azure.openai.chatDeployment custom-deployment-name
 ```
 
-Set the Azure OpenAI endpoint:
+Disable auto-saving for a specific project:
 
 ```bash
-chatx config set azure.openai.endpoint https://example.openai.azure.com
+chatx config set app.autoSaveChatHistory false
+chatx config set app.autoSaveTrajectory false
 ```
+
+## Common Configuration Keys
+
+### Application Settings
+
+| Key | Description | Example Value |
+|-----|-------------|---------------|
+| `app.preferredProvider` | Default AI provider | `"openai"`, `"azure-openai"`, `"copilot"` |
+| `app.autoSaveChatHistory` | Enable/disable auto-save of chat history | `true`, `false` |
+| `app.autoSaveTrajectory` | Enable/disable auto-save of trajectory | `true`, `false` |
+| `app.historyDirectory` | Custom directory for saving histories | `"C:/Chats"` |
+| `app.trimTokenTarget` | Target token limit for trimming | `16000` |
+| `app.quietMode` | Reduce console output | `true`, `false` |
+| `app.interactiveMode` | Enable interactive mode by default | `true`, `false` |
+
+### OpenAI Settings
+
+| Key | Description | Example Value |
+|-----|-------------|---------------|
+| `openai.apiKey` | API key for OpenAI | `"sk-..."` |
+| `openai.chatModelName` | Default model for chat | `"gpt-4o"`, `"gpt-4-turbo"` |
+| `openai.maxTokens` | Maximum tokens for responses | `2048` |
+
+### Azure OpenAI Settings
+
+| Key | Description | Example Value |
+|-----|-------------|---------------|
+| `azure.openai.endpoint` | Azure OpenAI service endpoint | `"https://example.openai.azure.com"` |
+| `azure.openai.apiKey` | API key for Azure OpenAI | `"..."` |
+| `azure.openai.chatDeployment` | Deployment name for chat model | `"gpt-4"` |
+
+### GitHub Copilot Settings
+
+| Key | Description | Example Value |
+|-----|-------------|---------------|
+| `copilot.modelName` | Model to use with Copilot | `"claude-3.7-sonnet"` |
+| `copilot.apiEndpoint` | Custom API endpoint | `"https://api.githubcopilot.com"` |
 
 ## Output
 
@@ -61,7 +144,9 @@ If the operation fails, an error message is displayed:
 Error: Failed to set setting 'invalid.key'. Invalid configuration key.
 ```
 
-## Security Note
+## Notes
+
+### Security
 
 For security-sensitive settings like API keys, it's recommended to use the user scope (`--user`) rather than local or global scopes to limit exposure.
 
@@ -70,3 +155,21 @@ chatx config set openai.apiKey YOUR_API_KEY --user
 ```
 
 This ensures your API keys are stored in your user profile only and not in project directories that might be shared with others.
+
+### Configuration Precedence
+
+Settings follow this order of precedence (highest to lowest):
+
+1. Command-line options
+2. Environment variables
+3. Local scope configuration
+4. User scope configuration
+5. Global scope configuration
+
+This means settings specified in the command line will override any configured values.
+
+### Related Commands
+
+- `chatx config get <key>` - Get the value of a configuration setting
+- `chatx config list` - List all configuration settings
+- `chatx config clear <key>` - Remove a configuration setting

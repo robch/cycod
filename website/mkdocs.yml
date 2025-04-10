@@ -90,6 +90,23 @@ nav:
     - Chat Basics: usage/basics.md
     - Chat History: usage/chat-history.md 
     - Configuration: usage/configuration.md
+    - External Configuration Files: usage/external-config-files.md
+    - Working with List Settings: usage/config-list-settings.md
+    - Aliases: usage/aliases.md
+    - Templates and Variables: usage/templates-and-variables.md
+    - Troubleshooting: usage/troubleshooting.md
+  - TUTORIALS:
+    - Expert Roles: tutorials/expert-roles.md
+    - Effective System Prompts: tutorials/effective-system-prompts.md
+    - Using Azure OpenAI: tutorials/using-azure-openai.md
+    - Project Aliases: tutorials/project-aliases.md
+    - Creating User Aliases: tutorials/creating-user-aliases.md
+    - GitHub Copilot Authentication: tutorials/github-copilot-auth.md
+    - Managing MCP Servers: tutorials/managing-mcp-servers.md
+    - Removing MCP Servers: tutorials/removing-mcp-servers.md
+    - MCP Command Usage: tutorials/mcp-command-usage.md
+    - Working with MCP Arguments: tutorials/working-with-mcp-arguments.md
+    - Environment Variables in MCP: tutorials/env-variables-mcp.md
   - ADVANCED:
     - Aliases: advanced/aliases.md
     - Custom Prompts: advanced/prompts.md
@@ -98,6 +115,35 @@ nav:
   - REFERENCE:
     - chatx:
       - reference/cli/index.md
+      - Options:
+        - --add-system-prompt: reference/cli/options/add-system-prompt.md
+        - --arg: reference/cli/options/arg.md
+        - --azure-openai-api-key: reference/cli/options/azure-openai-api-key.md
+        - --azure-openai-chat-deployment: reference/cli/options/azure-openai-chat-deployment.md
+        - --azure-openai-endpoint: reference/cli/options/azure-openai-endpoint.md
+        - --ALIAS: reference/cli/options/alias.md
+        - --config: reference/cli/options/config.md
+        - --command: reference/cli/options/command.md
+        - --copilot-api-endpoint: reference/cli/options/copilot-api-endpoint.md
+        - --debug: reference/cli/options/debug.md
+        - --env: reference/cli/options/env.md
+        - --foreach: reference/cli/options/foreach.md
+        - --inp: reference/cli/options/inp.md
+        - --quiet: reference/cli/options/quiet.md
+        - --input: reference/cli/options/input.md
+        - --instruction: reference/cli/options/instruction.md
+        - --inpu: reference/cli/options/inpu.md
+        - --instructions: reference/cli/options/instructions.md
+        - --openai-api-key: reference/cli/options/openai-api-key.md
+        - --openai-chat-model-name: reference/cli/options/openai-chat-model-name.md
+        - --profile: reference/cli/options/profile.md
+        - --python-expert: reference/cli/options/python-expert.md
+        - --save-profile: reference/cli/options/save-profile.md
+        - --threads: reference/cli/options/threads.md
+        - --use-copilot: reference/cli/options/use-copilot.md
+        - --use-copilot-hmac: reference/cli/options/use-copilot-hmac.md
+        - --var: reference/cli/options/var.md
+        - --vars: reference/cli/options/vars.md
       - alias:
         - reference/cli/alias/index.md
         - List: reference/cli/alias/list.md

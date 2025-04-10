@@ -1,0 +1,108 @@
+# --copilot-hmac-key
+
+Specifies a HMAC key for authentication with the GitHub Copilot API.
+
+## Syntax
+
+```bash
+--copilot-hmac-key KEY
+```
+
+## Description
+
+The `--copilot-hmac-key` option provides an alternative authentication method for the GitHub Copilot API. While the recommended method is to use GitHub token authentication via `chatx github login`, this option allows direct HMAC-based authentication for specialized scenarios.
+
+When using HMAC authentication, you must also provide a Copilot integration ID using the [`--copilot-integration-id`](copilot-integration-id.md) option or the corresponding environment variable.
+
+## Environment Variable
+
+This option corresponds to the `COPILOT_HMAC_KEY` environment variable.
+
+## Use Cases
+
+HMAC authentication is particularly useful in the following scenarios:
+
+- **CI/CD pipelines**: For automation where interactive GitHub login isn't possible
+- **Server applications**: For backend services that need Copilot access
+- **Air-gapped environments**: Where direct GitHub authentication isn't feasible
+- **Organization-managed credentials**: When credentials are centrally managed and distributed
+- **Custom integrations**: For specialized enterprise integrations with GitHub Copilot
+
+## Examples
+
+### Example 1: Basic usage with HMAC authentication
+
+```bash
+chatx --copilot-hmac-key YOUR_HMAC_KEY --copilot-integration-id YOUR_INTEGRATION_ID --question "Explain quantum computing"
+```
+
+### Example 2: Using with a specific model
+
+```bash
+chatx --copilot-hmac-key YOUR_HMAC_KEY --copilot-integration-id YOUR_INTEGRATION_ID --copilot-model-name claude-3-opus --question "Generate a Python class for managing database connections"
+```
+
+### Example 3: Saving HMAC key in configuration for reuse
+
+```bash
+# First, save your credentials securely in user configuration
+chatx config set copilot.hmacKey YOUR_HMAC_KEY --user
+chatx config set copilot.integrationId YOUR_INTEGRATION_ID --user
+
+# Then use the dedicated provider flag
+chatx --use-copilot-hmac --question "Create a React component for a navigation bar"
+```
+
+### Example 4: Creating an alias for easier access
+
+```bash
+# Create an alias to reuse your configuration
+chatx --use-copilot-hmac --copilot-model-name claude-3.7-sonnet --save-alias copilot-hmac
+
+# Then use it like this:
+chatx --copilot-hmac --question "How do I implement a binary search tree?"
+```
+
+## Provider Selection
+
+To explicitly use Copilot with HMAC authentication, you can use the `--use-copilot-hmac` flag:
+
+```bash
+chatx --use-copilot-hmac --question "What is ChatX?"
+```
+
+This flag assumes that you have already set the required environment variables or configuration values:
+- `COPILOT_HMAC_KEY` 
+- `COPILOT_INTEGRATION_ID`
+
+## Security Notes
+
+- The HMAC key is a sensitive credential. Avoid exposing it in command history, scripts, or public repositories.
+- When passing the key directly in the command line, be aware that it may be visible in process lists or command history.
+- For better security, store the key using `chatx config set` or as an environment variable.
+- Consider using environment variables in scripts rather than hardcoding the key value:
+  ```bash
+  export COPILOT_HMAC_KEY="your-hmac-key"
+  export COPILOT_INTEGRATION_ID="your-integration-id"
+  chatx --use-copilot-hmac --question "Generate code for a REST API"
+  ```
+
+## Obtaining HMAC Credentials
+
+HMAC keys and integration IDs are typically provided to enterprise customers or organizations with specific GitHub Copilot arrangements. These credentials aren't available through standard GitHub Copilot subscriptions. Contact your GitHub account representative or administrator if you need these credentials.
+
+## Related Options
+
+| Option | Description |
+|--------|-------------|
+| [`--use-copilot-hmac`](use-copilot-hmac.md) | Explicitly selects Copilot with HMAC authentication |
+| [`--copilot-integration-id`](copilot-integration-id.md) | Specifies the integration ID (required for HMAC auth) |
+| [`--copilot-api-endpoint`](copilot-api-endpoint.md) | Specifies the API endpoint (default: https://api.githubcopilot.com) |
+| [`--copilot-model-name`](copilot-model-name.md) | Specifies the model to use (default: claude-3.7-sonnet) |
+
+## See Also
+
+- [--copilot-integration-id](copilot-integration-id.md)
+- [--use-copilot-hmac](use-copilot-hmac.md)
+- [GitHub Copilot Provider](../../../providers/github-copilot.md)
+- [HMAC Authentication Tutorial](../../../tutorials/github-copilot-hmac-auth.md)

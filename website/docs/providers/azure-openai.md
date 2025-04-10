@@ -38,6 +38,70 @@ chatx --use-azure-openai --azure-openai-endpoint YOUR_ENDPOINT --azure-openai-ap
 
 Using the `--use-azure-openai` flag (or just `--use-azure`) explicitly tells CHATX to use Azure OpenAI as the provider.
 
+### Authentication with `--azure-openai-api-key`
+
+The `--azure-openai-api-key` option allows you to specify your Azure OpenAI API key directly in the command. This is useful for:
+
+- Testing a new API key without changing your configuration
+- Running one-off commands with a different key
+- Scripts where you want to pass the key as an environment variable
+
+```bash
+# Using an API key directly in a command
+chatx --use-azure --azure-openai-api-key "your-api-key" --question "What's the weather like today?"
+
+# Using an environment variable to provide the API key (more secure for scripts)
+chatx --use-azure --azure-openai-api-key "$AZURE_OPENAI_API_KEY" --question "What's the weather like today?"
+```
+
+For regular use, storing your API key in configuration (as shown above) is recommended rather than specifying it on every command.
+
+### Specifying Endpoints with `--azure-openai-endpoint`
+
+The `--azure-openai-endpoint` option allows you to specify the Azure OpenAI service endpoint URL directly in the command. This is useful for:
+
+- Testing a new Azure OpenAI resource without changing your configuration
+- Running commands against different endpoints for different regions
+- Scripts where you need to target specific Azure resources dynamically
+
+```bash
+# Using a specific endpoint directly in a command
+chatx --use-azure --azure-openai-endpoint "https://my-resource.openai.azure.com" --question "What is Azure OpenAI?"
+
+# Targeting a different region or resource
+chatx --use-azure --azure-openai-endpoint "https://my-backup-resource.openai.azure.com" --question "What are the benefits of Azure?"
+```
+
+Finding your endpoint:
+1. Sign in to the Azure Portal
+2. Navigate to your Azure OpenAI resource
+3. Select "Keys and Endpoint" from the left menu
+4. Copy the Endpoint value (typically in the format `https://your-resource.openai.azure.com`)
+
+For regular use, storing your endpoint in configuration (as shown in the Configuration section) is recommended rather than specifying it on every command.
+
+### Specifying Deployments with `--azure-openai-chat-deployment`
+
+The `--azure-openai-chat-deployment` option specifies which deployment to use for chat completions:
+
+```bash
+# Using a specific deployment
+chatx --use-azure --azure-openai-chat-deployment "gpt-4" --question "Can you help me design a system?"
+
+# Switching between deployments for different tasks
+chatx --use-azure --azure-openai-chat-deployment "gpt-35-turbo" --question "Simple question"
+chatx --use-azure --azure-openai-chat-deployment "gpt-4" --question "Complex reasoning task"
+```
+
+Benefits of explicitly specifying deployments:
+
+- Use different models for different types of tasks
+- Test new model deployments without changing your configuration
+- Control costs by selecting more economical deployments for simpler tasks
+- Ensure critical tasks use your most capable models
+
+For regular use with the same deployment, store this in your configuration or create profiles as shown in the "Working with Multiple Deployments" section.
+
 ## Example Usage
 
 Basic query using Azure OpenAI:
@@ -51,6 +115,30 @@ Interactive chat with Azure OpenAI:
 ```bash title="Interactive chat"
 chatx --use-azure --interactive
 ```
+
+## Understanding Azure OpenAI Deployments
+
+In Azure OpenAI, a "deployment" is an instance of a specific model that you've deployed to your Azure OpenAI resource. Each deployment:
+
+- Is associated with a specific model (like GPT-4, GPT-3.5-Turbo, etc.)
+- Has a unique deployment name that you choose when creating it
+- Has its own quota and rate limits 
+- May have different configuration settings
+
+When using the `--azure-openai-chat-deployment` option, you need to specify the name of a deployment you've created in your Azure OpenAI resource.
+
+### Finding Your Deployment Names
+
+To find your deployment names:
+
+1. Sign in to the [Azure Portal](https://portal.azure.com)
+2. Navigate to your Azure OpenAI resource
+3. Select "Deployments" from the left menu
+4. The "Name" column shows your deployment names
+
+![Azure OpenAI Deployments](../assets/images/azure-openai-deployments.png)
+
+Common deployment names are often the model name (like "gpt-4" or "gpt-35-turbo"), but you can choose any name when creating a deployment.
 
 ## Working with Multiple Azure OpenAI Deployments
 
@@ -84,6 +172,15 @@ When working with Azure OpenAI API keys:
 2. Consider using Azure AD authentication when available
 3. Regularly rotate your API keys following your organization's security policies
 4. Never share configuration files containing API keys
+5. Avoid using `--azure-openai-api-key` in scripts that might be committed to version control
+6. When using the key in scripts, read it from environment variables rather than hardcoding it
+7. Use command history exclusion in your shell (e.g., HISTIGNORE in bash) to prevent API keys from being stored in command history
+
+```bash
+# Example of securely providing an API key via an environment variable
+export AZURE_OPENAI_KEY="your-api-key"
+chatx --use-azure --azure-openai-api-key "$AZURE_OPENAI_KEY" --question "Your question"
+```
 
 ## Troubleshooting
 

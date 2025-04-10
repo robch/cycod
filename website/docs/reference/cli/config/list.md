@@ -5,12 +5,16 @@ Lists all configuration settings.
 ## Syntax
 
 ```bash
-chatx config list [options]
+chatx config list [--scope]
 ```
 
 ## Description
 
-The `chatx config list` command displays all configuration settings. By default, it shows settings from all scopes.
+The `chatx config list` command displays all configuration settings from the specified scope(s). By default, it shows settings from all scopes (local, user, and global).
+
+When multiple scopes are shown, the settings are displayed in order from broadest to narrowest scope: global, then user, then local. This display order helps you understand which settings might be overriding others.
+
+The command also shows the source of each setting (e.g., configuration file, environment variable, command line).
 
 ## Options
 
@@ -20,61 +24,62 @@ The `chatx config list` command displays all configuration settings. By default,
 | `--user`, `-u` | Show only user settings (current user) |
 | `--local`, `-l` | Show only local settings (current directory) |
 | `--any`, `-a` | Show settings from all scopes (default) |
-| `--json`, `-j` | Output results in JSON format |
 
 ## Examples
 
-List all configuration settings from all scopes:
+### List all configuration settings from all scopes
 
 ```bash
 chatx config list
 ```
 
-List only user configuration settings:
+This will display settings from the global, user, and local scopes, as well as any settings specified via command-line options or environment variables.
+
+### List only user configuration settings
 
 ```bash
 chatx config list --user
 ```
 
-Output all settings in JSON format:
+This will display only settings from the user scope, which are stored in the `.chatx/config.json` file in the user's home directory.
+
+### List only local configuration settings
 
 ```bash
-chatx config list --json
+chatx config list --local
 ```
+
+This will display only settings from the local scope, which are stored in the `.chatx/config.json` file in the current directory.
 
 ## Output
 
-The command outputs a list of configuration settings:
+The command outputs a list of configuration settings grouped by scope:
 
 ```
+SETTINGS (scope: global)
+  azure.openai.endpoint: https://example.azure.com/openai
+  app.allowedDomains: [example.com, trusted-site.org]
+
 SETTINGS (scope: user)
   openai.apiKey: sk-***
   openai.chatModelName: gpt-4o
   app.preferredProvider: openai
 
 SETTINGS (scope: local)
-  azure.openai.endpoint: https://example.openai.azure.com
-  azure.openai.apiKey: ***
+  azure.openai.chatDeployment: gpt-4
+  app.autoSaveChatHistory: false
 ```
 
-When using `--json` option, the output is formatted as JSON:
-
-```json
-{
-  "user": {
-    "openai.apiKey": "sk-***",
-    "openai.chatModelName": "gpt-4o",
-    "app.preferredProvider": "openai"
-  },
-  "local": {
-    "azure.openai.endpoint": "https://example.openai.azure.com",
-    "azure.openai.apiKey": "***"
-  }
-}
-```
-
-If no settings are found in the specified scope, the command will indicate this:
+If no settings are found in a specific scope, the command will indicate this:
 
 ```
 No settings found in local scope.
 ```
+
+## Related Commands
+
+- [chatx config get](./get.md) - Get the value of a specific configuration setting
+- [chatx config set](./set.md) - Set a configuration value
+- [chatx config clear](./clear.md) - Clear a configuration value
+- [chatx config add](./add.md) - Add a value to a list setting
+- [chatx config remove](./remove.md) - Remove a value from a list setting
