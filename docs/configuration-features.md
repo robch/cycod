@@ -96,6 +96,9 @@ Config files store persistent settings for the application.
 # Set a configuration value
 chatx config set default-model gpt-4o
 
+# Set a timeout for chat completions (in seconds)
+chatx config set App.ChatCompletionTimeout 120
+
 # View configuration 
 chatx config list
 ```

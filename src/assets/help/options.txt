@@ -73,6 +73,7 @@ USAGE: chatx [...]
     --debug                               Turn on diagnostics/debug outputs
     --quiet                               Turn off all but the most critical console outputs
     --verbose                             Turn on additional diagnostics/debug outputs
+    --chat-completion-timeout SECONDS     Set a timeout in seconds for chat completion API calls
 
 SEE ALSO
 
