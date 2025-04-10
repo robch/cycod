@@ -42,11 +42,11 @@ public static class PromptFileHelpers
     /// </summary>
     /// <param name="promptName">The name of the prompt to find</param>
     /// <returns>The full path to the prompt file if found, null otherwise</returns>
-    public static string? FindPromptFile(string promptName, ConfigFileScope scope = ConfigFileScope.Any)
+    public static string? FindPromptFile(string promptName, ConfigFileScope scope = ConfigFileScope.Any, bool searchParents = false)
     {
         var promptFileName = $"{promptName}.prompt";
         var promptFilePath = scope == ConfigFileScope.Any
-            ? ScopeFileHelpers.FindFileInAnyScope(promptFileName, "prompts", searchParents: true)
+            ? ScopeFileHelpers.FindFileInAnyScope(promptFileName, "prompts", searchParents: searchParents)
             : ScopeFileHelpers.FindFileInScope(promptFileName, "prompts", scope);
 
         ConsoleHelpers.WriteDebugLine(promptFilePath != null
