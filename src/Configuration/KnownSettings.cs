@@ -34,6 +34,7 @@ public static class KnownSettings
     public const string AppPreferredProvider = "App.PreferredProvider";
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
+    public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     
     #endregion
     
@@ -89,7 +90,8 @@ public static class KnownSettings
         { AppMaxTokens, "APP_MAX_TOKENS" },
         { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CHATX_AUTO_SAVE_CHAT_HISTORY" },
-        { AppAutoSaveTrajectory, "CHATX_AUTO_SAVE_TRAJECTORY" }
+        { AppAutoSaveTrajectory, "CHATX_AUTO_SAVE_TRAJECTORY" },
+        { AppChatCompletionTimeout, "CHATX_CHAT_COMPLETION_TIMEOUT" }
     };
     
     /// <summary>
@@ -119,7 +121,8 @@ public static class KnownSettings
         // Application settings
         { AppMaxTokens, "--max-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
-        { AppAutoSaveTrajectory, "--auto-save-trajectory" }
+        { AppAutoSaveTrajectory, "--auto-save-trajectory" },
+        { AppChatCompletionTimeout, "--chat-completion-timeout" }
     };
     
     /// <summary>
@@ -183,7 +186,8 @@ public static class KnownSettings
         AppMaxTokens,
         AppPreferredProvider,
         AppAutoSaveChatHistory,
-        AppAutoSaveTrajectory
+        AppAutoSaveTrajectory,
+        AppChatCompletionTimeout
     };
     
     #endregion

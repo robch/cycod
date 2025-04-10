@@ -3,6 +3,7 @@ using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using OpenAI.Chat;
+using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
 
@@ -214,6 +215,16 @@ public static class ChatClientFactory
         options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
+        
+        // Apply timeout if configured
+        var timeoutSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppChatCompletionTimeout);
+        if (timeoutSetting.AsInt() > 0)
+        {
+            int timeoutSeconds = timeoutSetting.AsInt();
+            ConsoleHelpers.WriteDebugLine($"Setting chat completion timeout to {timeoutSeconds} seconds");
+            options.Transport.RequestTimeout = TimeSpan.FromSeconds(timeoutSeconds);
+        }
+        
         return options;
     }
 }

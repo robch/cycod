@@ -57,6 +57,7 @@ These options control the chat interaction:
 | `--output-chat-history <file>` | Save chat history to a JSONL file |
 | `--output-trajectory <file>` | Save chat history in a more readable trajectory format |
 | `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
+| `--chat-completion-timeout <n>` | Set a timeout in seconds for chat completion API calls |
 
 ## Provider Selection Options
 
@@ -161,6 +162,16 @@ chatx --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" 
 ```
 
 This will automatically trim tool call content when the history approaches the specified token target.
+
+### Setting Completion Timeout
+
+If you're experiencing timeouts with API calls:
+
+```bash
+chatx --chat-completion-timeout 120 --input "Please write a comprehensive analysis of this long text..."
+```
+
+This sets a 120-second timeout for chat completion API calls, useful for complex queries that take longer to process.
 
 ### Using Different Providers
 
