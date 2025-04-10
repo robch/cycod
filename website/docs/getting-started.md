@@ -1,53 +1,59 @@
-# Getting Started with CHATX
+# Getting Started with ChatX
 
-CHATX is an AI-powered CLI tool that makes it easy to interact with large language models directly from your terminal. This guide will help you install CHATX and get started with its basic features.
+ChatX is an AI-powered CLI tool that makes it easy to interact with large language models directly from your terminal. This guide will help you install ChatX and get started with its basic features.
 
 ## Installation
 
-### Windows
+### Prerequisites
 
-You can install CHATX on Windows using one of the following methods:
+- .NET 8.0 SDK or later
 
-#### Using winget (recommended)
+### Installing as a .NET Tool
 
-```powershell
-winget install RobChambers.CHATX
-```
-
-#### Manual Installation
-
-1. Download the latest release from the [GitHub Releases page](https://github.com/robch/chatx/releases).
-2. Extract the ZIP file to a directory of your choice.
-3. Add the directory to your PATH environment variable.
-
-### macOS
-
-You can install CHATX on macOS using Homebrew:
+You can install ChatX globally:
 
 ```bash
-brew install robch/tap/chatx
+dotnet tool install --global ChatX --prerelease
 ```
 
-### Linux
-
-You can install CHATX on Linux using the following commands:
+Or locally in your current directory:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/robch/chatx/main/install.sh | bash
+dotnet tool install --local ChatX --prerelease
 ```
+
+### Building from Source
+
+Alternatively, you can build ChatX from source:
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/robch/chatx.git
+   cd chatx
+   ```
+
+2. Build the project:
+   ```
+   dotnet build
+   ```
+
+3. Run the application:
+   ```
+   dotnet run
+   ```
 
 ## Verifying Installation
 
-After installation, you can verify that CHATX is installed correctly by running:
+After installation, you can verify that ChatX is installed correctly by running:
 
 ```bash
 chatx --version
 ```
 
-You should see output similar to:
+You should see output showing the installed version:
 
 ```
-CHATX - AI-powered CLI, Version 1.0.0
+ChatX - AI-powered CLI, Version 1.0.0
 Copyright(c) 2025, Rob Chambers. All rights reserved.
 ```
 
