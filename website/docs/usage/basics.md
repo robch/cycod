@@ -259,6 +259,7 @@ chatx --use-copilot --question "What is the capital of France?"
 
 Now that you understand the basics of using CHATX, explore these advanced topics:
 
+- [Usage Examples](examples.md): See platform-specific examples for common tasks
 - [Chat History](chat-history.md): Learn how to save and continue conversations
 - [Configuration](configuration.md): Configure CHATX to suit your preferences
 - [Aliases](../advanced/aliases.md): Create shortcuts for common commands

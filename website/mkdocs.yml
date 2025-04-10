@@ -80,15 +80,18 @@ copyright: |
 
 nav:
   - HOME: index.md
-  - GETTING STARTED:
-    - Installation: getting-started.md
-  - PROVIDERS:
-    - Overview: providers/index.md
-    - OpenAI: providers/openai.md
-    - Azure OpenAI: providers/azure-openai.md
-    - GitHub Copilot: providers/github-copilot.md
+  - PRE-REQS:
+    - INSTALL:
+      - Installation: getting-started.md
+      - Verify Installation: verify-installation.md
+    - SETUP:
+      - Provider Overview: providers/overview.md
+      - GitHub Copilot: providers/github-copilot.md
+      - Azure OpenAI: providers/azure-openai.md
+      - OpenAI: providers/openai.md
   - USAGE:
     - Chat Basics: usage/basics.md
+    - Usage Examples: usage/examples.md
     - Chat History: usage/chat-history.md 
     - Configuration: usage/configuration.md
     - External Configuration Files: usage/external-config-files.md
@@ -117,6 +120,7 @@ nav:
     - Aliases: advanced/aliases.md
     - Custom Prompts: advanced/prompts.md
     - Profiles: advanced/profiles.md
+    - Provider Profiles: advanced/provider-profiles.md
     - MCP: advanced/mcp.md
   - REFERENCE:
     - chatx:
@@ -169,7 +173,6 @@ nav:
         - --save-alias: reference/cli/options/save-alias.md
         - --save-global-alias: reference/cli/options/save-global-alias.md
         - --save-local-alias: reference/cli/options/save-local-alias.md
-        - --save-profile: reference/cli/options/save-profile.md
         - --save-user-alias: reference/cli/options/save-user-alias.md
         - --system-prompt: reference/cli/options/system-prompt.md
         - --threads: reference/cli/options/threads.md

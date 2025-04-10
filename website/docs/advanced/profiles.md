@@ -49,31 +49,17 @@ openai:
 
 Save this file as `.chatx/profiles/gpt4.yaml` to create a user-level profile.
 
-### Using Command-Line Options
+### Creating Profile Files
 
-A more convenient way to create profiles is by using the `--save-profile` option:
+Profiles must be created manually as YAML files and placed in the appropriate profiles directory:
 
-```bash title="Save a profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --add-system-prompt "You are a helpful assistant." --save-profile gpt4
-```
-
-This creates a profile with all the specified options. For detailed syntax and examples, see the [--save-profile option reference](../reference/cli/options/save-profile.md).
+- Local: `.chatx/profiles/profile_name.yaml` in the current directory
+- User: `.chatx/profiles/profile_name.yaml` in the user's home directory
+- Global: `.chatx/profiles/profile_name.yaml` in the system-wide location
 
 ### Profile Scopes
 
-Like other CHATX features, profiles can be created in different scopes:
-
-```bash title="Save a local profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --save-profile gpt4 --local
-```
-
-```bash title="Save a user profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --save-profile gpt4 --user
-```
-
-```bash title="Save a global profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --save-profile gpt4 --global
-```
+Like other CHATX features, profiles can be created in different scopes. Simply create the YAML file in the appropriate directory depending on the scope you need.
 
 ## Profile Search Order
 
@@ -87,44 +73,81 @@ This means that a local profile takes precedence over a user profile with the sa
 
 ## Example Profiles
 
-### Provider-Specific Profiles
+### Provider-Specific Profiles Examples
 
-Creating profiles for different AI providers:
+Here are examples of YAML content for different providers:
 
-```bash title="Save OpenAI profile"
-chatx --use-openai --openai-chat-model-name gpt-4o --save-profile openai
+```yaml title="openai-profile.yaml"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-4o"
 ```
 
-```bash title="Save Azure OpenAI profile"
-chatx --use-azure-openai --azure-openai-chat-deployment gpt-4 --save-profile azure
+```yaml title="azure-profile.yaml"
+app:
+  preferredProvider: "azure-openai"
+
+azure:
+  openai:
+    chatDeployment: "gpt-4"
 ```
 
-```bash title="Save GitHub Copilot profile"
-chatx --use-copilot --copilot-model-name claude-3.7-sonnet --save-profile github
+```yaml title="github-profile.yaml"
+app:
+  preferredProvider: "copilot"
+
+copilot:
+  modelName: "claude-3.7-sonnet"
 ```
 
-### Model-Specific Profiles
+### Model-Specific Profiles Examples
 
 Creating profiles for different AI models:
 
-```bash title="Save GPT-4 profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --save-profile gpt4
+```yaml title="gpt4.yaml"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-4"
 ```
 
-```bash title="Save GPT-3.5 profile"
-chatx --use-openai --openai-chat-model-name gpt-3.5-turbo --save-profile gpt35
+```yaml title="gpt35.yaml"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-3.5-turbo"
 ```
 
-### Role-Based Profiles
+### Role-Based Profiles Examples
 
 Creating profiles for different assistant roles:
 
-```bash title="Save programmer profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --add-system-prompt "You are an expert programmer. Provide clear, concise code with helpful explanations." --save-profile programmer
+```yaml title="programmer.yaml"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-4"
+  
+prompts:
+  system:
+    - "You are an expert programmer. Provide clear, concise code with helpful explanations."
 ```
 
-```bash title="Save writer profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --add-system-prompt "You are a skilled writer. Help craft engaging, grammatically correct content." --save-profile writer
+```yaml title="writer.yaml"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-4"
+  
+prompts:
+  system:
+    - "You are a skilled writer. Help craft engaging, grammatically correct content."
 ```
 
 ## Advanced Profile Features

@@ -1,4 +1,15 @@
+---
+hide:
+- toc
+icon: material/brain
+---
+
 # OpenAI API Provider
+??? tip "Prerequisites"
+
+    Before you begin:
+    
+    1. Make sure you have [installed CHATX](/getting-started.md)
 
 CHATX can connect to the OpenAI API to access models like GPT-4o, GPT-4, and GPT-3.5-Turbo. This guide will help you set up and use the OpenAI API with CHATX.
 

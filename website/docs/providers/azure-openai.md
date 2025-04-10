@@ -1,4 +1,15 @@
+---
+hide:
+- toc
+icon: material/microsoft-azure
+---
+
 # Azure OpenAI Provider
+??? tip "Prerequisites"
+
+    Before you begin:
+    
+    1. Make sure you have [installed CHATX](/getting-started.md)
 
 CHATX can connect directly to Azure OpenAI services, allowing you to use your organization's Azure deployments. This guide will help you set up and use Azure OpenAI with CHATX.
 
@@ -140,16 +151,26 @@ Common deployment names are often the model name (like "gpt-4" or "gpt-35-turbo"
 
 ## Working with Multiple Azure OpenAI Deployments
 
-If you have multiple Azure OpenAI deployments, you can set up different profiles for each:
+If you have multiple Azure OpenAI deployments, you can set up different configurations for each:
 
-1. Create a profile for each deployment:
+1. Create configuration files for each deployment:
 
-```bash
-# Create a profile for GPT-4 deployment
-chatx --use-azure --azure-openai-chat-deployment gpt-4 --save-profile azure-gpt4
+```yaml title="azure-gpt4.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "azure-openai"
 
-# Create a profile for GPT-3.5 deployment
-chatx --use-azure --azure-openai-chat-deployment gpt-35-turbo --save-profile azure-gpt35
+azure:
+  openai:
+    chatDeployment: "gpt-4"
+```
+
+```yaml title="azure-gpt35.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "azure-openai"
+
+azure:
+  openai:
+    chatDeployment: "gpt-35-turbo"
 ```
 
 2. Use the profiles as needed:

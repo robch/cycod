@@ -32,14 +32,14 @@ chatx --use-azure-openai \
       --question "Explain how Azure OpenAI works"
 ```
 
-### Example 2: Create profiles for different model deployments
+### Example 2: Use different model deployments for different tasks
 
 ```bash
-# Create a profile for GPT-4 deployment
-chatx --use-azure --azure-openai-chat-deployment gpt-4 --save-profile azure-gpt4
+# Use a more powerful deployment for complex coding tasks
+chatx --use-azure --azure-openai-chat-deployment gpt-4 --question "Explain how to implement a B-tree in Python"
 
-# Create a profile for GPT-3.5 deployment
-chatx --use-azure --azure-openai-chat-deployment gpt-35-turbo --save-profile azure-gpt35
+# Use a more economical deployment for simpler tasks
+chatx --use-azure --azure-openai-chat-deployment gpt-35-turbo --question "What's the weather like today?"
 ```
 
 ### Example 3: Set as configuration value

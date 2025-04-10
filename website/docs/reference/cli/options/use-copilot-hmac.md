@@ -102,10 +102,16 @@ chatx config set copilot.modelName claude-3-opus --user
 chatx config set copilot.apiEndpoint https://api.githubcopilot.com --user
 ```
 
-You can also create a profile for using GitHub Copilot with HMAC:
+You can also create a profile for using GitHub Copilot with HMAC by creating a YAML file:
 
-```bash
-chatx --use-copilot-hmac --save-profile copilot-hmac
+```yaml title="copilot-hmac.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "copilot"
+
+copilot:
+  authentication: "hmac"
+  hmacKey: "YOUR_HMAC_KEY"
+  integrationId: "YOUR_INTEGRATION_ID"
 ```
 
 Then use it with:

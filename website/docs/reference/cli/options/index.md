@@ -88,7 +88,6 @@ These options manage configurations and profiles:
 |--------|-------------|
 | [`--config`](config.md) | Load configuration from YAML or INI files |
 | [`--profile`](profile.md) | Load a specific profile's configuration |
-| [`--save-profile`](save-profile.md) | Save current options as a profile |
 
 ### Alias Options
 

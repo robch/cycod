@@ -95,10 +95,15 @@ chatx config set app.preferredProvider copilot --user
 chatx config set copilot.authType token --user
 ```
 
-Or create a profile specifically for using GitHub Copilot with token authentication:
+Or create a profile specifically for using GitHub Copilot with token authentication by creating a YAML file:
 
-```bash
-chatx --use-copilot-token --save-profile copilot-token
+```yaml title="copilot-token.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "copilot"
+
+copilot:
+  authentication: "token"
+  modelName: "claude-3.7-sonnet"
 ```
 
 Then use it with:

@@ -437,10 +437,14 @@ For detailed information on using external configuration files, including advanc
 
 ## Configuration Profiles
 
-For more complex configurations, you can use profiles:
+For more complex configurations, you can use profiles. Create YAML files in your profiles directory:
 
-```bash title="Save a profile"
-chatx --use-openai --openai-chat-model-name gpt-4 --save-profile gpt4
+```yaml title="gpt4.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "openai"
+
+openai:
+  chatModelName: "gpt-4"
 ```
 
 ```bash title="Use saved profile"

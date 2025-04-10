@@ -81,10 +81,14 @@ Instead of specifying this option on each command, you can set GitHub Copilot as
 chatx config set app.preferredProvider copilot --user
 ```
 
-Or create a profile for using GitHub Copilot:
+Or create a profile for using GitHub Copilot by creating a YAML file:
 
-```bash
-chatx --use-copilot --save-profile copilot
+```yaml title="copilot.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "copilot"
+
+copilot:
+  modelName: "claude-3.7-sonnet"
 ```
 
 Then use it with:

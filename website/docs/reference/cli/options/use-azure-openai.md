@@ -67,10 +67,11 @@ Instead of specifying this option on each command, you can set Azure OpenAI as y
 chatx config set app.preferredProvider azure-openai --user
 ```
 
-Or create a profile for using Azure OpenAI:
+Or create a profile for using Azure OpenAI by creating a YAML file:
 
-```bash
-chatx --use-azure-openai --save-profile azure
+```yaml title="azure.yaml (in .chatx/profiles directory)"
+app:
+  preferredProvider: "azure-openai"
 ```
 
 Then use it with:

@@ -1,4 +1,16 @@
+---
+hide:
+- toc
+icon: material/github
+---
+
 # GitHub Copilot Provider
+??? tip "Prerequisites"
+
+    Before you begin:
+    
+    1. Make sure you have [installed CHATX](/getting-started.md)
+    2. Authenticate with GitHub using [`chatx github login`](/reference/cli/github/login.md)
 
 CHATX can leverage GitHub Copilot's AI capabilities through its API. This guide will help you set up and use GitHub Copilot with CHATX.
 
@@ -163,9 +175,6 @@ chatx --use-copilot-token --copilot-model-name claude-3-opus --question "Explain
 
 # Interactive chat with token auth
 chatx --use-copilot-token --interactive
-
-# Saving a profile for token auth
-chatx --use-copilot-token --save-profile copilot-token
 ```
 
 You can also provide a specific GitHub token directly (useful for automation):

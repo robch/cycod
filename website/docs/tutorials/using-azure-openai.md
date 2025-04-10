@@ -120,22 +120,28 @@ chatx --use-azure-openai \
 
 ## Creating Profiles for Different Deployments
 
-To make it easier to switch between deployments, you can create profiles:
+To make it easier to switch between deployments, you can create profile YAML files:
 
-```bash
-# Create a profile for your GPT-4 deployment
-chatx --use-azure-openai \
-      --azure-openai-endpoint https://your-resource.openai.azure.com \
-      --azure-openai-api-key your-api-key \
-      --azure-openai-chat-deployment gpt-4 \
-      --save-profile azure-gpt4
+```yaml title="azure-gpt4.yaml (in .chatx/profiles/ directory)"
+app:
+  preferredProvider: "azure-openai"
 
-# Create a profile for your GPT-3.5 Turbo deployment
-chatx --use-azure-openai \
-      --azure-openai-endpoint https://your-resource.openai.azure.com \
-      --azure-openai-api-key your-api-key \
-      --azure-openai-chat-deployment gpt-35-turbo \
-      --save-profile azure-gpt35
+azure:
+  openai:
+    endpoint: "https://your-resource.openai.azure.com"
+    apiKey: "your-api-key" 
+    chatDeployment: "gpt-4"
+```
+
+```yaml title="azure-gpt35.yaml (in .chatx/profiles/ directory)"
+app:
+  preferredProvider: "azure-openai"
+
+azure:
+  openai:
+    endpoint: "https://your-resource.openai.azure.com"
+    apiKey: "your-api-key"
+    chatDeployment: "gpt-35-turbo"
 ```
 
 Then use the profiles as needed:
