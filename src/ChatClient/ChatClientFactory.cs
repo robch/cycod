@@ -222,7 +222,7 @@ public static class ChatClientFactory
         {
             int timeoutSeconds = timeoutSetting.AsInt();
             ConsoleHelpers.WriteDebugLine($"Setting chat completion timeout to {timeoutSeconds} seconds");
-            options.Transport.RequestTimeout = TimeSpan.FromSeconds(timeoutSeconds);
+            options.NetworkTimeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
         
         return options;
