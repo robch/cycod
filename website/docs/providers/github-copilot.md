@@ -21,11 +21,11 @@ CHATX can leverage GitHub Copilot's AI capabilities through its API. This guide 
 
 ## Authentication
 
-CHATX offers two authentication methods for GitHub Copilot:
+CHATX provides authentication for GitHub Copilot through GitHub's OAuth flow:
 
-### Method 1: GitHub Token Authentication (Recommended)
+### GitHub Token Authentication
 
-Unlike OpenAI and Azure OpenAI which use API keys, GitHub Copilot's primary authentication method is handled through GitHub's OAuth flow. ChatX makes this process easy with the `github login` command:
+Unlike OpenAI and Azure OpenAI which use API keys, GitHub Copilot's authentication method is handled through GitHub's OAuth flow. ChatX makes this process easy with the `github login` command:
 
 ```bash
 chatx github login
@@ -39,9 +39,7 @@ This command will:
 
 After successful authentication, CHATX will automatically use your GitHub credentials when needed.
 
-#### When to Use Token Authentication
-
-Token authentication is recommended for most users because:
+Token authentication is recommended because:
 
 - It's the standard GitHub authentication mechanism
 - It handles token refresh and expiration automatically
@@ -54,42 +52,10 @@ To check if your token authentication is working:
 
 ```bash
 # Test with a simple query
-chatx --use-copilot-token --question "Hello, am I authenticated?"
+chatx --use-copilot --question "Hello, am I authenticated?"
 ```
 
 If you see an error message about authentication, run `chatx github login` again to refresh your token.
-
-### Method 2: HMAC Authentication
-
-For specialized scenarios or environments where the OAuth flow isn't feasible, CHATX also supports HMAC-based authentication. This requires:
-
-1. A Copilot HMAC key
-2. A Copilot integration ID
-
-To use HMAC authentication:
-
-```bash
-# Configure the required credentials
-chatx config set copilot.hmacKey YOUR_HMAC_KEY --user
-chatx config set copilot.integrationId YOUR_INTEGRATION_ID --user
-
-# Then use with the appropriate flag
-chatx --use-copilot-hmac --question "What is ChatX?"
-```
-
-You can also provide these credentials directly in the command:
-
-```bash
-chatx --copilot-hmac-key YOUR_HMAC_KEY --copilot-integration-id YOUR_INTEGRATION_ID --question "What is ChatX?"
-```
-
-HMAC authentication may be necessary in environments like:
-- CI/CD pipelines
-- Automated scripts
-- Air-gapped environments
-- Corporate environments with specific authentication policies
-
-For detailed instructions on setting up and using HMAC authentication, see the [HMAC Authentication Tutorial](../tutorials/github-copilot-hmac-auth.md).
 
 ## Command-Line Options
 
@@ -98,29 +64,15 @@ For detailed instructions on setting up and using HMAC authentication, see the [
 You can explicitly tell CHATX to use GitHub Copilot as the provider:
 
 ```bash
-# Use GitHub Copilot (either token or HMAC auth, depending on available credentials)
+# Use GitHub Copilot with token authentication
 chatx --use-copilot --question "What is GitHub Copilot?"
-
-# Specifically use token-based authentication (requires 'chatx github login' first)
-chatx --use-copilot-token --question "What is GitHub Copilot?"
-
-# Specifically use HMAC-based authentication (requires HMAC key and integration ID)
-chatx --use-copilot-hmac --question "What is GitHub Copilot?"
 ```
 
-#### Token vs HMAC Authentication Flags
-
-These flags give you control over the authentication method:
-
-- **`--use-copilot`**: Uses either token or HMAC auth, whichever is available (token is preferred)
-- **`--use-copilot-token`**: Explicitly uses token authentication only
-- **`--use-copilot-hmac`**: Explicitly uses HMAC authentication only
-
-When to use `--use-copilot-token` specifically:
-- When you have both token and HMAC configured but want to ensure token auth is used
-- In environments where you want to fail if token auth isn't available
-- When creating aliases or profiles specifically for token-based authentication
-- When you want to be explicit about which authentication method is being used
+When to use `--use-copilot`:
+- For standard GitHub Copilot interactions
+- In environments where you've authenticated using `chatx github login`
+- When creating aliases or profiles for GitHub Copilot
+- When you want to explicitly specify GitHub Copilot as your provider
 
 ### Model and Configuration Options
 
@@ -128,12 +80,6 @@ You can specify which Copilot model to use:
 
 ```bash
 chatx --use-copilot --copilot-model-name claude-3.7-sonnet --question "Explain quantum computing"
-```
-
-When using HMAC authentication, you'll need to provide the required credentials:
-
-```bash
-chatx --use-copilot-hmac --copilot-hmac-key YOUR_HMAC_KEY --copilot-integration-id YOUR_ID --question "Hello world"
 ```
 
 ## Available Models
@@ -164,26 +110,24 @@ chatx --use-copilot --interactive
 
 ### Token Authentication Examples
 
-If you've authenticated with `chatx github login`, you can use these examples with token authentication:
+If you've authenticated with `chatx github login`, you can use these examples:
 
-```bash title="Explicit token authentication"
-# Basic usage with token auth
-chatx --use-copilot-token --question "Write a Python function to calculate Fibonacci numbers"
+```bash title="GitHub Copilot usage"
+# Basic usage
+chatx --use-copilot --question "Write a Python function to calculate Fibonacci numbers"
 
-# Using a specific model with token auth
-chatx --use-copilot-token --copilot-model-name claude-3-opus --question "Explain quantum computing"
+# Using a specific model
+chatx --use-copilot --copilot-model-name claude-3-opus --question "Explain quantum computing"
 
-# Interactive chat with token auth
-chatx --use-copilot-token --interactive
+# Interactive chat
+chatx --use-copilot --interactive
 ```
 
 You can also provide a specific GitHub token directly (useful for automation):
 
 ```bash title="Using a specific GitHub token"
-chatx --use-copilot-token --github-token ghp_YOUR_TOKEN_HERE --question "Create a React component"
+chatx --use-copilot --github-token ghp_YOUR_TOKEN_HERE --question "Create a React component"
 ```
-
-For most users, the regular `--use-copilot` flag is sufficient as it will use token authentication if available.
 
 ## Advanced Configuration
 
@@ -200,36 +144,6 @@ chatx config set copilot.apiEndpoint https://api.githubcopilot.com --user
 
 # Alternatively, you can specify the endpoint directly in the command
 chatx --copilot-api-endpoint https://api.githubcopilot.com --question "Write a Python function that sorts a list"
-```
-
-### HMAC Authentication Setup
-
-To configure HMAC authentication for GitHub Copilot:
-
-```bash
-# Set the HMAC key (required for HMAC auth)
-chatx config set copilot.hmacKey YOUR_HMAC_KEY --user
-
-# Set the integration ID (required for HMAC auth)
-chatx config set copilot.integrationId YOUR_INTEGRATION_ID --user
-
-# Set the model name (optional)
-chatx config set copilot.modelName claude-3-opus --user
-
-# Set custom API endpoint (optional)
-chatx config set copilot.apiEndpoint https://api.githubcopilot.com --user
-```
-
-With these settings in place, you can use:
-
-```bash
-chatx --use-copilot-hmac --question "Hello world"
-```
-
-Or continue to provide the credentials directly:
-
-```bash
-chatx --copilot-hmac-key YOUR_HMAC_KEY --copilot-integration-id YOUR_ID --question "Hello world"
 ```
 
 ### Custom API Endpoint
