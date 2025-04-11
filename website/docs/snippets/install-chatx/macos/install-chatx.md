@@ -1,9 +1,10 @@
 Use `brew` to install the .NET 8 SDK,  
-Then use `dotnet` to install the ChatX CLI.
+Then use `dotnet` to install the ChatX CLI (and MDX CLI).
 
 ```bash
 brew install --cask dotnet-sdk
 dotnet tool install --global ChatX --prerelease
+dotnet tool install --global mdx --prerelease
 ```
 
 ??? tip "If you don't have `brew` ..."

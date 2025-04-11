@@ -1,5 +1,5 @@
 Install the .NET 8 SDK for your distribution,  
-Then use `dotnet` to install the ChatX CLI.
+Then use `dotnet` to install the ChatX CLI (and MDX CLI).
 
 ```bash
 # For Ubuntu/Debian:
@@ -10,6 +10,7 @@ sudo apt-get install -y dotnet-sdk-8.0
 
 # Install ChatX CLI
 dotnet tool install --global ChatX --prerelease
+dotnet tool install --global mdx --prerelease
 ```
 
 ??? tip "Other Linux distributions"
