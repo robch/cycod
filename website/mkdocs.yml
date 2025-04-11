@@ -194,7 +194,6 @@ nav:
         - --use-azure: reference/cli/options/use-azure.md
         - --use-azure-openai: reference/cli/options/use-azure-openai.md
         - --use-copilot: reference/cli/options/use-copilot.md
-        - --use-copilot-token: reference/cli/options/use-copilot-token.md
         - --use-openai: reference/cli/options/use-openai.md
         - --use-templates: reference/cli/options/use-templates.md
         - --user: reference/cli/options/user.md
