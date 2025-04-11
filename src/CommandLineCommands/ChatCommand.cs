@@ -545,16 +545,30 @@ public class ChatCommand : Command
 
     private static void SaveExceptionChatHistory(FunctionCallingChat chat)
     {
-        var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
-        chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-        ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+        try
+        {
+            var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
+            chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+        }
+        catch (Exception)
+        {
+            ConsoleHelpers.WriteWarning("Failed to save exception chat history.");
+        }
     }
 
     private static void SaveExceptionTrajectory(FunctionCallingChat chat)
     {
-        var fileName = FileHelpers.GetFileNameFromTemplate("exception-trajectory.md", "{filebase}-{time}.{fileext}")!;
-        chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-        ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+        try
+        {
+            var fileName = FileHelpers.GetFileNameFromTemplate("exception-trajectory.md", "{filebase}-{time}.{fileext}")!;
+            chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
+        }
+        catch (Exception)
+        {
+            ConsoleHelpers.WriteWarning("Failed to save exception trajectory.");
+        }
     }
 
     public string? SystemPrompt { get; set; }

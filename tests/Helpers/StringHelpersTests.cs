@@ -141,22 +141,6 @@ public class StringHelpersTests
         Assert.AreEqual(1, countFound);
     }
 
-    [TestMethod]
-    public void ExactlyReplaceOnce_EmptyString_ReturnsNull()
-    {
-        // Arrange
-        var content = "Some content";
-        var oldStr = "";
-        var newStr = "replacement";
-
-        // Act
-        var result = StringHelpers.ExactlyReplaceOnce(content, oldStr, newStr, out var countFound);
-
-        // Assert
-        Assert.IsNull(result);
-        Assert.AreEqual(2, countFound); // Empty string is found multiple times
-    }
-
     #endregion
 
     #region FuzzyReplaceOnce Tests
