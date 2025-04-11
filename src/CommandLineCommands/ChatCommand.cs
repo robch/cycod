@@ -48,15 +48,18 @@ public class ChatCommand : Command
 
     public async Task<int> ExecuteAsync(bool interactive)
     {
+        // Setup the named values
+        _namedValues = new TemplateVariables(Variables);
+
         // Transfer known settings to the command if not already set
         var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
         var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
         if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
-        InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory);
-        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory);
-        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory);
+        InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
+        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory)?.ReplaceValues(_namedValues);
+        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory)?.ReplaceValues(_namedValues);
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
 
         // Ground the system prompt, added user messages, and InputInstructions.
@@ -132,13 +135,16 @@ public class ChatCommand : Command
     private string GroundSystemPrompt()
     {
         SystemPrompt ??= GetBuiltInSystemPrompt();
-        return ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+
+        var processed =  ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+        return _namedValues != null ? processed.ReplaceValues(_namedValues) : processed;
     }
 
     private List<string> GroundUserPromptAdds()
     {
         return UserPromptAdds
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .Select(x => _namedValues != null ? x.ReplaceValues(_namedValues) : x)
             .ToList();
     }
 
@@ -146,6 +152,7 @@ public class ChatCommand : Command
     {
         return InputInstructions
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
+            .Select(x => _namedValues != null ? x.ReplaceValues(_namedValues) : x)
             .ToList();
     }
 
@@ -571,6 +578,7 @@ public class ChatCommand : Command
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 
+    private INamedValues? _namedValues;
     private TrajectoryFile? _trajectoryFile;
     private SlashCommandHandler _chatCommandHandler = new();
 
