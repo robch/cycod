@@ -3,6 +3,11 @@ title: Templates and Variables
 description: Learn how to use variables and generate multiple commands with ChatX
 ---
 
+---
+hide:
+- toc
+---
+
 --8<-- "snippets/ai-generated.md"
 
 # Templates and Variables in ChatX

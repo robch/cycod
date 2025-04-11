@@ -1,3 +1,8 @@
+---
+hide:
+- toc
+---
+
 --8<-- "snippets/ai-generated.md"
 
 # Tutorial: Creating User Aliases for Personal Productivity
