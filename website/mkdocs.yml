@@ -89,19 +89,21 @@ nav:
       - Setup GitHub Copilot: providers/github-copilot.md
       - Setup Azure OpenAI: providers/azure-openai.md
       - Setup OpenAI: providers/openai.md
-  - BASICS:
-    - Getting Started:
-      - Chat Basics: usage/basics.md
+  - CHAT:
+      - Overview: basics/overview.md
+      - The Basics: usage/basics.md
       - System Prompts: tutorials/effective-system-prompts.md
-      - Getting Help: usage/getting-help.md
-    - Input & Output:
-      - Input Options: usage/input-options.md
-      - Chat History: usage/chat-history.md
-      - Configuration: usage/configuration.md
-    - Built-in Capabilities:
-      - File Operations: basics/file-operations.md
-      - Shell Commands: basics/shell-commands.md
-      - Interactive Commands: basics/interactive-commands.md
+  - MEMORY:
+    - Concepts:
+      - Memory Overview: memory/overview.md
+      - Memory Organization: memory/organization.md
+    - Implementation:
+      - Basic Setup: memory/setup.md
+      - Tiered Memories: memory/tiered-memories.md
+      - Targeted Access: memory/targeted-access.md
+    - Advanced Techniques:
+      - Self-Updating Memories: memory/self-updating.md
+      - Memory Patterns & Examples: memory/patterns.md
   - TOOLS & EXTENSIONS:
     - Slash Commands:
       - Using Slash Commands: tools/slash-commands.md
@@ -137,6 +139,14 @@ nav:
       - Provider Profiles: advanced/provider-profiles.md
     - Troubleshooting:
       - Troubleshooting: usage/troubleshooting.md
+    - Input & Output:
+      - Input Options: usage/input-options.md
+      - Chat History: usage/chat-history.md
+      - Configuration: usage/configuration.md
+    - Built-in Capabilities:
+      - File Operations: basics/file-operations.md
+      - Shell Commands: basics/shell-commands.md
+      - Interactive Commands: basics/interactive-commands.md
   - REFERENCE:
     - chatx:
       - reference/cli/index.md
