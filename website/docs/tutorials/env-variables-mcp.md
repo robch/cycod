@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Using Environment Variables with MCP Servers
 
 This tutorial explains how to use environment variables to safely configure MCP servers in ChatX.

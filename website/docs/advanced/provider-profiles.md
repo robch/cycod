@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Provider Profiles
 
 When working with different AI providers, it's helpful to create dedicated profiles. This approach lets you quickly switch between providers and custom configurations.

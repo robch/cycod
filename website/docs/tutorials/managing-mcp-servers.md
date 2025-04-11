@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Managing MCP Servers with ChatX
 
 This tutorial will guide you through the process of managing Model Context Protocol (MCP) servers using the `chatx mcp list` command and related MCP commands.

@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Removing MCP Servers in ChatX
 
 This tutorial explains how to effectively remove Model Context Protocol (MCP) servers from your ChatX configuration using the `chatx mcp remove` command.

@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Custom Prompts
 
 Custom prompts are reusable text templates that can be quickly inserted into your chat conversations with CHATX. They help streamline common interactions and tasks.

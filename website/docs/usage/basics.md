@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Chat Basics
 
 CHATX offers both interactive and non-interactive modes for chatting with AI models. This guide covers the core commands and options for effective communication with AI through the terminal.

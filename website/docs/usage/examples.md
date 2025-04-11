@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # CLI Usage Examples
 
 This page provides practical examples of using ChatX across different operating systems. Choose your platform from the tabs below to see platform-specific examples.

@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Using Expert Roles in ChatX
 
 ChatX allows you to define and use expert roles to get specialized assistance for specific domains or tasks. This tutorial focuses on using predefined expert roles and creating your own custom roles.

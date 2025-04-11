@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Aliases
 
 CHATX aliases allow you to save and reuse sets of options for common commands. This feature helps you avoid typing the same long commands repeatedly.

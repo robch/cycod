@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Working with MCP Server Arguments
 
 This tutorial explores how to effectively use the `--arg` option to configure Model Context Protocol (MCP) servers in ChatX.

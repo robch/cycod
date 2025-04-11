@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # External Configuration Files
 
 CHATX provides a powerful way to manage settings through external configuration files using the `--config` option. This approach offers flexibility for different projects, teams, and environments.

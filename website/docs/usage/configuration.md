@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Configuration
 
 CHATX offers multiple configuration options to customize its behavior. This guide explains how to manage these settings effectively, with special focus on the `config set` command.

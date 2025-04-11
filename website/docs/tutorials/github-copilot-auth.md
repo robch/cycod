@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Authenticating with GitHub Copilot
 
 This tutorial walks you through the process of setting up GitHub authentication for ChatX to use GitHub Copilot as your AI provider.

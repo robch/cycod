@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Model Context Protocol (MCP)
 
 Model Context Protocol (MCP) is an advanced feature in CHATX that allows you to connect to custom model providers, giving AI models access to external tools, databases, and APIs.

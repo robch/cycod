@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Project-Specific Aliases with ChatX
 
 This tutorial guides you through creating and using project-specific aliases with ChatX, with a special focus on the `--save-local-alias` option.

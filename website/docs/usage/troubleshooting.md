@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Troubleshooting ChatX
 
 This guide will help you diagnose and resolve common issues when using ChatX.

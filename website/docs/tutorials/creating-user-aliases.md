@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Tutorial: Creating User Aliases for Personal Productivity
 
 This tutorial shows how to create and use user aliases in ChatX to boost your personal productivity across all your projects.

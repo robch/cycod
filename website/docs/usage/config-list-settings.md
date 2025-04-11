@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Working with List Settings
 
 Some ChatX configuration settings can store multiple values in a list. This guide explains how to work with these list-type settings using the `config add` and `config remove` commands.

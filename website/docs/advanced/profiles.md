@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Profiles
 
 CHATX profiles allow you to save collections of settings as a single unit and easily switch between them. This is especially useful when working with different AI providers, models, or use cases.

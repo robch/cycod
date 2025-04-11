@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Effective System Prompts in ChatX
 
 System prompts are powerful tools that guide how AI models behave when responding to your queries. This tutorial explores how to craft effective system prompts in ChatX using the `--system-prompt` and `--add-system-prompt` options.

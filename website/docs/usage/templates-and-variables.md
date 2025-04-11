@@ -3,6 +3,8 @@ title: Templates and Variables
 description: Learn how to use variables and generate multiple commands with ChatX
 ---
 
+--8<-- "snippets/ai-generated.md"
+
 # Templates and Variables in ChatX
 
 ChatX provides powerful templating and variable substitution capabilities that can help you automate repetitive tasks, batch process similar queries, and create dynamic interactions with AI models.

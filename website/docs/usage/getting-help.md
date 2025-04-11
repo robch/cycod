@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Getting Help in ChatX
 
 ChatX provides an extensive built-in help system to guide you through its features and commands. This page covers various ways to access help information in ChatX.

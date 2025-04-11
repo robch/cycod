@@ -89,38 +89,54 @@ nav:
       - Setup GitHub Copilot: providers/github-copilot.md
       - Setup Azure OpenAI: providers/azure-openai.md
       - Setup OpenAI: providers/openai.md
-  - USAGE:
-    - Chat Basics: usage/basics.md
-    - Usage Examples: usage/examples.md
-    - Chat History: usage/chat-history.md 
-    - Configuration: usage/configuration.md
-    - External Configuration Files: usage/external-config-files.md
-    - Getting Help: usage/getting-help.md
-    - Input Options: usage/input-options.md
-    - Scopes: usage/scopes.md
-    - Working with List Settings: usage/config-list-settings.md
-    - Aliases: usage/aliases.md
-    - Templates and Variables: usage/templates-and-variables.md
-    - Troubleshooting: usage/troubleshooting.md
-  - TUTORIALS:
-    - Expert Roles: tutorials/expert-roles.md
-    - Effective System Prompts: tutorials/effective-system-prompts.md
-    - Using Azure OpenAI: tutorials/using-azure-openai.md
-    - Project Aliases: tutorials/project-aliases.md
-    - Creating User Aliases: tutorials/creating-user-aliases.md
-    - GitHub Copilot Authentication: tutorials/github-copilot-auth.md
-    - Help System: tutorials/help-system.md
-    - Managing MCP Servers: tutorials/managing-mcp-servers.md
-    - Removing MCP Servers: tutorials/removing-mcp-servers.md
-    - MCP Command Usage: tutorials/mcp-command-usage.md
-    - Working with MCP Arguments: tutorials/working-with-mcp-arguments.md
-    - Environment Variables in MCP: tutorials/env-variables-mcp.md
+  - BASICS:
+    - Getting Started:
+      - Chat Basics: usage/basics.md
+      - System Prompts: tutorials/effective-system-prompts.md
+      - Getting Help: usage/getting-help.md
+    - Input & Output:
+      - Input Options: usage/input-options.md
+      - Chat History: usage/chat-history.md
+      - Configuration: usage/configuration.md
+    - Built-in Capabilities:
+      - File Operations: basics/file-operations.md
+      - Shell Commands: basics/shell-commands.md
+      - Interactive Commands: basics/interactive-commands.md
+  - TOOLS & EXTENSIONS:
+    - Slash Commands:
+      - Using Slash Commands: tools/slash-commands.md
+      - File Operations: tools/file-operations.md
+      - Search Commands: tools/search-commands.md
+      - Run Commands: tools/run-commands.md
+    - MCP Integration:
+      - MCP Overview: advanced/mcp.md
+      - Managing MCP Servers: tutorials/managing-mcp-servers.md
+      - Working with MCP Arguments: tutorials/working-with-mcp-arguments.md
+      - Environment Variables in MCP: tutorials/env-variables-mcp.md
+    - Templates & Variables:
+      - Templates and Variables: usage/templates-and-variables.md
+      - Variable Substitution: tools/variable-substitution.md
+  - WORKFLOWS:
+    - Use Cases:
+      - Expert Roles: tutorials/expert-roles.md
+      - Project Workflows: workflows/project-workflows.md
+      - Documentation Generation: workflows/documentation.md
+    - Advanced Patterns:
+      - Looping with --foreach: workflows/looping.md
+      - Parallel Processing: workflows/parallel-processing.md
+      - Alias Workflows: workflows/alias-workflows.md
   - ADVANCED:
-    - Aliases: advanced/aliases.md
-    - Custom Prompts: advanced/prompts.md
-    - Profiles: advanced/profiles.md
-    - Provider Profiles: advanced/provider-profiles.md
-    - MCP: advanced/mcp.md
+    - Configuration:
+      - External Configuration Files: usage/external-config-files.md
+      - Scopes: usage/scopes.md
+      - Working with List Settings: usage/config-list-settings.md
+    - Aliases & Profiles:
+      - Aliases: advanced/aliases.md
+      - Custom Prompts: advanced/prompts.md
+      - Profiles: advanced/profiles.md
+      - Provider Profiles: advanced/provider-profiles.md
+    - Troubleshooting:
+      - Troubleshooting: usage/troubleshooting.md
   - REFERENCE:
     - chatx:
       - reference/cli/index.md

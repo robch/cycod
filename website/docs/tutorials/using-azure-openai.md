@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Using Azure OpenAI with ChatX
 
 This tutorial will guide you through setting up and using Azure OpenAI with ChatX, including how to configure and work with different model deployments.

@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Using the --command Option with MCP Servers
 
 This tutorial explains how to effectively use the `--command` option when setting up Model Context Protocol (MCP) servers in ChatX. MCP servers allow AI models to access external tools, databases, APIs, and other resources.

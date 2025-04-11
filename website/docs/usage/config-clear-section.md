@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 ### Clearing Configuration Settings
 
 The `config clear` command removes a configuration setting entirely from a specified scope. Unlike setting a value to empty or null, clearing a setting removes the key completely from the configuration file.

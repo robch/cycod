@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Understanding Scopes in ChatX
 
 ChatX uses a powerful scoping system that allows you to apply settings, configurations, aliases, and prompts at different levels. Understanding how scopes work is essential for effectively customizing and managing your ChatX environment.

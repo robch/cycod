@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Chat History
 
 CHATX allows you to save, load, and continue conversations across sessions. This guide explains how to manage your chat history effectively.

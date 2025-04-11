@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Input Options
 
 ChatX provides several options for sending input to the AI model. This page explains the different input options and when to use each one.

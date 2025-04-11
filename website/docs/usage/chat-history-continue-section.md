@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 ## Continuing Recent Conversations
 
 To continue your most recently saved chat history, use the `--continue` flag:

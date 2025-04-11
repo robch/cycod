@@ -1,3 +1,5 @@
+--8<-- "snippets/ai-generated.md"
+
 # Using Aliases in ChatX
 
 Aliases in ChatX are powerful shortcuts that save you from typing the same command options repeatedly. This guide explains how to create, use, and manage aliases effectively.
