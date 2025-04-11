@@ -49,12 +49,6 @@ chatx --use-copilot --copilot-model-name claude-3-opus --question "Explain quant
 chatx config set copilot.modelName claude-3-opus --user
 ```
 
-### Example 3: Using with HMAC authentication
-
-```bash
-chatx --use-copilot-hmac --copilot-model-name gpt-4o --question "Write a complex algorithm for pathfinding"
-```
-
 ## Configuration
 
 You can set a default model name in your configuration:
@@ -83,13 +77,9 @@ Different models have different strengths and characteristics:
 | Option | Description |
 |--------|-------------|
 | `--use-copilot` | Explicitly selects GitHub Copilot as the provider |
-| `--use-copilot-hmac` | Selects Copilot with HMAC authentication |
 | `--copilot-api-endpoint` | Specifies the API endpoint |
-| [`--copilot-hmac-key`](copilot-hmac-key.md) | Specifies the HMAC key for authentication |
-| [`--copilot-integration-id`](copilot-integration-id.md) | Specifies the integration ID for HMAC auth |
 
 ## See Also
 
 - [GitHub Copilot Provider](../../../providers/github-copilot.md)
 - [`--use-copilot`](use-copilot.md)
-- [`--use-copilot-hmac`](use-copilot-hmac.md)

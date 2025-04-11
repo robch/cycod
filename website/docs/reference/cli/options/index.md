@@ -43,8 +43,6 @@ These options control which AI provider to use:
 | Option | Description |
 |--------|-------------|
 | [`--use-copilot`](use-copilot.md) | Prefer use of GitHub Copilot |
-| [`--use-copilot-token`](use-copilot-token.md) | Prefer use of GitHub Copilot with token authentication |
-| [`--use-copilot-hmac`](use-copilot-hmac.md) | Prefer use of GitHub Copilot with HMAC authentication |
 | [`--use-openai`](use-openai.md) | Prefer use of OpenAI API |
 | [`--use-azure-openai`](use-azure-openai.md) | Prefer use of Azure OpenAI API |
 | [`--use-azure`](use-azure.md) | Alias for `--use-azure-openai` |
@@ -67,8 +65,6 @@ These options configure GitHub Copilot API:
 |--------|-------------|
 | [`--copilot-model-name`](copilot-model-name.md) | Use a specific model by name |
 | [`--copilot-api-endpoint`](copilot-api-endpoint.md) | Use a specific API endpoint |
-| [`--copilot-integration-id`](copilot-integration-id.md) | Use a specific integration id |
-| [`--copilot-hmac-key`](copilot-hmac-key.md) | Use a specific authentication key |
 | [`--github-token`](github-token.md) | Use a specific GitHub authentication token |
 
 ### OpenAI Options

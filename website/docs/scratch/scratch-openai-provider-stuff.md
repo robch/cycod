@@ -1,33 +1,10 @@
 ---
 hide:
 - toc
-icon: material/microsoft-azure
+icon: material/brain
 ---
 
-The `chatx config set` command allows you to configure your OpenAI API key and model name.
-
---8<-- "tips/tip-setup-prereqs.md"
-
-```bash title="Set up OpenAI configuration"
-chatx config set openai.apiKey YOUR_API_KEY --user
-chatx config set openai.chatDeployment YOUR_DEPLOYMENT_NAME --user
-```
-
-## View Configuration
-
-To view the persisted configuration, use the following commands:
-
-```bash title="List all config values"
-chatx config list
-```
-
-```bash title="View OpenAI config values"
-chatx config get openai.apiKey
-chatx config get openai.chatModelName
-```
-
-
-<!-- # OpenAI API Provider
+# OpenAI API Provider
 ??? tip "Prerequisites"
 
     Before you begin:
@@ -232,4 +209,4 @@ If you encounter issues with the OpenAI API, try these steps:
 4. Check for API rate limits or quotas
 5. Try explicitly using the `--openai-api-key` parameter to rule out configuration issues
 
-For more detailed information, refer to the [OpenAI API documentation](https://platform.openai.com/docs/api-reference). -->
+For more detailed information, refer to the [OpenAI API documentation](https://platform.openai.com/docs/api-reference).

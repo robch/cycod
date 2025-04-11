@@ -41,8 +41,6 @@ USAGE: chatx [...]
   COPILOT OPTIONS
     --copilot-model-name NAME             Use a specific model by name (default: claude-3.7-sonnet)
     --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
-    --copilot-integration-id ID           Use a specific integration id
-    --copilot-hmac-key KEY                Use a specific authenticaion key
     --github-token TOKEN                  Use a specific GitHub authentication tok
 
   OPENAI OPTIONS

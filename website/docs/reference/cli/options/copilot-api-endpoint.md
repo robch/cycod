@@ -49,8 +49,6 @@ chatx config set copilot.apiEndpoint https://custom-copilot-api.example.com --us
 |--------|-------------|
 | `--use-copilot` | Prefer use of GitHub Copilot |
 | `--copilot-model-name` | Use a specific model by name (default: claude-3.7-sonnet) |
-| [`--copilot-integration-id`](copilot-integration-id.md) | Use a specific integration id |
-| `--copilot-hmac-key` | Use a specific authentication key |
 | `--github-token` | Use a specific GitHub authentication token |
 
 ## See Also

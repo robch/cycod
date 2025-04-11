@@ -82,13 +82,13 @@ nav:
   - HOME: index.md
   - PRE-REQS:
     - INSTALL:
-      - Installation: getting-started.md
+      - ChatX CLI Installation: install-chatx-cli.md
       - Verify Installation: verify-installation.md
     - SETUP:
-      - Provider Overview: providers/overview.md
-      - GitHub Copilot: providers/github-copilot.md
-      - Azure OpenAI: providers/azure-openai.md
-      - OpenAI: providers/openai.md
+      - Overview: providers/overview.md
+      - Setup GitHub Copilot: providers/github-copilot.md
+      - Setup Azure OpenAI: providers/azure-openai.md
+      - Setup OpenAI: providers/openai.md
   - USAGE:
     - Chat Basics: usage/basics.md
     - Usage Examples: usage/examples.md
@@ -109,7 +109,6 @@ nav:
     - Project Aliases: tutorials/project-aliases.md
     - Creating User Aliases: tutorials/creating-user-aliases.md
     - GitHub Copilot Authentication: tutorials/github-copilot-auth.md
-    - GitHub Copilot HMAC Auth: tutorials/github-copilot-hmac-auth.md
     - Help System: tutorials/help-system.md
     - Managing MCP Servers: tutorials/managing-mcp-servers.md
     - Removing MCP Servers: tutorials/removing-mcp-servers.md
@@ -142,8 +141,6 @@ nav:
         - --command: reference/cli/options/command.md
         - --continue: reference/cli/options/continue.md
         - --copilot-api-endpoint: reference/cli/options/copilot-api-endpoint.md
-        - --copilot-hmac-key: reference/cli/options/copilot-hmac-key.md
-        - --copilot-integration-id: reference/cli/options/copilot-integration-id.md
         - --copilot-model-name: reference/cli/options/copilot-model-name.md
         - --debug: reference/cli/options/debug.md
         - --env: reference/cli/options/env.md
@@ -181,7 +178,6 @@ nav:
         - --use-azure: reference/cli/options/use-azure.md
         - --use-azure-openai: reference/cli/options/use-azure-openai.md
         - --use-copilot: reference/cli/options/use-copilot.md
-        - --use-copilot-hmac: reference/cli/options/use-copilot-hmac.md
         - --use-copilot-token: reference/cli/options/use-copilot-token.md
         - --use-openai: reference/cli/options/use-openai.md
         - --use-templates: reference/cli/options/use-templates.md

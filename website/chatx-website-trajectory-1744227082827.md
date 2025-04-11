@@ -3155,7 +3155,7 @@ CHATX is an AI-powered CLI tool that brings the power of large language models t
     -   **MULTIPLE AI PROVIDERS**  
 
         :material-microsoft-azure: Azure OpenAI API!  
-        :material-openai: OpenAI API!  
+        :material-brain: OpenAI API!  
         :material-github: GitHub Copilot!  
         :material-account-group: Custom model providers with MCP!  
 

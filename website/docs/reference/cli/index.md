@@ -29,17 +29,17 @@ These options apply to the main `chatx` command:
 
 | Option | Description |
 |--------|-------------|
-| `--system-prompt "PROMPT"` | Replace system prompt given to AI model |
+| [`--system-prompt "PROMPT"`](options/system-prompt.md) | Replace system prompt given to AI model |
 | [`--add-system-prompt "TEXT"`](options/add-system-prompt.md) | Add text to the system prompt |
 | [`--add-user-prompt "TEXT"`](options/add-user-prompt.md) | Add user prompt(s), prepended to the first input |
-| `--input "LINE"` | Provide input to the AI model |
-| `--question "LINE"` | Alias for `--interactive false --quiet --input` |
-| `--instruction "LINE"` | Alias for `--input` |
-| `--inputs "INPUT1" "INPUT2" ...` | Provide multiple sequential inputs |
-| `--questions "Q1" "Q2" ...` | Alias for `--interactive false --quiet --inputs` |
-| `--instructions "I1" "I2" ...` | Alias for `--inputs` |
-| `--use-templates TRUE/FALSE` | Control template processing in inputs (default: true) |
-| `--no-templates` | Alias for `--use-templates false` |
+| [`--input "LINE"`](options/input.md) | Provide input to the AI model |
+| [`--question "LINE"`](options/question.md) | Alias for `--interactive false --quiet --input` |
+| [`--instruction "LINE"`](options/instruction.md) | Alias for `--input` |
+| [`--inputs "INPUT1" "INPUT2" ...`](options/inputs.md) | Provide multiple sequential inputs |
+| [`--questions "Q1" "Q2" ...`](options/questions.md) | Alias for `--interactive false --quiet --inputs` |
+| [`--instructions "I1" "I2" ...`](options/instructions.md) | Alias for `--inputs` |
+| [`--use-templates TRUE/FALSE`](options/use-templates.md) | Control template processing in inputs (default: true) |
+| [`--no-templates`](options/no-templates.md) | Alias for `--use-templates false` |
 
 ### Chat History
 
@@ -56,18 +56,16 @@ These options apply to the main `chatx` command:
 | Option | Description |
 |--------|-------------|
 | `--max-tokens TOKENS` | Limit AI output to specified number of tokens |
-| `--trim-token-target TOKENS` | Specify chat history maximum tokens target (default: 18000) |
+| [`--trim-token-target TOKENS`](options/trim-token-target.md) | Specify chat history maximum tokens target (default: 18000) |
 
 ### Model Providers
 
 | Option | Description |
 |--------|-------------|
-| `--use-copilot` | Prefer use of GitHub Copilot |
-| `--use-copilot-token` | Prefer use of GitHub Copilot with token authentication |
-| `--use-copilot-hmac` | Prefer use of GitHub Copilot with HMAC authentication |
-| `--use-openai` | Prefer use of OpenAI API |
-| `--use-azure-openai` | Prefer use of Azure OpenAI API |
-| `--use-azure` | Alias for `--use-azure-openai` |
+| [`--use-copilot`](options/use-copilot.md) | Prefer use of GitHub Copilot |
+| [`--use-openai`](options/use-openai.md) | Prefer use of OpenAI API |
+| [`--use-azure`](options/use-azure.md) | Alias for `--use-azure-openai` |
+| [`--use-azure-openai`](options/use-azure-openai.md) | Prefer use of Azure OpenAI API |
 
 ### Azure OpenAI Options
 
@@ -81,52 +79,50 @@ These options apply to the main `chatx` command:
 
 | Option | Description |
 |--------|-------------|
-| `--copilot-model-name NAME` | Use a specific model by name (default: claude-3.7-sonnet) |
-| `--copilot-api-endpoint URL` | Use a specific API endpoint (default: https://api.githubcopilot.com) |
-| [`--copilot-integration-id ID`](options/copilot-integration-id.md) | Use a specific integration id |
-| [`--copilot-hmac-key KEY`](options/copilot-hmac-key.md) | Use a specific authentication key |
-| `--github-token TOKEN` | Use a specific GitHub authentication token |
+| [`--copilot-model-name NAME`](options/copilot-model-name.md) | Use a specific model by name (default: claude-3.7-sonnet) |
+| [`--copilot-api-endpoint URL`](options/copilot-api-endpoint.md) | Use a specific API endpoint (default: https://api.githubcopilot.com) |
+| [`--github-token TOKEN`](options/github-token.md) | Use a specific GitHub authentication token |
 
 ### OpenAI Options
 
 | Option | Description |
 |--------|-------------|
-| `--openai-api-key KEY` | Use a specific API key |
-| `--openai-chat-model-name NAME` | Use a specific chat model (default: gpt-4o) |
+| [`--openai-api-key KEY`](options/openai-api-key.md) | Use a specific API key |
+| [`--openai-chat-model-name NAME`](options/openai-chat-model-name.md) | Use a specific chat model (default: gpt-4o) |
 
 ### Configuration
 
 | Option | Description |
 |--------|-------------|
-| `--config FILE1 [FILE2 [...]]` | Load configuration from YAML or INI files |
-| `--profile NAME` | Load a specific profile's configuration |
+| [`--config FILE1 [FILE2 [...]]`](options/config.md) | Load configuration from YAML or INI files |
+| [`--profile NAME`](options/profile.md) | Load a specific profile's configuration |
 
 ### Aliases
 
 | Option | Description |
 |--------|-------------|
-| `--save-alias ALIAS` | Same as `--save-local-alias` |
-| `--save-local-alias ALIAS` | Save current options as an alias in local scope |
-| `--save-user-alias ALIAS` | Save current options as an alias in user scope |
-| `--save-global-alias ALIAS` | Save current options as an alias in global scope |
+| [`--save-alias ALIAS`](options/save-alias.md) | Same as `--save-local-alias` |
+| [`--save-local-alias ALIAS`](options/save-local-alias.md) | Save current options as an alias in local scope |
+| [`--save-user-alias ALIAS`](options/save-user-alias.md) | Save current options as an alias in user scope |
+| [`--save-global-alias ALIAS`](options/save-global-alias.md) | Save current options as an alias in global scope |
 | `--{ALIAS}` | Use options saved under the specified alias name |
 
 ### Variables
 
 | Option | Description |
 |--------|-------------|
-| `--var NAME=VALUE` | Set a variable for template substitution |
-| `--vars NAME1=VALUE1 NAME2=VALUE2 ...` | Set multiple variables for template substitution |
-| `--foreach var NAME in VALUE1 [...]` | Define a loop variable with multiple values |
-| `--foreach var NAME in @FILE` | Define a loop variable with values from a file |
-| `--foreach var NAME in #..#` | Define a loop variable with a numeric range |
+| [`--var NAME=VALUE`](options/var.md) | Set a variable for template substitution |
+| [`--vars NAME1=VALUE1 NAME2=VALUE2 ...`](options/vars.md) | Set multiple variables for template substitution |
+| [`--foreach var NAME in VALUE1 [...]`](options/foreach.md) | Define a loop variable with multiple values |
+| [`--foreach var NAME in @FILE`](options/foreach.md) | Define a loop variable with values from a file |
+| [`--foreach var NAME in #..#`](options/foreach.md) | Define a loop variable with a numeric range |
 
 ### Additional Options
 
 | Option | Description |
 |--------|-------------|
-| `--interactive TRUE/FALSE` | Allow interactive use (default: true) |
-| `--threads COUNT` | Number of parallel threads for non-interactive mode |
+| [`--interactive TRUE/FALSE`](options/interactive.md) | Allow interactive use (default: true) |
+| [`--threads COUNT`](options/threads.md) | Number of parallel threads for non-interactive mode |
 | [`--debug`](options/debug.md) | Turn on diagnostics/debug outputs |
 | [`--quiet`](options/quiet.md) | Turn off all but the most critical console outputs |
 | [`--verbose`](options/verbose.md) | Turn on additional diagnostics/debug outputs |

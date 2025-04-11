@@ -46,7 +46,6 @@ chatx --use-copilot --github-token %GITHUB_TOKEN% --question "What is GitHub Cop
   - Don't hardcode tokens in script files
   - Use environment variables or secure secret management tools
   - Consider using more secure authentication methods when possible
-- If you need to use GitHub Copilot in CI/CD pipelines, consider if HMAC authentication might be more appropriate
 
 ## Related Options
 

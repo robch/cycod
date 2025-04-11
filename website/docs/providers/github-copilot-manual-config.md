@@ -4,18 +4,16 @@ hide:
 icon: material/github
 ---
 
-The `chatx github login` command allows you to authenticate with GitHub using device code authentication.
+# Setup GitHub Copilot manually
+
+The `chatx config set` command allows you to configure your GitHub Copilot settings.
 
 --8<-- "tips/tip-setup-prereqs.md"
 
-```bash title="Login to GitHub"
-chatx github login
+```bash title="Setup GitHub configuration"
+chatx config set github.token YOUR_GITHUB_TOKEN --user
+chatx config set copilot.modelName YOUR_MODEL_NAME --user
 ```
-
-**STEP 1**: ⇛ Launch the browser  
-**STEP 2**: ⇛ Enter the device code
-
-Alternatively, you can manually obtain and [set your GitHub token](./github-copilot-manual-config.md).
 
 ## View Configuration
 
@@ -30,8 +28,6 @@ chatx config get github.token
 chatx config get copilot.apiEndpoint
 chatx config get copilot.modelName
 ```
-
-
 
 <!-- 
 ## Authentication

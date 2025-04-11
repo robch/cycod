@@ -15,6 +15,5 @@ chatx --version
 You should see output showing the installed version:
 
 ```
-ChatX - AI-powered CLI, Version 1.0.0
-Copyright(c) 2025, Rob Chambers. All rights reserved.
+Version: 1.0.0-alpha-20250401.2
 ```

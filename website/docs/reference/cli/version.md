@@ -49,4 +49,4 @@ Version: 1.0.0+89178f5a0a8bac990aac639ba5261610daaddd40
 ## Related Topics
 
 - [help](help.md) - Access the ChatX help system
-- [Getting Started](../../getting-started.md) - Installation and first steps
+- [Getting Started](../../install-chatx-cli.md) - Installation and first steps

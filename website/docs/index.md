@@ -41,7 +41,7 @@ CHATX is an AI-powered CLI tool that brings the power of large language models t
     ---
 
     **Installation and Setup**  
-    [:material-download: CHATX Installation](/getting-started.md)  
+    [:material-download: CHATX Installation](/install-chatx-cli.md)  
     [:material-github:{ .med } GitHub Copilot Setup](/providers/github-copilot.md)  
     [:material-microsoft-azure:{ .med } Azure OpenAI Setup](/providers/azure-openai.md)  
     [:material-brain:{ .med } OpenAI Setup](/providers/openai.md)  

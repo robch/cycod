@@ -4,36 +4,6 @@ hide:
 icon: material/github
 ---
 
-The `chatx github login` command allows you to authenticate with GitHub using device code authentication.
-
---8<-- "tips/tip-setup-prereqs.md"
-
-```bash title="Login to GitHub"
-chatx github login
-```
-
-**STEP 1**: ⇛ Launch the browser  
-**STEP 2**: ⇛ Enter the device code
-
-Alternatively, you can manually obtain and [set your GitHub token](./github-copilot-manual-config.md).
-
-## View Configuration
-
-To view the persisted configuration, use the following commands:
-
-```bash title="List all config values"
-chatx config list
-```
-
-```bash title="View Copilot config values"
-chatx config get github.token
-chatx config get copilot.apiEndpoint
-chatx config get copilot.modelName
-```
-
-
-
-<!-- 
 ## Authentication
 
 CHATX provides authentication for GitHub Copilot through GitHub's OAuth flow.
@@ -202,4 +172,4 @@ For more detailed information about GitHub Copilot, refer to the [GitHub Copilot
 
 - [Authenticating with GitHub Copilot Tutorial](../tutorials/github-copilot-auth.md) - Step-by-step guide to setting up GitHub authentication
 - [`github login` Command Reference](../reference/cli/github/login.md) - Detailed documentation of the login command
-- [`--use-copilot` Option](../reference/cli/options/use-copilot.md) - How to specify GitHub Copilot as your AI provider -->
+- [`--use-copilot` Option](../reference/cli/options/use-copilot.md) - How to specify GitHub Copilot as your AI provider

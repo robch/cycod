@@ -14,7 +14,7 @@ When deciding which provider to use, consider the following factors:
   * OpenAI offers models like GPT-4o and GPT-3.5-Turbo
 
 * **Authentication Methods**: Providers use different authentication mechanisms:
-  * GitHub Copilot uses GitHub tokens or HMAC authentication
+  * GitHub Copilot uses GitHub tokens authentication
   * Azure OpenAI uses API keys and endpoints
   * OpenAI uses API keys
 
@@ -35,9 +35,6 @@ Each provider has its own set of options that can be configured:
 
 * `--github-token`: GitHub authentication token
 * `--copilot-model-name`: The model to use (default: claude-3.5-sonnet)
-* `--copilot-api-endpoint`: The API endpoint
-* `--copilot-hmac-key`: HMAC authentication key
-* `--copilot-integration-id`: Integration ID for HMAC auth
 
 ### Azure OpenAI Options
 

@@ -1,5 +1,5 @@
-!!! info "Prerequisites"
+??? tip "If you don't have the `chatx` CLI installed ..."
 
-    Before you begin:
-    
-    1. Make sure you have [installed CHATX](/getting-started.md)
+    Before you begin, you'll need to install the `chatx` CLI.
+
+    [:octicons-arrow-right-24: Install the `chatx` CLI](/install-chatx-cli.md)  

@@ -2,4 +2,4 @@
 
     Before you begin:
     
-    1. Make sure you have [installed CHATX](/getting-started.md)
+    1. Make sure you have [installed CHATX](/install-chatx-cli.md)

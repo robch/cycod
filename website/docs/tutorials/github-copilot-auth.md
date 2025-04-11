@@ -6,17 +6,14 @@ This tutorial walks you through the process of setting up GitHub authentication 
 
 Before starting this tutorial, make sure you have:
 
-- ChatX installed ([installation guide](../getting-started.md))
+- ChatX installed ([installation guide](../install-chatx-cli.md))
 - A GitHub account with an active GitHub Copilot subscription
 
 ## Understanding GitHub Authentication
 
-ChatX offers integration with GitHub Copilot, giving you access to powerful AI models like Claude from Anthropic. To use GitHub Copilot with ChatX, you have two authentication options:
+ChatX offers integration with GitHub Copilot, giving you access to powerful AI models like Claude from Anthropic.
 
-1. **Token-based authentication** (covered in this tutorial) - Recommended for most users
-2. **HMAC authentication** - For specialized use cases like CI/CD pipelines or corporate environments
-
-This tutorial covers the standard token-based authentication using the `github login` command. For HMAC authentication, which requires the `--copilot-integration-id` and `--copilot-hmac-key` options, see the [HMAC Authentication Tutorial](github-copilot-hmac-auth.md).
+This tutorial covers the standard token-based authentication using the `github login` command.
 
 The token-based authentication process:
 

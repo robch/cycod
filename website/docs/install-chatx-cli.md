@@ -4,9 +4,9 @@ hide:
 icon: material/download
 ---
 
-# Installing ChatX
+# `chatx` CLI Installation
 
-ChatX is an AI-powered CLI tool that makes it easy to interact with large language models directly from your terminal.
+ChatX is an AI-powered CLI tool that makes it easy to interact with GenAI models and MCP servers directly from your terminal.
 
 === "Windows"
     

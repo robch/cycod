@@ -70,7 +70,7 @@ website/
 │   ├── js/               # JavaScript files
 │   │   └── cli-toggle.js # JS for CLI toggle functionality
 │   ├── index.md          # Homepage
-│   ├── getting-started.md # Installation and setup guide
+│   ├── install-chatx-cli.md # Installation and setup guide
 │   ├── providers/        # Provider-specific documentation
 │   ├── usage/            # Usage documentation
 │   ├── advanced/         # Advanced features documentation
