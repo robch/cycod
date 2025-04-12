@@ -93,6 +93,11 @@ nav:
       - The Basics: basics/chat.md
       - Chat History: basics/chat-history.md
       - System Prompts: basics/system-prompts.md
+      - Custom Prompts: basics/custom-prompts.md
+      - Slash Commands: basics/slash-commands.md
+      - Variables: basics/variables.md
+      - Parallel Processing: basics/parallel-processing.md
+      - Configuration: basics/configuration.md
       - TL;DR/Overview: basics/overview.md
   - MEMORY:
     - Concepts:
@@ -147,7 +152,6 @@ nav:
     - Built-in Capabilities:
       - File Operations: basics/file-operations.md
       - Shell Commands: basics/shell-commands.md
-      - Interactive Commands: basics/interactive-commands.md
   - REFERENCE:
     - chatx:
       - reference/cli/index.md
