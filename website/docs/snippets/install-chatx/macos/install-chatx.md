@@ -11,3 +11,5 @@ dotnet tool install --global mdx --prerelease
 
     [Install Homebrew](https://brew.sh/)  
     Walks you through installing Homebrew, a package manager for macOS.
+
+--8<-- "tips/tip-why-need-mdx.md"

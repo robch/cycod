@@ -11,3 +11,5 @@ dotnet tool install --global mdx --prerelease
 
     [Install WinGet](https://learn.microsoft.com/en-us/windows/package-manager/winget/#install-winget)  
     Walks you through installing the Windows Package Manager.
+
+--8<-- "tips/tip-why-need-mdx.md"

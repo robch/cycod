@@ -85,14 +85,15 @@ nav:
       - ChatX CLI Installation: install-chatx-cli.md
       - Verify Installation: verify-installation.md
     - SETUP:
-      - Overview: providers/overview.md
+      - Providers: providers/overview.md
       - Setup GitHub Copilot: providers/github-copilot.md
       - Setup Azure OpenAI: providers/azure-openai.md
       - Setup OpenAI: providers/openai.md
   - CHAT:
-      - Overview: basics/overview.md
-      - The Basics: usage/basics.md
-      - System Prompts: tutorials/effective-system-prompts.md
+      - Chat Basics: usage/basics.md
+      - Chat History: basics/chat-history.md
+      - Using System Prompts: tutorials/effective-system-prompts.md
+      - TL;DR/Overview: basics/overview.md
   - MEMORY:
     - Concepts:
       - Memory Overview: memory/overview.md

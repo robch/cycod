@@ -17,3 +17,4 @@ dotnet tool install --global mdx --prerelease
 
     For other Linux distributions, follow the .NET installation instructions for your specific distribution from the [Microsoft .NET documentation](https://docs.microsoft.com/en-us/dotnet/core/install/linux).
 
+--8<-- "tips/tip-why-need-mdx.md"
