@@ -112,11 +112,3 @@ I can get the current date for you using the GetCurrentDate function.
 The current date is April 12, 2025.
 ````
 
-## See Also
-
-- [--output-chat-history](../reference/cli/options/output-chat-history.md): Reference for saving chat history
-- [--input-chat-history](../reference/cli/options/input-chat-history.md): Reference for loading chat history
-- [--chat-history](../reference/cli/options/chat-history.md): Reference for combined history loading/saving
-- [--output-trajectory](../reference/cli/options/output-trajectory.md): Reference for saving human-readable history
-- [--continue](../reference/cli/options/continue.md): Reference for continuing recent conversations
-- [Configuration](configuration.md): How to configure ChatX's behavior

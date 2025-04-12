@@ -129,10 +129,3 @@ chatx --input "Show smallest hello world possible" --py
 chatx --input "Show smallest hello world possible" --rb
 chatx --input "Show smallest hello world possible" --rs
 ```
-
-## See Also
-
-- [--system-prompt](../reference/cli/options/system-prompt.md): Reference for replacing the system prompt
-- [--add-system-prompt](../reference/cli/options/add-system-prompt.md): Reference for adding to the system prompt
-- [Creating User Aliases](../advanced/creating-user-aliases.md): How to save your system prompts for reuse
-- [Configuration](configuration.md): How to configure ChatX's behavior
