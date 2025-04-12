@@ -95,6 +95,6 @@ chatx --question "Explain quantum computing" --output-trajectory trajectory.md
 
 ## See Also
 
-- [Chat Basics](/usage/basics.md) - Learn more about basic ChatX usage
+- [Chat Basics](/basics/chat.md) - Learn more about basic ChatX usage
 - [Configuration](/usage/configuration.md) - How to configure ChatX
 - [Templates and Variables](/usage/templates-and-variables.md) - Working with templates

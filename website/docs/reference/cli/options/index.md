@@ -159,4 +159,4 @@ chatx --var name=John --var age=30 --question "Generate a bio for {name}, who is
 chatx --continue --question "Explain more about the last topic"
 ```
 
-For more examples and usage patterns, see the [Usage](../../../usage/basics.md) section.
+For more examples and usage patterns, see the [Chat Basics](../../../basics/chat.md) section.

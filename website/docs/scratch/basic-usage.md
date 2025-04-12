@@ -19,4 +19,4 @@ chatx --use-azure-openai --question "What are Azure OpenAI models?"
 chatx --use-copilot --question "Explain GitHub Copilot"
 ```
 
-For more detailed information on using ChatX, check out the [Chat Basics](/usage/basics.md) guide.
+For more detailed information on using ChatX, check out the [Chat Basics](/basics/chat.md) guide.

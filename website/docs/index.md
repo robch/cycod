@@ -51,8 +51,8 @@ CHATX is an AI-powered CLI tool that brings the power of large language models t
     ---
 
     **Core Functionality**  
-    [:material-chat: Chat Basics](/usage/basics.md)  
-    [:material-history: Chat History](/usage/chat-history.md)  
+    [:material-chat: Chat Basics](/basics/chat.md)  
+    [:material-history: Chat History](/basics/chat-history.md)  
     [:material-cog: Configuration](/usage/configuration.md)  
 
 -   :material-hammer-wrench:{ .lg .middle } __Advanced Features__

@@ -59,6 +59,18 @@ chatx --how-help-works --input "review the help topic for `mdx integration`"
 chatx --how-help-works --input "review the {x} topic" --foreach var x in "usage" "options" "mdx integration"
 ```
 
+## JSONL Format
+
+The `--output-chat-history`, `--input-chat-history`, `--chat-history` and `--continue` options use JSONL file format.
+
+```jsonl
+{"role":"system","content":"You are a helpful assistant."}
+{"role":"user","content":"What is the capital of France?"}
+{"role":"assistant","content":"The capital of France is Paris."}
+{"role":"user","content":"What about Germany?"}
+{"role":"assistant","content":"The capital of Germany is Berlin."}
+```
+
 ## Trajectories
 
 ??? question "What are trajectories?"
@@ -73,17 +85,7 @@ chatx --output-trajectory trajectory.md
 chatx --output-trajectory trajectory-{time}.md
 ```
 
-## Chat History Formats
-
-The `--output-chat-history` and `--input-chat-history` options use the JSONL file format.
-
-```jsonl
-{"role":"system","content":"You are a helpful assistant."}
-{"role":"user","content":"What is the capital of France?"}
-{"role":"assistant","content":"The capital of France is Paris."}
-{"role":"user","content":"What about Germany?"}
-{"role":"assistant","content":"The capital of Germany is Berlin."}
-```
+### Trajectory Format
 
 The `--output-trajectory` option uses a human-readable markdown format.
 

@@ -184,7 +184,7 @@ chatx --threads 4 --foreach var topic in "sorting" "searching" "hashing" "trees"
 
 ## Next Steps
 
-- See the [Getting Started](../usage/basics.md) guide for basic usage instructions
+- See the [Chat Basics](../basics/chat.md) guide for basic usage instructions
 - Learn about [System Prompts](../tutorials/effective-system-prompts.md) to customize AI behavior
 - Explore [Input Options](../usage/input-options.md) for different ways to interact with ChatX
 - Check out [Provider Setup](../providers/overview.md) to configure your preferred AI service

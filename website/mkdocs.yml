@@ -90,7 +90,7 @@ nav:
       - Setup Azure OpenAI: providers/azure-openai.md
       - Setup OpenAI: providers/openai.md
   - CHAT:
-      - Chat Basics: usage/basics.md
+      - The Basics: basics/chat.md
       - Chat History: basics/chat-history.md
       - Using System Prompts: tutorials/effective-system-prompts.md
       - TL;DR/Overview: basics/overview.md
