@@ -80,7 +80,7 @@ public class StrReplaceEditorHelperFunctions
     {
         if (File.Exists(path))
         {
-            return $"Path {path} already exists; cannot create file.\nYou can use the StrReplace function with oldStr=\"\" to replace the entire file content.";
+            return $"Path {path} already exists; cannot create file.\nYou can use the StrReplace function with oldStr=\"\" to replace the entire file content. You must specify the oldStr parameter. It will not default to empty string";
         }
         DirectoryHelpers.EnsureDirectoryForFileExists(path);
         File.WriteAllText(path, fileText);

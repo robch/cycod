@@ -113,7 +113,11 @@ public static class AliasFileHelpers
         var aliasFilePath = FindAliasFile(alias);
         if (aliasFilePath != null && File.Exists(aliasFilePath))
         {
-            var aliasArgs = File.ReadAllLines(aliasFilePath);
+            var aliasArgs = File.ReadAllLines(aliasFilePath)
+                .Select(x => x.StartsWith('@')
+                    ? AtFileHelpers.ExpandAtFileValue(x)
+                    : x)
+                .ToArray();
             for (var j = 0; j < aliasArgs.Length; j++)
             {
                 var parsed = CommandLineOptions.TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
