@@ -117,7 +117,7 @@ public class FunctionFactory
             var function = _functions.FirstOrDefault(x => x.Value.Function.Name == functionName);
             if (function.Key != null)
             {
-                result = CallFunction(function.Key, function.Value.Function, functionArguments, function.Value.Instance);
+                result = TryCallFunction(function.Key, function.Value.Function, functionArguments, function.Value.Instance);
                 return true;
             }
         }
@@ -131,6 +131,19 @@ public class FunctionFactory
         a._functions.ToList().ForEach(x => newFactory._functions.Add(x.Key, x.Value));
         b._functions.ToList().ForEach(x => newFactory._functions.Add(x.Key, x.Value));
         return newFactory;
+    }
+
+    private static string? TryCallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
+    {
+        try
+        {
+            return CallFunction(methodInfo, function, argumentsAsJson, instance);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Error calling function '{function.Name}': {ex.Message}");
+            return "Exception: " + ex.Message;
+        }
     }
 
     private static string? CallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
