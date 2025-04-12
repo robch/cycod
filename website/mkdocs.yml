@@ -92,7 +92,7 @@ nav:
   - CHAT:
       - The Basics: basics/chat.md
       - Chat History: basics/chat-history.md
-      - Using System Prompts: tutorials/effective-system-prompts.md
+      - System Prompts: basics/system-prompts.md
       - TL;DR/Overview: basics/overview.md
   - MEMORY:
     - Concepts:
