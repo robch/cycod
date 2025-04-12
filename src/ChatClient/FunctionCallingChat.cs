@@ -165,7 +165,7 @@ public class FunctionCallingChat : IAsyncDisposable
             ConsoleHelpers.WriteDebugLine($"Calling function: {functionCall.Name} with arguments: {functionCall.Arguments}");
             var functionResult = _functionFactory.TryCallFunction(functionCall.Name, functionCall.Arguments, out var functionResponse)
                 ? functionResponse ?? "Function call succeeded"
-                : "Function not found or failed to execute";
+                : $"Function not found or failed to execute: {functionResponse}";
             ConsoleHelpers.WriteDebugLine($"Function call result: {functionResult}");
 
             functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
