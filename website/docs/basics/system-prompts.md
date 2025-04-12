@@ -95,7 +95,7 @@ echo "We only program in {language}." > explain.txt
 echo "If not specified, language is Python" >> explain.txt
 echo "If possible, answer question on single line of code." >> explain.txt
 echo "Only speak in {language}." >> explain.txt
-chatx --system-prompt @explain.txt --question "How to delete file by name?" --var language=C#
+chatx --add-system-prompt @explain.txt --question "How to delete file by name?" --var language=C#
 ```
 
 ```` { .plaintext .cli-output }
@@ -108,60 +108,27 @@ System.IO.File.Delete("path/to/your/file.txt");
 Just replace "path/to/your/file.txt" with the actual path to the file you want to delete. This method will throw an exception if the file doesn't exist or if the process doesn't have sufficient permissions, so you might want to add exception handling in a real application.
 ````
 
-## Saving System Prompts as Aliases
-
-``` { .bash .cli-command title="Save a system prompt as an alias" }
-chatx --system-prompt "You are a Python coding assistant. Always provide code examples." --save-alias python-assistant
+``` { .bash .cli-command title="Create aliases for easier use" }
+chatx --var language=C# --add-system-prompt @explain.txt --save-alias cs
+chatx --var language=C++ --add-system-prompt @explain.txt --save-alias cpp
+chatx --var language=Java --add-system-prompt @explain.txt --save-alias java
+chatx --var language=JavaScript --add-system-prompt @explain.txt --save-alias js
+chatx --var language=Go --add-system-prompt @explain.txt --save-alias go
+chatx --var language=Python --add-system-prompt @explain.txt --save-alias py
+chatx --var language=Ruby --add-system-prompt @explain.txt --save-alias rb
+chatx --var language=Rust --add-system-prompt @explain.txt --save-alias rs
 ```
 
-``` { .bash .cli-command title="Use the alias" }
-chatx --python-assistant --question "How do I read CSV files?"
+``` { .bash .cli-command title="Use the aliases" }
+chatx --input "Show smallest hello world possible" --cs
+chatx --input "Show smallest hello world possible" --cpp
+chatx --input "Show smallest hello world possible" --java
+chatx --input "Show smallest hello world possible" --js
+chatx --input "Show smallest hello world possible" --go
+chatx --input "Show smallest hello world possible" --py
+chatx --input "Show smallest hello world possible" --rb
+chatx --input "Show smallest hello world possible" --rs
 ```
-
-```` { .plaintext .cli-output }
-Here's how to read CSV files in Python using the built-in `csv` module:
-
-```python
-import csv
-
-# Reading a CSV file into a list of lists
-with open('file.csv', 'r', newline='') as csvfile:
-    csv_reader = csv.reader(csvfile)
-    for row in csv_reader:
-        print(row)  # row is a list containing each column
-```
-
-For more control and to work with dictionaries (using headers as keys):
-
-```python
-import csv
-
-# Reading a CSV file into a list of dictionaries
-with open('file.csv', 'r', newline='') as csvfile:
-    csv_reader = csv.DictReader(csvfile)
-    for row in csv_reader:
-        print(row)  # row is a dictionary where keys are column headers
-```
-
-Using pandas (which is much more powerful for data analysis):
-
-```python
-import pandas as pd
-
-# Read CSV into a DataFrame
-df = pd.read_csv('file.csv')
-print(df.head())  # Display first 5 rows
-
-# Access specific column
-print(df['column_name'])
-
-# Filter data
-filtered_data = df[df['column_name'] > 100]
-print(filtered_data)
-```
-
-The pandas approach is recommended for data analysis, while the csv module is good for simple reading/writing operations.
-````
 
 ## See Also
 
