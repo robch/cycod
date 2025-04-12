@@ -238,7 +238,7 @@ echo "What is the capital of France?" | chatx > output.txt
 
 ## Quiet Mode
 
-To supress the majority of outputs (e.g. `User:`, `Assistant:`, etc.), use the `--quiet` flag:
+To suppress the majority of outputs (e.g. `User:`, `Assistant:`, etc.), use the `--quiet` flag:
 
 ``` { .bash .cli-command title="Quiet mode" }
 echo "What is the capital of France?" | chatx --quiet --interactive false
@@ -266,7 +266,7 @@ chatx -q "What is the capital of France?"
 The capital of France is Paris. 
 ```
 
-This is tyipcally useful for quick questions, or if you want to capture the output into a file, or pipe the output to another program.
+This is typically useful for quick questions, or if you want to capture the output into a file, or pipe the output to another program.
 
 ```bash
 git log -5 | chatx -q "Summarize the last 5 commits in this repository." > changes.txt
