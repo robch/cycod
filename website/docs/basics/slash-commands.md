@@ -8,32 +8,52 @@ icon: material/console-line
 
 # Slash Commands
 
-When using ChatX in interactive mode, you can use slash commands for quick access to functionality.
+You can use slash commands interactively for quick access to functionality.
 
-``` { .bash .cli-command title="Start an interactive session" }
-chatx
+```bash
+chatx [ENTER]
+
+User: ▌
 ```
 
-``` { .plaintext .cli-output }
+> /help
+
+```plaintext
+User: /help
+
+  BUILT-IN
+
+    /save     Save chat history to file
+    /clear    Clear chat history
+    /cost     Show token usage statistics
+    /help     Show this help message
+
+  EXTERNAL
+
+    /files    List files matching pattern
+    /file     Get contents of a file
+    /find     Find content in files
+
+    /search   Search the web
+    /get      Get content from URL
+
+    /run      Run a command
+
+  PROMPTS
+
+    No custom prompts found.
+
 User: ▌
 ```
 
 ## Basic Commands
 
-``` { .plaintext .cli-command title="Clear the current conversation" }
-/clear
-```
-
-``` { .plaintext .cli-output }
-Chat history cleared.
-```
-
-``` { .plaintext .cli-command title="Save the current conversation" }
+``` { .plaintext .cli-command title="Save chat history" }
 /save
 ```
 
 ``` { .plaintext .cli-output }
-Chat history saved to: chat-history-1744466974845.jsonl
+Chat history saved to: chat-history.jsonl
 ```
 
 ``` { .plaintext .cli-command title="Save with a specific filename" }
@@ -44,18 +64,49 @@ Chat history saved to: chat-history-1744466974845.jsonl
 Chat history saved to: my-important-chat.jsonl
 ```
 
-## File Operations
-
-``` { .plaintext .cli-command title="Search for files matching a pattern" }
-/file *.py
+``` { .plaintext .cli-command title="Clear chat history" }
+/clear
 ```
 
 ``` { .plaintext .cli-output }
-Found 3 files:
-  src/main.py
-  src/utils.py
-  tests/test_main.py
+Chat history cleared.
 ```
+
+## File Operations
+
+``` { .plaintext .cli-command title="Include file content" }
+/file README.md
+```
+
+`````` { .plaintext .cli-output }
+user-function: /file => ## README.md
+
+Modified: 1 day ago
+Size: 6 KB
+
+```markdown
+...
+```
+
+User: ▌
+``````
+
+``` { .plaintext .cli-command title="Include multiple files" }
+/files **/*.md
+```
+
+`````` { .plaintext .cli-output }
+user-function: /files => ## ...file1...
+
+...
+
+## ...file2...
+
+...
+
+User: ▌
+``````
+
 
 ``` { .plaintext .cli-command title="Find occurrences of a pattern in files" }
 /find TODO
@@ -73,18 +124,24 @@ Found 5 matches:
 ## Command Execution
 
 ``` { .plaintext .cli-command title="Execute a shell command" }
-/run ls -la
+/run --bash "ls -la"
 ```
 
-``` { .plaintext .cli-output }
-total 48
-drwxr-xr-x  8 user group  256 Apr 12 10:15 .
-drwxr-xr-x 12 user group  384 Apr 10 15:23 ..
--rw-r--r--  1 user group 1523 Apr 12 09:42 README.md
-drwxr-xr-x  6 user group  192 Apr 12 09:21 src
-drwxr-xr-x  4 user group  128 Apr 11 14:36 tests
--rw-r--r--  1 user group 2145 Apr 12 09:58 package.json
+```` { .plaintext .cli-output }
+user-function: /run => ## `ls -la`
+
+Output:
 ```
+total 2468
+drwxrwxrwx 1 robch robch   4096 Apr 13 22:57 .
+drwxrwxrwx 1 robch robch   4096 Apr 11 18:59 ..
+-rwxrwxrwx 1 robch robch   1088 Apr  2 17:28 LICENSE
+-rwxrwxrwx 1 robch robch   7150 Apr 12 21:26 README.md
+...
+```
+
+User: ▌
+````
 
 ``` { .plaintext .cli-command title="Execute with output processing" }
 /run git status
@@ -104,35 +161,6 @@ Untracked files:
 	new-feature.py
 
 no changes added to commit (use "git add" and/or "git commit -a")
-```
-
-## Custom Prompts
-
-``` { .plaintext .cli-command title="Use a custom prompt template" }
-/code-review
-```
-
-``` { .plaintext .cli-output }
-Please paste or specify the code you'd like me to review. I'll provide feedback on:
-
-1. Potential bugs or edge cases
-2. Performance considerations
-3. Style and readability
-4. Best practices
-
-User: ▌
-```
-
-``` { .plaintext .cli-command title="List available custom prompts" }
-/prompts
-```
-
-``` { .plaintext .cli-output }
-Available prompts:
-  code-review - Review code for issues and improvements
-  commit-msg - Generate a good commit message
-  explain-code - Explain how code works
-  refactor - Suggest refactoring for cleaner code
 ```
 
 ## Web Operations
@@ -172,6 +200,35 @@ Rather than general-purpose assistants, we're seeing more specialized bots with 
 
 ## 3. Improved Reasoning Capabilities
 The latest models demonstrate enhanced logical reasoning and problem-solving skills.
+```
+
+## Custom Prompts
+
+``` { .plaintext .cli-command title="Use a custom prompt template" }
+/code-review
+```
+
+``` { .plaintext .cli-output }
+Please paste or specify the code you'd like me to review. I'll provide feedback on:
+
+1. Potential bugs or edge cases
+2. Performance considerations
+3. Style and readability
+4. Best practices
+
+User: ▌
+```
+
+``` { .plaintext .cli-command title="List available custom prompts" }
+/prompts
+```
+
+``` { .plaintext .cli-output }
+Available prompts:
+  code-review - Review code for issues and improvements
+  commit-msg - Generate a good commit message
+  explain-code - Explain how code works
+  refactor - Suggest refactoring for cleaner code
 ```
 
 ## Command Help

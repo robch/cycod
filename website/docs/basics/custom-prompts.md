@@ -97,78 +97,84 @@ Prompt 'hello' saved to: C:\Users\username\.chatx\prompts\hello.prompt
 
 ### Multi-line Prompts
 
-#### Bash (Linux/macOS)
+=== "Bash"
+    ``` { .bash .cli-command title="Create a multi-line prompt in Bash" }
+    chatx prompt create code-review "Please review this code and suggest improvements:
+    1. Identify any bugs or edge cases
+    2. Suggest performance optimizations
+    3. Comment on style and readability"
+    ```
 
-``` { .bash .cli-command title="Create a multi-line prompt in Bash" }
-chatx prompt create code-review "Please review this code and suggest improvements:
-1. Identify any bugs or edge cases
-2. Suggest performance optimizations
-3. Comment on style and readability"
-```
+=== "CMD"
+    ``` { .cmd .cli-command title="Create a multi-line prompt in CMD" }
+    chatx prompt create code-review "Please review this code and suggest improvements:^
+    1. Identify any bugs or edge cases^
+    2. Suggest performance optimizations^
+    3. Comment on style and readability"
+    ```
 
-#### CMD (Windows)
+=== "PowerShell"
+    ``` { .powershell .cli-command title="Create a multi-line prompt in PowerShell" }
+    chatx prompt create code-review "Please review this code and suggest improvements:`n1. Identify any bugs or edge cases`n2. Suggest performance optimizations`n3. Comment on style and readability"
+    ```
 
-``` { .cmd .cli-command title="Create a multi-line prompt in CMD" }
-chatx prompt create code-review "Please review this code and suggest improvements:^
-1. Identify any bugs or edge cases^
-2. Suggest performance optimizations^
-3. Comment on style and readability"
-```
-
-#### PowerShell (Windows)
-
-``` { .powershell .cli-command title="Create a multi-line prompt in PowerShell" }
-chatx prompt create code-review "Please review this code and suggest improvements:`n1. Identify any bugs or edge cases`n2. Suggest performance optimizations`n3. Comment on style and readability"
+``` { .plaintext .cli-output }
+Prompt 'code-review' saved to: C:\Users\username\.chatx\prompts\code-review.prompt
 ```
 
 ### Creating Prompts from Files
 
-``` { .bash .cli-command title="Create a file with your prompt text" }
-echo "Based on the following git diff, generate a clear and concise commit message with:
-- A short summary (50 chars or less)
-- A more detailed explanation if needed
-- Reference any relevant issue numbers
+=== "Bash"
+    ``` { .bash .cli-command title="Create a file with your prompt text" }
+    echo "Based on the following git diff, generate a clear and concise commit message with:
+    - A short summary (50 chars or less)
+    - A more detailed explanation if needed
+    - Reference any relevant issue numbers
 
-DIFF:
-{diff}" > commit-msg-prompt.txt
-```
+    DIFF:
+    {diff}" > commit-msg-prompt.txt
+    ```
 
-``` { .bash .cli-command title="Create a prompt from file content" }
-chatx prompt create commit-msg @commit-msg-prompt.txt
-```
+    ``` { .bash .cli-command title="Create a prompt from file content" }
+    chatx prompt create commit-msg @commit-msg-prompt.txt
+    ```
+
+=== "CMD"
+    ``` { .cmd .cli-command title="Create a file with your prompt text" }
+    (
+    echo Based on the following git diff, generate a clear and concise commit message with:
+    echo - A short summary (50 chars or less^)
+    echo - A more detailed explanation if needed
+    echo - Reference any relevant issue numbers
+    echo.
+    echo DIFF:
+    echo {diff}
+    ) > commit-msg-prompt.txt
+    ```
+
+    ``` { .cmd .cli-command title="Create a prompt from file content" }
+    chatx prompt create commit-msg @commit-msg-prompt.txt
+    ```
+
+=== "PowerShell"
+    ``` { .powershell .cli-command title="Create a file with your prompt text" }
+    @"
+    Based on the following git diff, generate a clear and concise commit message with:
+    - A short summary (50 chars or less)
+    - A more detailed explanation if needed
+    - Reference any relevant issue numbers
+
+    DIFF:
+    {diff}
+    "@ | Out-File -FilePath commit-msg-prompt.txt
+    ```
+
+    ``` { .powershell .cli-command title="Create a prompt from file content" }
+    chatx prompt create commit-msg @commit-msg-prompt.txt
+    ```
 
 ``` { .plaintext .cli-output }
 Prompt 'commit-msg' saved to: C:\Users\username\.chatx\prompts\commit-msg.prompt
-```
-
-### Prompts with Variables
-
-``` { .bash .cli-command title="Create a prompt with placeholder variables" }
-chatx prompt create translate "Translate the following text from {source_lang} to {target_lang}:
-
-{text}"
-```
-
-``` { .plaintext .cli-output }
-Prompt 'translate' saved to: C:\Users\username\.chatx\prompts\translate.prompt
-```
-
-## Using Prompts with Variables
-
-``` { .bash .cli-command title="Use a prompt with variables" }
-chatx --prompt translate --var source_lang=English --var target_lang=Spanish --var "text=Hello, how are you today?"
-```
-
-``` { .plaintext .cli-output }
-User: Translate the following text from English to Spanish:
-
-Hello, how are you today?
-```
-
-``` { .plaintext .cli-output }
-Assistant: Hola, ¿cómo estás hoy?
-
-User: ▌
 ```
 
 ## Managing Prompts
@@ -223,3 +229,76 @@ You can manually edit these files or create new ones by adding text files to thi
     You can share prompts with your team by adding them to a shared repository and configuring 
     ChatX to look for prompts in that location using the `--config-dir` option or by setting up
     a global prompt directory.
+
+## Using Prompts with Input Flags
+
+You can use custom prompts with the `--input` and `--inputs` flags directly from the command line:
+
+``` { .bash .cli-command title="Use a prompt directly with --input" }
+chatx --input "/code-review
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}"
+```
+
+``` { .plaintext .cli-output }
+User: Please review this code and suggest improvements:
+1. Identify any bugs or edge cases
+2. Suggest performance optimizations
+3. Comment on style and readability
+
+function calculateTotal(items) {
+  return items.reduce((sum, item) => sum + item.price, 0);
+}
+```
+
+The `--inputs` flag allows you to chain multiple inputs, including slash commands:
+
+``` { .bash .cli-command title="Use multiple prompts with --inputs" }
+chatx --inputs "/code-review" "function getUser(id) { return users.find(u => u.id === id); }" "/refactor"
+```
+
+``` { .plaintext .cli-output }
+User: Please review this code and suggest improvements:
+1. Identify any bugs or edge cases
+2. Suggest performance optimizations
+3. Comment on style and readability
+
+User: function getUser(id) { return users.find(u => u.id === id); }
+
+User: Please suggest ways to refactor this code to make it more:
+1. Readable
+2. Maintainable
+3. Efficient
+4. Robust
+```
+
+### Prompts with Variables
+
+``` { .bash .cli-command title="Create a prompt with placeholder variables" }
+chatx prompt create translate "Translate the following text from {source_lang} to {target_lang}:
+
+{text}"
+```
+
+``` { .plaintext .cli-output }
+Prompt 'translate' saved to: C:\Users\username\.chatx\prompts\translate.prompt
+```
+
+## Using Prompts with Variables
+
+``` { .bash .cli-command title="Use a prompt with variables" }
+chatx --prompt translate --var source_lang=English --var target_lang=Spanish --var "text=Hello, how are you today?"
+```
+
+``` { .plaintext .cli-output }
+User: Translate the following text from English to Spanish:
+
+Hello, how are you today?
+```
+
+``` { .plaintext .cli-output }
+Assistant: Hola, ¿cómo estás hoy?
+
+User: ▌
+```
