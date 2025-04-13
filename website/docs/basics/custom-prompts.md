@@ -1,7 +1,7 @@
 ---
 hide:
 - toc
-icon: material/message-text
+icon: material/text-box-outline
 ---
 
 --8<-- "snippets/ai-generated.md"
@@ -10,55 +10,70 @@ icon: material/message-text
 
 Custom prompts are reusable templates that help streamline common interactions with ChatX.
 
-``` { .bash .cli-command title="Create a basic prompt template" }
-chatx prompt create code-review "Please review this code and suggest improvements:
+## Using Prompts Interactively
+
+``` { .bash .cli-command title="Start an interactive chat session" }
+chatx
+```
+
+``` { .plaintext .cli-output }
+User: ▌
+```
+
+``` { .plaintext .cli-command title="Use a slash command to activate a prompt" }
+/code-review
+```
+
+``` { .plaintext .cli-output }
+Please review this code and suggest improvements:
 1. Identify any bugs or edge cases
 2. Suggest performance optimizations
-3. Comment on style and readability"
+3. Comment on style and readability
+
+User: ▌
+```
+
+``` { .plaintext .cli-command title="Paste code for review after the prompt" }
+function add(a, b) { return a + b }
 ```
 
 ``` { .plaintext .cli-output }
-Prompt 'code-review' saved to: C:\Users\username\.chatx\prompts\code-review.txt
+Assistant: I've reviewed the code and here are my suggestions:
+
+1. **Bugs and Edge Cases:**
+   - There's no type checking for inputs. If non-number values are passed (strings, objects, etc.), unexpected results may occur.
+   - No handling for missing parameters - if either `a` or `b` is undefined, you'll get `NaN`.
+
+2. **Performance Optimizations:**
+   - This simple function is already optimal in terms of performance.
+
+3. **Style and Readability:**
+   - Consider adding a function comment describing purpose and parameters
+   - For consistency with modern JS practices, use arrow function syntax
+   - Add explicit return type if using TypeScript
+
+Improved version:
+```javascript
+/**
+ * Adds two numbers together
+ * @param {number} a - First number
+ * @param {number} b - Second number
+ * @return {number} Sum of a and b
+ */
+const add = (a, b) => {
+  if (typeof a !== 'number' || typeof b !== 'number') {
+    throw new TypeError('Both arguments must be numbers');
+  }
+  return a + b;
+};
 ```
 
-## Creating Prompts
-
-``` { .bash .cli-command title="Create a prompt for generating commit messages" }
-chatx prompt create commit-msg "Based on the following git diff, generate a clear and concise commit message with:
-- A short summary (50 chars or less)
-- A more detailed explanation if needed
-- Reference any relevant issue numbers
-
-DIFF:
-{diff}"
+User: ▌
 ```
 
-``` { .plaintext .cli-output }
-Prompt 'commit-msg' saved to: C:\Users\username\.chatx\prompts\commit-msg.txt
-```
-
-``` { .bash .cli-command title="Create a prompt with complex formatting" }
-chatx prompt create react-component "Create a React component with the following properties:
-
-Component name: {name}
-Props:
-{props}
-
-Include:
-- TypeScript interfaces
-- Error handling
-- Basic styling with CSS modules
-- Unit test template"
-```
-
-``` { .plaintext .cli-output }
-Prompt 'react-component' saved to: C:\Users\username\.chatx\prompts\react-component.txt
-```
-
-## Using Prompts
-
-``` { .bash .cli-command title="Use a prompt in CLI mode" }
-chatx --prompt code-review --input "function add(a, b) { return a + b }"
+``` { .bash .cli-command title="Use a prompt in CLI with --input" }
+chatx --input "/code-review
+function multiply(a, b) { return a * b }"
 ```
 
 ``` { .plaintext .cli-output }
@@ -67,258 +82,91 @@ User: Please review this code and suggest improvements:
 2. Suggest performance optimizations
 3. Comment on style and readability
 
-function add(a, b) { return a + b }
+function multiply(a, b) { return a * b }
 ```
 
-``` { .bash .cli-command title="Use a prompt with variables" }
-chatx --prompt react-component --var name=UserProfile --var "props=userId: string, showAvatar: boolean" --quiet
-```
+## Creating Prompts
 
-``` { .plaintext .cli-output }
-Create a React component with the following properties:
-
-Component name: UserProfile
-Props:
-userId: string, showAvatar: boolean
-
-Include:
-- TypeScript interfaces
-- Error handling
-- Basic styling with CSS modules
-- Unit test template
-
-Here's a React component with the specified properties:
-
-```tsx
-// UserProfile.tsx
-import React, { useState, useEffect } from 'react';
-import styles from './UserProfile.module.css';
-
-interface UserProfileProps {
-  userId: string;
-  showAvatar: boolean;
-}
-
-const UserProfile: React.FC<UserProfileProps> = ({ userId, showAvatar }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  interface User {
-    id: string;
-    name: string;
-    email: string;
-    avatarUrl?: string;
-  }
-
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        setLoading(true);
-        // Example API call
-        const response = await fetch(`/api/users/${userId}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch user data: ${response.status}`);
-        }
-        
-        const userData = await response.json();
-        setUser(userData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [userId]);
-
-  if (loading) {
-    return <div className={styles.loading}>Loading user data...</div>;
-  }
-
-  if (error) {
-    return <div className={styles.error}>Error: {error}</div>;
-  }
-
-  if (!user) {
-    return <div className={styles.notFound}>User not found</div>;
-  }
-
-  return (
-    <div className={styles.container}>
-      {showAvatar && user.avatarUrl && (
-        <img 
-          src={user.avatarUrl} 
-          alt={`${user.name}'s avatar`} 
-          className={styles.avatar}
-        />
-      )}
-      <div className={styles.userInfo}>
-        <h2 className={styles.userName}>{user.name}</h2>
-        <p className={styles.userEmail}>{user.email}</p>
-      </div>
-    </div>
-  );
-};
-
-export default UserProfile;
-```
-
-```css
-/* UserProfile.module.css */
-.container {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  background-color: #fff;
-}
-
-.avatar {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-right: 1rem;
-}
-
-.userInfo {
-  flex: 1;
-}
-
-.userName {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.2rem;
-  color: #333;
-}
-
-.userEmail {
-  margin: 0;
-  color: #666;
-}
-
-.loading {
-  padding: 1rem;
-  color: #666;
-}
-
-.error {
-  padding: 1rem;
-  color: #d32f2f;
-  background-color: #ffebee;
-  border-radius: 4px;
-}
-
-.notFound {
-  padding: 1rem;
-  color: #666;
-  font-style: italic;
-}
-```
-
-```tsx
-// UserProfile.test.tsx
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
-import UserProfile from './UserProfile';
-
-// Mock fetch API
-global.fetch = jest.fn();
-
-describe('UserProfile Component', () => {
-  const mockUser = {
-    id: 'user123',
-    name: 'Jane Doe',
-    email: 'jane@example.com',
-    avatarUrl: 'https://example.com/avatar.jpg'
-  };
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
-  test('renders loading state initially', () => {
-    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
-    
-    render(<UserProfile userId="user123" showAvatar={true} />);
-    
-    expect(screen.getByText('Loading user data...')).toBeInTheDocument();
-  });
-
-  test('renders user data after successful fetch', async () => {
-    (global.fetch as jest.Mock).mockImplementation(() => 
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockUser)
-      })
-    );
-    
-    render(<UserProfile userId="user123" showAvatar={true} />);
-    
-    await waitFor(() => {
-      expect(screen.getByText('Jane Doe')).toBeInTheDocument();
-      expect(screen.getByText('jane@example.com')).toBeInTheDocument();
-      expect(screen.getByAltText(`Jane Doe's avatar`)).toBeInTheDocument();
-    });
-  });
-
-  test('does not show avatar when showAvatar is false', async () => {
-    (global.fetch as jest.Mock).mockImplementation(() => 
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(mockUser)
-      })
-    );
-    
-    render(<UserProfile userId="user123" showAvatar={false} />);
-    
-    await waitFor(() => {
-      expect(screen.queryByAltText(`Jane Doe's avatar`)).not.toBeInTheDocument();
-    });
-  });
-
-  test('renders error state on fetch error', async () => {
-    (global.fetch as jest.Mock).mockImplementation(() => 
-      Promise.resolve({
-        ok: false,
-        status: 404
-      })
-    );
-    
-    render(<UserProfile userId="invalid-id" showAvatar={true} />);
-    
-    await waitFor(() => {
-      expect(screen.getByText(/Error:/)).toBeInTheDocument();
-      expect(screen.getByText(/Failed to fetch user data: 404/)).toBeInTheDocument();
-    });
-  });
-});
-```
-```
-
-## Using Prompts Interactively
-
-``` { .bash .cli-command title="Use a prompt in interactive mode" }
-chatx
+``` { .bash .cli-command title="Create a simple prompt" }
+chatx prompt create hello "Hello! How can I help you today?"
 ```
 
 ``` { .plaintext .cli-output }
-User: ▌
+Prompt 'hello' saved to: C:\Users\username\.chatx\prompts\hello.prompt
 ```
 
-``` { .plaintext .cli-command title="Use the code-review prompt interactively" }
-/code-review
-```
+### Multi-line Prompts
 
-``` { .plaintext .cli-output }
-Please paste or specify the code you'd like me to review. I'll provide feedback on:
+#### Bash (Linux/macOS)
 
+``` { .bash .cli-command title="Create a multi-line prompt in Bash" }
+chatx prompt create code-review "Please review this code and suggest improvements:
 1. Identify any bugs or edge cases
 2. Suggest performance optimizations
-3. Comment on style and readability
+3. Comment on style and readability"
+```
+
+#### CMD (Windows)
+
+``` { .cmd .cli-command title="Create a multi-line prompt in CMD" }
+chatx prompt create code-review "Please review this code and suggest improvements:^
+1. Identify any bugs or edge cases^
+2. Suggest performance optimizations^
+3. Comment on style and readability"
+```
+
+#### PowerShell (Windows)
+
+``` { .powershell .cli-command title="Create a multi-line prompt in PowerShell" }
+chatx prompt create code-review "Please review this code and suggest improvements:`n1. Identify any bugs or edge cases`n2. Suggest performance optimizations`n3. Comment on style and readability"
+```
+
+### Creating Prompts from Files
+
+``` { .bash .cli-command title="Create a file with your prompt text" }
+echo "Based on the following git diff, generate a clear and concise commit message with:
+- A short summary (50 chars or less)
+- A more detailed explanation if needed
+- Reference any relevant issue numbers
+
+DIFF:
+{diff}" > commit-msg-prompt.txt
+```
+
+``` { .bash .cli-command title="Create a prompt from file content" }
+chatx prompt create commit-msg @commit-msg-prompt.txt
+```
+
+``` { .plaintext .cli-output }
+Prompt 'commit-msg' saved to: C:\Users\username\.chatx\prompts\commit-msg.prompt
+```
+
+### Prompts with Variables
+
+``` { .bash .cli-command title="Create a prompt with placeholder variables" }
+chatx prompt create translate "Translate the following text from {source_lang} to {target_lang}:
+
+{text}"
+```
+
+``` { .plaintext .cli-output }
+Prompt 'translate' saved to: C:\Users\username\.chatx\prompts\translate.prompt
+```
+
+## Using Prompts with Variables
+
+``` { .bash .cli-command title="Use a prompt with variables" }
+chatx --prompt translate --var source_lang=English --var target_lang=Spanish --var "text=Hello, how are you today?"
+```
+
+``` { .plaintext .cli-output }
+User: Translate the following text from English to Spanish:
+
+Hello, how are you today?
+```
+
+``` { .plaintext .cli-output }
+Assistant: Hola, ¿cómo estás hoy?
 
 User: ▌
 ```
@@ -333,12 +181,12 @@ chatx prompt list
 Available prompts:
   code-review - Review code for issues and improvements
   commit-msg - Generate a good commit message
-  explain-code - Explain how code works
-  react-component - Create a React component with specified properties
+  hello - Simple greeting
+  translate - Translate text between languages
 ```
 
 ``` { .bash .cli-command title="Show a specific prompt" }
-chatx prompt get code-review
+chatx prompt show code-review
 ```
 
 ``` { .plaintext .cli-output }
@@ -350,11 +198,11 @@ Please review this code and suggest improvements:
 ```
 
 ``` { .bash .cli-command title="Delete a prompt" }
-chatx prompt delete react-component
+chatx prompt delete hello
 ```
 
 ``` { .plaintext .cli-output }
-Prompt 'react-component' deleted.
+Prompt 'hello' deleted.
 ```
 
 ## Prompt Storage
@@ -366,4 +214,12 @@ Windows: %USERPROFILE%\.chatx\prompts\
 macOS/Linux: ~/.chatx/prompts/
 ```
 
+Each prompt is saved with a `.prompt` extension, although you don't need to include this extension when referencing prompts.
+
 You can manually edit these files or create new ones by adding text files to this directory.
+
+??? tip "Sharing Prompts with Your Team"
+
+    You can share prompts with your team by adding them to a shared repository and configuring 
+    ChatX to look for prompts in that location using the `--config-dir` option or by setting up
+    a global prompt directory.
