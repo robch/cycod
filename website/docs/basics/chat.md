@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/chat
 ---
 
 # Chat Basics

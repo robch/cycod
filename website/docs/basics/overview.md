@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/information-outline
 ---
 
 --8<-- "snippets/ai-generated.md"

@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/message-text-outline
 ---
 
 # System Prompts

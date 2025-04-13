@@ -1,6 +1,7 @@
----                                              
-hide:                                             
-- toc                                             
+---
+hide:
+- toc
+icon: material/call-split
 ---                                              
                                                   
 --8<-- "snippets/ai-generated.md"

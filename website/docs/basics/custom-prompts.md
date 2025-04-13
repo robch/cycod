@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/message-text
 ---
 
 --8<-- "snippets/ai-generated.md"

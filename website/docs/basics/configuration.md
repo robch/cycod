@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/cog
 ---
 
 --8<-- "snippets/ai-generated.md"

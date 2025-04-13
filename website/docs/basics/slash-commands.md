@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/console-line
 ---
 
 --8<-- "snippets/ai-generated.md"

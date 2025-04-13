@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/variable
 ---
 
 --8<-- "snippets/ai-generated.md"
