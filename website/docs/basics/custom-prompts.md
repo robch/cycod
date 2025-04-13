@@ -337,7 +337,7 @@ Available prompts:
 ```
 
 ``` { .bash .cli-command title="Show a specific prompt" }
-chatx prompt show code-review
+chatx prompt get code-review
 ```
 
 ``` { .plaintext .cli-output }
