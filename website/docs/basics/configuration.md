@@ -4,8 +4,6 @@ hide:
 icon: material/cog-outline
 ---
 
---8<-- "snippets/ai-generated.md"
-
 # Configuration System
 
 ChatX provides a flexible configuration system that helps you customize its behavior at different scopes.
