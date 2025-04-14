@@ -106,11 +106,16 @@ public class ChatCommand : Command
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
                 if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
 
-                var handled = await TryHandleChatCommandAsync(chat, userPrompt);
-                if (handled) continue;
+                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
+                if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
+
+                var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
+                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
+
+                var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
                 DisplayAssistantLabel();
-                var response = await CompleteChatStreamingAsync(chat, userPrompt,
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
@@ -176,39 +181,57 @@ public class ChatCommand : Command
         return joined.Trim(new char[] { '\n', '\r', ' ' });
     }
 
-    private async Task<bool> TryHandleChatCommandAsync(FunctionCallingChat chat, string userPrompt)
+    private async Task<(bool skipAssistant, string? giveAssistant)> TryHandleChatCommandAsync(FunctionCallingChat chat, string userPrompt)
     {
+        bool skipAssistant = false;
+        string? giveAssistant = null;
+
         if (userPrompt.StartsWith("/save"))
         {
-            return HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
+            skipAssistant = HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
         }
         else if (userPrompt == "/clear")
         {
-            return HandleClearChatHistoryCommand(chat);
+            skipAssistant = HandleClearChatHistoryCommand(chat);
         }
         else if (userPrompt == "/cost")
         {
-            return HandleShowCostCommand();
+            skipAssistant = HandleShowCostCommand();
         }
         else if (userPrompt == "/help")
         {
-            return HandleHelpCommand();
+            skipAssistant = HandleHelpCommand();
         }
-        
-        if (_chatCommandHandler.IsCommand(userPrompt))
+        else if (_mdxCommandHandler.IsCommand(userPrompt))
         {
-            return await HandleSlashCommand(chat, userPrompt);
+            skipAssistant = await HandleMdxCommand(chat, userPrompt);
+        }
+        else if (_promptCommandHandler.IsCommand(userPrompt))
+        {
+            var handled = HandlePromptCommand(chat, userPrompt, out giveAssistant);
+            if (!handled) giveAssistant = null;
         }
 
-        return false;
+        return (skipAssistant, giveAssistant);
     }
 
-    private async Task<bool> HandleSlashCommand(FunctionCallingChat chat, string userPrompt)
+    private void DisplayPromptReplacement(string userPrompt, string? replaceUserPrompt)
     {
-        var userFunctionName = _chatCommandHandler.GetCommandName(userPrompt);
+        ConsoleHelpers.WriteLine($"\rUser: {userPrompt} => {replaceUserPrompt}", ConsoleColor.DarkGray, overrideQuiet: true);
+    }
+
+    private bool HandlePromptCommand(FunctionCallingChat chat, string userPrompt, out string? giveAssistant)
+    {
+        giveAssistant = _promptCommandHandler.HandleCommand(userPrompt);
+        return !string.IsNullOrEmpty(giveAssistant);
+    }
+
+    private async Task<bool> HandleMdxCommand(FunctionCallingChat chat, string userPrompt)
+    {
+        var userFunctionName = _mdxCommandHandler.GetCommandName(userPrompt);
         DisplayUserFunctionCall(userFunctionName, null);
 
-        var result = await _chatCommandHandler.HandleCommand(userPrompt);
+        var result = await _mdxCommandHandler.HandleCommand(userPrompt);
         if (result != null) chat.AddUserMessage(result);
 
         DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
@@ -255,12 +278,6 @@ public class ChatCommand : Command
         helpBuilder.AppendLine("  /help     Show this help message");
         helpBuilder.AppendLine();
         
-        // Tool integration commands
-        helpBuilder.AppendLine("TOOLS");
-        helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /mcp      Manage MCP servers (see 'chatx help mcp')");
-        helpBuilder.AppendLine();
-        
         // MDX integration commands
         helpBuilder.AppendLine("EXTERNAL");
         helpBuilder.AppendLine();
@@ -273,7 +290,7 @@ public class ChatCommand : Command
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /run      Run a command");
         helpBuilder.AppendLine();
-        
+
         // User-defined prompts
         helpBuilder.AppendLine("PROMPTS");
         helpBuilder.AppendLine();
@@ -594,7 +611,8 @@ public class ChatCommand : Command
 
     private INamedValues? _namedValues;
     private TrajectoryFile? _trajectoryFile;
-    private SlashCommandHandler _chatCommandHandler = new();
+    private SlashMdxCommandHandler _mdxCommandHandler = new();
+    private SlashPromptCommandHandler _promptCommandHandler = new();
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
