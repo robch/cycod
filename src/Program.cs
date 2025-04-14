@@ -78,6 +78,13 @@ public class Program
             return 0;
         }
 
+        var shouldSetWorkingDir = !string.IsNullOrEmpty(commandLineOptions.WorkingDirectory);
+        if (shouldSetWorkingDir)
+        {
+            DirectoryHelpers.EnsureDirectoryExists(commandLineOptions.WorkingDirectory!);
+            Directory.SetCurrentDirectory(commandLineOptions.WorkingDirectory!);
+        }
+
         var threadCountMax = commandLineOptions.ThreadCount;
         var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
 

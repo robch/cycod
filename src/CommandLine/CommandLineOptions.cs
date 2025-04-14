@@ -23,6 +23,7 @@ public class CommandLineOptions
         SaveAliasName = null;
 
         ThreadCount = 0;
+        WorkingDirectory = null;
     }
 
     public bool Interactive;
@@ -35,6 +36,7 @@ public class CommandLineOptions
     public bool ExpandHelpTopics;
 
     public int ThreadCount { get; private set; }
+    public string? WorkingDirectory { get; set; }
     public List<Command> Commands;
 
     public string[] AllOptions;
@@ -445,6 +447,13 @@ public class CommandLineOptions
         {
             var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
             commandLineOptions.ThreadCount = ValidateInt(arg, countStr, "thread count");
+        }
+        else if (arg == "--working-dir" || arg == "--folder" || arg == "--dir" || arg == "--cwd")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var dirPath = ValidateString(arg, max1Arg.FirstOrDefault(), "directory path");
+            commandLineOptions.WorkingDirectory = dirPath;
+            i += max1Arg.Count();
         }
         else
         {
