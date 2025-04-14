@@ -1,5 +1,3 @@
-namespace Helpers;
-
 [TestClass]
 public class StringHelpersTests
 {

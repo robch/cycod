@@ -1,5 +1,3 @@
-namespace Templates.ExpressionCalculator;
-
 // Disable warning CS8618 (Non-nullable field is uninitialized)
 // _calculator is initialized in the Setup method
 #pragma warning disable CS8618

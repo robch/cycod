@@ -1,5 +1,3 @@
-namespace Templates.ExpressionCalculator;
-
 [TestClass]
 public class ExceptionTests : ExpressionCalculatorTestBase
 {

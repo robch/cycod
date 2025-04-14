@@ -1,5 +1,3 @@
-namespace Helpers;
-
 using System.Text.RegularExpressions;
 
 [TestClass]

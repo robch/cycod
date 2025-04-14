@@ -40,7 +40,7 @@ public class TemplateVariables : INamedValues
         
         // Then check configuration
         var configValue = ConfigStore.Instance.GetFromAnyScope(name);
-        if (configValue != null)
+        if (configValue.Source != ConfigSource.NotFound)
         {
             return configValue!.AsString();
         }
@@ -53,6 +53,44 @@ public class TemplateVariables : INamedValues
         }
         
         // Finally check special variables
+        var builtInValue = GetBuiltInVariable(name);
+        if (builtInValue != null)
+        {
+            return builtInValue;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Sets a value by name
+    /// </summary>
+    /// <param name="name">The name of the value to set</param>
+    /// <param name="value">The value to set</param>
+    public void Set(string name, string value)
+    {
+        _variables[name] = value;
+    }
+
+    /// <summary>
+    /// Checks if a value exists
+    /// </summary>
+    /// <param name="name">The name of the value to check</param>
+    /// <returns>True if the value exists, false otherwise</returns>
+    public bool Contains(string name)
+    {
+        return _variables.ContainsKey(name) || 
+               ConfigStore.Instance.GetFromAnyScope(name).Value != null ||
+               Environment.GetEnvironmentVariable(name) != null ||
+               GetBuiltInVariable(name) != null;
+    }
+
+    /// <summary>
+    /// Gets a built-in variable value by name
+    /// </summary>
+    /// <param name="name"></param>
+    private static string? GetBuiltInVariable(string name)
+    {
         switch (name.ToLowerInvariant())
         {
             case "os":
@@ -84,27 +122,5 @@ public class TemplateVariables : INamedValues
         }
         
         return null;
-    }
-    
-    /// <summary>
-    /// Sets a value by name
-    /// </summary>
-    /// <param name="name">The name of the value to set</param>
-    /// <param name="value">The value to set</param>
-    public void Set(string name, string value)
-    {
-        _variables[name] = value;
-    }
-
-    /// <summary>
-    /// Checks if a value exists
-    /// </summary>
-    /// <param name="name">The name of the value to check</param>
-    /// <returns>True if the value exists, false otherwise</returns>
-    public bool Contains(string name)
-    {
-        return _variables.ContainsKey(name) || 
-               ConfigStore.Instance.GetFromAnyScope(name) != null ||
-               Environment.GetEnvironmentVariable(name) != null;
     }
 }
