@@ -1,6 +1,6 @@
 # prompt Command
 
-The `chatx prompt` command allows you to manage custom prompts for CHATX.
+The `chatx prompt` command allows you to manage custom prompts for ChatX.
 
 ## Syntax
 
@@ -26,9 +26,34 @@ chatx prompt SUBCOMMAND [options]
 | `--local`, `-l` | Operate on local prompts (default) |
 | `--any`, `-a` | Include prompts from all scopes (default for 'list' and 'get' commands) |
 
+## Using Prompts
+
+Custom prompts can be used in several ways:
+
+1. **In interactive mode with slash commands**:
+   ```bash
+   # In an interactive session
+   /code-review
+   ```
+
+2. **With the --prompt alias**:
+   ```bash
+   chatx --prompt code-review --input "function sum(a, b) { return a + b; }"
+   ```
+
+3. **Within --input and --inputs commands**:
+   ```bash
+   chatx --input "/code-review" --input "function sum(a, b) { return a + b; }"
+   ```
+
+4. **With variables**:
+   ```bash
+   chatx --prompt translate --var source_lang=English --var target_lang=Spanish
+   ```
+
 ## Prompt Scopes
 
-CHATX supports three prompt scopes:
+ChatX supports three prompt scopes:
 
 - **Local**: Prompts apply only to the current directory, stored in `.chatx/prompts.json`
 - **User**: Prompts apply to the current user across all directories, stored in `~/.chatx/prompts.json`
@@ -71,3 +96,4 @@ chatx prompt delete code-review
 - Prompts from the local scope take precedence over user scope, which takes precedence over global scope
 - Prompts can include variable placeholders in the format `{variable_name}` that are replaced with values when used
 - Use the `--var` option when using prompts to provide values for placeholders
+- When using the `--prompt` alias, prompt names without a leading slash will automatically have one added

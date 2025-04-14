@@ -25,13 +25,15 @@ User: ▌
 ```
 
 ``` { .plaintext .cli-output }
-Please review this code and suggest improvements:
+User: /code-review => Please review this code and suggest improvements:
 1. Identify any bugs or edge cases
 2. Suggest performance optimizations
 3. Comment on style and readability
 
 User: ▌
 ```
+
+When you use a slash command for a prompt in interactive mode, ChatX now immediately replaces the command with the prompt content and sends it to the assistant. This provides a smoother experience when working with custom prompts.
 
 ``` { .plaintext .cli-command title="Paste code for review after the prompt" }
 function add(a, b) { return a + b }
@@ -302,3 +304,28 @@ Assistant: Hola, ¿cómo estás hoy?
 
 User: ▌
 ```
+
+## Using the --prompt Alias
+
+ChatX provides a convenient `--prompt` alias for working with custom prompts. This alias works similarly to `--add-user-prompt` but is specifically designed for seamless integration with the custom prompt system.
+
+``` { .bash .cli-command title="Use a prompt by name" }
+chatx --prompt code-review --input "function sum(a, b) { return a + b; }"
+```
+
+The `--prompt` alias has two key behaviors that make it especially useful:
+
+1. It automatically adds a slash prefix to prompt names when needed
+2. It immediately resolves named prompts to their content
+
+For example, these commands are equivalent:
+
+``` { .bash .cli-command title="Using --add-user-prompt with full slash syntax" }
+chatx --add-user-prompt "/code-review" --input "function sum(a, b) { return a + b; }"
+```
+
+``` { .bash .cli-command title="Using --prompt with simplified syntax" }
+chatx --prompt code-review --input "function sum(a, b) { return a + b; }"
+```
+
+This makes `--prompt` particularly useful in scripts and command aliases where you want to reference your custom prompts by name.

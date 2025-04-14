@@ -15,6 +15,7 @@ These options control the input provided to the AI model:
 | [`--system-prompt`](system-prompt.md) | Replace system prompt given to AI model |
 | [`--add-system-prompt`](add-system-prompt.md) | Add text to the system prompt |
 | [`--add-user-prompt`](add-user-prompt.md) | Add user prompt(s), prepended to the first input |
+| [`--prompt`](prompt.md) | Alias for `--add-user-prompt` |
 | [`--input`](input.md) | Provide input to the AI model |
 | [`--question`](question.md) | Alias for `--interactive false --quiet --input` |
 | [`--instruction`](instruction.md) | Alias for `--input` |
