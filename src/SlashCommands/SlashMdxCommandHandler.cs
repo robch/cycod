@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 /// <summary>
 /// Handles slash commands by translating them to MDX commands
 /// </summary>
-public class SlashCommandHandler
+public class SlashMdxCommandHandler
 {
-    public SlashCommandHandler()
+    public SlashMdxCommandHandler()
     {
         _mdxWrapper = new MdxCliWrapper();
         
@@ -44,17 +44,7 @@ public class SlashCommandHandler
         }
 
         var commandName = ExtractCommandName(commandWithArgs);
-        
-        // Check if it's a built-in command
-        if (_commandHandlers.ContainsKey(commandName))
-        {
-            return true;
-        }
-        
-        // Check if it's a custom prompt
-        var promptName = commandName.TrimStart('/');
-        var promptFile = PromptFileHelpers.FindPromptFile(promptName);
-        return promptFile != null;
+        return _commandHandlers.ContainsKey(commandName);
     }
     
     /// <summary>
@@ -89,15 +79,7 @@ public class SlashCommandHandler
                 return $"Error executing slash command: {ex.Message}";
             }
         }
-        
-        // Then check custom prompts
-        var promptName = command.TrimStart('/');
-        var promptText = PromptFileHelpers.GetPromptText(promptName);
-        if (promptText != null)
-        {
-            return promptText;
-        }
-        
+
         return $"Unknown command: {command}";
     }
 

@@ -1,17 +1,18 @@
 USAGE: chatx [...]
 
   MODEL INPUTS
-    --system-prompt "PROMPT"              Replace system prompt given to AI model
-    --add-system-prompt "TEXT"            Add text to the system prompt, to re-inforce critical instructions
-    --add-user-prompt "TEXT"              Add user prompt(s), prepended to the first input/question/instruction
+    --system-prompt "PROMPT|NAME"         Replace system prompt given to AI model
+    --add-system-prompt "PROMPT|NAME"     Add text to the system prompt, to re-inforce critical instructions
+    --add-user-prompt "PROMPT|NAME"       Add user prompt(s), prepended to the first input/question/instruction
+    --prompt "NAME"                       Alias for --add-user-prompt
 
     --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
     --question ...                        Alias for --interactive false --quiet --input
-    --instruction ...                     Alias for --inp
+    --instruction ...                     Alias for --input
 
     --inputs "INPUT1" "INPUT2" ...        Provide one or more inputs, sequentially, to the AI model.
     --questions ...                       Alias for --interactive false --quiet --inputs
-    --instructions ...                    Alias for --inpu
+    --instructions ...                    Alias for --inputs
 
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates fal
