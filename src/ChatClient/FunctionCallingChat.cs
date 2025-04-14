@@ -1,6 +1,5 @@
 using Microsoft.Extensions.AI;
 using System.Text.Json;
-using chatx.FunctionCalling;
 
 public class FunctionCallingChat : IAsyncDisposable
 {

@@ -1,7 +1,7 @@
 using System;
 using System.Text;
 
-class MarkdownHelpers
+public class MarkdownHelpers
 {
     public static int GetCodeBlockBacktickCharCountRequired(string? content)
     {
@@ -43,11 +43,14 @@ class MarkdownHelpers
 
         var backticks = GetCodeBlockBackticks(content);
         sb.AppendLine($"{backticks}{lang}");
+
         sb.Append(content);
-        sb.AppendLine(backticks);
+        var contentNeedsLF = content.Length > 0 && content[^1] != '\n';
+        if (contentNeedsLF) sb.AppendLine();
+
+        sb.Append(backticks);
 
         if (trailingLF) sb.AppendLine();
-
         return sb.ToString();
     }
 }

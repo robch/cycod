@@ -80,54 +80,54 @@ public class StrReplaceEditorHelperFunctions
     {
         if (File.Exists(path))
         {
-            return $"Path {path} already exists; cannot create file. After viewing the file, use StrReplace or LinesReplace to edit it.";
+            return $"Path {path} already exists; cannot create file. Use ViewFile and then StrReplace to edit the file.";
         }
         DirectoryHelpers.EnsureDirectoryForFileExists(path);
         File.WriteAllText(path, fileText);
         return $"Created file {path} with {fileText.Length} characters.";
     }
 
-    [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
-    public string LinesReplace(
-        [Description("Absolute or relative path to file.")] string path,
-        [Description("Optional start line number (1-indexed) to view.")] int startLine,
-        [Description("Optional end line number. Use -1 to view all remaining lines.")] int endLine,
-        [Description("New string content that will replace the lines.")] string newStr)
-    {
-        if (!File.Exists(path))
-        {
-            return $"File {path} does not exist.";
-        }
+    // [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
+    // public string LinesReplace(
+    //     [Description("Absolute or relative path to file.")] string path,
+    //     [Description("Optional start line number (1-indexed) to view.")] int startLine,
+    //     [Description("Optional end line number. Use -1 to view all remaining lines.")] int endLine,
+    //     [Description("New string content that will replace the lines.")] string newStr)
+    // {
+    //     if (!File.Exists(path))
+    //     {
+    //         return $"File {path} does not exist.";
+    //     }
 
-        var text = File.ReadAllText(path);
-        var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
-        if (startLine < 0 || startLine > lines.Count)
-        {
-            return $"Invalid line number: {startLine}; file has {lines.Count} lines.";
-        }
+    //     var text = File.ReadAllText(path);
+    //     var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
+    //     if (startLine < 0 || startLine > lines.Count)
+    //     {
+    //         return $"Invalid line number: {startLine}; file has {lines.Count} lines.";
+    //     }
 
-        // Save current text for undo.
-        if (!EditHistory.ContainsKey(path))
-        {
-            EditHistory[path] = text;
-        }
+    //     // Save current text for undo.
+    //     if (!EditHistory.ContainsKey(path))
+    //     {
+    //         EditHistory[path] = text;
+    //     }
 
-        // Replace lines with new string.
-        var newLines = newStr.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
-        if (endLine == -1)
-        {
-            endLine = lines.Count;
-        }
-        else if (endLine < startLine || endLine > lines.Count)
-        {
-            return $"Invalid range: start line {startLine} and end line {endLine} exceed file line count of {lines.Count}";
-        }
-        lines.RemoveRange(startLine - 1, endLine - startLine + 1);
-        lines.InsertRange(startLine - 1, newLines);
-        var newText = string.Join(Environment.NewLine, lines);
-        File.WriteAllText(path, newText);
-        return $"Replaced lines {startLine} to {endLine} in {path} with {newStr.Length} characters.";
-    }
+    //     // Replace lines with new string.
+    //     var newLines = newStr.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
+    //     if (endLine == -1)
+    //     {
+    //         endLine = lines.Count;
+    //     }
+    //     else if (endLine < startLine || endLine > lines.Count)
+    //     {
+    //         return $"Invalid range: start line {startLine} and end line {endLine} exceed file line count of {lines.Count}";
+    //     }
+    //     lines.RemoveRange(startLine - 1, endLine - startLine + 1);
+    //     lines.InsertRange(startLine - 1, newLines);
+    //     var newText = string.Join(Environment.NewLine, lines);
+    //     File.WriteAllText(path, newText);
+    //     return $"Replaced lines {startLine} to {endLine} in {path} with {newStr.Length} characters.";
+    // }
 
     [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
     public string StrReplace(

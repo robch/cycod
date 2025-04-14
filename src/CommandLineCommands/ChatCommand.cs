@@ -3,8 +3,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using chatx.FunctionCalling;
-using chatx.McpHelpers;
 using ModelContextProtocol.Client;
 
 public class ChatCommand : Command
