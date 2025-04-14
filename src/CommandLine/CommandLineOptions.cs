@@ -728,13 +728,15 @@ public class CommandLineOptions
             }
             i += promptArgs.Count();
         }
-        else if (arg == "--add-user-prompt")
+        else if (arg == "--add-user-prompt" || arg == "--prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
             var prompt = ValidateString(arg, string.Join("\n\n", promptArgs), "additional user prompt");
             if (!string.IsNullOrEmpty(prompt))
             {
-                command.UserPromptAdds.Add(prompt);
+                var needsSlashPrefix = arg == "--prompt" && !prompt.StartsWith("/");
+                var prefix = needsSlashPrefix ? "/" : string.Empty;
+                command.UserPromptAdds.Add($"{prefix}{prompt}");
             }
             i += promptArgs.Count();
         }

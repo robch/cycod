@@ -140,6 +140,8 @@ public class ChatCommand : Command
     private string GroundSystemPrompt()
     {
         SystemPrompt ??= GetBuiltInSystemPrompt();
+        SystemPrompt = GroundPromptName(SystemPrompt);
+        SystemPrompt = GroundSlashPrompt(SystemPrompt);
 
         var processed =  ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
         return _namedValues != null ? processed.ReplaceValues(_namedValues) : processed;
@@ -148,11 +150,29 @@ public class ChatCommand : Command
     private List<string> GroundUserPromptAdds()
     {
         return UserPromptAdds
+            .Select(x => GroundSlashPrompt(x))
             .Select(x => UseTemplates ? ProcessTemplate(x) : x)
             .Select(x => _namedValues != null ? x.ReplaceValues(_namedValues) : x)
             .ToList();
     }
 
+    private string GroundPromptName(string promptOrName)
+    {
+        var check = $"/{promptOrName}";
+        var isPromptCommand = _promptCommandHandler.IsCommand(check);
+        return isPromptCommand
+            ? _promptCommandHandler.HandleCommand(check) ?? promptOrName
+            : promptOrName;
+    }
+
+    private string GroundSlashPrompt(string promptOrSlashPromptCommand)
+    {
+        var isPromptCommand = _promptCommandHandler.IsCommand(promptOrSlashPromptCommand);
+        return isPromptCommand
+            ? _promptCommandHandler.HandleCommand(promptOrSlashPromptCommand) ?? promptOrSlashPromptCommand
+            : promptOrSlashPromptCommand;
+    }
+    
     private List<string> GroundInputInstructions()
     {
         return InputInstructions
