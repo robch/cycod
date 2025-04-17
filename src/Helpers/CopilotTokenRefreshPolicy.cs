@@ -123,7 +123,7 @@ public class CopilotTokenRefreshPolicy : PipelinePolicy
         var hasAuthHeader = message.Request.Headers.TryGetValue("Authorization", out var existingAuth);
         
         // Replace only if it's a Bearer token
-        if (hasAuthHeader && existingAuth != null && existingAuth.ToString().StartsWith("Bearer "))
+        if (hasAuthHeader && existingAuth != null && existingAuth.ToString().StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             message.Request.Headers.Remove("Authorization");
         }
