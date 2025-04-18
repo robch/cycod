@@ -53,20 +53,12 @@ public static class ChatClientFactory
         // Create options with the initial auth header
         var options = InitOpenAIClientOptions(endpoint, $"Bearer {tokenDetails.token}");
         
-        // Create the refresh policy with a callback that updates both token and expiration
-        var refreshPolicy = (CopilotTokenRefreshPolicy)null!;
-        refreshPolicy = new CopilotTokenRefreshPolicy(
+        // Create the refresh policy with automatic token refresh capability
+        var refreshPolicy = CopilotTokenRefreshPolicy.CreateWithAutoRefresh(
             tokenDetails.token!, 
             tokenDetails.expires_at!.Value, 
             githubToken,
-            () => {
-                // Get a new token with expiration details when refreshing
-                var refreshedDetails = helper.RefreshCopilotTokenWithDetails(githubToken);
-                if (refreshedDetails.expires_at.HasValue) {
-                    refreshPolicy.UpdateTokenExpiration(refreshedDetails.expires_at.Value);
-                }
-                return refreshedDetails.token!;
-            });
+            helper);
         
         // Add the refresh policy to the pipeline
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);

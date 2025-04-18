@@ -143,6 +143,36 @@ public class CopilotTokenRefreshPolicy : PipelinePolicy
         _tokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(expiresAt);
     }
     
+    /// <summary>
+    /// Creates a CopilotTokenRefreshPolicy with automatic token refresh capability.
+    /// </summary>
+    /// <param name="initialToken">The initial Copilot token.</param>
+    /// <param name="expiresAt">Unix timestamp when the token expires.</param>
+    /// <param name="githubToken">The GitHub token used to refresh the Copilot token.</param>
+    /// <param name="helper">GitHubCopilotHelper instance used for token refreshing.</param>
+    /// <returns>A configured CopilotTokenRefreshPolicy instance.</returns>
+    public static CopilotTokenRefreshPolicy CreateWithAutoRefresh(
+        string initialToken, 
+        int expiresAt, 
+        string githubToken, 
+        GitHubCopilotHelper helper)
+    {
+        CopilotTokenRefreshPolicy? policy = null;
+        policy = new CopilotTokenRefreshPolicy(
+            initialToken,
+            expiresAt,
+            githubToken,
+            () => {
+                // Get a new token with expiration details when refreshing
+                var refreshedDetails = helper.RefreshCopilotTokenWithDetails(githubToken);
+                if (refreshedDetails.expires_at.HasValue && policy != null) {
+                    policy.UpdateTokenExpiration(refreshedDetails.expires_at.Value);
+                }
+                return refreshedDetails.token!;
+            });
+        return policy;
+    }
+    
     private readonly string _githubToken;
     private readonly Func<string> _tokenRefreshCallback;
     private string _copilotToken;
