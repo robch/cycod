@@ -54,7 +54,7 @@ public static class ChatClientFactory
         var options = InitOpenAIClientOptions(endpoint, $"Bearer {tokenDetails.token}");
         
         // Create the refresh policy with a callback that updates both token and expiration
-        CopilotTokenRefreshPolicy refreshPolicy = null!;
+        var refreshPolicy = (CopilotTokenRefreshPolicy)null!;
         refreshPolicy = new CopilotTokenRefreshPolicy(
             tokenDetails.token!, 
             tokenDetails.expires_at!.Value, 

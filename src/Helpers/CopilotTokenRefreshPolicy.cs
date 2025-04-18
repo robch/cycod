@@ -9,12 +9,6 @@ using System.Threading.Tasks;
 /// </summary>
 public class CopilotTokenRefreshPolicy : PipelinePolicy
 {
-    private readonly string _githubToken;
-    private readonly Func<string> _tokenRefreshCallback;
-    private string _copilotToken;
-    private DateTimeOffset _tokenExpiresAt;
-    private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
-    private readonly TimeSpan _refreshBuffer = TimeSpan.FromMinutes(5); // Refresh 5 minutes before expiration
 
     /// <summary>
     /// Creates a new instance of the CopilotTokenRefreshPolicy.
@@ -148,4 +142,11 @@ public class CopilotTokenRefreshPolicy : PipelinePolicy
         _copilotToken = token;
         _tokenExpiresAt = DateTimeOffset.FromUnixTimeSeconds(expiresAt);
     }
+    
+    private readonly string _githubToken;
+    private readonly Func<string> _tokenRefreshCallback;
+    private string _copilotToken;
+    private DateTimeOffset _tokenExpiresAt;
+    private readonly SemaphoreSlim _refreshLock = new SemaphoreSlim(1, 1);
+    private readonly TimeSpan _refreshBuffer = TimeSpan.FromMinutes(5); // Refresh 5 minutes before expiration
 }
