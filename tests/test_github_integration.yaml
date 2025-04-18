@@ -1,0 +1,73 @@
+# GitHub Integration Tests
+#
+# This test file covers the GitHub integration features of the chatx CLI,
+# primarily focusing on the GitHub login command.
+
+# Note: These tests are designed to check that the GitHub login command responds
+# as expected, but they do not perform an actual login since that would require
+# user interaction. They focus on validating command behavior and error handling.
+
+- area: GitHub Login Command
+  tests:
+  - name: Display GitHub login help
+    command: chatx help github login
+    expect: |
+      The output should explain the GitHub login process
+      The output should mention that it's for using Copilot with CHATX
+      The output should include information about the device authorization flow
+
+  - name: Run GitHub login command with --help
+    command: chatx github login --help
+    expect: |
+      The output should display help information about the github login command
+      The output should not attempt to initiate an actual login process
+
+- area: Provider Selection with GitHub Copilot
+  tests:
+  - name: Use Copilot provider flag
+    command: chatx --use-copilot --question "What is 2+2?" --debug
+    expect: |
+      The output should either:
+      1. Show that it's attempting to use GitHub Copilot as the provider
+      2. Show an error indicating that Copilot credentials are not available
+      
+      It should not crash with an unexpected error
+
+  - name: Setting GitHub token via environment variable
+    steps:
+    - name: Set a dummy GitHub token and check behavior
+      bash: |
+        # Store current token if any
+        if [ -n "$GITHUB_TOKEN" ]; then
+          ORIG_TOKEN="$GITHUB_TOKEN"
+        fi
+        
+        # Set dummy token and run command
+        export GITHUB_TOKEN=dummy_token_for_testing
+        chatx config get github.token
+        
+        # Restore original token if any
+        if [ -n "$ORIG_TOKEN" ]; then
+          export GITHUB_TOKEN="$ORIG_TOKEN"
+        else
+          unset GITHUB_TOKEN
+        fi
+      expect: |
+        The output should indicate that a GitHub token value exists
+        The output should not display the actual token value (for security)
+
+  - name: Configure CHATX preferred provider
+    steps:
+    - name: Set preferred provider to GitHub Copilot
+      command: chatx config set app.preferredProvider "github-copilot" --local
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the preferred provider setting
+      command: chatx config get app.preferredProvider --local
+      expect: |
+        The output should show "github-copilot" as the value
+        The output should indicate the scope as Local
+      
+    - name: Clean up test configuration
+      command: chatx config clear app.preferredProvider --local
+      expect: The output should indicate that the value was cleared successfully

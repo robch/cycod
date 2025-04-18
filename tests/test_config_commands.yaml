@@ -1,0 +1,178 @@
+# Configuration Commands Tests
+#
+# This test file covers the configuration commands of the chatx CLI,
+# including listing, getting, setting, clearing, adding, and removing configuration values.
+
+- area: Config List Command
+  tests:
+  - name: List all configuration settings (example from help)
+    command: chatx config list
+    expect: The output should display a list of configuration settings from all scopes
+
+  - name: List only local configuration settings
+    command: chatx config list --local
+    expect: |
+      The output should display only local configuration settings
+      The output should indicate the scope of the settings (Local)
+
+  - name: List only user configuration settings
+    command: chatx config list --user
+    expect: |
+      The output should display only user configuration settings
+      The output should indicate the scope of the settings (User)
+
+  - name: List only global configuration settings
+    command: chatx config list --global
+    expect: |
+      The output should display only global configuration settings
+      The output should indicate the scope of the settings (Global)
+
+  - name: Use short option for scope
+    command: chatx config list -l
+    expect: |
+      The output should display only local configuration settings
+      The output should indicate the scope of the settings (Local)
+
+- area: Config Get Command
+  tests:
+  - name: Get configuration value (from any scope)
+    steps:
+    - name: Set a test configuration value
+      command: chatx config set TEST_GET_VALUE test_value --local
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Get the configuration value
+      command: chatx config get TEST_GET_VALUE
+      expect: |
+        The output should display the value "test_value"
+        The output should indicate the scope where the value was found
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_GET_VALUE --local
+      expect: The output should indicate that the value was cleared successfully
+
+  - name: Get configuration value from specific scope
+    steps:
+    - name: Set a test configuration value in local scope
+      command: chatx config set TEST_GET_SCOPE local_value --local
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Get the configuration value from local scope
+      command: chatx config get TEST_GET_SCOPE --local
+      expect: |
+        The output should display the value "local_value"
+        The output should indicate the scope as Local
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_GET_SCOPE --local
+      expect: The output should indicate that the value was cleared successfully
+
+- area: Config Set Command
+  tests:
+  - name: Set configuration value (example from help)
+    steps:
+    - name: Set a test configuration value
+      command: chatx config set TEST_SET_VALUE test_value
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the value was set
+      command: chatx config get TEST_SET_VALUE
+      expect: |
+        The output should display the value "test_value"
+        The output should indicate the scope where the value was set
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_SET_VALUE
+      expect: The output should indicate that the value was cleared successfully
+
+  - name: Set configuration value in user scope (example from help)
+    steps:
+    - name: Set a test configuration value in user scope
+      command: chatx config set TEST_SET_USER user_value --user
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the value was set
+      command: chatx config get TEST_SET_USER --user
+      expect: |
+        The output should display the value "user_value"
+        The output should indicate the scope as User
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_SET_USER --user
+      expect: The output should indicate that the value was cleared successfully
+
+- area: Config Clear Command
+  tests:
+  - name: Clear configuration value
+    steps:
+    - name: Set a test configuration value
+      command: chatx config set TEST_CLEAR_VALUE test_value
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Clear the configuration value
+      command: chatx config clear TEST_CLEAR_VALUE
+      expect: The output should indicate that the value was cleared successfully
+      
+    - name: Verify the value was cleared
+      command: chatx config get TEST_CLEAR_VALUE
+      expect: |
+        The output should indicate that the key was not found
+        The output should not contain "test_value"
+
+  - name: Clear configuration value from specific scope
+    steps:
+    - name: Set a test configuration value in user scope
+      command: chatx config set TEST_CLEAR_SCOPE user_value --user
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Clear the configuration value from user scope
+      command: chatx config clear TEST_CLEAR_SCOPE --user
+      expect: The output should indicate that the value was cleared successfully
+      
+    - name: Verify the value was cleared
+      command: chatx config get TEST_CLEAR_SCOPE --user
+      expect: |
+        The output should indicate that the key was not found in user scope
+        The output should not contain "user_value"
+
+- area: Config Add and Remove Commands
+  tests:
+  - name: Add value to list setting
+    steps:
+    - name: Add a test value to a list setting
+      command: chatx config add TEST_LIST_ADD value1
+      expect: The output should indicate that the value was added successfully
+      
+    - name: Verify the value was added
+      command: chatx config get TEST_LIST_ADD
+      expect: |
+        The output should contain "value1"
+        The output should indicate the scope where the value was set
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_LIST_ADD
+      expect: The output should indicate that the value was cleared successfully
+
+  - name: Remove value from list setting
+    steps:
+    - name: Add multiple test values to a list setting
+      command: chatx config add TEST_LIST_REMOVE value1
+      expect: The output should indicate that the value was added successfully
+    
+    - name: Add another value to the list
+      command: chatx config add TEST_LIST_REMOVE value2
+      expect: The output should indicate that the value was added successfully
+      
+    - name: Remove a value from the list
+      command: chatx config remove TEST_LIST_REMOVE value1
+      expect: The output should indicate that the value was removed successfully
+      
+    - name: Verify the value was removed
+      command: chatx config get TEST_LIST_REMOVE
+      expect: |
+        The output should contain "value2"
+        The output should not contain "value1"
+      
+    - name: Clean up test configuration
+      command: chatx config clear TEST_LIST_REMOVE
+      expect: The output should indicate that the value was cleared successfully

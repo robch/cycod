@@ -1,0 +1,211 @@
+# Error Handling and Edge Cases Tests
+#
+# This test file tests error handling and edge cases in the chatx CLI,
+# focusing on how the application handles invalid inputs and error conditions.
+
+- area: Command Line Argument Errors
+  tests:
+  - name: Invalid command
+    command: chatx invalid-command
+    expect: |
+      The output should display an error message
+      The output should show usage information or help
+      The command should exit with a non-zero status code
+
+  - name: Invalid option
+    command: chatx --invalid-option
+    expect: |
+      The output should display an error message about the invalid option
+      The output should show usage information or help
+      The command should exit with a non-zero status code
+
+  - name: Missing required argument for option
+    command: chatx --question
+    expect: |
+      The output should display an error message about the missing argument
+      The output should not crash with an unexpected error
+      The command should exit with a non-zero status code
+
+- area: Configuration Command Errors
+  tests:
+  - name: Missing key in config set
+    command: chatx config set
+    expect: |
+      The output should display an error message about the missing key
+      The output should show usage information for the config set command
+      The command should exit with a non-zero status code
+
+  - name: Missing value in config set
+    command: chatx config set TEST_KEY
+    expect: |
+      The output should display an error message about the missing value
+      The output should show usage information for the config set command
+      The command should exit with a non-zero status code
+
+  - name: Invalid scope option
+    command: chatx config list --invalid-scope
+    expect: |
+      The output should display an error message about the invalid scope
+      The output should not crash with an unexpected error
+      The command should exit with a non-zero status code
+
+- area: Alias Command Errors
+  tests:
+  - name: Missing alias name in alias get
+    command: chatx alias get
+    expect: |
+      The output should display an error message about the missing alias name
+      The output should show usage information for the alias get command
+      The command should exit with a non-zero status code
+
+  - name: Get non-existent alias
+    command: chatx alias get non-existent-alias
+    expect: |
+      The output should indicate that the alias was not found
+      The output should not crash with an unexpected error
+
+  - name: Delete non-existent alias
+    command: chatx alias delete non-existent-alias
+    expect: |
+      The output should indicate that the alias was not found
+      The output should not crash with an unexpected error
+
+- area: Prompt Command Errors
+  tests:
+  - name: Missing prompt name in prompt get
+    command: chatx prompt get
+    expect: |
+      The output should display an error message about the missing prompt name
+      The output should show usage information for the prompt get command
+      The command should exit with a non-zero status code
+
+  - name: Missing prompt text in prompt create
+    command: chatx prompt create test-prompt
+    expect: |
+      The output should display an error message about the missing prompt text
+      The output should show usage information for the prompt create command
+      The command should exit with a non-zero status code
+
+  - name: Create prompt with invalid characters in name
+    command: chatx prompt create "invalid name with spaces" "This is a test"
+    expect: |
+      The output should display an error message about the invalid prompt name
+      The output should not crash with an unexpected error
+      The command should exit with a non-zero status code
+
+- area: MCP Command Errors
+  tests:
+  - name: Missing server name in mcp get
+    command: chatx mcp get
+    expect: |
+      The output should display an error message about the missing server name
+      The output should show usage information for the mcp get command
+      The command should exit with a non-zero status code
+
+  - name: Missing command in mcp add
+    command: chatx mcp add test-server
+    expect: |
+      The output should display an error message about the missing command
+      The output should show usage information for the mcp add command
+      The command should exit with a non-zero status code
+
+  - name: Delete non-existent MCP server
+    command: chatx mcp remove non-existent-server
+    expect: |
+      The output should indicate that the server was not found
+      The output should not crash with an unexpected error
+
+- area: Template and Variable Errors
+  tests:
+  - name: Undefined template variable
+    command: chatx --question "Hello, my name is {name}"
+    expect: |
+      The output should either:
+      1. Handle the undefined variable gracefully
+      2. Include the literal "{name}" in the response
+      3. Mention that a variable was undefined
+      
+      It should not crash with an unexpected error
+
+  - name: Invalid foreach syntax
+    command: chatx --foreach invalid syntax --question "Test"
+    expect: |
+      The output should display an error message about the invalid foreach syntax
+      The output should not crash with an unexpected error
+      The command should exit with a non-zero status code
+
+  - name: Invalid numeric range in foreach
+    command: chatx --foreach var x in 5..2 --question "Count from {x}"
+    expect: |
+      The output should either:
+      1. Display an error message about the invalid range
+      2. Handle the range in reverse order
+      
+      It should not crash with an unexpected error
+
+- area: File Access Errors
+  tests:
+  - name: Non-existent chat history file
+    command: chatx --input-chat-history non-existent-file.jsonl --question "Hello"
+    expect: |
+      The output should display an error message about the missing file
+      The output should not crash with an unexpected error
+      The command should still execute and respond to the question
+
+  - name: Invalid chat history file format
+    steps:
+    - name: Create an invalid JSONL file
+      bash: |
+        echo "This is not valid JSONL" > invalid-chat-history.jsonl
+      
+    - name: Try to load the invalid file
+      command: chatx --input-chat-history invalid-chat-history.jsonl --question "Hello"
+      expect: |
+        The output should display an error message about the invalid file format
+        The output should not crash with an unexpected error
+        The command should still execute and respond to the question
+      
+    - name: Clean up test file
+      bash: rm -f invalid-chat-history.jsonl
+
+  - name: Invalid config file
+    steps:
+    - name: Create an invalid config file
+      bash: |
+        echo "This is not valid YAML" > invalid-config.yaml
+      
+    - name: Try to load the invalid config
+      command: chatx --config invalid-config.yaml --question "Hello"
+      expect: |
+        The output should display an error message about the invalid config file
+        The output should not crash with an unexpected error
+        The command should still execute and respond to the question
+      
+    - name: Clean up test file
+      bash: rm -f invalid-config.yaml
+
+- area: Edge Cases
+  tests:
+  - name: Empty question
+    command: chatx --question ""
+    expect: |
+      The output should either:
+      1. Display an error message about the empty question
+      2. Prompt for input
+      3. Handle the empty question gracefully
+      
+      It should not crash with an unexpected error
+
+  - name: Very long question
+    command: chatx --question "$(printf 'a%.0s' {1..500})"
+    expect: |
+      The output should handle the long input gracefully
+      The response should either acknowledge the unusual input or provide a reasonable response
+      It should not crash with an unexpected error
+
+  - name: Unicode and special characters
+    command: chatx --question "What do these symbols mean? ❤️ 😊 🌍 🚀 ©®™ ¼½¾ §†‡"
+    expect: |
+      The output should handle the Unicode characters correctly
+      The response should explain the meaning of some or all of the symbols
+      It should not crash with an unexpected error

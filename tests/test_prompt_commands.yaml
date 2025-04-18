@@ -1,0 +1,244 @@
+# Prompt Commands Tests
+#
+# This test file covers the prompt commands of the chatx CLI,
+# including creating, listing, getting, and deleting custom prompts.
+
+- area: Prompt Creation
+  tests:
+  - name: Create a simple prompt in local scope (example from help)
+    steps:
+    - name: Create a prompt
+      command: chatx prompt create summarize "Please summarize the following text in three bullet points:"
+      expect: |
+        The output should indicate that the prompt was created successfully
+        The output should mention the path where the prompt was saved
+      
+    - name: Verify prompt was created
+      command: chatx prompt get summarize
+      expect: |
+        The output should include the prompt name "summarize"
+        The output should include the prompt text
+        The output should indicate the scope where the prompt is stored
+      
+    - name: Clean up test prompt
+      command: chatx prompt delete summarize
+      expect: The output should indicate that the prompt was deleted successfully
+
+  - name: Create a prompt in user scope (example from help)
+    steps:
+    - name: Create a user-level prompt
+      command: chatx prompt create explain "Explain the following like I'm five:" --user
+      expect: |
+        The output should indicate that the prompt was created successfully
+        The output should mention the path where the prompt was saved
+      
+    - name: Verify user prompt was created
+      command: chatx prompt get explain --user
+      expect: |
+        The output should include the prompt name "explain"
+        The output should include the prompt text
+        The output should indicate the scope as User
+      
+    - name: Clean up test prompt
+      command: chatx prompt delete explain --user
+      expect: The output should indicate that the prompt was deleted successfully
+
+  - name: Create a prompt with multiline text (example from help)
+    steps:
+    - name: Create a multiline prompt
+      command: |
+        chatx prompt create translate "Translate the following text to Spanish:
+        Then format the translation with bullet points for each sentence.
+        Finally, provide pronunciation tips."
+      expect: |
+        The output should indicate that the prompt was created successfully
+        The output should mention the path where the prompt was saved
+      
+    - name: Verify multiline prompt was created
+      command: chatx prompt get translate
+      expect: |
+        The output should include the prompt name "translate"
+        The output should include the multiline prompt text
+        The output should indicate the scope where the prompt is stored
+      
+    - name: Clean up test prompt
+      command: chatx prompt delete translate
+      expect: The output should indicate that the prompt was deleted successfully
+
+- area: Prompt List Command
+  tests:
+  - name: List all prompts (example from help)
+    steps:
+    - name: Create test prompts in different scopes
+      bash: |
+        # Create temporary test prompts
+        chatx prompt create test-local "Local test prompt"
+        chatx prompt create test-user "User test prompt" --user
+        chatx prompt create test-global "Global test prompt" --global
+      
+    - name: List all prompts
+      command: chatx prompt list
+      expect: |
+        The output should include "test-local"
+        The output should include "test-user"
+        The output should include "test-global"
+        The output should indicate the scope of each prompt
+
+    - name: Clean up test prompts
+      bash: |
+        # Remove temporary test prompts
+        chatx prompt delete test-local
+        chatx prompt delete test-user --user
+        chatx prompt delete test-global --global
+
+  - name: List prompts from specific scope
+    steps:
+    - name: Create test prompts in different scopes
+      bash: |
+        # Create temporary test prompts
+        chatx prompt create test-local-specific "Local test prompt"
+        chatx prompt create test-user-specific "User test prompt" --user
+      
+    - name: List only user prompts
+      command: chatx prompt list --user
+      expect: |
+        The output should include "test-user-specific"
+        The output should not include "test-local-specific"
+
+    - name: Clean up test prompts
+      bash: |
+        # Remove temporary test prompts
+        chatx prompt delete test-local-specific
+        chatx prompt delete test-user-specific --user
+
+- area: Prompt Get Command
+  tests:
+  - name: Get an existing prompt (example from help)
+    steps:
+    - name: Create a test prompt
+      command: chatx prompt create test-get "This is a test prompt for get command"
+      expect: The output should indicate that the prompt was created successfully
+      
+    - name: Get the prompt details
+      command: chatx prompt get test-get
+      expect: |
+        The output should include the prompt name "test-get"
+        The output should include the prompt text
+        The output should indicate the scope where the prompt is stored
+
+    - name: Clean up test prompt
+      command: chatx prompt delete test-get
+      expect: The output should indicate that the prompt was deleted successfully
+
+  - name: Get a prompt from a specific scope
+    steps:
+    - name: Create a test prompt in user scope
+      command: chatx prompt create test-get-user "This is a test prompt in user scope" --user
+      expect: The output should indicate that the prompt was created successfully
+      
+    - name: Get the prompt from user scope
+      command: chatx prompt get test-get-user --user
+      expect: |
+        The output should include the prompt name "test-get-user"
+        The output should include the prompt text
+        The output should indicate the scope as User
+
+    - name: Clean up test prompt
+      command: chatx prompt delete test-get-user --user
+      expect: The output should indicate that the prompt was deleted successfully
+
+  - name: Try to get a non-existent prompt
+    command: chatx prompt get non-existent-prompt
+    expect: |
+      The output should indicate that the prompt was not found
+      The output should not crash or show an error stack trace
+
+- area: Prompt Delete Command
+  tests:
+  - name: Delete an existing prompt (example from help)
+    steps:
+    - name: Create a test prompt
+      command: chatx prompt create test-delete "This is a test prompt for delete command"
+      expect: The output should indicate that the prompt was created successfully
+      
+    - name: Delete the prompt
+      command: chatx prompt delete test-delete
+      expect: |
+        The output should indicate that the prompt was deleted successfully
+        The output should mention the path of the deleted prompt file
+
+    - name: Verify the prompt was deleted
+      command: chatx prompt get test-delete
+      expect: The output should indicate that the prompt was not found
+
+  - name: Delete a prompt from a specific scope
+    steps:
+    - name: Create a test prompt in user scope
+      command: chatx prompt create test-delete-user "This is a test prompt in user scope" --user
+      expect: The output should indicate that the prompt was created successfully
+      
+    - name: Delete the prompt from user scope
+      command: chatx prompt delete test-delete-user --user
+      expect: |
+        The output should indicate that the prompt was deleted successfully
+        The output should mention the path of the deleted prompt file
+
+    - name: Verify the prompt was deleted
+      command: chatx prompt get test-delete-user --user
+      expect: The output should indicate that the prompt was not found
+
+  - name: Try to delete a non-existent prompt
+    command: chatx prompt delete non-existent-prompt
+    expect: |
+      The output should indicate that the prompt was not found
+      The output should not crash or show an error stack trace
+
+- area: Using Custom Prompts
+  tests:
+  - name: Set up a custom prompt for interactive test
+    steps:
+    - name: Create a test prompt for use in interactive mode
+      command: chatx prompt create code-review "Please review this code and suggest improvements:
+      1. Identify any bugs or edge cases
+      2. Suggest performance optimizations
+      3. Comment on style and readability"
+      expect: The output should indicate that the prompt was created successfully
+
+    - name: Create a file with sample code
+      bash: |
+        cat > sample-code.py << EOF
+        def factorial(n):
+            if n <= 0:
+                return 1
+            else:
+                return n * factorial(n-1)
+                
+        print(factorial(5))
+        EOF
+
+    # Note: This test simulates interactive use, but actual interactive testing
+    # would be difficult in an automated test framework. In practice, this would
+    # need to be manually tested.
+    - name: Create a simple test that captures use of the prompt through standard inputs
+      command: chatx --input "I need help with this Python code: 
+      
+      ```python
+      def factorial(n):
+          if n <= 0:
+              return 1
+          else:
+              return n * factorial(n-1)
+              
+      print(factorial(5))
+      ```
+      
+      Can you review it using the code review criteria?"
+      expect: |
+        The output should provide a code review of the factorial function
+        The response should identify potential issues with negative inputs
+        The response should mention the lack of docstring or comments
+
+    - name: Clean up test prompt and file
+      bash: |
+        chatx prompt delete code-review
+        rm -f sample-code.py

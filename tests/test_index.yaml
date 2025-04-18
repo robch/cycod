@@ -1,0 +1,64 @@
+# ChatX Tests Index
+#
+# This file lists all the available test files for the chatx CLI tool.
+# You can run all tests with: ai test tests/test_*.yaml
+# Or run specific test files with: ai test tests/test_core_chat_basic.yaml
+
+tests:
+  - name: Core Chat Functionality
+    description: Tests basic chat functionality, including questions, inputs, and output formats
+    file: test_core_chat_basic.yaml
+  
+  - name: Configuration Commands
+    description: Tests configuration commands for listing, getting, setting, clearing, adding, and removing configuration values
+    file: test_config_commands.yaml
+  
+  - name: Alias Commands
+    description: Tests alias commands for creating, listing, getting, deleting, and using aliases
+    file: test_alias_commands.yaml
+  
+  - name: Prompt Commands
+    description: Tests prompt commands for creating, listing, getting, and deleting custom prompts
+    file: test_prompt_commands.yaml
+  
+  - name: MCP Commands
+    description: Tests MCP (Model Context Protocol) server commands for adding, listing, getting, and removing server configurations
+    file: test_mcp_commands.yaml
+  
+  - name: GitHub Integration
+    description: Tests GitHub integration, primarily focusing on the login command
+    file: test_github_integration.yaml
+  
+  - name: System Prompt and Template Features
+    description: Tests system prompt customization, template variables, and foreach loops
+    file: test_system_prompt_templates.yaml
+  
+  - name: Advanced Features
+    description: Tests advanced features like provider selection, working directory settings, threads, and other options
+    file: test_advanced_features.yaml
+  
+  - name: Slash Commands
+    description: Tests slash command functionality in interactive mode
+    file: test_slash_commands.yaml
+  
+  - name: Help Examples
+    description: Tests the examples shown in the help documentation
+    file: test_help_examples.yaml
+  
+  - name: Error Handling
+    description: Tests error handling and edge cases
+    file: test_error_handling.yaml
+
+# Usage:
+#
+# To run all tests:
+#   ai test tests/test_*.yaml
+#
+# To run a specific test file:
+#   ai test tests/test_core_chat_basic.yaml
+#
+# To run tests with a specific tag:
+#   ai test tests/test_*.yaml --filter-tag provider
+#
+# To exclude a specific tag:
+#   ai test tests/test_*.yaml --exclude-tag parallel

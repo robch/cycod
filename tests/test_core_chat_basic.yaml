@@ -1,0 +1,107 @@
+# Core Chat Functionality Tests
+#
+# This test file covers the basic chat functionality of the chatx CLI,
+# including simple questions, interactive mode, and output formatting.
+
+- area: Basic Question and Answer
+  tests:
+  - name: Ask a simple question (example from help)
+    command: chatx --question "What time is it?"
+    expect: The output should contain information about the current time
+
+  - name: Ask a math question
+    command: chatx --question "What is 2+2?"
+    expect: |
+      The output should clearly state that 2+2=4
+      The response should be reasonably concise
+
+  - name: Ask for information about the tool itself
+    command: chatx --question "What are you? Explain what chatx is."
+    expect: |
+      The response should explain that it is chatx, an AI-powered CLI tool
+      It should mention its capabilities related to chat functionality
+
+- area: Multiple Inputs
+  tests:
+  - name: Use multiple sequential inputs (example from help)
+    command: chatx --inputs "What's today's date?" "show me a calendar for this month"
+    expect: |
+      The output should contain today's date
+      The output should include a calendar representation for the current month
+
+  - name: Ask follow-up questions
+    command: chatx --inputs "Name three countries in Europe" "What are their capitals?"
+    expect: |
+      The output should name three countries in Europe
+      The output should list the capitals of the three countries mentioned
+
+- area: Chat Output Formats
+  tests:
+  - name: Save chat history in JSONL format (example from help)
+    command: chatx --question "Tell me a joke" --output-chat-history temp-test-chat-history.jsonl
+    expect: The output should include a joke
+    # This will check that the JSONL file was created
+    steps:
+    - name: Verify chat history file was created
+      bash: |
+        if [ -f temp-test-chat-history.jsonl ]; then
+          echo "Chat history file was created successfully"
+          rm temp-test-chat-history.jsonl
+          exit 0
+        else
+          echo "Error: Chat history file was not created"
+          exit 1
+        fi
+
+  - name: Save chat history in trajectory format (example from help)
+    command: chatx --question "What time is it?" --output-trajectory temp-test-trajectory.md
+    expect: The output should contain information about the current time
+    steps:
+    - name: Verify trajectory file was created
+      bash: |
+        if [ -f temp-test-trajectory.md ]; then
+          echo "Trajectory file was created successfully"
+          rm temp-test-trajectory.md
+          exit 0
+        else
+          echo "Error: Trajectory file was not created"
+          exit 1
+        fi
+
+- area: Chat History Continuation
+  tests:
+  - name: Continue from saved chat history (example from help)
+    steps:
+    - name: Initial chat to create history
+      command: chatx --question "Tell me a joke" --output-chat-history temp-test-continue.jsonl
+      expect: The output should include a joke
+    
+    - name: Continue chat from saved history
+      command: chatx --input-chat-history temp-test-continue.jsonl --question "Tell me another"
+      expect: |
+        The output should include a different joke (not the same as the first one)
+        The response should acknowledge the previous conversation
+    
+    - name: Clean up test files
+      bash: rm -f temp-test-continue.jsonl
+
+  - name: Use the continue flag (example from help)
+    steps:
+    - name: Initial chat
+      command: chatx --question "What's today's date?" --output-chat-history temp-test-continue2.jsonl
+      expect: The output should contain today's date
+      
+    - name: Continue with the most recent chat history
+      command: chatx --continue --question "What will the date be tomorrow?"
+      expect: The output should reference tomorrow's date
+      
+    - name: Clean up test files
+      bash: rm -f temp-test-continue2.jsonl
+
+- area: Input/Output Redirection
+  tests:
+  - name: Pipe input through stdin (example from help)
+    bash: echo "What is the capital of France?" | chatx
+    expect: |
+      The output should indicate that Paris is the capital of France
+      The response should be reasonably concise

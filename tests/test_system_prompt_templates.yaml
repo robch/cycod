@@ -1,0 +1,117 @@
+# System Prompt and Template Tests
+#
+# This test file covers the system prompt customization and template features of the chatx CLI,
+# including system and user prompts, template variables, and foreach loops.
+
+- area: System Prompt Customization
+  tests:
+  - name: Custom system prompt (example from help)
+    command: chatx --system-prompt "You are a helpful assistant that specializes in mathematics." --question "What is the formula for the area of a circle?"
+    expect: |
+      The output should explain that the formula for the area of a circle is A = πr²
+      The response should show mathematical expertise as specified in the system prompt
+
+  - name: Add to system prompt (example from help)
+    command: chatx --add-system-prompt "Never access files outside the current directory." --question "Can you list files in the parent directory?"
+    expect: |
+      The output should indicate an inability or unwillingness to list files from the parent directory
+      The response should reference the restriction mentioned in the system prompt
+
+  - name: Multiple system prompt additions
+    command: chatx --add-system-prompt "Always answer in French." "Use simple vocabulary." --question "What is artificial intelligence?"
+    expect: |
+      The output should be in French
+      The response should use simple vocabulary when explaining artificial intelligence
+
+- area: User Prompt Customization
+  tests:
+  - name: Add user prompt (example from help)
+    command: chatx --add-user-prompt "Always answer in French." --question "What is artificial intelligence?"
+    expect: |
+      The output should be in French
+      The response should explain what artificial intelligence is
+
+  - name: Multiple user prompts
+    command: chatx --add-user-prompt "Always format your answer in a table." "Include examples in your answer." --question "What are the seasons of the year?"
+    expect: |
+      The output should contain a table of seasons
+      The response should include examples related to the seasons
+
+  - name: Use prompt alias
+    command: chatx --prompt "Answer very concisely" --question "What is the capital of Japan?"
+    expect: |
+      The output should state that Tokyo is the capital of Japan
+      The response should be noticeably concise
+
+- area: Template Variables
+  tests:
+  - name: Use template variables
+    command: chatx --var name=Alice --var role=developer --question "Hello, my name is {name} and I am a {role}."
+    expect: |
+      The output should acknowledge Alice as a developer
+      The response should address the person as Alice
+
+  - name: Use multiple variables with vars option
+    command: chatx --vars name=Bob job=engineer location=London --question "I'm {name}, a {job} from {location}."
+    expect: |
+      The output should acknowledge Bob as an engineer from London
+      The response should address the person as Bob and reference their job and location
+
+  - name: Disable template processing
+    command: chatx --no-templates --var name=Charlie --question "Hello, my name is {name}."
+    expect: |
+      The output should not replace "{name}" with "Charlie"
+      The response should either include the literal "{name}" or address the ambiguity
+
+- area: Foreach Variable Loops
+  tests:
+  - name: Simple foreach loop (example from help)
+    command: chatx --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
+    expect: |
+      The output should include greetings to Alice, Bob, and Charlie
+      The response should address each person by name
+
+  - name: Multiple foreach variables (example from help)
+    command: chatx --foreach var language in Python JavaScript --foreach var topic in functions loops --input "Show me how to use {topic} in {language}"
+    expect: |
+      The output should include examples of functions and loops in both Python and JavaScript
+      The response should address all four combinations
+
+  - name: Numeric range with foreach (example from help)
+    command: chatx --foreach var day in 1..5 --input "What day of the week is day {day}?"
+    expect: |
+      The output should list the days of the week corresponding to days 1 through 5
+      The response should cover 5 different days
+
+  - name: Multiple threads with foreach (example from help)
+    command: chatx --threads 2 --foreach var topic in "sorting algorithms" "data structures" --question "Explain {topic} concisely"
+    expect: |
+      The output should include concise explanations of sorting algorithms and data structures
+      The response should address both topics
+
+- area: Complex Template Examples
+  tests:
+  - name: Create a temporary file for foreach using a file
+    steps:
+    - name: Create a file with topics
+      bash: |
+        cat > temp-topics.txt << EOF
+        Python
+        JavaScript
+        Go
+        EOF
+      
+    - name: Use foreach with file input
+      command: chatx --foreach var language in @temp-topics.txt --input "What is {language} primarily used for?"
+      expect: |
+        The output should explain the primary uses of Python, JavaScript, and Go
+        The response should address each language individually
+
+    - name: Clean up temporary file
+      bash: rm -f temp-topics.txt
+
+  - name: Complex template with multiple variables
+    command: chatx --vars format=table language=Python item=list --input "Show me how to create a {item} in {language} and display it in a {format}."
+    expect: |
+      The output should include code for creating a list in Python
+      The response should display the list in a table format

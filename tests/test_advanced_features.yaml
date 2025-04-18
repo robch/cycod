@@ -1,0 +1,190 @@
+# Advanced Features Tests
+#
+# This test file covers advanced features of the chatx CLI,
+# including provider selection, working directory settings, threads,
+# and other specialized options.
+
+- area: Provider Selection
+  tests:
+  - name: Select OpenAI provider (example from help)
+    command: chatx --use-openai --question "What are GPT models?" --debug
+    expect: |
+      The output should show that it's using the OpenAI provider
+      The response should explain GPT models
+    tags: provider
+
+  - name: Select Azure OpenAI provider
+    command: chatx --use-azure-openai --question "What are GPT models?" --debug
+    expect: |
+      The output should show that it's using the Azure OpenAI provider
+      The response should explain GPT models
+    tags: provider
+
+  - name: Configure chat model name
+    steps:
+    - name: Set a specific OpenAI model
+      command: chatx --openai-chat-model-name gpt-4 --question "Identify yourself" --debug
+      expect: |
+        The output should show that it's attempting to use the gpt-4 model
+        The response should identify itself appropriately
+
+  - name: Use profile for provider settings (example from help)
+    steps:
+    - name: Create a test profile
+      bash: |
+        mkdir -p ./.chatx/profiles
+        cat > ./.chatx/profiles/test-profile.yaml << EOF
+        app:
+          preferredProvider: "openai"
+        openai:
+          chatModelName: "gpt-4"
+        EOF
+      
+    - name: Use the profile
+      command: chatx --profile test-profile --question "Identify which model you are" --debug
+      expect: |
+        The output should show that it's using the OpenAI provider
+        The output should show that it's attempting to use the gpt-4 model
+        The response should identify itself appropriately
+      
+    - name: Clean up test profile
+      bash: |
+        rm -f ./.chatx/profiles/test-profile.yaml
+        if [ -z "$(ls -A ./.chatx/profiles)" ]; then
+          rm -rf ./.chatx/profiles
+          if [ -z "$(ls -A ./.chatx)" ]; then
+            rm -rf ./.chatx
+          fi
+        fi
+
+- area: Working Directory
+  tests:
+  - name: Change working directory (example from help)
+    steps:
+    - name: Create a test directory and file
+      bash: |
+        mkdir -p ./temp-test-dir
+        echo "Test content" > ./temp-test-dir/test-file.txt
+      
+    - name: Run command in different directory
+      command: chatx --folder ./temp-test-dir --question "List files in the current directory"
+      expect: |
+        The output should mention test-file.txt
+        The response should indicate that it found the file in the current directory
+      
+    - name: Clean up test directory
+      bash: rm -rf ./temp-test-dir
+
+  - name: Use cwd alias for folder (example from help)
+    steps:
+    - name: Create a test directory and file
+      bash: |
+        mkdir -p ./temp-test-dir2
+        echo "Test content" > ./temp-test-dir2/test-file.txt
+      
+    - name: Run command in different directory using cwd
+      command: chatx --cwd ./temp-test-dir2 --question "What files are in this directory?"
+      expect: |
+        The output should mention test-file.txt
+        The response should indicate that it found the file in the current directory
+      
+    - name: Clean up test directory
+      bash: rm -rf ./temp-test-dir2
+
+- area: Threads and Parallelism
+  tests:
+  - name: Use multiple threads (example from help)
+    command: chatx --threads 2 --foreach var num in 1 2 --question "What is {num} + {num}?"
+    expect: |
+      The output should include answers for both 1+1 and 2+2
+      The response should contain the correct mathematical results
+    tags: parallel
+
+- area: Chat Completion Options
+  tests:
+  - name: Set max tokens
+    command: chatx --max-tokens 100 --question "Tell me about the history of computers"
+    expect: |
+      The output should be noticeably concise
+      The response should be limited in length due to the token constraint
+
+  - name: Set chat completion timeout
+    command: chatx --chat-completion-timeout 30 --question "What is 2+2?"
+    expect: |
+      The output should indicate that 2+2=4
+      The command should complete within the timeout period
+
+  - name: Set token trimming target
+    command: chatx --trim-token-target 10000 --question "What is 2+2?"
+    expect: |
+      The output should indicate that 2+2=4
+      The command should execute successfully with the specified token target
+
+- area: Debug and Verbosity Options
+  tests:
+  - name: Use debug mode
+    command: chatx --debug --question "What is your name?"
+    expect: |
+      The output should include debug information
+      The response should still answer the question about its name
+
+  - name: Use quiet mode
+    command: chatx --quiet --question "What is 2+2?"
+    expect: |
+      The output should be minimal, mainly showing just the AI response
+      The response should indicate that 2+2=4
+
+  - name: Use verbose mode
+    command: chatx --verbose --question "What is 2+2?"
+    expect: |
+      The output should include verbose information
+      The response should still indicate that 2+2=4
+
+- area: Configuration Loading
+  tests:
+  - name: Load configuration from file
+    steps:
+    - name: Create a test configuration file
+      bash: |
+        cat > temp-test-config.yaml << EOF
+        app:
+          preferredProvider: "openai"
+        openai:
+          chatModelName: "gpt-4"
+        EOF
+      
+    - name: Load the configuration
+      command: chatx --config temp-test-config.yaml --question "Identify which model you are" --debug
+      expect: |
+        The output should show that it's using the OpenAI provider
+        The output should show that it's attempting to use the gpt-4 model
+        The response should identify itself appropriately
+      
+    - name: Clean up test configuration
+      bash: rm -f temp-test-config.yaml
+
+  - name: Load multiple configuration files
+    steps:
+    - name: Create test configuration files
+      bash: |
+        cat > temp-config1.yaml << EOF
+        app:
+          preferredProvider: "openai"
+        EOF
+        
+        cat > temp-config2.yaml << EOF
+        openai:
+          chatModelName: "gpt-4"
+        EOF
+      
+    - name: Load multiple configurations
+      command: chatx --config temp-config1.yaml temp-config2.yaml --question "Identify which model you are" --debug
+      expect: |
+        The output should show that it's using the OpenAI provider
+        The output should show that it's attempting to use the gpt-4 model
+        The response should identify itself appropriately
+      
+    - name: Clean up test configurations
+      bash: |
+        rm -f temp-config1.yaml
+        rm -f temp-config2.yaml

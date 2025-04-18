@@ -1,0 +1,122 @@
+# Slash Commands Tests
+#
+# This test file tests the slash command functionality in chatx interactive mode.
+# Note: These tests are simulations of interactive mode and may not fully test
+# the actual interactive experience.
+
+- area: Session Management Slash Commands
+  tests:
+  - name: Help for slash commands
+    command: chatx help slash commands
+    expect: |
+      The output should include information about available slash commands
+      The output should explain how to use slash commands in an interactive session
+      The output should mention commands like /clear, /save, /cost
+
+  - name: Create a sample file for testing slash commands
+    steps:
+    - name: Create a test file
+      bash: |
+        mkdir -p ./temp-test-slash
+        cat > ./temp-test-slash/test-code.py << EOF
+        def hello():
+            print("Hello, world!")
+
+        if __name__ == "__main__":
+            hello()
+        EOF
+
+    # Note: Actual interactive slash commands would need to be tested manually
+    # These are simulations using input with the slash commands
+    - name: Simulate using the /file command
+      command: chatx --input "Let me analyze a Python file
+      
+      /file ./temp-test-slash/test-code.py"
+      expect: |
+        The output should mention the Python file or its contents
+        The response should include an analysis of the test-code.py file
+    
+    - name: Clean up test files
+      bash: rm -rf ./temp-test-slash
+
+- area: Custom Prompt Slash Commands
+  tests:
+  - name: Setup and use a custom prompt with slash command simulation
+    steps:
+    - name: Create a custom prompt
+      command: chatx prompt create test-explain "Explain the following concept in simple terms:"
+      expect: The output should indicate that the prompt was created successfully
+
+    # Note: This is a simulation of using a slash command in interactive mode
+    - name: Simulate using the custom prompt
+      command: chatx --input "/test-explain
+      Artificial intelligence"
+      expect: |
+        The output should provide a simple explanation of artificial intelligence
+        The response should be in terms that are easy to understand
+
+    - name: Clean up test prompt
+      command: chatx prompt delete test-explain
+      expect: The output should indicate that the prompt was deleted successfully
+
+- area: MDX Integration Commands 
+  tests:
+  # Note: These are simulations and would require MDX to be installed
+  # for actual functionality testing
+  - name: Simulate file search slash command
+    command: chatx --input "/files *.py
+    
+    Can you list the Python files you found?"
+    expect: |
+      The output should either:
+      1. List Python files if MDX is installed and files are found
+      2. Indicate that it attempted to search for Python files
+      3. Mention that MDX integration is not available
+
+  - name: Simulate find slash command
+    command: chatx --input "/find \"def \"\n\nWhat Python functions did you find?"
+    expect: |
+      The output should either:
+      1. List Python functions found if MDX is installed
+      2. Indicate that it attempted to search for function definitions
+      3. Mention that MDX integration is not available
+
+  - name: Simulate web search slash command
+    command: chatx --input "/search Python tutorial\n\nSummarize the search results."
+    expect: |
+      The output should either:
+      1. Provide information about Python tutorials if MDX is installed
+      2. Indicate that it attempted to search for Python tutorials
+      3. Mention that MDX integration is not available
+
+- area: Session State Commands
+  tests:
+  # Note: These are simulations and would need to be tested manually
+  # in an actual interactive session for full verification
+  - name: Simulate clear command
+    command: chatx --input "What is 2+2?\n\n/clear\n\nDo you remember what I asked before?"
+    expect: |
+      The output should include an answer to 2+2
+      The output should indicate that it doesn't remember the previous question
+      The response should show evidence that the conversation was cleared
+
+  - name: Simulate save command
+    steps:
+    - name: Create a conversation and save it
+      command: chatx --input "Tell me a joke.\n\n/save temp-saved-chat.jsonl"
+      expect: |
+        The output should include a joke
+        The output should indicate that the chat was saved or attempted to be saved
+    
+    - name: Check if a file was created
+      bash: |
+        if [ -f temp-saved-chat.jsonl ]; then
+          echo "Chat was saved successfully"
+          rm temp-saved-chat.jsonl
+          exit 0
+        else
+          echo "Chat was not saved to the specified file"
+          exit 1
+        fi
+
+  # Note: Cost command would require actual API usage to be meaningful

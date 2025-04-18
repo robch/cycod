@@ -1,6 +1,11 @@
 # Chatx Tests
 
-This directory contains all tests for the Chatx project. The test structure mirrors the source code structure for easy navigation and maintenance.
+This directory contains all tests for the Chatx project, including unit tests and YAML-based integration tests.
+
+## Test Types
+
+1. **Unit Tests**: C# tests that target specific internal components (see [Unit Test Structure](#test-structure) below)
+2. **YAML-Based Integration Tests**: Tests that exercise ChatX functionality from the outside using the ai-test framework (see [README-YAML-TESTS.md](README-YAML-TESTS.md))
 
 ## Test Structure
 

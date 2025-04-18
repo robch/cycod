@@ -1,0 +1,288 @@
+# MCP Commands Tests
+#
+# This test file covers the MCP (Model Context Protocol) server commands of the chatx CLI,
+# including adding, listing, getting, and removing MCP server configurations.
+
+- area: MCP Add Command
+  tests:
+  - name: Add a basic stdio MCP server (example from help)
+    steps:
+    - name: Create a mock script for testing
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-mcp-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-mcp-server.cmd
+      
+    - name: Add an MCP server configuration
+      command: chatx mcp add test-mcp-server --command ./temp-test-mcp/mock-mcp-server.cmd
+      expect: |
+        The output should indicate that the MCP server was added successfully
+        The output should mention the path where the configuration was saved
+      
+    - name: Verify MCP server was added
+      command: chatx mcp get test-mcp-server
+      expect: |
+        The output should include the name "test-mcp-server"
+        The output should include the command path
+        The output should indicate the scope where the configuration is stored
+      
+    - name: Clean up test MCP server
+      bash: |
+        chatx mcp remove test-mcp-server
+        rm -rf ./temp-test-mcp
+
+  - name: Add an MCP server with arguments (example from help)
+    steps:
+    - name: Create a mock script for testing
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-mcp-arg-server.cmd << EOF
+        @echo off
+        echo Server received args: %*
+        EOF
+        chmod +x ./temp-test-mcp/mock-mcp-arg-server.cmd
+      
+    - name: Add an MCP server with arguments
+      command: chatx mcp add test-mcp-arg-server --command ./temp-test-mcp/mock-mcp-arg-server.cmd --arg --config --arg ./temp-test-mcp/config.json
+      expect: |
+        The output should indicate that the MCP server was added successfully
+        The output should mention the path where the configuration was saved
+      
+    - name: Verify MCP server with arguments was added
+      command: chatx mcp get test-mcp-arg-server
+      expect: |
+        The output should include the name "test-mcp-arg-server"
+        The output should include the command path
+        The output should include the arguments "--config" and "./temp-test-mcp/config.json"
+      
+    - name: Clean up test MCP server
+      bash: |
+        chatx mcp remove test-mcp-arg-server
+        rm -rf ./temp-test-mcp
+
+  - name: Add an MCP server with environment variables (example from help)
+    steps:
+    - name: Create a mock script for testing
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-mcp-env-server.cmd << EOF
+        @echo off
+        echo Server started with environment variables
+        EOF
+        chmod +x ./temp-test-mcp/mock-mcp-env-server.cmd
+      
+    - name: Add an MCP server with environment variables
+      command: chatx mcp add test-mcp-env-server --command ./temp-test-mcp/mock-mcp-env-server.cmd --env API_KEY=test123 --env CACHE_DIR=./temp-cache
+      expect: |
+        The output should indicate that the MCP server was added successfully
+        The output should mention the path where the configuration was saved
+      
+    - name: Verify MCP server with environment variables was added
+      command: chatx mcp get test-mcp-env-server
+      expect: |
+        The output should include the name "test-mcp-env-server"
+        The output should include the command path
+        The output should include the environment variables "API_KEY=test123" and "CACHE_DIR=./temp-cache"
+      
+    - name: Clean up test MCP server
+      bash: |
+        chatx mcp remove test-mcp-env-server
+        rm -rf ./temp-test-mcp
+
+  - name: Add an SSE MCP server (example from help)
+    steps:
+    - name: Add an SSE MCP server configuration
+      command: chatx mcp add test-mcp-sse-server --url https://example.com/sse-endpoint
+      expect: |
+        The output should indicate that the MCP server was added successfully
+        The output should mention the path where the configuration was saved
+      
+    - name: Verify SSE MCP server was added
+      command: chatx mcp get test-mcp-sse-server
+      expect: |
+        The output should include the name "test-mcp-sse-server"
+        The output should include the URL "https://example.com/sse-endpoint"
+      
+    - name: Clean up test MCP server
+      command: chatx mcp remove test-mcp-sse-server
+
+- area: MCP List Command
+  tests:
+  - name: List all MCP servers (example from help)
+    steps:
+    - name: Create test MCP servers in different scopes
+      bash: |
+        # Create temporary test MCP servers
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-local-mcp --command ./temp-test-mcp/mock-server.cmd
+        chatx mcp add test-user-mcp --command ./temp-test-mcp/mock-server.cmd --user
+        chatx mcp add test-global-mcp --command ./temp-test-mcp/mock-server.cmd --global
+      
+    - name: List all MCP servers
+      command: chatx mcp list
+      expect: |
+        The output should include "test-local-mcp"
+        The output should include "test-user-mcp"
+        The output should include "test-global-mcp"
+        The output should indicate the scope of each MCP server
+
+    - name: Clean up test MCP servers
+      bash: |
+        chatx mcp remove test-local-mcp
+        chatx mcp remove test-user-mcp --user
+        chatx mcp remove test-global-mcp --global
+        rm -rf ./temp-test-mcp
+
+  - name: List MCP servers from specific scope
+    steps:
+    - name: Create test MCP servers in different scopes
+      bash: |
+        # Create temporary test MCP servers
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-local-specific --command ./temp-test-mcp/mock-server.cmd
+        chatx mcp add test-user-specific --command ./temp-test-mcp/mock-server.cmd --user
+      
+    - name: List only user MCP servers
+      command: chatx mcp list --user
+      expect: |
+        The output should include "test-user-specific"
+        The output should not include "test-local-specific"
+
+    - name: Clean up test MCP servers
+      bash: |
+        chatx mcp remove test-local-specific
+        chatx mcp remove test-user-specific --user
+        rm -rf ./temp-test-mcp
+
+- area: MCP Get Command
+  tests:
+  - name: Get an existing MCP server (example from help)
+    steps:
+    - name: Create a test MCP server
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-get-mcp --command ./temp-test-mcp/mock-server.cmd
+      
+    - name: Get the MCP server details
+      command: chatx mcp get test-get-mcp
+      expect: |
+        The output should include the name "test-get-mcp"
+        The output should include the command path
+        The output should indicate the scope where the configuration is stored
+
+    - name: Clean up test MCP server
+      bash: |
+        chatx mcp remove test-get-mcp
+        rm -rf ./temp-test-mcp
+
+  - name: Get an MCP server from a specific scope
+    steps:
+    - name: Create a test MCP server in user scope
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-get-user-mcp --command ./temp-test-mcp/mock-server.cmd --user
+      
+    - name: Get the MCP server from user scope
+      command: chatx mcp get test-get-user-mcp --user
+      expect: |
+        The output should include the name "test-get-user-mcp"
+        The output should include the command path
+        The output should indicate the scope as User
+
+    - name: Clean up test MCP server
+      bash: |
+        chatx mcp remove test-get-user-mcp --user
+        rm -rf ./temp-test-mcp
+
+  - name: Try to get a non-existent MCP server
+    command: chatx mcp get non-existent-mcp
+    expect: |
+      The output should indicate that the MCP server was not found
+      The output should not crash or show an error stack trace
+
+- area: MCP Remove Command
+  tests:
+  - name: Remove an existing MCP server (example from help)
+    steps:
+    - name: Create a test MCP server
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-remove-mcp --command ./temp-test-mcp/mock-server.cmd
+      
+    - name: Remove the MCP server
+      command: chatx mcp remove test-remove-mcp
+      expect: |
+        The output should indicate that the MCP server was removed successfully
+        The output should mention the path of the removed configuration file
+
+    - name: Verify the MCP server was removed
+      command: chatx mcp get test-remove-mcp
+      expect: The output should indicate that the MCP server was not found
+
+    - name: Clean up test files
+      bash: rm -rf ./temp-test-mcp
+
+  - name: Remove an MCP server from a specific scope
+    steps:
+    - name: Create a test MCP server in user scope
+      bash: |
+        mkdir -p ./temp-test-mcp
+        cat > ./temp-test-mcp/mock-server.cmd << EOF
+        @echo off
+        echo MCP server mock response
+        EOF
+        chmod +x ./temp-test-mcp/mock-server.cmd
+        
+        chatx mcp add test-remove-user-mcp --command ./temp-test-mcp/mock-server.cmd --user
+      
+    - name: Remove the MCP server from user scope
+      command: chatx mcp remove test-remove-user-mcp --user
+      expect: |
+        The output should indicate that the MCP server was removed successfully
+        The output should mention the path of the removed configuration file
+
+    - name: Verify the MCP server was removed
+      command: chatx mcp get test-remove-user-mcp --user
+      expect: The output should indicate that the MCP server was not found
+
+    - name: Clean up test files
+      bash: rm -rf ./temp-test-mcp
+
+  - name: Try to remove a non-existent MCP server
+    command: chatx mcp remove non-existent-mcp
+    expect: |
+      The output should indicate that the MCP server was not found
+      The output should not crash or show an error stack trace

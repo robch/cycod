@@ -1,0 +1,205 @@
+# Help Examples Tests
+#
+# This test file tests the examples shown in the help documentation.
+# It focuses on verifying that the examples work as described.
+
+- area: Core Chat Examples from Help
+  tests:
+  - name: Example 1 - Ask a single question
+    command: chatx --question "What time is it?"
+    expect: |
+      The output should provide information about the current time
+      The response should be reasonably concise
+
+  - name: Example 2 - Use multiple sequential inputs
+    command: chatx --inputs "What's today's date?" "show me a calendar for this month"
+    expect: |
+      The output should contain today's date
+      The output should include a calendar representation for the current month
+
+  - name: Example 3 - Continue the most recent chat history
+    steps:
+    - name: Initial chat
+      command: chatx --question "What's today's date?" --output-chat-history help-example-continue.jsonl
+      expect: The output should contain today's date
+      
+    - name: Continue chat
+      command: chatx --continue --question "Next month?"
+      expect: |
+        The output should reference the next month after the current one
+        The response should show awareness of the previous question about today's date
+      
+    - name: Clean up test files
+      bash: rm -f help-example-continue.jsonl
+
+  - name: Example 4 - Save chat history in JSONL format
+    steps:
+    - name: Chat with history output
+      command: chatx --question "Tell me a joke" --output-chat-history help-example-history.jsonl
+      expect: The output should include a joke
+      
+    - name: Verify chat history was saved
+      bash: |
+        if [ -f help-example-history.jsonl ]; then
+          echo "Chat history file was created successfully"
+          rm help-example-history.jsonl
+          exit 0
+        else
+          echo "Error: Chat history file was not created"
+          exit 1
+        fi
+
+  - name: Example 5 - Continue chat from history file
+    steps:
+    - name: Initial chat
+      command: chatx --question "Tell me a joke" --output-chat-history help-example-load.jsonl
+      expect: The output should include a joke
+      
+    - name: Continue from saved history
+      command: chatx --input-chat-history help-example-load.jsonl --question "Tell me another"
+      expect: |
+        The output should include a different joke
+        The response should acknowledge the previous conversation
+      
+    - name: Clean up test files
+      bash: rm -f help-example-load.jsonl
+
+  - name: Example 6 - Save chat history in trajectory format
+    steps:
+    - name: Chat with trajectory output
+      command: chatx --question "What time is it?" --output-trajectory help-example-trajectory.md
+      expect: The output should contain information about the current time
+      
+    - name: Verify trajectory was saved
+      bash: |
+        if [ -f help-example-trajectory.md ]; then
+          echo "Trajectory file was created successfully"
+          rm help-example-trajectory.md
+          exit 0
+        else
+          echo "Error: Trajectory file was not created"
+          exit 1
+        fi
+
+  - name: Example 7 - Use additional system prompt
+    command: chatx --add-system-prompt "Never access files outside the current directory." --question "Can you list files in the parent directory?"
+    expect: |
+      The output should indicate an inability or unwillingness to list files from the parent directory
+      The response should reference the restriction mentioned in the system prompt
+
+  - name: Example 8 - Add a user prompt
+    command: chatx --add-user-prompt "Always answer in French." --question "What time is it?"
+    expect: |
+      The output should be in French
+      The response should provide the current time in French
+
+  - name: Example 9 - Use foreach variables
+    command: chatx --foreach var name in Alice Bob --input "Hello, {name}!"
+    expect: |
+      The output should include greetings to Alice and Bob
+      The response should address each person by name
+
+  - name: Example 10 - Combine multiple foreach variables
+    command: chatx --foreach var language in Python JavaScript --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
+    expect: |
+      The output should include examples of functions and loops in both Python and JavaScript
+      The response should address all four combinations
+
+  - name: Example 11 - Use numeric range with foreach
+    command: chatx --foreach var day in 1..3 --input "What day of the week is day {day}?"
+    expect: |
+      The output should list the days of the week corresponding to days 1 through 3
+      The response should cover 3 different days
+
+  - name: Example 12 - Process multiple commands with threads
+    command: chatx --threads 2 --foreach var topic in "sorting algorithms" "data structures" --question "Explain {topic} concisely"
+    expect: |
+      The output should include concise explanations of sorting algorithms and data structures
+      The response should address both topics
+
+- area: Configuration Examples from Help
+  tests:
+  - name: Example 1 from config set help - Set default model
+    steps:
+    - name: Set a configuration value
+      command: chatx config set OPENAI_CHAT_MODEL_NAME gpt-4-test --local
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the value was set
+      command: chatx config get OPENAI_CHAT_MODEL_NAME --local
+      expect: |
+        The output should display the value "gpt-4-test"
+        The output should indicate the scope as Local
+      
+    - name: Clean up test configuration
+      command: chatx config clear OPENAI_CHAT_MODEL_NAME --local
+      expect: The output should indicate that the value was cleared successfully
+
+  - name: Example 2 from config set help - Set OpenAI API key
+    steps:
+    - name: Set a simulated OpenAI key
+      command: chatx config set OPENAI_API_KEY sk-test12345 --user
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the key was set (should be masked)
+      command: chatx config get OPENAI_API_KEY --user
+      expect: |
+        The output should indicate that an API key is set
+        The output should not display the actual key value (for security)
+      
+    - name: Clean up test configuration
+      command: chatx config clear OPENAI_API_KEY --user
+      expect: The output should indicate that the value was cleared successfully
+
+  - name: Example 3 from config set help - Set Azure OpenAI endpoint
+    steps:
+    - name: Set an endpoint
+      command: chatx config set AZURE_OPENAI_ENDPOINT https://test-resource.openai.azure.com
+      expect: The output should indicate that the value was set successfully
+      
+    - name: Verify the endpoint was set
+      command: chatx config get AZURE_OPENAI_ENDPOINT
+      expect: |
+        The output should display the value "https://test-resource.openai.azure.com"
+      
+    - name: Clean up test configuration
+      command: chatx config clear AZURE_OPENAI_ENDPOINT
+      expect: The output should indicate that the value was cleared successfully
+
+- area: Prompt Examples from Help
+  tests:
+  - name: Example 1 from prompt create help - Create a simple prompt
+    steps:
+    - name: Create a prompt
+      command: chatx prompt create test-summarize "Please summarize the following text in three bullet points:"
+      expect: |
+        The output should indicate that the prompt was created successfully
+        The output should mention the path where the prompt was saved
+      
+    - name: Verify prompt was created
+      command: chatx prompt get test-summarize
+      expect: |
+        The output should include the prompt text about summarizing
+        The output should indicate the scope where the prompt is stored
+      
+    - name: Clean up test prompt
+      command: chatx prompt delete test-summarize
+      expect: The output should indicate that the prompt was deleted successfully
+
+  - name: Example 2 from prompt create help - Create a user-scoped prompt
+    steps:
+    - name: Create a user-level prompt
+      command: chatx prompt create test-explain "Explain the following like I'm five:" --user
+      expect: |
+        The output should indicate that the prompt was created successfully
+        The output should mention the path where the prompt was saved
+      
+    - name: Verify user prompt was created
+      command: chatx prompt get test-explain --user
+      expect: |
+        The output should include the prompt text about explaining
+        The output should indicate the scope as User
+      
+    - name: Clean up test prompt
+      command: chatx prompt delete test-explain --user
+      expect: The output should indicate that the prompt was deleted successfully

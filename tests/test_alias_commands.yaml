@@ -1,0 +1,209 @@
+# Alias Commands Tests
+#
+# This test file covers the alias commands of the chatx CLI,
+# including listing, getting, deleting, creating and using aliases.
+
+- area: Alias Creation
+  tests:
+  - name: Save alias in local scope (example from help)
+    steps:
+    - name: Create a simple alias
+      command: chatx --question "What is 2+2?" --save-alias test-math
+      expect: |
+        The output should indicate that the alias was saved successfully
+        The output should mention the path where the alias was saved
+
+    - name: Verify alias was created
+      command: chatx alias get test-math
+      expect: |
+        The output should include the alias name "test-math"
+        The output should include "--question" and "What is 2+2?"
+        The output should indicate the scope where the alias is stored
+      
+    - name: Clean up test alias
+      command: chatx alias delete test-math
+      expect: The output should indicate that the alias was deleted successfully
+
+  - name: Save alias in user scope (example from help)
+    steps:
+    - name: Create a user-level alias
+      command: chatx --question "Tell me a joke" --save-user-alias test-joke
+      expect: |
+        The output should indicate that the alias was saved successfully
+        The output should mention the path where the alias was saved
+
+    - name: Verify user alias was created
+      command: chatx alias get test-joke --user
+      expect: |
+        The output should include the alias name "test-joke"
+        The output should include "--question" and "Tell me a joke"
+        The output should indicate the scope as User
+
+    - name: Clean up test alias
+      command: chatx alias delete test-joke --user
+      expect: The output should indicate that the alias was deleted successfully
+
+  - name: Save alias in global scope (example from help)
+    steps:
+    - name: Create a global alias
+      command: chatx --question "What's today's date?" --save-global-alias test-date
+      expect: |
+        The output should indicate that the alias was saved successfully
+        The output should mention the path where the alias was saved
+
+    - name: Verify global alias was created
+      command: chatx alias get test-date --global
+      expect: |
+        The output should include the alias name "test-date"
+        The output should include "--question" and "What's today's date?"
+        The output should indicate the scope as Global
+
+    - name: Clean up test alias
+      command: chatx alias delete test-date --global
+      expect: The output should indicate that the alias was deleted successfully
+
+- area: Alias List Command
+  tests:
+  - name: List all aliases (example from help)
+    steps:
+    - name: Create test aliases in different scopes
+      bash: |
+        # Create temporary test aliases
+        chatx --question "Local test" --save-local-alias test-local-list
+        chatx --question "User test" --save-user-alias test-user-list
+        chatx --question "Global test" --save-global-alias test-global-list
+      
+    - name: List all aliases
+      command: chatx alias list
+      expect: |
+        The output should include "test-local-list"
+        The output should include "test-user-list"
+        The output should include "test-global-list"
+        The output should indicate the scope of each alias
+
+    - name: Clean up test aliases
+      bash: |
+        # Remove temporary test aliases
+        chatx alias delete test-local-list
+        chatx alias delete test-user-list --user
+        chatx alias delete test-global-list --global
+
+  - name: List aliases from specific scope
+    steps:
+    - name: Create test aliases in different scopes
+      bash: |
+        # Create temporary test aliases
+        chatx --question "Local test" --save-local-alias test-local-list-specific
+        chatx --question "User test" --save-user-alias test-user-list-specific
+      
+    - name: List only local aliases
+      command: chatx alias list --local
+      expect: |
+        The output should include "test-local-list-specific"
+        The output should not include "test-user-list-specific"
+
+    - name: Clean up test aliases
+      bash: |
+        # Remove temporary test aliases
+        chatx alias delete test-local-list-specific
+        chatx alias delete test-user-list-specific --user
+
+- area: Alias Get Command
+  tests:
+  - name: Get an existing alias (example from help)
+    steps:
+    - name: Create a test alias
+      command: chatx --question "What time is it?" --save-alias test-time
+      expect: The output should indicate that the alias was saved successfully
+      
+    - name: Get the alias details
+      command: chatx alias get test-time
+      expect: |
+        The output should include the alias name "test-time"
+        The output should include "--question" and "What time is it?"
+        The output should indicate the scope where the alias is stored
+
+    - name: Clean up test alias
+      command: chatx alias delete test-time
+      expect: The output should indicate that the alias was deleted successfully
+
+  - name: Get an alias from a specific scope
+    steps:
+    - name: Create a test alias in user scope
+      command: chatx --question "What time is it?" --save-user-alias test-time-user
+      expect: The output should indicate that the alias was saved successfully
+      
+    - name: Get the alias from user scope
+      command: chatx alias get test-time-user --user
+      expect: |
+        The output should include the alias name "test-time-user"
+        The output should include "--question" and "What time is it?"
+        The output should indicate the scope as User
+
+    - name: Clean up test alias
+      command: chatx alias delete test-time-user --user
+      expect: The output should indicate that the alias was deleted successfully
+
+  - name: Try to get a non-existent alias
+    command: chatx alias get non-existent-alias
+    expect: |
+      The output should indicate that the alias was not found
+      The output should not crash or show an error stack trace
+
+- area: Alias Delete Command
+  tests:
+  - name: Delete an existing alias (example from help)
+    steps:
+    - name: Create a test alias
+      command: chatx --question "What is the weather?" --save-alias test-weather
+      expect: The output should indicate that the alias was saved successfully
+      
+    - name: Delete the alias
+      command: chatx alias delete test-weather
+      expect: |
+        The output should indicate that the alias was deleted successfully
+        The output should mention the path of the deleted alias file
+
+    - name: Verify the alias was deleted
+      command: chatx alias get test-weather
+      expect: The output should indicate that the alias was not found
+
+  - name: Delete an alias from a specific scope
+    steps:
+    - name: Create a test alias in user scope
+      command: chatx --question "What is the weather?" --save-user-alias test-weather-user
+      expect: The output should indicate that the alias was saved successfully
+      
+    - name: Delete the alias from user scope
+      command: chatx alias delete test-weather-user --user
+      expect: |
+        The output should indicate that the alias was deleted successfully
+        The output should mention the path of the deleted alias file
+
+    - name: Verify the alias was deleted
+      command: chatx alias get test-weather-user --user
+      expect: The output should indicate that the alias was not found
+
+  - name: Try to delete a non-existent alias
+    command: chatx alias delete non-existent-alias
+    expect: |
+      The output should indicate that the alias was not found
+      The output should not crash or show an error stack trace
+
+- area: Using Aliases
+  tests:
+  - name: Use a previously created alias
+    steps:
+    - name: Create a test alias
+      command: chatx --question "What is the capital of France?" --save-alias test-capital
+      expect: The output should indicate that the alias was saved successfully
+      
+    - name: Use the alias
+      command: chatx --test-capital
+      expect: |
+        The output should indicate that Paris is the capital of France
+        The response should be reasonably concise
+
+    - name: Clean up test alias
+      command: chatx alias delete test-capital
+      expect: The output should indicate that the alias was deleted successfully
