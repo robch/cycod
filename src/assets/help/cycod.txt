@@ -1,0 +1,52 @@
+USAGE: cycod <command> [...]
+
+COMMANDS
+
+  cycod chat [...]            Chat with AI interactively or programmatically
+
+  SETTINGS                    Manage application settings and connectivity to AI/tool providers
+    cycod github login        Authenticate with GitHub for Copilot using device code flow
+    cycod config [...]        Set/clear/add/remove/list app settings, including AI and Tool providers
+
+  CONTEXT                     Create and refine context (files, commands, pages) to input to AI
+    cycod find [...]          Find and filter files (e.g. --files *.cs --contains "TODO")
+    cycod run [...]           Run commands (e.g. --bash "git log --since='1 week ago'")
+    cycod web [...]           Search and retrieve web pages (e.g. --get https://...)
+
+  CUSTOMIZATION               Manage aliases, prompts, and Model Context Protocol servers
+    cycod alias [...]         Add/remove/list commonly used command/option combinations
+    cycod prompt [...]        Add/remove/list commonly used prompts for AI (system or user)
+    cycod mcp [...]           Add/remove/list/allow MCP servers to use custom tools
+
+EXAMPLES
+
+  EXAMPLE 1: Chat with AI
+
+    cycod chat
+    cycod chat --question "What time is it?"
+    cycod chat --inputs "How do I sort an array?" "Now show me in Python"
+
+  EXAMPLE 2: Process files with AI
+
+    cycod find **/*.md --contains "TODO" --instructions "Create a task list"
+    cycod find *.pdf --instructions "Extract key information" --save-output summary.md
+
+  EXAMPLE 3: Process web content with AI
+
+    cycod web search "Python best practices" --instructions "Create a cheat sheet"
+    cycod web get https://example.com --instructions "Summarize key points"
+
+  EXAMPLE 4: Run commands and process output with AI
+  
+    cycod run "git log --since='1 week ago'" --instructions "Summarize changes"
+
+ADDITIONAL HELP
+
+  cycod help examples
+  cycod help options
+  
+  cycod help find "topic"
+  cycod help topics
+  
+  cycod help provider
+  cycod help chat history
