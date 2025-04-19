@@ -122,4 +122,18 @@ public class TryCatchHelpers
             }
         };
     }
+
+    public static T TryCatchNoThrow<T>(Func<T> function, T defaultResult, out Exception? functionThrewException)
+    {
+        functionThrewException = null;
+        try
+        {
+            return function();
+        }
+        catch (Exception ex)
+        {
+            functionThrewException = ex;
+        }
+        return defaultResult;
+    }
 }

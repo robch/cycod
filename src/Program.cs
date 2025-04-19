@@ -133,6 +133,8 @@ public class Program
                 McpGetCommand mcpGetCommand => mcpGetCommand.Execute(isTruelyInteractive),
                 McpAddCommand mcpAddCommand => mcpAddCommand.Execute(isTruelyInteractive),
                 McpRemoveCommand mcpRemoveCommand => mcpRemoveCommand.Execute(isTruelyInteractive),
+                TestListCommand testListCommand => testListCommand.Execute(isTruelyInteractive),
+                TestRunCommand testRunCommand => testRunCommand.Execute(isTruelyInteractive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 

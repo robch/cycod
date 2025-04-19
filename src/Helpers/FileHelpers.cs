@@ -2,11 +2,74 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
 public class FileHelpers
 {
+    public static IEnumerable<string> FindFiles(string path, string pattern)
+    {
+        var combined = PathHelpers.Combine(path, pattern);
+        return combined != null
+            ? FindFiles(combined)
+            : Enumerable.Empty<string>();
+    }
+
+    public static IEnumerable<string> FindFiles(string fileNames)
+    {
+        var currentDir = Directory.GetCurrentDirectory();
+        foreach (var item in fileNames.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            ConsoleHelpers.WriteDebugLine($"  Searching for files '{fileNames}'");
+
+            var i1 = item.LastIndexOf(Path.DirectorySeparatorChar);
+            var i2 = item.LastIndexOf(Path.AltDirectorySeparatorChar);
+            var hasPath = i1 >= 0 || i2 >= 0;
+
+            var pathLen = Math.Max(i1, i2);
+            var path = !hasPath ? currentDir : item.Substring(0, pathLen);
+            var pattern = !hasPath ? item : item.Substring(pathLen + 1);
+
+            EnumerationOptions? recursiveOptions = null;
+            if (path.EndsWith("**"))
+            {
+                path = path.Substring(0, path.Length - 2).TrimEnd('/', '\\');
+                if (string.IsNullOrEmpty(path)) path = ".";
+                recursiveOptions = new EnumerationOptions() { RecurseSubdirectories = true };
+            }
+
+            if (!Directory.Exists(path)) continue;
+
+            var files = recursiveOptions != null 
+                ? Directory.EnumerateFiles(path, pattern, recursiveOptions)
+                : Directory.EnumerateFiles(path, pattern);
+            foreach (var file in files)
+            {
+                yield return file;
+            }
+        }
+
+        yield break;
+    }
+
+    public static IEnumerable<string> FindFilesInOsPath(string fileName)
+    {
+        var lookIn = Environment.GetEnvironmentVariable("PATH")!.Split(System.IO.Path.PathSeparator);
+        var found = lookIn.SelectMany(x =>
+        {
+            try
+            {
+                return System.IO.Directory.GetFiles(x, fileName);
+            }
+            catch (Exception)
+            {
+                return Enumerable.Empty<string>();
+            }
+        });
+        return found;
+    }
+
     public static string? FindFileSearchParents(params string[] paths)
     {
         return FindFileSearchParents(paths, createIfNotFound: false);
@@ -118,4 +181,20 @@ public class FileHelpers
         DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
         File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
     }
+
+    public static FileInfo GetAssemblyFileInfo(Type type)
+    {
+        // GetAssembly.Location always returns empty when the project is built as 
+        // a single-file app (which we do when publishing the Dependency package),
+        // warning IL3000
+        var assembly = Assembly.GetAssembly(type);
+        string assemblyPath = assembly?.Location ?? string.Empty;
+        if (assemblyPath == string.Empty)
+        {
+            assemblyPath = AppContext.BaseDirectory;
+            assemblyPath += assembly?.GetName().Name + ".dll";
+        }
+        return new FileInfo(assemblyPath);
+    }
+
 }

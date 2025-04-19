@@ -1,0 +1,19 @@
+CHATX TEST COMMANDS
+
+  The chatx test command manages CLI YAML tests.
+
+USAGE: chatx test <command> [...]
+
+COMMANDS
+
+  chatx test list [...]   Lists CLI YAML tests (see: chatx help test list)
+  chatx test run [...]    Runs CLI YAML tests (see: chatx help test run)
+
+ADDITIONAL TOPICS
+
+  chatx help test examples
+
+SEE ALSO
+
+  chatx help test list
+  chatx help test run
