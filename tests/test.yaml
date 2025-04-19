@@ -1,25 +1,16 @@
-﻿- name: simulate pass
-  simulate: Passed
-  tag: skip
-
-- name: simulate skipped
-  simulate: Skipped
-  tag: skip
-
-- test1: run --script "echo hello"
-- test2: run --script "echo oh yeah?"
-
-- name: try1a command ... chatx
+﻿
+- name: help
   command: chatx
+  arguments:
+    inputs: |
+      hello
+      how are you?
+      what's your name?
 
-- name: try1b command ... chatx run --script "echo hello"
-  command: chatx run --script "echo hello"
+- name: cmd
+  script: echo hello
   expect-regex: hello
 
-- name: try2a script ... chatx
-  script: chatx
-
-- name: try2b script ... chatx run --script "echo hello"
-  script: chatx run --script "echo hello"
-  expect-regex: hello
-
+- name: bash
+  bash: pwd
+  expect: this should show a valid path

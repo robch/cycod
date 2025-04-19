@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class YamlTestCaseRunner
@@ -163,15 +164,12 @@ public class YamlTestCaseRunner
             var kvs = KeyValuePairsFromJson(arguments, true);
             kvs.AddRange(KeyValuePairsFromJson(@foreach, false));
             stackTrace = UpdateStackTrace(stackTrace, command, kvs);
-            kvs = ConvertValuesToAtArgs(kvs, ref filesToDelete);
+            // kvs = ConvertValuesToAtArgs(kvs, ref filesToDelete);
 
-            var useCmd = !scriptIsBash;
-            script = WriteTextToTempFile(script, useCmd ? "cmd" : null);
+            // var useCmd = !scriptIsBash;
+            // script = WriteTextToTempFile(script, useCmd ? "cmd" : null);
 
-            expectRegex = WriteTextToTempFile(expectRegex);
-            notExpectRegex = WriteTextToTempFile(notExpectRegex);
-
-            GetStartInfoArgs(out var startProcess, out var startArgs, cli, command, script, scriptIsBash, kvs, expectRegex, notExpectRegex, ref filesToDelete);
+            GetStartInfoArgs(out var startProcess, out var startArgs, command, script, scriptIsBash, kvs);
             stackTrace = $"{startProcess} {startArgs}\n{stackTrace ?? string.Empty}";
 
             Logger.Log($"Process.Start('{startProcess} {startArgs}')");
@@ -223,6 +221,11 @@ public class YamlTestCaseRunner
             additional = additional
                 + $" STOP TIME: {exitTime}"
                 + $" EXIT CODE: {exitCode}";
+                
+            // Check regex expectations if they exist
+            if (outcome == TestOutcome.Passed && (!string.IsNullOrEmpty(expectRegex) || !string.IsNullOrEmpty(notExpectRegex))) {
+                outcome = CheckExpectRegExPatterns(sbMerged.ToString(), expectRegex, notExpectRegex);
+            }
         }
         catch (Exception ex)
         {
@@ -407,7 +410,7 @@ public class YamlTestCaseRunner
         }
         else
         {
-            var clis = new[] { "chatx", "ai" };
+            var clis = new[] { "chatx" };
             var found = PickCliOrNull(clis);
             return found != null
                 ? PickCliFound(clis, found)         // use what we found
@@ -617,43 +620,40 @@ public class YamlTestCaseRunner
         return completed;
     }
 
-    private static void GetStartInfoArgs(out string startProcess, out string startArgs,string cli, string? command, string? script, bool scriptIsBash, List<KeyValuePair<string, string>> kvs, string? expectRegex, string? notExpectRegex, ref List<string>? files)
+    private static void GetStartInfoArgs(out string startProcess, out string startArgs, string? command, string? script, bool scriptIsBash, List<KeyValuePair<string, string>> kvs)
     {
-        startProcess = FindCacheCli(cli);
-
         var isCommand = !string.IsNullOrEmpty(command) || string.IsNullOrEmpty(script);
         if (isCommand)
         {
             command = $"{command} {GetKeyValueArgs(kvs)}";
-
-            var hasExpectations = !string.IsNullOrEmpty(expectRegex) || !string.IsNullOrEmpty(notExpectRegex);
-            if (hasExpectations) 
+            
+            if (scriptIsBash)
             {
-                command = WriteTextToTempFile(command)!;
-                files ??= new List<string>();
-                files.Add(command);
-
-                startArgs = $"run --command @{command} {GetAtArgs(expectRegex, notExpectRegex)}";
-                return;
+                startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+                    ? EnsureFindCacheGetBashExe()
+                    : "/bin/bash";
+                startArgs = $"-lc \"{EscapeForBash(command)}\"";
             }
-
-            startArgs = command;
-            return;
+            else
+            {
+                startProcess = "cmd";
+                startArgs = $"/c \"{EscapeForCmd(command)}\"";
+            }
         }
-
-        if (scriptIsBash)
+        else if (scriptIsBash)
         {
-            var bash = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+            startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
                 ? EnsureFindCacheGetBashExe()
                 : "/bin/bash";
-            startArgs = $"run --process \"{bash}\" --pre.script -l --script \"{script}\" {GetKeyValueArgs(kvs)} {GetAtArgs(expectRegex, notExpectRegex)}";
-            return;
+            startArgs = $"-lc \"{EscapeForBash(script!)} {EscapeForBash(GetKeyValueArgs(kvs))}\"";
         }
-
-        startArgs = $"run --cmd --script \"{script}\" {GetKeyValueArgs(kvs)} {GetAtArgs(expectRegex, notExpectRegex)}";
-        return;
+        else
+        {
+            startProcess = "cmd";
+            startArgs = $"/c \"{script} {EscapeForCmd(GetKeyValueArgs(kvs))}\"";
+        }
     }
-
+    
     private static string EnsureFindCacheGetBashExe()
     {
         var gitBash = FindCacheGitBashExe();
@@ -809,8 +809,8 @@ public class YamlTestCaseRunner
 
         try
         {
-            var startProcess = FindCacheCli("ai");
-            var startArgs = $"chat --quiet true --index-name @none --question @{questionTempFile}";
+            var startProcess = FindCacheCli("chatx");
+            var startArgs = $"--question @{questionTempFile}";
             var startInfo = new ProcessStartInfo(startProcess, startArgs)
             {
                 UseShellExecute = false,
@@ -893,6 +893,67 @@ public class YamlTestCaseRunner
     }
 
     #endregion
+
+    // Helper method to escape strings for bash
+    private static string EscapeForBash(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        
+        // Replace single quotes with '\'' (close quote, escaped quote, open quote)
+        return text.Replace("'", "'\\''");
+    }
+    
+    // Helper method to escape strings for cmd
+    private static string EscapeForCmd(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        
+        // Escape special characters in cmd
+        return text
+            .Replace("^", "^^")
+            .Replace("&", "^&")
+            .Replace("|", "^|")
+            .Replace("<", "^<")
+            .Replace(">", "^>")
+            .Replace("(", "^(")
+            .Replace(")", "^)");
+    }
+    
+    // New method to check regex patterns
+    private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)
+    {
+        // Check for expected regex patterns
+        if (!string.IsNullOrEmpty(expectRegex))
+        {
+            var expectedPatterns = expectRegex.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var pattern in expectedPatterns)
+            {
+                if (!Regex.IsMatch(output, pattern))
+                {
+                    Logger.LogWarning($"Expected pattern not found: '{pattern}'");
+                    return TestOutcome.Failed;
+                }
+            }
+        }
+        
+        // Check for not expected regex patterns
+        if (!string.IsNullOrEmpty(notExpectRegex))
+        {
+            var notExpectedPatterns = notExpectRegex.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            foreach (var pattern in notExpectedPatterns)
+            {
+                if (Regex.IsMatch(output, pattern))
+                {
+                    Logger.LogWarning($"Unexpected pattern found: '{pattern}'");
+                    return TestOutcome.Failed;
+                }
+            }
+        }
+        
+        return TestOutcome.Passed;
+    }
 
     private static Dictionary<string, string> _cliCache = new Dictionary<string, string>();
 }
