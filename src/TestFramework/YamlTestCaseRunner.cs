@@ -236,9 +236,6 @@ public class YamlTestCaseRunner
         }
         finally
         {
-            if (script != null) File.Delete(script);
-            if (expectRegex != null) File.Delete(expectRegex);
-            if (notExpectRegex != null) File.Delete(notExpectRegex);
             filesToDelete?.ForEach(x => File.Delete(x));
         }
 

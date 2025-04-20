@@ -46,7 +46,7 @@ class TestRunCommand : TestBaseCommand
         catch (Exception ex)
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}");
+            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             Console.ResetColor();
             return 1;
         }
