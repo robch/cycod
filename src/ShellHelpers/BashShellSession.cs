@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 public class BashShellSession : ShellSession
@@ -12,10 +13,14 @@ public class BashShellSession : ShellSession
 
     protected override ProcessStartInfo GetProcessStartInfo()
     {
+        var arguments = Environment.OSVersion.Platform == PlatformID.Win32NT
+            ? "--norc --noprofile -i"
+            : "--norc --noprofile";
+
         return new ProcessStartInfo
         {
             FileName = "bash",
-            Arguments = "--norc --noprofile",
+            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,

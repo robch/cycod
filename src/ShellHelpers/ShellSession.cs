@@ -74,7 +74,7 @@ public abstract class ShellSession
         // Optionally write an initial marker to signal readiness.
         _process.StandardInput.WriteLine(WrapCommand("echo Ready"));
         _process.StandardInput.Flush();
-        WaitForMarkerAsync(5000).Wait();
+        WaitForMarkerAsync(20000).Wait();
     }
 
     // Executes a command and waits for the marker.
@@ -87,6 +87,9 @@ public abstract class ShellSession
             _stderrBuffer.Clear();
             _mergedBuffer.Clear();
         }
+
+        var isExit = command.Trim().ToLower() == "exit";
+        if (isExit) return ResetShell(allShells: true);
 
         var wrappedCommand = WrapCommand(command);
         _process!.StandardInput.WriteLine(wrappedCommand);
@@ -177,6 +180,19 @@ public abstract class ShellSession
                 session.Shutdown();
             }
         }
+    }
+
+    private static (string stdout, string stderr, string merged, int exitCode) ResetShell(bool allShells = false)
+    {
+        if (allShells)
+        {
+            ShutdownAll();
+            var shutdownAllShellsMessage = $"<All persistent shells have been closed... current working directory is now: {Environment.CurrentDirectory}>";
+            return (shutdownAllShellsMessage, "", shutdownAllShellsMessage, 0);
+        }
+
+        var shutdownThisShellMessage = $"<Persistent shell has been closed... current working directory is now: {Environment.CurrentDirectory}>";
+        return (shutdownThisShellMessage, "", shutdownThisShellMessage, 0);
     }
 
     protected Process? _process;
