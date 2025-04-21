@@ -4,11 +4,13 @@ using System.Text.RegularExpressions;
 
 public abstract class ShellSession
 {
-    protected Process? _process;
-    protected readonly StringBuilder _stdoutBuffer = new StringBuilder();
-    protected readonly StringBuilder _stderrBuffer = new StringBuilder();
-    protected readonly StringBuilder _mergedBuffer = new StringBuilder();
-    protected readonly object _lock = new object();
+    public ShellSession()
+    {
+        lock (_sessions)
+        {
+            _sessions.Add(this);
+        }
+    }
 
     // This marker will be used to indicate when a command has finished.
     public abstract string Marker { get; }
@@ -165,4 +167,23 @@ public abstract class ShellSession
             _process = null;
         }
     }
+
+    public static void ShutdownAll()
+    {
+        lock (_sessions)
+        {
+            foreach (var session in _sessions)
+            {
+                session.Shutdown();
+            }
+        }
+    }
+
+    protected Process? _process;
+    protected readonly StringBuilder _stdoutBuffer = new StringBuilder();
+    protected readonly StringBuilder _stderrBuffer = new StringBuilder();
+    protected readonly StringBuilder _mergedBuffer = new StringBuilder();
+    protected readonly object _lock = new object();
+
+    private static List<ShellSession> _sessions = new List<ShellSession>();
 }
