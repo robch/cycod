@@ -1,0 +1,97 @@
+1.1.1 Create new solution `CycoDevSolution.sln`
+1.1.2 Create the three projects (CycoDev.Common, CycoDev, CycoDevTest)
+1.1.3 Set up project references
+1.1.4 Configure output names in project files (.csproj)
+1.2 Create Initial Project Files
+1.3.1 Create the `CycoDev.Tests` project for unit tests
+1.3.2 Configure project references to all other projects
+1.3.3 Set up MSTest with necessary packages
+1.3.4 Create folder structure (CommonTests, CycoDevTests, TestHelpers)
+1.3.5 Migrate GlobalUsings.cs and any existing test files
+2.1.1 Create the Configuration directory in CycoDev.Common
+2.1.2 Move configuration-related files
+2.1.3 Update configuration files to use a shared configuration directory
+2.2.1 Create the CommandLine directory in CycoDev.Common
+2.2.2 Move command line-related files
+2.2.3 Update environment variable prefixes in KnownSettings.cs
+2.3.1 Create a base `CommandLineOptionsBase` class in the common library
+2.3.2 Create a `CommandRegistry` class in the common library
+2.3.3 Create specialized CommandLineOptions classes for each application
+2.3.4 Create helper methods for command execution in the common library
+2.3.5 Update Program.cs files to use the new command line parsing architecture
+2.4 Note About Test Framework
+2.5.1 Create the FunctionCallingTools directory in CycoDev
+2.5.2 Move function calling tool files to CycoDev project
+2.5.3 Create the ShellHelpers directory in CycoDev
+2.5.4 Move shell helper classes to CycoDev project
+2.6.1 Create the Helpers directory in CycoDev.Common
+2.6.2 Move shared helper classes
+2.6.3 Update references to Program.Name in helper classes
+2.7.1 Move `VersionCommand.cs` to CycoDev.Common/CommandLine/Commands
+2.7.2 Move `VersionInfo.cs` (or equivalent) to CycoDev.Common/Helpers
+2.7.3 Update VersionInfo to provide application-specific versioning
+2.8.1 Identify which HTTP client related files should be moved to common vs. kept in CycoDev
+2.9.1 Create the Templates directory in CycoDev.Common
+2.9.2 Move templates-related files
+2.9.3 Update namespace references as needed
+3.1.1 Create CommandLineCommands directory
+3.1.2 Copy all non-test commands from the original project with their complete directory structures
+3.1.3 Create a specialized `HelpCommand.cs`
+3.2.1 Create a modified version of Program.cs
+3.3.1 Create specialized command line parser for CycoDev
+3.3.2 Include logic to parse all commands except test commands
+3.4.1 Create assets directory
+3.4.2 Copy help files and other assets needed for the main application
+3.4.3 Include common help files adapted specifically for cycod
+3.4.4 Update all help file content to replace "chatx" with "cycod"
+3.4.5 Special handling for `usage.txt`
+4.1.1 Create TestFramework directory in the CycoDevTest project
+4.1.2 Move all test framework files from the original TestFramework directory
+4.1.3 Update YamlTestFramework.cs
+4.1.4 Update YamlTestCaseRunner.cs
+4.2.1 Create CommandLineCommands directory
+4.2.2 Modify test commands to work without the "test" prefix
+4.2.3 Update the existing TestBaseCommand class to work with the new command structure
+4.2.4 Create a specialized `HelpCommand.cs`
+4.3.1 Create a simplified Program.cs
+4.4.1 Create specialized command line parser for CycoDevTest
+4.4.2 Implement parsing that treats "list" and "run" as primary commands
+4.5.1 Create assets directory with help files
+4.5.2 Include common help files adapted specifically for cycodt
+4.5.3 Rename test-specific help files to remove redundant "test" prefix
+4.5.4 Update all test-related help files
+4.5.5 Special handling for `usage.txt`
+5.1.1 Create a tracking spreadsheet or document for "chatx" references
+5.1.2 Perform multiple codebase-wide searches for "chatx" references
+5.1.3 On Windows systems, use PowerShell as an alternative search method
+5.1.4 Systematically categorize each reference found in the tracking document
+5.1.5 Update hardcoded string references based on type and context
+5.1.6 Pay special attention to files known to have critical hardcoded references
+5.1.7 Create unit tests to verify string replacements haven't broken functionality
+5.1.8 Use methods to get the executable name dynamically where appropriate
+5.1.9 After making all replacements, perform a verification search
+5.1.10 Document any instances where "chatx" references are intentionally preserved
+5.2.1 Create a structured test organization
+5.2.2 For each test directory, create appropriate sub-project specific folders grouping tests together
+5.2.3 Update test paths in test files to reflect the new structure
+5.3.1 Create extension points or abstract base classes in the common library
+5.3.2 Ensure the command registration system works for both applications
+5.4.1 Update the help system to work with both applications
+5.4.2 Create a mechanism to filter help content based on the application
+5.5.1 Ensure command base classes are appropriate for both applications
+5.5.2 Create specialized base classes if needed
+6.1.1 Update unit tests in the CycoDev.Tests project
+6.1.2 Migrate any tests from the original project that weren't moved during setup
+6.1.3 Ensure all unit tests pass for all projects
+6.1.4 Add test coverage for any new extension points or interfaces
+6.2.1 Test CycoDev functionality
+6.2.2 Test CycoDevTest functionality
+6.3.1 Test that configuration is properly shared between applications
+6.3.2 Verify configuration scoping works as expected
+7.1.1 Update README.md and other documentation to reflect the new structure
+7.1.2 Document the use of both applications
+7.1.3 Include examples of using both tools
+7.2.1 Review the implementation for any edge cases or issues
+7.2.2 Make any final refinements to the codebase
+7.3.1 Configure the build system to build both executables
+7.3.2 Ensure proper versioning for both applications
