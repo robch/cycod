@@ -39,7 +39,7 @@ public static class ChatHistoryFileHelpers
         var mostRecent = mostRecentFiles.FirstOrDefault();
         if (!string.IsNullOrEmpty(mostRecent))
         {
-            ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine($"Loading: {mostRecent}\n", ColorHelpers.MapColor(ConsoleColor.DarkGray));
         }
         
         return mostRecent;
