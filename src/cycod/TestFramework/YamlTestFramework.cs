@@ -253,7 +253,8 @@ public class YamlTestFramework
     private static IEnumerable<FileInfo> FindFiles(DirectoryInfo directory)
     {
         return directory.GetFiles($"*{YamlFileExtension}", SearchOption.AllDirectories)
-            .Where(file => file.Name != YamlDefaultTagsFileName);
+            .Where(file => file.Name != YamlDefaultTagsFileName)
+            .Where(file => file.Name != YamlTestsConfigFileName);
     }
 
     private static bool IsTrait(Trait trait, string check)
@@ -288,7 +289,7 @@ public class YamlTestFramework
     #region constants
     public const string YamlFileExtension = ".yaml";
     public const string FakeExecutor = "executor://ai/cli/TestFramework/v1";
-    public const string YamlDefaultTagsFileName = $"{Program.Name}-tests-default-tags.yaml";
+    public readonly static string YamlDefaultTagsFileName = $"{ProgramInfo.Name}-tests-default-tags.yaml";
     public const string YamlTestsConfigDirectoryName = "tests";
     public const string YamlTestsConfigFileName = "config.yaml";
     public const string DefaultTimeout = "600000";

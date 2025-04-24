@@ -422,7 +422,7 @@ public class YamlTestCaseRunner
 
         var path1 = Environment.GetEnvironmentVariable("PATH");
         var path2 = Directory.GetCurrentDirectory();
-        var path3 = FileHelpers.GetAssemblyFileInfo(typeof(YamlTestCaseRunner)).DirectoryName;
+        var path3 = FileHelpers.GetProgramAssemblyFileInfo().DirectoryName;
         var path = $"{path3}{Path.PathSeparator}{path2}{Path.PathSeparator}{path1}";
 
         var paths = path.Split(Path.PathSeparator);

@@ -98,6 +98,6 @@ public static class AliasDisplayHelpers
     /// <param name="filesSaved">List of saved files</param>
     public static void DisplaySavedAliasFiles(List<string> filesSaved)
     {
-        CommonDisplayHelpers.DisplaySavedFiles(filesSaved, $"{Program.Name} [...] --{{name}}");
+        CommonDisplayHelpers.DisplaySavedFiles(filesSaved, $"{ProgramInfo.Name} [...] --{{name}}");
     }
 }

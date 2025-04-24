@@ -182,12 +182,12 @@ public class FileHelpers
         File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
     }
 
-    public static FileInfo GetAssemblyFileInfo(Type type)
+    public static FileInfo GetProgramAssemblyFileInfo()
     {
-        // GetAssembly.Location always returns empty when the project is built as 
+        // Assembly.Location always returns empty when the project is built as 
         // a single-file app (which we do when publishing the Dependency package),
         // warning IL3000
-        var assembly = Assembly.GetAssembly(type);
+        var assembly = ProgramInfo.Assembly;
         string assemblyPath = assembly?.Location ?? string.Empty;
         if (assemblyPath == string.Empty)
         {

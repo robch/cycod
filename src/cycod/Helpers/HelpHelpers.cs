@@ -8,7 +8,7 @@ class HelpHelpers
     {
         var allResourceNames = EmbeddedFileHelpers.GetEmbeddedStreamFileNames();
 
-        var helpPrefix = $"{Program.Name}.help.";
+        var helpPrefix = $"{ProgramInfo.Name}.help.";
         var helpTopics = allResourceNames
             .Where(name => name.StartsWith(helpPrefix, StringComparison.OrdinalIgnoreCase))
             .Select(name => name.Substring(helpPrefix.Length))
@@ -37,7 +37,7 @@ class HelpHelpers
             ? GetHelpTopicText(command)
             : GetHelpTopicText(UsageHelpTopic);
 
-        helpContent ??= $"USAGE: {Program.Name} [...]";
+        helpContent ??= $"USAGE: {ProgramInfo.Name} [...]";
 
         ConsoleHelpers.WriteLine(helpContent.TrimEnd(), overrideQuiet: true);
     }
@@ -94,8 +94,8 @@ class HelpHelpers
     public static void DisplayHelpTopics(IEnumerable<string> topics, bool expandTopics)
     {
         topics = topics.Select(t => expandTopics
-            ? $"## `{Program.Name} help {t}`\n\n```\n{GetHelpTopicText(t)}\n```\n"
-            : $"  {Program.Name} help {t}").ToList();
+            ? $"## `{ProgramInfo.Name} help {t}`\n\n```\n{GetHelpTopicText(t)}\n```\n"
+            : $"  {ProgramInfo.Name} help {t}").ToList();
         ConsoleHelpers.WriteLine(string.Join("\n", topics), overrideQuiet: true);
     }
 

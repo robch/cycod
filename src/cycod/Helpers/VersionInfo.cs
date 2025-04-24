@@ -13,14 +13,14 @@ public static class VersionInfo
 
     private static string GetAssemblyVersion()
     {
-        return typeof(VersionInfo).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                    ?? typeof(VersionInfo).Assembly.GetName().Version?.ToString()
+        return ProgramInfo.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                    ?? ProgramInfo.Assembly.GetName().Version?.ToString()
                     ?? DefaultVersion;
     }
 
     private static bool IsReleaseBuild()
     {
-        return typeof(VersionInfo).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration == "Release";
+        return ProgramInfo.Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>()?.Configuration == "Release";
     }
 
     private static string StripCommitHash(string version)

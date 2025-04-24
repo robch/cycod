@@ -80,7 +80,7 @@ public static class ScopeFileHelpers
         // If not found in any scope and searchParents is true, search parent directories
         if (searchParents)
         {
-            var appDirName = $".{Program.Name}";
+            var appDirName = $".{ProgramInfo.Name}";
             var existing = FileHelpers.FindFileSearchParents(appDirName, subDir, fileName);
 
             ConsoleHelpers.WriteDebugLine(existing != null
@@ -138,7 +138,7 @@ public static class ScopeFileHelpers
         // If not found in any scope and searchParents is true, search parent directories
         if (searchParents)
         {
-            var appDirName = $".{Program.Name}";
+            var appDirName = $".{ProgramInfo.Name}";
             var existing = DirectoryHelpers.FindDirectorySearchParents(appDirName, subDir);
 
             ConsoleHelpers.WriteDebugLine(existing != null

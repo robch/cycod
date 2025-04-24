@@ -2,13 +2,13 @@ public class EmbeddedFileHelpers
 {
     public static IEnumerable<string> GetEmbeddedStreamFileNames()
     {
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var assembly = ProgramInfo.Assembly;
         return assembly.GetManifestResourceNames();
     }
 
     public static bool EmbeddedStreamExists(string fileName)
     {
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var assembly = ProgramInfo.Assembly;
         var resourceName = assembly.GetManifestResourceNames()
             .Where(name => name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
             .OrderBy(name => name.Length)
@@ -25,7 +25,7 @@ public class EmbeddedFileHelpers
 
     public static string? ReadEmbeddedStream(string fileName)
     {
-        var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+        var assembly = ProgramInfo.Assembly;
         var resourceName = assembly.GetManifestResourceNames()
             .Where(name => name.EndsWith(fileName, StringComparison.OrdinalIgnoreCase))
             .OrderBy(name => name.Length)

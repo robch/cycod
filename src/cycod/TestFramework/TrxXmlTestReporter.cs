@@ -12,7 +12,7 @@ public static class TrxXmlTestReporter
         var startTime = testRun.StartTime;
         var endTime = testRun.EndTime;
 
-        var assemblyPath = FileHelpers.GetAssemblyFileInfo(typeof(YamlTestFrameworkConsoleHost)).DirectoryName;
+        var assemblyPath = FileHelpers.GetProgramAssemblyFileInfo().DirectoryName;
 
         var testRunId = Guid.NewGuid().ToString();
         var testListId = "8c84fa94-04c1-424b-9868-57a2d4851a1d";

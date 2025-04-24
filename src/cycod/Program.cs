@@ -165,7 +165,7 @@ public class Program
 
     private static void DisplayBanner()
     {
-        var programNameUppercase = Program.Name.ToUpper();
+        var programNameUppercase = ProgramInfo.Name.ToUpper();
         ConsoleHelpers.WriteLine(
             $"{programNameUppercase} - AI-powered CLI, Version {VersionInfo.GetVersion()}\n" +
             "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
@@ -218,5 +218,5 @@ public class Program
     private static ConsoleColor _originalForegroundColor;
     private static ConsoleColor _originalBackgroundColor;
 
-    public const string Name = "chatx";
+    private static ProgramInfo _programInfo = new CycoDevProgramInfo();
 }
