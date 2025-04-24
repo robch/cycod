@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 
 public class BashShellSession : ShellSession
@@ -12,10 +13,14 @@ public class BashShellSession : ShellSession
 
     protected override ProcessStartInfo GetProcessStartInfo()
     {
+        var arguments = Environment.OSVersion.Platform == PlatformID.Win32NT
+            ? "--norc --noprofile -i"
+            : "--norc --noprofile";
+
         return new ProcessStartInfo
         {
             FileName = "bash",
-            Arguments = "--norc --noprofile -i",
+            Arguments = arguments,
             UseShellExecute = false,
             RedirectStandardInput = true,
             RedirectStandardOutput = true,
@@ -29,7 +34,8 @@ public class BashShellSession : ShellSession
     protected override string WrapCommand(string command)
     {
         // Try to set UTF-8 locale if available, but don't fail if it's not
-        return "{ export LC_ALL=C.UTF-8 2>/dev/null || export LC_ALL=en_US.UTF-8 2>/dev/null || true; " + command + " ; EC=$?; echo " + Marker + "$EC; }";
+        // Explicitly disable job control with 'set +m' to prevent backgrounding issues
+        return "{ set +m; export LC_ALL=C.UTF-8 2>/dev/null || export LC_ALL=en_US.UTF-8 2>/dev/null || true; " + command + " ; EC=$?; echo " + Marker + "$EC; }";
     }
 
     protected override int ParseExitCode(string markerOutput)

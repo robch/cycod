@@ -32,6 +32,7 @@ public class Program
         }
         finally
         {
+            ShellSession.ShutdownAll();
             RestoreConsoleColor();
         }
     }
@@ -178,11 +179,6 @@ public class Program
             ConsoleHelpers.WriteWarning($"{ex.Message}");
             ConsoleHelpers.Write("\n\n", overrideQuiet: true);
         }
-    }
-
-    private static void DisplaySavedAliasFiles(List<string> filesSaved)
-    {
-        ;
     }
 
     private static string[] ProcessDirectives(string[] args)

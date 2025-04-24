@@ -1,3 +1,5 @@
+using System.Runtime.InteropServices;
+
 public static class ColorHelpers
 {
     public static void ResetColor()
@@ -258,5 +260,4 @@ public static class ColorHelpers
     private static ConsoleColor[] colors = InitBestColors();
 
     private static Dictionary<ConsoleColor, ConsoleColor> colorMap = InitColorMap();
-
 }

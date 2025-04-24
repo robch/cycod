@@ -235,7 +235,7 @@ public class ChatCommand : Command
 
     private void DisplayPromptReplacement(string userPrompt, string? replaceUserPrompt)
     {
-        ConsoleHelpers.WriteLine($"\rUser: {userPrompt} => {replaceUserPrompt}", ConsoleColor.DarkGray, overrideQuiet: true);
+        ConsoleHelpers.WriteLine($"\rUser: {userPrompt} => {replaceUserPrompt}", ColorHelpers.MapColor(ConsoleColor.DarkGray), overrideQuiet: true);
     }
 
     private bool HandlePromptCommand(FunctionCallingChat chat, string userPrompt, out string? giveAssistant)
@@ -479,12 +479,12 @@ public class ChatCommand : Command
 
     private void DisplayUserFunctionCall(string userFunctionName, string? result)
     {
-        ConsoleHelpers.Write($"\ruser-function: {userFunctionName} => ", ConsoleColor.DarkGray);
+        ConsoleHelpers.Write($"\ruser-function: {userFunctionName} => ", ColorHelpers.MapColor(ConsoleColor.DarkGray));
 
-        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
+        if (result == null) ConsoleHelpers.Write("...", ColorHelpers.MapColor(ConsoleColor.DarkGray));
         if (result != null)
         {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine(result, ColorHelpers.MapColor(ConsoleColor.DarkGray));
             DisplayUserPrompt();
         }
     }
@@ -542,19 +542,19 @@ public class ChatCommand : Command
         if (hasThought && !hasResult) ConsoleHelpers.WriteLine($"\n[THINKING]\n{thought}", ConsoleColor.DarkCyan);
         if (hasResult)
         {
-            ConsoleHelpers.WriteLine($"\n{result}", ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine($"\n{result}", ColorHelpers.MapColor(ConsoleColor.DarkGray));
             DisplayAssistantLabel();
         }
     }
     
     private void DisplayGenericAssistantFunctionCall(string name, string args, string? result)
     {
-        ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
+        ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ColorHelpers.MapColor(ConsoleColor.DarkGray));
         
-        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
+        if (result == null) ConsoleHelpers.Write("...", ColorHelpers.MapColor(ConsoleColor.DarkGray));
         if (result != null)
         {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine(result, ColorHelpers.MapColor(ConsoleColor.DarkGray));
             DisplayAssistantLabel();
         }
     }
