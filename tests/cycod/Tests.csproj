@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\chatx.csproj" />
+    <ProjectReference Include="..\..\src\cycod\chatx.csproj" />
   </ItemGroup>
 
 </Project>
