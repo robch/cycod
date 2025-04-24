@@ -1,6 +1,6 @@
 # Common Components
 
-This document outlines the components that will be moved to the shared CycoDev.Common library.
+This document outlines the components that will be moved to the shared common library (src/common).
 
 ## Configuration System
 
@@ -34,10 +34,10 @@ These components are essential for both applications as they handle:
   - Update occurrences of `var appDirName = $".{Program.Name}";` to use the fixed name
   - Change to `var appDirName = ".cycod";` in both `FindFileInAnyScope` and `FindDirectoryInAnyScope` methods
 - For application-specific settings (if needed in the future):
-  - Settings specific to CycoDev would use the prefix `cycod.` in dot notation
-  - Settings specific to CycoDevTest would use the prefix `cycodt.` in dot notation
+  - Settings specific to cycod would use the prefix `cycod.` in dot notation
+  - Settings specific to cycodt would use the prefix `cycodt.` in dot notation
   - Currently, there are no known settings that are unique to either application
-  - Note that CycoDevTest will only read configuration settings and has no ability to modify them
+  - Note that cycodt will only read configuration settings and has no ability to modify them
 - In **KnownSettings.cs**:
   - Update environment variable prefixes:
     - "CHATX_PREFERRED_PROVIDER" → "CYCODEV_PREFERRED_PROVIDER"
@@ -62,14 +62,14 @@ The command line infrastructure provides the foundation for parsing and handling
 ### Command Line Parsing Refactoring
 The **CommandLineOptions.cs** file requires significant refactoring:
 
-1. Create a base **CommandLineOptionsBase.cs** class in the Common library with:
+1. Create a base **CommandLineOptionsBase.cs** class in the common library with:
    - Core argument parsing logic
    - Common option handling
    - Extension points for application-specific command registration
 
 2. Create application-specific derived classes:
-   - **CycoDev.CommandLineOptions** - Registers all non-test commands
-   - **CycoDevTest.CommandLineOptions** - Registers test commands with simplified names
+   - **src/cycod/CommandLineOptions.cs** - Registers all non-test commands
+   - **src/cycodt/CommandLineOptions.cs** - Registers test commands with simplified names
 
 3. The base class should include:
    - Methods for basic command detection (`TryGetCommand`)
@@ -87,10 +87,10 @@ The **CommandLineOptions.cs** file requires significant refactoring:
 
 ## Note on Test Framework
 
-The test framework components should be placed solely in the CycoDevTest project and NOT in the common library, as they are only needed by the test application.
+The test framework components should be placed solely in the cycodt project (src/cycodt) and NOT in the common library, as they are only needed by the test application.
 
 ### Test Framework Architecture
-- The entire **TestFramework/** directory will be moved to CycoDevTest project, including:
+- The entire **TestFramework/** directory will be moved to src/cycodt project, including:
   - **YamlTestFramework.cs** - Main test framework
   - **YamlTestCaseParser.cs** - Test case parsing
   - **YamlTestCaseRunner.cs** - Test execution
@@ -114,7 +114,7 @@ The test framework components should be placed solely in the CycoDevTest project
    
    > Note: Use a fixed string approach rather than a parameterized approach as the test framework will always invoke cycod.
 
-3. Create a new implementation of **TestBaseCommand.cs** in CycoDevTest that uses simplified commands:
+3. Create a new implementation of **TestBaseCommand.cs** in src/cycodt that uses simplified commands:
    ```csharp
    public abstract class TestBaseCommand : Command
    {
@@ -174,15 +174,15 @@ Various helper classes are used throughout both applications and should be share
   ```
 - Update **VersionInfo.cs** to provide application-specific versioning:
   ```csharp
-  public static string GetVersion(bool isCycoDevTest = false)
+  public static string GetVersion(bool isCycodtApp = false)
   {
-      return isCycoDevTest ? "CycoDevTest v1.0.0" : "CycoDev v1.0.0";
+      return isCycodtApp ? "cycodt v1.0.0" : "cycod v1.0.0";
   }
   ```
 
-## CycoDev-Specific Components
+## Cycod-Specific Components
 
-The following components will be kept in the CycoDev project as they are only needed by the main application:
+The following components will be kept in the src/cycod project as they are only needed by the main application:
 
 ### Function Calling Tools
 - **DateAndTimeHelperFunctions.cs** - Date and time utility functions
@@ -217,7 +217,7 @@ While most HTTP client functionality is application-specific, some base componen
 - **HttpClientHelpers.cs** - If present, basic HTTP client utilities
 - Base policy interfaces and implementations that might be used by both apps
 
-### HTTP Components to Keep in CycoDev
+### HTTP Components to Keep in src/cycod
 - **CustomHeaderPolicy.cs**
 - **CustomJsonPropertyRemovalPolicy.cs**
 - **FixNullFunctionArgsPolicy.cs**
@@ -237,7 +237,7 @@ To ensure flexibility, we'll need to design extension points in the common libra
 
 #### Command Registration
 ```csharp
-// In Common library
+// In common library
 public interface ICommandRegistration
 {
     void RegisterCommands(CommandRegistry registry);
@@ -261,7 +261,7 @@ public class CommandRegistry
 
 #### Help System
 ```csharp
-// In Common library
+// In common library
 public interface IHelpSystem
 {
     void RegisterHelpTopics(HelpRegistry registry);
@@ -286,7 +286,7 @@ public class HelpRegistry
 
 ## Code Organization Principles
 
-When moving code to the common library:
+When moving code to the src/common library:
 
 1. Minimize dependencies between components
 2. Use interfaces to define contracts between components

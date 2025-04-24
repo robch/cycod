@@ -4,118 +4,120 @@
 The current structure has a single project `chatx` that builds into one executable.
 
 ## New Structure
-The new structure will consist of three projects:
+The new structure will follow a layer-first approach with three main projects under a src/ directory:
 
-### 1. CycoDev.Common (Library Project)
+```
+/
+├── src/                  # All source code
+│   ├── common/           # Shared library
+│   ├── cycod/            # Main application
+│   └── cycodt/           # Test application
+└── tests/                # All test code
+    ├── common/           # Tests for common library
+    ├── cycod/            # Tests for main application
+    └── cycodt/           # Tests for test application
+```
+
+### 1. common (Library Project)
 This shared library will contain code used by both executables.
 
 ```
-CycoDev.Common/
-├─ Configuration/        # Configuration system (shared through .cycod directory)
-├─ CommandLine/          # Command line infrastructure
-│  └─ Commands/          # Base command classes shared between applications
-├─ Helpers/              # Shared utilities
-├─ Templates/            # Template processing utilities
-└─ CycoDev.Common.csproj
+src/common/
+├── Configuration/        # Configuration system (shared through .cycod directory)
+├── CommandLine/          # Command line infrastructure
+│   └── Commands/         # Base command classes shared between applications
+├── Helpers/              # Shared utilities
+├── Templates/            # Template processing utilities
+└── common.csproj
 ```
 
-### 2. CycoDev (Executable Project)
+### 2. cycod (Executable Project)
 This project will build the main `cycod` executable with all functionality except test commands.
 
 ```
-CycoDev/
-├─ CommandLineCommands/  # All non-test commands
-│  ├─ Chat/              # Chat-related commands 
-│  ├─ Config/            # Configuration commands
-│  ├─ GitHub/            # GitHub-related commands
-│  ├─ Prompt/            # Prompt-related commands
-│  └─ Alias/             # Alias-related commands
-├─ FunctionCalling/      # Function calling implementations
-├─ FunctionCallingTools/ # Function calling helpers
-├─ ShellHelpers/         # Shell session implementations
-├─ SlashCommands/        # Slash command handlers
-├─ McpHelpers/           # MCP functionality helpers
-├─ Program.cs            # Main program (modified to exclude test commands)
-├─ CommandLineOptions.cs # CycoDev-specific command line parsing
-├─ assets/               # Application assets with app-specific help files
-│  └─ help/              # Independent help files for cycod
-└─ CycoDev.csproj
+src/cycod/
+├── CommandLineCommands/  # All non-test commands
+│   ├── Chat/             # Chat-related commands 
+│   ├── Config/           # Configuration commands
+│   ├── GitHub/           # GitHub-related commands
+│   ├── Prompt/           # Prompt-related commands
+│   └── Alias/            # Alias-related commands
+├── FunctionCalling/      # Function calling implementations
+├── FunctionCallingTools/ # Function calling helpers
+├── ShellHelpers/         # Shell session implementations
+├── SlashCommands/        # Slash command handlers
+├── McpHelpers/           # MCP functionality helpers
+├── Program.cs            # Main program (modified to exclude test commands)
+├── CommandLineOptions.cs # cycod-specific command line parsing
+├── assets/               # Application assets with app-specific help files
+│   └── help/             # Independent help files for cycod
+└── cycod.csproj
 ```
 
-### 3. CycoDevTest (Executable Project)
-This project will build the test-focused `cycodt` executable. Note that CycoDevTest launches CycoDev as a child process when executing tests.
+### 3. cycodt (Executable Project)
+This project will build the test-focused `cycodt` executable. Note that cycodt launches cycod as a child process when executing tests.
 
 ```
-CycoDevTest/
-├─ TestFramework/        # Complete test framework moved from original project
-│  ├─ YamlTestFramework.cs        # Core test framework
-│  ├─ YamlTestCaseParser.cs       # Test case parsing
-│  ├─ YamlTestCaseRunner.cs       # Test execution (uses fixed string "cycod" for CLI references)
-│  ├─ YamlTestFrameworkConsoleHost.cs  # Console hosting
-│  ├─ Reporters/                  # Test reporting components
-│  └─ Commands/                   # Base test command classes
-├─ CommandLineCommands/  # Test commands (modified to work without "test" prefix)
-│  ├─ TestListCommand.cs # Keeps original class name but implements "list" command
-│  └─ TestRunCommand.cs  # Keeps original class name but implements "run" command
-├─ Program.cs            # Test-focused program
-├─ CommandLineOptions.cs # CycoDevTest-specific command line parsing
-├─ assets/               # Test-specific help files
-│  └─ help/              # Independent help files for cycodt
-└─ CycoDevTest.csproj
+src/cycodt/
+├── TestFramework/        # Complete test framework moved from original project
+│   ├── YamlTestFramework.cs        # Core test framework
+│   ├── YamlTestCaseParser.cs       # Test case parsing
+│   ├── YamlTestCaseRunner.cs       # Test execution (uses fixed string "cycod" for CLI references)
+│   ├── YamlTestFrameworkConsoleHost.cs  # Console hosting
+│   ├── Reporters/                  # Test reporting components
+│   └── Commands/                   # Base test command classes
+├── CommandLineCommands/  # Test commands (modified to work without "test" prefix)
+│   ├── TestListCommand.cs # Keeps original class name but implements "list" command
+│   └── TestRunCommand.cs  # Keeps original class name but implements "run" command
+├── Program.cs            # Test-focused program
+├── CommandLineOptions.cs # cycodt-specific command line parsing
+├── assets/               # Test-specific help files
+│   └── help/             # Independent help files for cycodt
+└── cycodt.csproj
 ```
 
-## Test Resources Organization
+## Test Organization
 
-Test resources will be organized in a structured way:
+Tests will be organized in a structured way under the tests/ directory:
 
 ```
-tests/                # Top-level tests folder
-├─ common/            # Most tests will migrate here
-│  └─ ...             # Sub-project specific folders
-├─ cycod/             # A small number of application-specific tests
-│  └─ ...             # Sub-project specific folders
-└─ cycodt/            # Currently no tests specific to this component
-   └─ ...             # Reserved for future test organization
+tests/
+├── common/            # Tests for common library components
+├── cycod/             # Tests for main application components
+├── cycodt/            # Currently no tests specific to this component
+├── TestHelpers/       # Test utilities and helpers
+├── GlobalUsings.cs    # Global using directives for testing
+└── tests.csproj
 ```
 
-Nearly all tests currently in the `tests/` folder will migrate to the `tests/common/` folder.
+Nearly all tests currently in the existing `tests/` folder will migrate to the new `tests/common/` folder.
 
 ## Solution Structure
+
 The overall solution structure will look like this:
 
-### 4. CycoDev.Tests (Test Project)
-This project will contain the unit tests for the library and application code.
-
 ```
-CycoDev.Tests/
-├─ CommonTests/        # Tests for common library components
-├─ CycoDevTests/       # Tests for main application components
-├─ TestHelpers/        # Test utilities and helpers
-├─ GlobalUsings.cs     # Global using directives for testing
-└─ CycoDev.Tests.csproj
-```
-
-```
-CycoDevSolution/
-├─ CycoDev.Common/       # Shared library project
-├─ CycoDev/              # Main application project
-├─ CycoDevTest/          # Test application project
-├─ CycoDev.Tests/        # Unit tests project
-└─ CycoDevSolution.sln
+/
+├── src/
+│   ├── common/           # Shared library project
+│   ├── cycod/            # Main application project
+│   └── cycodt/           # Test application project
+├── tests/                # Unit tests project
+└── CycoDevSolution.sln
 ```
 
 ## Configuration and Cross-Application Features
 
 ### Shared Configuration
-- Both applications will share a configuration directory named `.cycod` (not `.cycodev`)
+- Both applications will share a configuration directory named `.cycod`
 - Environment variables will use "CYCODEV_" prefix instead of "CHATX_"
-- CycoDevTest can only read configuration settings but not modify them
+- cycodt can only read configuration settings but not modify them
 - If application-specific settings are needed in the future, they would use dot notation prefixes (`cycod.<setting>` and `cycodt.<setting>`)
 
 ### Cross-Application References
-- CycoDevTest will launch CycoDev as a child process when running tests
-- CycoDev has no need to launch CycoDevTest as a child process
-- Fixed string approach will be used for CLI references in CycoDevTest, not parameterization
+- cycodt will launch cycod as a child process when running tests
+- cycod has no need to launch cycodt as a child process
+- Fixed string approach will be used for CLI references in cycodt, not parameterization
 
 ### Help System Organization
 - Each application will have independent help files in their respective `assets/help/` folders
@@ -124,14 +126,14 @@ CycoDevSolution/
 
 ## Project Dependencies
 
-- **CycoDev.Common**: No dependencies on other projects
-- **CycoDev**: Depends on CycoDev.Common
-- **CycoDevTest**: Depends on CycoDev.Common
-- **CycoDev.Tests**: Depends on CycoDev.Common, CycoDev, and CycoDevTest
+- **src/common**: No dependencies on other projects
+- **src/cycod**: Depends on src/common
+- **src/cycodt**: Depends on src/common
+- **tests**: Depends on all src projects
 
 ## Project Files (.csproj)
 
-### CycoDev.Common.csproj
+### src/common/common.csproj
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -148,7 +150,7 @@ CycoDevSolution/
 </Project>
 ```
 
-### CycoDev.csproj
+### src/cycod/cycod.csproj
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -169,7 +171,7 @@ CycoDevSolution/
   
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CycoDev.Common\CycoDev.Common.csproj" />
+    <ProjectReference Include="..\common\common.csproj" />
   </ItemGroup>
   
   <!-- External packages -->
@@ -190,7 +192,7 @@ CycoDevSolution/
 </Project>
 ```
 
-### CycoDevTest.csproj
+### src/cycodt/cycodt.csproj
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -211,7 +213,7 @@ CycoDevSolution/
   
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CycoDev.Common\CycoDev.Common.csproj" />
+    <ProjectReference Include="..\common\common.csproj" />
   </ItemGroup>
   
   <!-- Test framework packages -->
@@ -227,7 +229,7 @@ CycoDevSolution/
 </Project>
 ```
 
-### CycoDev.Tests.csproj
+### tests/tests.csproj
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -240,9 +242,9 @@ CycoDevSolution/
   
   <!-- Project references -->
   <ItemGroup>
-    <ProjectReference Include="..\CycoDev.Common\CycoDev.Common.csproj" />
-    <ProjectReference Include="..\CycoDev\CycoDev.csproj" />
-    <ProjectReference Include="..\CycoDevTest\CycoDevTest.csproj" />
+    <ProjectReference Include="..\src\common\common.csproj" />
+    <ProjectReference Include="..\src\cycod\cycod.csproj" />
+    <ProjectReference Include="..\src\cycodt\cycodt.csproj" />
   </ItemGroup>
   
   <!-- Test packages -->

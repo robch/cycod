@@ -12,108 +12,110 @@ This document identifies all new files that need to be created as part of the re
 
 | File | Description |
 |------|-------------|
-| `CycoDev.Common/CycoDev.Common.csproj` | Project file for the shared common library |
-| `CycoDev/CycoDev.csproj` | Project file for the main application (cycod) |
-| `CycoDevTest/CycoDevTest.csproj` | Project file for the test application (cycodt) |
-| `CycoDev.Tests/CycoDev.Tests.csproj` | Project file for unit tests |
+| `src/common/common.csproj` | Project file for the shared common library |
+| `src/cycod/cycod.csproj` | Project file for the main application (cycod) |
+| `src/cycodt/cycodt.csproj` | Project file for the test application (cycodt) |
+| `tests/tests.csproj` | Project file for unit tests |
 
-## CycoDev.Common Library
+## common Library
 
 ### Command Line Infrastructure
 
 | File | Description |
 |------|-------------|
-| `CycoDev.Common/CommandLine/CommandLineOptionsBase.cs` | Abstract base class for command line options parsing |
-| `CycoDev.Common/CommandLine/CommandRegistry.cs` | Registry for command registration and discovery |
-| `CycoDev.Common/CommandLine/CommandExecutionHelpers.cs` | Helper methods for executing commands with proper throttling |
+| `src/common/CommandLine/CommandLineOptionsBase.cs` | Abstract base class for command line options parsing |
+| `src/common/CommandLine/CommandRegistry.cs` | Registry for command registration and discovery |
+| `src/common/CommandLine/CommandExecutionHelpers.cs` | Helper methods for executing commands with proper throttling |
 
 ### Extension Points
 
 | File | Description |
 |------|-------------|
-| `CycoDev.Common/CommandLine/ICommandRegistration.cs` | Interface for command registration |
-| `CycoDev.Common/Helpers/IHelpSystem.cs` | Interface for help system |
-| `CycoDev.Common/Helpers/HelpRegistry.cs` | Registry for registering help topics |
+| `src/common/CommandLine/ICommandRegistration.cs` | Interface for command registration |
+| `src/common/Helpers/IHelpSystem.cs` | Interface for help system |
+| `src/common/Helpers/HelpRegistry.cs` | Registry for registering help topics |
 
-## CycoDev Application
-
-### Core Files
-
-| File | Description |
-|------|-------------|
-| `CycoDev/Program.cs` | Main program entry point for CycoDev |
-| `CycoDev/CommandLineOptions.cs` | CycoDev-specific command line parser (derived from CommandLineOptionsBase) |
-
-### Command Files
-
-| File | Description |
-|------|-------------|
-| `CycoDev/CommandLineCommands/HelpCommand.cs` | Specialized help command for CycoDev that filters out test commands |
-
-## CycoDevTest Application
+## cycod Application
 
 ### Core Files
 
 | File | Description |
 |------|-------------|
-| `CycoDevTest/Program.cs` | Main program entry point for CycoDevTest |
-| `CycoDevTest/CommandLineOptions.cs` | CycoDevTest-specific command line parser (derived from CommandLineOptionsBase) |
+| `src/cycod/Program.cs` | Main program entry point for cycod |
+| `src/cycod/CommandLineOptions.cs` | cycod-specific command line parser (derived from CommandLineOptionsBase) |
 
 ### Command Files
 
 | File | Description |
 |------|-------------|
-| `CycoDevTest/CommandLineCommands/TestBaseCommand.cs` | Modified base class for test commands with simplified naming |
-| `CycoDevTest/CommandLineCommands/HelpCommand.cs` | Specialized help command for CycoDevTest that shows only test commands |
+| `src/cycod/CommandLineCommands/HelpCommand.cs` | Specialized help command for cycod that filters out test commands |
+
+## cycodt Application
+
+### Core Files
+
+| File | Description |
+|------|-------------|
+| `src/cycodt/Program.cs` | Main program entry point for cycodt |
+| `src/cycodt/CommandLineOptions.cs` | cycodt-specific command line parser (derived from CommandLineOptionsBase) |
+
+### Command Files
+
+| File | Description |
+|------|-------------|
+| `src/cycodt/CommandLineCommands/TestBaseCommand.cs` | Modified base class for test commands with simplified naming |
+| `src/cycodt/CommandLineCommands/HelpCommand.cs` | Specialized help command for cycodt that shows only test commands |
 
 ## Test Project
 
 | File | Description |
 |------|-------------|
-| `CycoDev.Tests/GlobalUsings.cs` | Global using statements for tests |
+| `tests/GlobalUsings.cs` | Global using statements for tests |
 
 ## Directory Structure
 
 The following directories need to be created. While they don't represent individual files, they're important to establish the correct project structure:
 
 ```
-CycoDevSolution/
-├── CycoDev.Common/
-│   ├── Configuration/
-│   ├── CommandLine/
-│   │   └── Commands/
-│   ├── Helpers/
-│   └── Templates/
-├── CycoDev/
-│   ├── CommandLineCommands/
-│   │   ├── AliasCommands/
-│   │   ├── ConfigCommands/
-│   │   ├── McpCommands/
-│   │   └── PromptCommands/
-│   ├── FunctionCalling/
-│   ├── FunctionCallingTools/
-│   ├── ShellHelpers/
-│   ├── SlashCommands/
-│   ├── McpHelpers/
-│   └── assets/help/
-├── CycoDevTest/
-│   ├── TestFramework/
-│   ├── CommandLineCommands/
-│   └── assets/help/
-└── CycoDev.Tests/
-    ├── CommonTests/
-    ├── CycoDevTests/
+/
+├── src/
+│   ├── common/
+│   │   ├── Configuration/
+│   │   ├── CommandLine/
+│   │   │   └── Commands/
+│   │   ├── Helpers/
+│   │   └── Templates/
+│   ├── cycod/
+│   │   ├── CommandLineCommands/
+│   │   │   ├── AliasCommands/
+│   │   │   ├── ConfigCommands/
+│   │   │   ├── McpCommands/
+│   │   │   └── PromptCommands/
+│   │   ├── FunctionCalling/
+│   │   ├── FunctionCallingTools/
+│   │   ├── ShellHelpers/
+│   │   ├── SlashCommands/
+│   │   ├── McpHelpers/
+│   │   └── assets/help/
+│   └── cycodt/
+│       ├── TestFramework/
+│       ├── CommandLineCommands/
+│       └── assets/help/
+└── tests/
+    ├── common/
+    ├── cycod/
+    ├── cycodt/
     └── TestHelpers/
 ```
 
 ## Help Content Files
 
-In addition to moving and adapting existing help files, the following new help files need to be created specifically for CycoDevTest:
+In addition to moving and adapting existing help files, the following new help files need to be created specifically for cycodt:
 
 | File | Description |
 |------|-------------|
-| `CycoDevTest/assets/help/usage.txt` | Simplified usage overview specific to cycodt |
-| `CycoDevTest/assets/help/help.txt` | Main help file for cycodt |
+| `src/cycodt/assets/help/usage.txt` | Simplified usage overview specific to cycodt |
+| `src/cycodt/assets/help/help.txt` | Main help file for cycodt |
 
 ## Implementation Notes
 

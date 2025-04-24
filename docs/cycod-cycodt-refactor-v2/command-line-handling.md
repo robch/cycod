@@ -17,7 +17,7 @@ The command parsing is handled in `CommandLineOptions.cs` which has a complex pa
 
 ## New Command Line Structure
 
-### For CycoDev (cycod)
+### For cycod
 
 The structure will remain similar to the current one:
 
@@ -25,7 +25,7 @@ The structure will remain similar to the current one:
 
 But test commands will be removed from this executable.
 
-### For CycoDevTest (cycodt)
+### For cycodt
 
 The structure will be simplified to eliminate the "test" prefix:
 
@@ -43,7 +43,7 @@ The `CommandLineOptions.cs` class is a critical component that requires careful 
 Create a base `CommandLineOptionsBase` class in the common library that contains shared functionality:
 
 ```csharp
-// In CycoDev.Common/CommandLine/CommandLineOptionsBase.cs
+// In src/common/CommandLine/CommandLineOptionsBase.cs
 public abstract class CommandLineOptionsBase
 {
     // Common properties for all command line options
@@ -91,10 +91,10 @@ public abstract class CommandLineOptionsBase
 Create specialized classes for each application:
 
 ```csharp
-// In CycoDev/CommandLineOptions.cs
+// In src/cycod/CommandLineOptions.cs
 public class CommandLineOptions : CommandLineOptionsBase
 {
-    // CycoDev-specific properties
+    // cycod-specific properties
     
     protected override void RegisterCommands(CommandRegistry registry)
     {
@@ -105,14 +105,14 @@ public class CommandLineOptions : CommandLineOptionsBase
         // Register all other non-test commands
     }
     
-    // Override common option parsing to handle CycoDev-specific options
+    // Override common option parsing to handle cycod-specific options
     protected override bool TryParseCommonOptions(string arg, ref int i, string[] args)
     {
         // Try base implementation first
         if (base.TryParseCommonOptions(arg, ref i, args))
             return true;
             
-        // Handle CycoDev-specific options
+        // Handle cycod-specific options
         if (arg == "--model")
         {
             // Process model option
@@ -123,10 +123,10 @@ public class CommandLineOptions : CommandLineOptionsBase
     }
 }
 
-// In CycoDevTest/CommandLineOptions.cs
+// In src/cycodt/CommandLineOptions.cs
 public class CommandLineOptions : CommandLineOptionsBase
 {
-    // CycoDevTest-specific properties
+    // cycodt-specific properties
     
     protected override void RegisterCommands(CommandRegistry registry)
     {
@@ -137,14 +137,14 @@ public class CommandLineOptions : CommandLineOptionsBase
         // Any other test-specific commands
     }
     
-    // Override common option parsing to handle CycoDevTest-specific options
+    // Override common option parsing to handle cycodt-specific options
     protected override bool TryParseCommonOptions(string arg, ref int i, string[] args)
     {
         // Try base implementation first
         if (base.TryParseCommonOptions(arg, ref i, args))
             return true;
             
-        // Handle CycoDevTest-specific options
+        // Handle cycodt-specific options
         if (arg == "--format")
         {
             // Process format option
@@ -161,7 +161,7 @@ public class CommandLineOptions : CommandLineOptionsBase
 Create a robust command registry in the common library:
 
 ```csharp
-// In CycoDev.Common/CommandLine/CommandRegistry.cs
+// In src/common/CommandLine/CommandRegistry.cs
 public class CommandRegistry
 {
     private Dictionary<string, Func<Command>> _commandFactories = new();
@@ -204,10 +204,10 @@ public class CommandRegistry
 
 These commands will need to be modified to work without the "test" prefix in their exposed command names, while keeping their class names as is for clarity:
 
-1. Create new command classes in the CycoDevTest project:
+1. Create new command classes in the cycodt project:
 
 ```csharp
-// In CycoDevTest/CommandLineCommands/TestListCommand.cs
+// In src/cycodt/CommandLineCommands/TestListCommand.cs
 // Note: Class name remains as TestListCommand for clarity, only the command name is simplified
 public class TestListCommand : TestBaseCommand
 {
@@ -225,7 +225,7 @@ public class TestListCommand : TestBaseCommand
     }
 }
 
-// In CycoDevTest/CommandLineCommands/TestRunCommand.cs
+// In src/cycodt/CommandLineCommands/TestRunCommand.cs
 // Note: Class name remains as TestRunCommand for clarity, only the command name is simplified
 public class TestRunCommand : TestBaseCommand
 {
@@ -249,7 +249,7 @@ public class TestRunCommand : TestBaseCommand
 Create specialized help commands for each application:
 
 ```csharp
-// In CycoDev/CommandLineCommands/HelpCommand.cs
+// In src/cycod/CommandLineCommands/HelpCommand.cs
 public class HelpCommand : Command
 {
     public override void Execute()
@@ -260,7 +260,7 @@ public class HelpCommand : Command
     public override string GetCommandName() => "help";
 }
 
-// In CycoDevTest/CommandLineCommands/HelpCommand.cs
+// In src/cycodt/CommandLineCommands/HelpCommand.cs
 public class HelpCommand : Command
 {
     public override void Execute()
@@ -274,7 +274,7 @@ public class HelpCommand : Command
 
 ## Program.cs Changes
 
-### CycoDev Program.cs
+### cycod Program.cs
 
 ```csharp
 public static class Program
@@ -284,7 +284,7 @@ public static class Program
     
     public static async Task<int> Main(string[] args)
     {
-        Console.WriteLine($"CycoDev v1.0.0");
+        Console.WriteLine($"cycod v1.0.0");
         
         var commandLineOptions = new CommandLineOptions();
         if (!commandLineOptions.Parse(args, out var exception))
@@ -316,7 +316,7 @@ public static class Program
 }
 ```
 
-### CycoDevTest Program.cs
+### cycodt Program.cs
 
 ```csharp
 public static class Program
@@ -326,7 +326,7 @@ public static class Program
     
     public static async Task<int> Main(string[] args)
     {
-        Console.WriteLine($"CycoDevTest v1.0.0");
+        Console.WriteLine($"cycodt v1.0.0");
         
         var commandLineOptions = new CommandLineOptions();
         if (!commandLineOptions.Parse(args, out var exception))

@@ -1,9 +1,9 @@
-# CycoDev and CycoDevTest Refactoring Plan
+# cycod and cycodt Refactoring Plan
 
 This document outlines the plan for refactoring the current "chatx" application into two separate executables:
 
-1. **cycod** (CycoDev) - Main application with all features EXCEPT test commands
-2. **cycodt** (CycoDevTest) - Application focused solely on test functionality
+1. **cycod** - Main application with all features EXCEPT test commands
+2. **cycodt** - Application focused solely on test functionality
 
 ## Overview of Changes
 
@@ -31,14 +31,15 @@ The refactoring plan is broken down into several sections:
 ## Summary of Key Changes
 
 ### Project Structure
-- Create a new solution with three projects:
-  - **CycoDev.Common** - Shared library for common components
-  - **CycoDev** - Main application executable with all features except testing
-  - **CycoDevTest** - Test application executable containing the TestFramework and test commands
+- Create a new solution with a Layer-First approach:
+  - **src/common** - Shared library for common components
+  - **src/cycod** - Main application executable with all features except testing
+  - **src/cycodt** - Test application executable containing the TestFramework and test commands
+  - **tests/** - All test code organized by component
 
 ### Command Line Changes
-- **CycoDev** will have no test commands - they will be completely removed
-- **CycoDevTest** will exclusively contain all test functionality with simplified commands:
+- **cycod** will have no test commands - they will be completely removed
+- **cycodt** will exclusively contain all test functionality with simplified commands:
   - Current: `chatx test list` → New: `cycodt list`
   - Current: `chatx test run` → New: `cycodt run`
 - Class names should remain as `TestListCommand` and `TestRunCommand` for clarity, even though command names will be simplified
@@ -54,7 +55,7 @@ The refactoring plan is broken down into several sections:
 - Both applications will share the configuration system in a `.cycod` directory (not `.cycodev`)
 - Configuration files will be accessible to both applications
 - Environment variables with "CHATX_" prefix will be updated to use "CYCODEV_" prefix
-- CycoDevTest can only read configuration settings, not modify them
+- cycodt can only read configuration settings, not modify them
 - If application-specific settings are needed in the future, they will use dot notation prefixes (`cycod.<setting>` and `cycodt.<setting>`)
 
 ### Test Resources Organization
@@ -64,8 +65,8 @@ The refactoring plan is broken down into several sections:
   - `cycodt/` - Currently no tests specific to this component
 
 ### Cross-Application References
-- CycoDevTest will launch CycoDev as a child process (similar to how it currently launches chatx)
-- CycoDev has no need to launch CycoDevTest
+- cycodt will launch cycod as a child process (similar to how it currently launches chatx)
+- cycod has no need to launch cycodt
 - Fixed string approach should be used for CLI references (not parameterized)
 
 ### Versioning Strategy
@@ -85,8 +86,9 @@ The refactoring plan is broken down into several sections:
 
 The implementation will follow a phased approach:
 
-1. Create the common library and move shared code
-2. Create the CycoDev (main) application
-3. Create the CycoDevTest (test) application
-4. Perform global search for "chatx" references and update them
-5. Test and validate both applications function correctly
+1. Create the src/common library and move shared code
+2. Create the src/cycod (main) application
+3. Create the src/cycodt (test) application
+4. Set up the tests/ project structure
+5. Perform global search for "chatx" references and update them
+6. Test and validate both applications function correctly
