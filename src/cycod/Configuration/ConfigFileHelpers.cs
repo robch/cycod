@@ -132,7 +132,7 @@ public static class ConfigFileHelpers
             : null;
     }
 
-    private readonly static string CONFIG_DIR_NAME = $".{ProgramInfo.Name}";
+    private readonly static string CONFIG_DIR_NAME = ProgramInfo.ConfigDirName;
     private readonly static string YAML_CONFIG_NAME = "config.yaml";
     private readonly static string INI_CONFIG_NAME = "config";
 }

@@ -1,6 +1,9 @@
 public class CycoDevProgramInfo : ProgramInfo
 {
-    public CycoDevProgramInfo() : base(() => "chatx", () => typeof(CycoDevProgramInfo).Assembly)
+    public CycoDevProgramInfo() : base(
+        () => "chatx",
+        () => ".chatx",
+        () => typeof(CycoDevProgramInfo).Assembly)
     {
     }
 }

@@ -1,6 +1,8 @@
 .vs/
 src/bin/
 src/obj/
+src/common/obj/
+src/common/bin/
 src/cycod/obj/
 src/cycod/bin/
 

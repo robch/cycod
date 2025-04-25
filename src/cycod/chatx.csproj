@@ -46,6 +46,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\common\common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="assets\help\**">
       <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </EmbeddedResource>

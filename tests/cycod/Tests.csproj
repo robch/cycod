@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\cycod\chatx.csproj" />
+    <ProjectReference Include="..\..\src\common\common.csproj" />
   </ItemGroup>
 
 </Project>
