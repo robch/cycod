@@ -2,7 +2,7 @@ class TestListCommand : TestBaseCommand
 {
     public override string GetCommandName()
     {
-        return "test list";
+        return "list";
     }
 
     public Task<int> Execute(bool interactive)

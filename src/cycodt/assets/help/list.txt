@@ -1,8 +1,8 @@
-CHATX TEST LIST
+CYCODT TEST LIST
 
-  The chatx test list command lists CLI YAML tests.
+  The cycodt test list command lists CLI YAML tests.
 
-USAGE: chatx test list [...]
+USAGE: cycodt test list [...]
 
   FILES
     --file FILE
@@ -21,18 +21,17 @@ EXAMPLES
 
   EXAMPLE 1: Lists all available tests
 
-    chatx test list
+    cycodt test list
 
   EXAMPLE 2: Lists tests from files under current directory, that contain 'setup' or 'nightly', and 'java', but not 'skip'
 
-    chatx test list --tests setup nightly --contains java --remove skip
+    cycodt test list --tests setup nightly --contains java --remove skip
 
   EXAMPLE 3: Lists tests from files under 'tests' directory, that contain 'test3', but not 'skip'
 
-    chatx test list --files ../tests/**/*.yaml --contains test3 --remove skip
+    cycodt test list --files ../tests/**/*.yaml --contains test3 --remove skip
 
 SEE ALSO
 
-  chatx help test
-  chatx help test run
-  chatx help test examples
+  cycodt help run
+  cycodt help examples

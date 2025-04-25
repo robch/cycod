@@ -32,15 +32,15 @@ public class Program
         }
         finally
         {
-            ShellSession.ShutdownAll();
+            // ShellSession.ShutdownAll();
             RestoreConsoleColor();
         }
     }
 
     private static async Task<int> DoProgram(string[] args)
     {
-        CommandLineOptions.SetDefaultCommandHandler(() => new ChatCommand());
-
+        // CommandLineOptions.SetDefaultCommandHandler(() => new ChatCommand());
+		
         if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
             DisplayBanner();
@@ -67,20 +67,20 @@ public class Program
             return 0;
         }
 
-        var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
-        if (shouldSaveAlias)
-        {
-            var filesSaved = AliasFileHelpers.SaveAlias(
-                commandLineOptions.SaveAliasName!,
-                commandLineOptions.AllOptions,
-                commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
-
-            DisplayBanner();
-            AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
-
-            return 0;
-        }
-
+        // var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
+        // if (shouldSaveAlias)
+        // {
+        //     var filesSaved = AliasFileHelpers.SaveAlias(
+        //         commandLineOptions.SaveAliasName!,
+        //         commandLineOptions.AllOptions,
+        //         commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
+		// 
+        //     DisplayBanner();
+        //     AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
+		// 
+        //     return 0;
+        // }
+		
         var shouldSetWorkingDir = !string.IsNullOrEmpty(commandLineOptions.WorkingDirectory);
         if (shouldSetWorkingDir)
         {
@@ -102,7 +102,7 @@ public class Program
         var allTasks = new List<Task<int>>();
         var throttler = new SemaphoreSlim(parallelism);
 
-        var commands = ForEachVarHelpers.ExpandForEachVars(commandLineOptions.Commands).ToList();
+        var commands = commandLineOptions.Commands;
         foreach (var command in commands)
         {
             throttler.Wait();
@@ -116,26 +116,9 @@ public class Program
 
             var startedTask = command switch
             {
-                ChatCommand chatCommand => chatCommand.ExecuteAsync(isTruelyInteractive),
                 VersionCommand versionCommand => versionCommand.ExecuteAsync(isTruelyInteractive),
-                GitHubLoginCommand loginCommand => loginCommand.ExecuteAsync(isTruelyInteractive),
-                ConfigListCommand configListCommand => configListCommand.Execute(isTruelyInteractive),
-                ConfigGetCommand configGetCommand => configGetCommand.Execute(isTruelyInteractive),
-                ConfigSetCommand configSetCommand => configSetCommand.Execute(isTruelyInteractive),
-                ConfigClearCommand configClearCommand => configClearCommand.Execute(isTruelyInteractive),
-                ConfigAddCommand configAddCommand => configAddCommand.Execute(isTruelyInteractive),
-                ConfigRemoveCommand configRemoveCommand => configRemoveCommand.Execute(isTruelyInteractive),
-                AliasListCommand aliasListCommand => aliasListCommand.Execute(isTruelyInteractive),
-                AliasGetCommand aliasGetCommand => aliasGetCommand.Execute(isTruelyInteractive),
-                AliasDeleteCommand aliasDeleteCommand => aliasDeleteCommand.Execute(isTruelyInteractive),
-                PromptListCommand promptListCommand => promptListCommand.Execute(isTruelyInteractive),
-                PromptGetCommand promptGetCommand => promptGetCommand.Execute(isTruelyInteractive),
-                PromptDeleteCommand promptDeleteCommand => promptDeleteCommand.Execute(isTruelyInteractive),
-                PromptCreateCommand promptCreateCommand => promptCreateCommand.Execute(isTruelyInteractive),
-                McpListCommand mcpListCommand => mcpListCommand.Execute(isTruelyInteractive),
-                McpGetCommand mcpGetCommand => mcpGetCommand.Execute(isTruelyInteractive),
-                McpAddCommand mcpAddCommand => mcpAddCommand.Execute(isTruelyInteractive),
-                McpRemoveCommand mcpRemoveCommand => mcpRemoveCommand.Execute(isTruelyInteractive),
+                TestListCommand testListCommand => testListCommand.Execute(isTruelyInteractive),
+                TestRunCommand testRunCommand => testRunCommand.Execute(isTruelyInteractive),
                 _ => throw new NotImplementedException($"Command type {command.GetType()} not implemented.")
             };
 
@@ -233,5 +216,5 @@ public class Program
     private static ConsoleColor _originalForegroundColor;
     private static ConsoleColor _originalBackgroundColor;
 
-    private static ProgramInfo _programInfo = new CycoDevProgramInfo();
+    private static ProgramInfo _programInfo = new CycoTestProgramInfo();
 }

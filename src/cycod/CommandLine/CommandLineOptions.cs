@@ -42,7 +42,12 @@ public class CommandLineOptions
     public string[] AllOptions;
     public string? SaveAliasName;
     public ConfigFileScope? SaveAliasScope;
-        
+
+    public static void SetDefaultCommandHandler(Func<Command> newDefaultCommand)
+    {
+        _newDefaultCommand = newDefaultCommand;
+    }
+
     public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
     {
         options = null;
@@ -120,7 +125,7 @@ public class CommandLineOptions
 
         if (args.Count() == 0)
         {
-            command = new ChatCommand();
+            command = _newDefaultCommand?.Invoke();
         }
 
         if (string.IsNullOrEmpty(commandLineOptions.HelpTopic) && command != null && command.IsEmpty())
@@ -221,6 +226,7 @@ public class CommandLineOptions
             {
                 "help" => new HelpCommand(),
                 "version" => new VersionCommand(),
+                "chat" => new ChatCommand(),
                 "github login" => new GitHubLoginCommand(),
                 "config list" => new ConfigListCommand(),
                 "config get" => new ConfigGetCommand(),
@@ -239,18 +245,18 @@ public class CommandLineOptions
                 "mcp get" => new McpGetCommand(),
                 "mcp add" => new McpAddCommand(),
                 "mcp remove" => new McpRemoveCommand(),
-                "test list" => new TestListCommand(),
-                "test run" => new TestRunCommand(),
-                _ => new ChatCommand()
+                _ => null
             };
 
-            var needToRestartLoop = command is not ChatCommand;
-            if (needToRestartLoop)
+            var parsedCommand = command != null;
+            if (parsedCommand)
             {
                 var skipHowManyExtraArgs = commandName.Count(x => x == ' ');
                 i += skipHowManyExtraArgs;
                 return true;
             }
+
+            command = _newDefaultCommand?.Invoke();
         }
 
         var parsedOption = TryParseGlobalCommandLineOptions(commandLineOptions, args, ref i, arg) ||
@@ -262,7 +268,6 @@ public class CommandLineOptions
             TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
             TryParsePromptCommandOptions(command as PromptBaseCommand, args, ref i, arg) ||
             TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg) ||
-            TryParseTestCommandOptions(command as TestBaseCommand, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
@@ -382,6 +387,11 @@ public class CommandLineOptions
         {
             mcpRemoveCommand.Name = arg;
             parsedOption = true;
+        }
+
+        if (!parsedOption)
+        {
+            ConsoleHelpers.WriteDebugLine($"Unknown command line option: {arg}");
         }
 
         return parsedOption;
@@ -673,85 +683,6 @@ public class CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var env = ValidateString(arg, max1Arg.FirstOrDefault(), "environment variable");
             envAddCommand.EnvironmentVars.Add(env!);
-            i += max1Arg.Count();
-        }
-        else
-        {
-            parsed = false;
-        }
-
-        return parsed;
-    }
-
-    private static bool TryParseTestCommandOptions(TestBaseCommand? command, string[] args, ref int i, string arg)
-    {
-        if (command == null)
-        {
-            return false;
-        }
-
-        bool parsed = true;
-
-        if (arg == "--file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var filePattern = ValidateString(arg, max1Arg.FirstOrDefault(), "file pattern");
-            command.Files.Add(filePattern!);
-            i += max1Arg.Count();
-        }
-        else if (arg == "--files")
-        {
-            var filePatterns = GetInputOptionArgs(i + 1, args);
-            var validPatterns = ValidateStrings(arg, filePatterns, "file patterns");
-            command.Files.AddRange(validPatterns);
-            i += filePatterns.Count();
-        }
-        else if (arg == "--test")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var testName = ValidateString(arg, max1Arg.FirstOrDefault(), "test name");
-            command.Tests.Add(testName!);
-            i += max1Arg.Count();
-        }
-        else if (arg == "--tests")
-        {
-            var testNames = GetInputOptionArgs(i + 1, args);
-            var validTests = ValidateStrings(arg, testNames, "test names");
-            command.Tests.AddRange(validTests);
-            i += testNames.Count();
-        }
-        else if (arg == "--contains")
-        {
-            var containPatterns = GetInputOptionArgs(i + 1, args);
-            var validContains = ValidateStrings(arg, containPatterns, "contains patterns");
-            command.Contains.AddRange(validContains);
-            i += containPatterns.Count();
-        }
-        else if (arg == "--remove")
-        {
-            var removePatterns = GetInputOptionArgs(i + 1, args);
-            var validRemove = ValidateStrings(arg, removePatterns, "remove patterns");
-            command.Remove.AddRange(validRemove);
-            i += removePatterns.Count();
-        }
-        // Handle TestRunCommand specific options
-        else if (command is TestRunCommand runCommand && arg == "--output-file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var outputFile = ValidateString(arg, max1Arg.FirstOrDefault(), "output file");
-            runCommand.OutputFile = outputFile;
-            i += max1Arg.Count();
-        }
-        else if (command is TestRunCommand runCommand2 && arg == "--output-format")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var format = ValidateString(arg, max1Arg.FirstOrDefault(), "output format");
-            var allowedFormats = new[] { "trx", "junit" };
-            if (!allowedFormats.Contains(format))
-            {
-                throw new CommandLineException($"Invalid format for --output-format: {format}. Allowed values: trx, junit");
-            }
-            runCommand2.OutputFormat = format!;
             i += max1Arg.Count();
         }
         else
@@ -1143,6 +1074,7 @@ public class CommandLineOptions
         return ex;
     }
 
+    private static Func<Command>? _newDefaultCommand;
     private const string DefaultSimpleChatHistoryFileName = "chat-history.jsonl";
     private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
     private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";

@@ -1,8 +1,8 @@
-CHATX TEST RUN
+CYCODT RUN
 
-  The chatx test run command runs CLI YAML tests.
+  The cycodt run command runs CLI YAML tests.
 
-USAGE: chatx test run [...]
+USAGE: cycodt run [...]
 
   FILES
     --file FILE
@@ -25,18 +25,17 @@ EXAMPLES
 
   EXAMPLE 1: Runs all available tests
 
-    chatx test run
+    cycodt run
 
-  EXAMPLE 2: Run tests from files under current directory, that contain 'setup' or 'nightly', and 'java', but not 'skip'
+  EXAMPLE 2: Run tests that contain 'setup' or 'nightly', and 'java', but not 'skip'
 
-    chatx test run --tests setup nightly --contains java --remove skip
+    cycodt run --tests setup nightly --contains java --remove skip
 
   EXAMPLE 3: Run tests from files under 'tests' directory, that contain 'test3', but not 'skip'
 
-    chatx test run --files ../tests/**/*.yaml --contains test3 --remove skip
+    cycodt run --files ../tests/**/*.yaml --contains test3 --remove skip
 
 SEE ALSO
 
-  chatx help test
-  chatx help test list
-  chatx help test examples
+  cycodt help list
+  cycodt help examples

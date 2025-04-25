@@ -5,6 +5,8 @@ src/common/obj/
 src/common/bin/
 src/cycod/obj/
 src/cycod/bin/
+src/cycodt/obj/
+src/cycodt/bin/
 
 tests/**/bin/
 tests/**/obj/

@@ -455,7 +455,6 @@ The TestFramework will be handled separately in the CycoDevTest project implemen
    - Update "SEE ALSO" sections to reference the new command structure
 5. Special handling for `usage.txt`:
    - Create a new simplified `usage.txt` focused solely on test functionality
-   - Include a welcome message like "Welcome to CYCODT, the test runner for CycoDev"
    - Include examples that demonstrate the simplified command structure (e.g., "cycodt list" instead of "chatx test list")
    - Include appropriate SEE ALSO references to other test-related help topics
 

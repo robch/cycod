@@ -29,8 +29,8 @@ abstract class TestBaseCommand : Command
 
         var atLeastOneFileSpecified = files.Any();
         var tests = atLeastOneFileSpecified
-            ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("chatx test", file))
-            : YamlTestFramework.GetTestsFromDirectory("chatx test", new DirectoryInfo("."));
+            ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("cycodt", file))
+            : YamlTestFramework.GetTestsFromDirectory("cycodt", new DirectoryInfo("."));
 
         var filtered = YamlTestCaseFilter.FilterTestCases(tests, filters).ToList();
 

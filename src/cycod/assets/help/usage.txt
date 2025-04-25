@@ -1,5 +1,3 @@
-Welcome to CHATX, the AI-Powered Chat interface.
-
 Using CHATX, you can:
 
   - Chat with an AI model (interactively/programmatically)
@@ -7,52 +5,23 @@ Using CHATX, you can:
   - Use built-in function tools to:
     - Read and write files
     - Execute shell commands/scripts
+    - Use MCP (Model Context Protocol) tools
 
-USAGE: chatx [...]
-   OR: chatx config [COMMAND] [--scope] [...]
-   OR: chatx github login
+USAGE: chatx <command> [...]
 
-EXAMPLES
+COMMANDS
 
-  EXAMPLE 1: Ask a single question
+  chatx config [...]      (see: chatx help config)
+  chatx github login      (see: chatx help github login)
 
-    chatx --question "What time is it?"
-
-  EXAMPLE 2: Use multiple sequential inline inputs
-
-    chatx --inputs "What's today's date?" "show me a calendar for this month"
-
-  EXAMPLE 3: Read/write files
-
-    chatx --instructions "Look at the files in this folder. Summarize what they each do"
-
-  EXAMPLE 4: Execute shell commands
-
-    chatx --instructions "Use gh to find the open issues assigned to me"
-    
-  EXAMPLE 5: Use a specific AI provider
-  
-    chatx --use-openai --question "What are GPT models?"
-    
-  EXAMPLE 6: Use a configuration profile
-  
-    chatx --profile work --question "What's on my agenda today?"
-    
-  EXAMPLE 7: Pipe input through stdin
-  
-    echo "What is the capital of France?" | chatx
-
-  EXAMPLE 8: Customize system prompt with additions
-  
-    chatx --add-system-prompt "Answer in a casual, friendly tone." "Include examples in your responses."
+  chatx chat [...]        (see: chatx help chat)
+ 
+  chatx mcp [...]         (see: chatx help mcp)
+  chatx alias [...]       (see: chatx help alias)
+  chatx prompt [...]      (see: chatx help prompt)
 
 SEE ALSO
 
   chatx help
   chatx help examples
-  chatx help options
-  chatx help provider
-  chatx help config
   chatx help github login
-  chatx help chat history
-  chatx help slash commands

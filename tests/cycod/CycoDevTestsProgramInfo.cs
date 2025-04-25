@@ -8,7 +8,7 @@ public static class TestAssemblyInitializer
     [AssemblyInitialize]
     public static void AssemblyInitialize(TestContext testContext)
     {
-        ProgramInfo = new CycoDevTestProgramInfo();
+        ProgramInfo = new CycoDevTestsProgramInfo();
         testContext.WriteLine("ProgramInfo initialized for test assembly");
     }
     
@@ -26,12 +26,13 @@ public static class TestAssemblyInitializer
     /// </summary>
     public static ProgramInfo? ProgramInfo { get; private set; }
 
-    private class CycoDevTestProgramInfo : ProgramInfo
+    private class CycoDevTestsProgramInfo : ProgramInfo
     {
-        public CycoDevTestProgramInfo() : base(
+        public CycoDevTestsProgramInfo() : base(
             () => "chatx",
+            () => "CYCOD 'dotnet test' tests",
             () => ".chatx-tests",
-            () => typeof(CycoDevTestProgramInfo).Assembly)
+            () => typeof(CycoDevTestsProgramInfo).Assembly)
         {
         }
     }

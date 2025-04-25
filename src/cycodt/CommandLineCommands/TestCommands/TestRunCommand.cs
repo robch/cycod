@@ -15,7 +15,7 @@ class TestRunCommand : TestBaseCommand
 
     public override string GetCommandName()
     {
-        return "test run";
+        return "run";
     }
 
     public Task<int> Execute(bool interactive)

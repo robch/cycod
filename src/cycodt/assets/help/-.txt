@@ -1,0 +1,25 @@
+CYCODT STDIN (`-`)
+
+  The `-` symbol is used to represent the standard input (stdin) for file
+  content. When you use `-` as a file name, CYCODT will read from stdin
+  instead of a named file. You can also use `@-` to read individual lines as if
+  they were passed as command line arguments. These features are useful when
+  you want to pipe command output into CYCODT as command line argument(s).
+
+USAGE: cycodt [...] - 
+
+EXAMPLES
+
+  EXAMPLE 1: Pipe grep output into CYCODT to run tests from specific files
+
+    grep -l -i "g.*login" *.yaml | cycodt list --files @-
+
+  EXAMPLE 2: Pipe script output into CYCODT to run specific test cases by name
+
+    ./script.sh | cycodt run --tests @-
+
+SEE ALSO
+
+  cycodt help
+  cycodt help examples
+  cycodt help options

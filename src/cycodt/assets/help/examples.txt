@@ -1,0 +1,33 @@
+USAGE: cycodt list [...]
+   OR: cycodt list
+
+EXAMPLES
+
+  EXAMPLE 1: Lists all available tests
+
+    cycodt test list
+
+  EXAMPLE 2: Lists tests from files under current directory, that contain 'setup' or 'nightly', and 'java', but not 'skip'
+
+    cycodt test list --tests setup nightly --contains java --remove skip
+
+  EXAMPLE 3: Lists tests from files under 'tests' directory, that contain 'test3', but not 'skip'
+
+    cycodt test list --files ../tests/**/*.yaml --contains test3 --remove skip
+
+  EXAMPLE 4: Runs all available tests
+
+    cycodt run
+
+  EXAMPLE 5: Run tests that contain 'setup' or 'nightly', and 'java', but not 'skip'
+
+    cycodt run --tests setup nightly --contains java --remove skip
+
+  EXAMPLE 6: Run tests from files under 'tests' directory, that contain 'test3', but not 'skip'
+
+    cycodt run --files ../tests/**/*.yaml --contains test3 --remove skip
+
+SEE ALSO
+
+  cycodt help list
+  cycodt help run
