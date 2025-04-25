@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-class HelpHelpers
+public class HelpHelpers
 {
     public static IEnumerable<string> GetHelpTopics()
     {
