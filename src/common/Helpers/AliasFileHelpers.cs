@@ -98,36 +98,4 @@ public static class AliasFileHelpers
             : $"FindAliasInScope; alias NOT FOUND in scope: {aliasName}");
         return aliasFilePath;
     }
-
-    /// <summary>
-    /// Attempts to parse an alias from the command line
-    /// </summary>
-    /// <param name="commandLineOptions">Command line options object to update</param>
-    /// <param name="command">Reference to the current command</param>
-    /// <param name="args">The command line arguments</param>
-    /// <param name="currentIndex">Current index in the args array</param>
-    /// <param name="alias">The alias name</param>
-    /// <returns>True if alias was found and parsed, false otherwise</returns>
-    public static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int currentIndex, string alias)
-    {
-        var aliasFilePath = FindAliasFile(alias);
-        if (aliasFilePath != null && File.Exists(aliasFilePath))
-        {
-            var aliasArgs = File.ReadAllLines(aliasFilePath)
-                .Select(x => x.StartsWith('@')
-                    ? AtFileHelpers.ExpandAtFileValue(x)
-                    : x)
-                .ToArray();
-            for (var j = 0; j < aliasArgs.Length; j++)
-            {
-                var parsed = CommandLineOptions.TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
-                if (!parsed)
-                {
-                    throw new CommandLineException($"Invalid argument in alias file: {aliasArgs[j]}");
-                }
-            }
-            return true;
-        }
-        return false;
-    }
 }

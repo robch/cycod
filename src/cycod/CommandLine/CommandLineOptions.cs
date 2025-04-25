@@ -194,7 +194,7 @@ public class CommandLineOptions
         {
             if (arg.StartsWith("--"))
             {
-                var parsedAsAlias = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+                var parsedAsAlias = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
                 if (parsedAsAlias) return true;
             }
 
@@ -287,7 +287,7 @@ public class CommandLineOptions
         }
         else if (arg.StartsWith("--"))
         {
-            parsedOption = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+            parsedOption = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
         }
         else if (command is HelpCommand helpCommand)
         {
@@ -395,6 +395,29 @@ public class CommandLineOptions
         }
 
         return parsedOption;
+    }
+
+    public static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int currentIndex, string alias)
+    {
+        var aliasFilePath = AliasFileHelpers.FindAliasFile(alias);
+        if (aliasFilePath != null && File.Exists(aliasFilePath))
+        {
+            var aliasArgs = File.ReadAllLines(aliasFilePath)
+                .Select(x => x.StartsWith('@')
+                    ? AtFileHelpers.ExpandAtFileValue(x)
+                    : x)
+                .ToArray();
+            for (var j = 0; j < aliasArgs.Length; j++)
+            {
+                var parsed = TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
+                if (!parsed)
+                {
+                    throw new CommandLineException($"Invalid argument in alias file: {aliasArgs[j]}");
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     private static bool TryParseGlobalCommandLineOptions(CommandLineOptions commandLineOptions, string[] args, ref int i, string arg)

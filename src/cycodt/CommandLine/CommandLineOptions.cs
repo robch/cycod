@@ -192,11 +192,11 @@ public class CommandLineOptions
         var needNewCommand = command == null;
         if (needNewCommand)
         {
-            // if (arg.StartsWith("--"))
-            // {
-            //     var parsedAsAlias = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
-            //     if (parsedAsAlias) return true;
-            // }
+            if (arg.StartsWith("--"))
+            {
+                var parsedAsAlias = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+                if (parsedAsAlias) return true;
+            }
 			
             var name1 = GetInputOptionArgs(i, args, max: 1).FirstOrDefault();
             var name2 = GetInputOptionArgs(i + 1, args, max: 1).FirstOrDefault();
@@ -259,10 +259,10 @@ public class CommandLineOptions
             i = args.Count();
             parsedOption = true;
         }
-        // else if (arg.StartsWith("--"))
-        // {
-        //     parsedOption = AliasFileHelpers.TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
-        // }
+        else if (arg.StartsWith("--"))
+        {
+            parsedOption = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+        }
         else if (command is HelpCommand helpCommand)
         {
             commandLineOptions.HelpTopic = $"{commandLineOptions.HelpTopic} {arg}".Trim();
@@ -275,6 +275,29 @@ public class CommandLineOptions
         }
 
         return parsedOption;
+    }
+
+    public static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int currentIndex, string alias)
+    {
+        var aliasFilePath = AliasFileHelpers.FindAliasFile(alias);
+        if (aliasFilePath != null && File.Exists(aliasFilePath))
+        {
+            var aliasArgs = File.ReadAllLines(aliasFilePath)
+                .Select(x => x.StartsWith('@')
+                    ? AtFileHelpers.ExpandAtFileValue(x)
+                    : x)
+                .ToArray();
+            for (var j = 0; j < aliasArgs.Length; j++)
+            {
+                var parsed = TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
+                if (!parsed)
+                {
+                    throw new CommandLineException($"Invalid argument in alias file: {aliasArgs[j]}");
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     private static bool TryParseGlobalCommandLineOptions(CommandLineOptions commandLineOptions, string[] args, ref int i, string arg)

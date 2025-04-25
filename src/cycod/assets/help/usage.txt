@@ -11,11 +11,12 @@ USAGE: chatx <command> [...]
 
 COMMANDS
 
+  chatx [...]             (aka: chatx chat)
+  chatx chat [...]        (see: chatx help chat)
+
   chatx config [...]      (see: chatx help config)
   chatx github login      (see: chatx help github login)
 
-  chatx chat [...]        (see: chatx help chat)
- 
   chatx mcp [...]         (see: chatx help mcp)
   chatx alias [...]       (see: chatx help alias)
   chatx prompt [...]      (see: chatx help prompt)

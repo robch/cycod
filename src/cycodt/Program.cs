@@ -67,20 +67,20 @@ public class Program
             return 0;
         }
 
-        // var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
-        // if (shouldSaveAlias)
-        // {
-        //     var filesSaved = AliasFileHelpers.SaveAlias(
-        //         commandLineOptions.SaveAliasName!,
-        //         commandLineOptions.AllOptions,
-        //         commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
-		// 
-        //     DisplayBanner();
-        //     AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
-		// 
-        //     return 0;
-        // }
-		
+        var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
+        if (shouldSaveAlias)
+        {
+            var filesSaved = AliasFileHelpers.SaveAlias(
+                commandLineOptions.SaveAliasName!,
+                commandLineOptions.AllOptions,
+                commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
+
+            DisplayBanner();
+            AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
+
+            return 0;
+        }
+
         var shouldSetWorkingDir = !string.IsNullOrEmpty(commandLineOptions.WorkingDirectory);
         if (shouldSetWorkingDir)
         {
