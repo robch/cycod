@@ -1,5 +1,5 @@
 
-class VersionCommand : Command
+public class VersionCommand : Command
 {
     public VersionCommand()
     {
