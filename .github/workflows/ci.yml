@@ -29,11 +29,17 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Publish for multiple platforms (verification)
+    - name: Publish chatx for multiple platforms (verification)
       run: |
-        dotnet publish src/chatx.csproj -c Release -r win-x64
-        dotnet publish src/chatx.csproj -c Release -r linux-x64
-        dotnet publish src/chatx.csproj -c Release -r osx-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r linux-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r osx-x64
+
+    - name: Publish cycodt for multiple platforms (verification)
+      run: |
+        dotnet publish src/cycodt/cycodt.csproj -c Release -r win-x64
+        dotnet publish src/cycodt/cycodt.csproj -c Release -r linux-x64
+        dotnet publish src/cycodt/cycodt.csproj -c Release -r osx-x64
     
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
@@ -54,12 +60,22 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: false
     
-    - name: Upload build artifacts
+    - name: Upload chatx build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: chatx-build
         path: |
-          src/bin/Release/net8.0/
-          src/bin/Release/net8.0/win-x64/publish/
-          src/bin/Release/net8.0/linux-x64/publish/
-          src/bin/Release/net8.0/osx-x64/publish/
+          src/cycod/bin/Release/net8.0/
+          src/cycod/bin/Release/net8.0/win-x64/publish/
+          src/cycod/bin/Release/net8.0/linux-x64/publish/
+          src/cycod/bin/Release/net8.0/osx-x64/publish/
+    
+    - name: Upload cycodt build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycodt-build
+        path: |
+          src/cycodt/bin/Release/net8.0/
+          src/cycodt/bin/Release/net8.0/win-x64/publish/
+          src/cycodt/bin/Release/net8.0/linux-x64/publish/
+          src/cycodt/bin/Release/net8.0/osx-x64/publish/
