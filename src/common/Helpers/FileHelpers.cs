@@ -170,10 +170,28 @@ public class FileHelpers
         return content;
     }
 
-    public static void WriteAllText(string fileName, string content)
+    public static string WriteAllText(string fileName, string content, string? saveToFolderOnAccessDenied = null)
     {
-        DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
-        File.WriteAllText(fileName, content, Encoding.UTF8);
+        try
+        {
+            DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
+            File.WriteAllText(fileName, content, Encoding.UTF8);
+        }
+        catch (Exception)
+        {
+            var trySavingElsewhere = !string.IsNullOrEmpty(saveToFolderOnAccessDenied);
+            if (trySavingElsewhere)
+            {
+                var userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var trySavingToFolder = Path.Combine(userProfileFolder, saveToFolderOnAccessDenied!);
+
+                var fileNameWithoutFolder = Path.GetFileName(fileName);
+                fileName = Path.Combine(trySavingToFolder, fileNameWithoutFolder);
+
+                WriteAllText(fileName, content, null);
+            }
+        }
+        return fileName;
     }
 
     public static void AppendAllText(string fileName, string trajectoryContent)

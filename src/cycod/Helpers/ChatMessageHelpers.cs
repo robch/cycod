@@ -58,12 +58,12 @@ public static class AIExtensionsChatHelpers
         return history;
     }
 
-    public static void SaveChatHistoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    public static void SaveChatHistoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
         var jsonl = useOpenAIFormat
             ? messages.ToOpenAIChatMessages(_jsonlOptions).AsJsonl()
             : messages.AsJsonl();
-        FileHelpers.WriteAllText(fileName, jsonl);
+        FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
     public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
@@ -79,12 +79,29 @@ public static class AIExtensionsChatHelpers
         messages.AddRange(newMessages);
     }
 
-    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        var trajectoryFile = new TrajectoryFile(fileName);
-        foreach (var message in messages)
+        try
         {
-            trajectoryFile.AppendMessage(message);
+            var trajectoryFile = new TrajectoryFile(fileName);
+            foreach (var message in messages)
+            {
+                trajectoryFile.AppendMessage(message);
+            }
+        }
+        catch (Exception)
+        {
+            var trySavingElsewhere = !string.IsNullOrEmpty(saveToFolderOnAccessDenied);
+            if (trySavingElsewhere)
+            {
+                var userProfileFolder = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var trySavingToFolder = Path.Combine(userProfileFolder, saveToFolderOnAccessDenied!);
+
+                var fileNameWithoutFolder = Path.GetFileName(fileName);
+                fileName = Path.Combine(trySavingToFolder, fileNameWithoutFolder);
+
+                SaveTrajectoryToFile(messages, fileName, useOpenAIFormat, null);
+            }
         }
     }
 
