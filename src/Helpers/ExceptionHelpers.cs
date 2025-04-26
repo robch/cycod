@@ -16,7 +16,9 @@ public class ExceptionHelpers
             var fileName = innerExceptionNumber > 0
                 ? FileHelpers.GetFileNameFromTemplate(outterMostExceptionFileName, "{filebase}" + innerExceptionNumber + ".{fileext}")!
                 : outterMostExceptionFileName;
-            FileHelpers.WriteAllText(fileName, message1 + "\n\n" + message2);
+
+            var saveToFolderOnAccessDenied = ScopeFileHelpers.EnsureDirectoryInScope("exceptions", ConfigFileScope.User);
+            fileName = FileHelpers.WriteAllText(fileName, message1 + "\n\n" + message2, saveToFolderOnAccessDenied);
 
             ConsoleHelpers.WriteLine(overrideQuiet: true);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
