@@ -12,4 +12,11 @@ abstract public class Command
 
     abstract public bool IsEmpty();
     abstract public string GetCommandName();
+
+    public string GetHelpTopic()
+    {
+        var topic = GetCommandName();
+        var ok = !string.IsNullOrEmpty(topic);
+        return ok ? topic : "usage";
+    }
 }

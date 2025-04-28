@@ -41,7 +41,7 @@ public class Program
     {
         CommandLineOptions.SetDefaultCommandHandler(() => new ChatCommand());
 
-        if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
+        if (!CycoDevCommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
             DisplayBanner();
             if (ex != null)

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public class CommandLineOptions
 {
-    public CommandLineOptions()
+    protected CommandLineOptions()
     {
         Interactive = true;
 
@@ -48,16 +48,15 @@ public class CommandLineOptions
         _newDefaultCommand = newDefaultCommand;
     }
 
-    public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
+    virtual public bool Parse(string[] args, out CommandLineException? ex)
     {
-        options = null;
         ex = null;
 
         try
         {
-            var allInputs = ExpandedInputsFromCommandLine(args);
-            options = ParseInputOptions(allInputs);
-            return options.Commands.Any();
+            var allInputs = this.ExpandedInputsFromCommandLine(args);
+            this.ParseInputOptions(allInputs);
+            return this.Commands.Any();
         }
         catch (CommandLineException e)
         {
@@ -66,12 +65,50 @@ public class CommandLineOptions
         }
     }
 
-    private static IEnumerable<string> ExpandedInputsFromCommandLine(string[] args)
+    virtual protected string PeekCommandName(string[] args, int i)
+    {
+        var name1 = GetInputOptionArgs(i, args, max: 1).FirstOrDefault();
+        var name2 = GetInputOptionArgs(i + 1, args, max: 1).FirstOrDefault();
+        var commandName = name1 switch
+        {
+            "version" => "version",
+            "help" => "help",
+            _ => $"{name1} {name2}".Trim()
+        };
+        return commandName;
+    }
+
+    virtual protected bool CheckPartialCommandNeedsHelp(string commandName)
+    {
+        return false;
+    }
+
+    virtual protected Command? CommandFromName(string commandName)
+    {
+        return commandName switch
+        {
+            "help" => new HelpCommand(),
+            "version" => new VersionCommand(),
+            _ => null
+        };
+    }
+
+    virtual protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
+	{
+		return false;
+    }
+
+    virtual protected bool TryParseOtherCommandArg(Command? command, string arg)
+	{
+        return false;
+    }
+
+    protected IEnumerable<string> ExpandedInputsFromCommandLine(string[] args)
     {
         return args.SelectMany(arg => ExpandedInput(arg));
     }
     
-    private static IEnumerable<string> ExpandedInput(string input)
+    protected IEnumerable<string> ExpandedInput(string input)
     {
         return input.StartsWith("@@")
             ? ExpandedAtAtFileInput(input)
@@ -80,7 +117,7 @@ public class CommandLineOptions
                 : [input];
     }
 
-    private static IEnumerable<string> ExpandedAtAtFileInput(string input)
+    protected IEnumerable<string> ExpandedAtAtFileInput(string input)
     {
         if (!input.StartsWith("@@")) throw new ArgumentException("Not an @@ file input");
 
@@ -98,7 +135,7 @@ public class CommandLineOptions
         return [input];
     }
 
-    private static string ExpandedAtFileInput(string input)
+    protected string ExpandedAtFileInput(string input)
     {
         if (!input.StartsWith("@"))
         {
@@ -108,15 +145,14 @@ public class CommandLineOptions
         return AtFileHelpers.ExpandAtFileValue(input);
     }
 
-    private static CommandLineOptions ParseInputOptions(IEnumerable<string> allInputs)
+    protected void ParseInputOptions(IEnumerable<string> allInputs)
     {
-        CommandLineOptions commandLineOptions = new();
         Command? command = null;
 
-        var args = commandLineOptions.AllOptions = allInputs.ToArray();
+        var args = this.AllOptions = allInputs.ToArray();
         for (int i = 0; i < args.Count(); i++)
         {
-            var parsed = TryParseInputOptions(commandLineOptions, ref command, args, ref i, args[i]);
+            var parsed = TryParseInputOptions(ref command, args, ref i, args[i]);
             if (!parsed)
             {
                 throw InvalidArgException(command, args[i]);
@@ -128,30 +164,18 @@ public class CommandLineOptions
             command = _newDefaultCommand?.Invoke();
         }
 
-        if (string.IsNullOrEmpty(commandLineOptions.HelpTopic) && command != null && command.IsEmpty())
+        if (string.IsNullOrEmpty(this.HelpTopic) && command != null && command.IsEmpty())
         {
-            commandLineOptions.HelpTopic = command.GetCommandName();
+            this.HelpTopic = command.GetHelpTopic();
         }
 
         if (command != null && !command.IsEmpty())
         {
-            commandLineOptions.Commands.Add(command);
+            this.Commands.Add(command);
         }
-
-        // var oneChatCommandWithNoInput = commandLineOptions.Commands.Count == 1 && command is ChatCommand chatCommand && chatCommand.InputInstructions.Count == 0;
-        // var inOrOutRedirected = Console.IsInputRedirected || Console.IsOutputRedirected;
-        // var implictlyUseStdIn = oneChatCommandWithNoInput && inOrOutRedirected;
-        // if (implictlyUseStdIn)
-        // {
-        //     var stdinLines = ConsoleHelpers.GetAllLinesFromStdin();
-        //     var joined = string.Join("\n", stdinLines);
-        //     (command as ChatCommand)!.InputInstructions.Add(joined);
-        // }
-
-        return commandLineOptions;
     }
 
-    private static bool TryParseKnownSettingOption(string[] args, ref int i, string arg)
+    protected bool TryParseKnownSettingOption(string[] args, ref int i, string arg)
     {
         // Check if this is a known setting CLI option
         if (KnownSettingsCLIParser.TryParseCLIOption(arg, out string? settingName, out string? value))
@@ -179,12 +203,12 @@ public class CommandLineOptions
         return false;
     }
 
-    public static bool TryParseInputOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int i, string arg)
+    protected bool TryParseInputOptions(ref Command? command, string[] args, ref int i, string arg)
     {
         var isEndOfCommand = arg == "--" && command != null && !command.IsEmpty();
         if (isEndOfCommand)
         {
-            commandLineOptions.Commands.Add(command!);
+            this.Commands.Add(command!);
             command = null;
             return true;
         }
@@ -194,38 +218,20 @@ public class CommandLineOptions
         {
             if (arg.StartsWith("--"))
             {
-                var parsedAsAlias = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+                var parsedAsAlias = TryParseAliasOptions(ref command, args, ref i, arg.Substring(2));
                 if (parsedAsAlias) return true;
             }
-			
-            var name1 = GetInputOptionArgs(i, args, max: 1).FirstOrDefault();
-            var name2 = GetInputOptionArgs(i + 1, args, max: 1).FirstOrDefault();
-            var commandName = name1 switch
-            {
-                "version" => "version",
-                "help" => "help",
-                "test" => "test",
-                _ => $"{name1} {name2}".Trim()
-            };
 
-            var partialCommandNeedsHelp =
-                // commandName == "alias" ||
-                commandName == "test";
+            var commandName = PeekCommandName(args, i);
+            var partialCommandNeedsHelp = CheckPartialCommandNeedsHelp(commandName);
             if (partialCommandNeedsHelp)
             {
                 command = new HelpCommand();
-                commandLineOptions.HelpTopic = commandName;
+                this.HelpTopic = commandName;
                 return true;
             }
 
-            command = commandName switch
-            {
-                "help" => new HelpCommand(),
-                "version" => new VersionCommand(),
-                "list" => new TestListCommand(),
-                "run" => new TestRunCommand(),
-                _ => null
-            };
+            command = CommandFromName(commandName);
 
             var parsedCommand = command != null;
             if (parsedCommand)
@@ -238,17 +244,17 @@ public class CommandLineOptions
             command = _newDefaultCommand?.Invoke();
         }
 
-        var parsedOption = TryParseGlobalCommandLineOptions(commandLineOptions, args, ref i, arg) ||
-            TryParseHelpCommandOptions(commandLineOptions, command as HelpCommand, args, ref i, arg) ||
-            TryParseVersionCommandOptions(commandLineOptions, command as VersionCommand, args, ref i, arg) ||
-            TryParseTestCommandOptions(command as TestBaseCommand, args, ref i, arg) ||
+        var parsedOption = TryParseGlobalCommandLineOptions(args, ref i, arg) ||
+            TryParseHelpCommandOptions(command as HelpCommand, args, ref i, arg) ||
+            TryParseVersionCommandOptions(command as VersionCommand, args, ref i, arg) ||
+            TryParseOtherCommandOptions(command, args, ref i, arg) ||
             TryParseSharedCommandOptions(command, args, ref i, arg) ||
             TryParseKnownSettingOption(args, ref i, arg);
         if (parsedOption) return true;
 
         if (arg == "--help")
         {
-            commandLineOptions.HelpTopic = command!.GetCommandName();
+            this.HelpTopic = command?.GetHelpTopic() ?? "usage";
             command = new HelpCommand();
             i = args.Count();
             parsedOption = true;
@@ -261,12 +267,16 @@ public class CommandLineOptions
         }
         else if (arg.StartsWith("--"))
         {
-            parsedOption = TryParseAliasOptions(commandLineOptions, ref command, args, ref i, arg.Substring(2));
+            parsedOption = TryParseAliasOptions(ref command, args, ref i, arg.Substring(2));
         }
         else if (command is HelpCommand helpCommand)
         {
-            commandLineOptions.HelpTopic = $"{commandLineOptions.HelpTopic} {arg}".Trim();
+            this.HelpTopic = $"{this.HelpTopic} {arg}".Trim();
             parsedOption = true;
+        }
+        else if (TryParseOtherCommandArg(command, arg))
+        {
+		    parsedOption = true;
         }
 
         if (!parsedOption)
@@ -277,7 +287,7 @@ public class CommandLineOptions
         return parsedOption;
     }
 
-    public static bool TryParseAliasOptions(CommandLineOptions commandLineOptions, ref Command? command, string[] args, ref int currentIndex, string alias)
+    protected bool TryParseAliasOptions(ref Command? command, string[] args, ref int currentIndex, string alias)
     {
         var aliasFilePath = AliasFileHelpers.FindAliasFile(alias);
         if (aliasFilePath != null && File.Exists(aliasFilePath))
@@ -289,7 +299,7 @@ public class CommandLineOptions
                 .ToArray();
             for (var j = 0; j < aliasArgs.Length; j++)
             {
-                var parsed = TryParseInputOptions(commandLineOptions, ref command, aliasArgs, ref j, aliasArgs[j]);
+                var parsed = TryParseInputOptions(ref command, aliasArgs, ref j, aliasArgs[j]);
                 if (!parsed)
                 {
                     throw new CommandLineException($"Invalid argument in alias file: {aliasArgs[j]}");
@@ -300,7 +310,7 @@ public class CommandLineOptions
         return false;
     }
 
-    private static bool TryParseGlobalCommandLineOptions(CommandLineOptions commandLineOptions, string[] args, ref int i, string arg)
+    protected bool TryParseGlobalCommandLineOptions(string[] args, ref int i, string arg)
     {
         var parsed = true;
 
@@ -312,44 +322,44 @@ public class CommandLineOptions
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var interactive = max1Arg.FirstOrDefault() ?? "true";
-            commandLineOptions.Interactive = interactive.ToLower() == "true" || interactive == "1";
+            this.Interactive = interactive.ToLower() == "true" || interactive == "1";
             i += max1Arg.Count();
         }
         else if (arg == "--debug")
         {
-            commandLineOptions.Debug = true;
+            this.Debug = true;
             ConsoleHelpers.ConfigureDebug(true);
         }
         else if (arg == "--verbose")
         {
-            commandLineOptions.Verbose = true;
+            this.Verbose = true;
         }
         else if (arg == "--quiet")
         {
-            commandLineOptions.Quiet = true;
+            this.Quiet = true;
         }
         else if (arg == "--save-alias" || arg == "--save-local-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-alias");
-            commandLineOptions.SaveAliasName = aliasName;
-            commandLineOptions.SaveAliasScope = ConfigFileScope.Local;
+            this.SaveAliasName = aliasName;
+            this.SaveAliasScope = ConfigFileScope.Local;
             i += max1Arg.Count();
         }
         else if (arg == "--save-user-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-user-alias");
-            commandLineOptions.SaveAliasName = aliasName;
-            commandLineOptions.SaveAliasScope = ConfigFileScope.User;
+            this.SaveAliasName = aliasName;
+            this.SaveAliasScope = ConfigFileScope.User;
             i += max1Arg.Count();
         }
         else if (arg == "--save-global-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-global-alias");
-            commandLineOptions.SaveAliasName = aliasName;
-            commandLineOptions.SaveAliasScope = ConfigFileScope.Global;
+            this.SaveAliasName = aliasName;
+            this.SaveAliasScope = ConfigFileScope.Global;
             i += max1Arg.Count();
         }
         else if (arg == "--profile")
@@ -368,13 +378,13 @@ public class CommandLineOptions
         else if (arg == "--threads")
         {
             var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            commandLineOptions.ThreadCount = ValidateInt(arg, countStr, "thread count");
+            this.ThreadCount = ValidateInt(arg, countStr, "thread count");
         }
         else if (arg == "--working-dir" || arg == "--folder" || arg == "--dir" || arg == "--cwd")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var dirPath = ValidateString(arg, max1Arg.FirstOrDefault(), "directory path");
-            commandLineOptions.WorkingDirectory = dirPath;
+            this.WorkingDirectory = dirPath;
             i += max1Arg.Count();
         }
         else
@@ -385,7 +395,7 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static bool TryParseHelpCommandOptions(CommandLineOptions commandLineOptions, HelpCommand? helpCommand, string[] args, ref int i, string arg)
+    protected bool TryParseHelpCommandOptions(HelpCommand? helpCommand, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -395,7 +405,7 @@ public class CommandLineOptions
         }
         else if (arg == "--expand")
         {
-            commandLineOptions.ExpandHelpTopics = true;
+            this.ExpandHelpTopics = true;
         }
         else
         {
@@ -405,7 +415,7 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static bool TryParseVersionCommandOptions(CommandLineOptions commandLineOptions, VersionCommand? versionCommand, string[] args, ref int i, string arg)
+    protected bool TryParseVersionCommandOptions(VersionCommand? versionCommand, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -421,86 +431,8 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static bool TryParseTestCommandOptions(TestBaseCommand? command, string[] args, ref int i, string arg)
-    {
-        if (command == null)
-        {
-            return false;
-        }
 
-        bool parsed = true;
-
-        if (arg == "--file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var filePattern = ValidateString(arg, max1Arg.FirstOrDefault(), "file pattern");
-            command.Files.Add(filePattern!);
-            i += max1Arg.Count();
-        }
-        else if (arg == "--files")
-        {
-            var filePatterns = GetInputOptionArgs(i + 1, args);
-            var validPatterns = ValidateStrings(arg, filePatterns, "file patterns");
-            command.Files.AddRange(validPatterns);
-            i += filePatterns.Count();
-        }
-        else if (arg == "--test")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var testName = ValidateString(arg, max1Arg.FirstOrDefault(), "test name");
-            command.Tests.Add(testName!);
-            i += max1Arg.Count();
-        }
-        else if (arg == "--tests")
-        {
-            var testNames = GetInputOptionArgs(i + 1, args);
-            var validTests = ValidateStrings(arg, testNames, "test names");
-            command.Tests.AddRange(validTests);
-            i += testNames.Count();
-        }
-        else if (arg == "--contains")
-        {
-            var containPatterns = GetInputOptionArgs(i + 1, args);
-            var validContains = ValidateStrings(arg, containPatterns, "contains patterns");
-            command.Contains.AddRange(validContains);
-            i += containPatterns.Count();
-        }
-        else if (arg == "--remove")
-        {
-            var removePatterns = GetInputOptionArgs(i + 1, args);
-            var validRemove = ValidateStrings(arg, removePatterns, "remove patterns");
-            command.Remove.AddRange(validRemove);
-            i += removePatterns.Count();
-        }
-        // Handle TestRunCommand specific options
-        else if (command is TestRunCommand runCommand && arg == "--output-file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var outputFile = ValidateString(arg, max1Arg.FirstOrDefault(), "output file");
-            runCommand.OutputFile = outputFile;
-            i += max1Arg.Count();
-        }
-        else if (command is TestRunCommand runCommand2 && arg == "--output-format")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var format = ValidateString(arg, max1Arg.FirstOrDefault(), "output format");
-            var allowedFormats = new[] { "trx", "junit" };
-            if (!allowedFormats.Contains(format))
-            {
-                throw new CommandLineException($"Invalid format for --output-format: {format}. Allowed values: trx, junit");
-            }
-            runCommand2.OutputFormat = format!;
-            i += max1Arg.Count();
-        }
-        else
-        {
-            parsed = false;
-        }
-
-        return parsed;
-    }
-
-    private static bool TryParseSharedCommandOptions(Command? command, string[] args, ref int i, string arg)
+    protected bool TryParseSharedCommandOptions(Command? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -516,7 +448,7 @@ public class CommandLineOptions
         return parsed;
     }
 
-    private static IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue)
+    protected IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue)
     {
         for (int i = startAt; i < args.Length && i - startAt < max; i++)
         {
@@ -529,7 +461,7 @@ public class CommandLineOptions
         }
     }
 
-    private static string? ValidateString(string arg, string? argStr, string argDescription)
+    protected string? ValidateString(string arg, string? argStr, string argDescription)
     {
         if (string.IsNullOrEmpty(argStr))
         {
@@ -539,7 +471,7 @@ public class CommandLineOptions
         return argStr;
     }
 
-    private static IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription)
+    protected IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription)
     {
         var strings = argStrs.ToList();
         if (!strings.Any())
@@ -550,7 +482,7 @@ public class CommandLineOptions
         return strings.Select(x => ValidateString(arg, x, argDescription)!);
     }
 
-    private static (string, string) ValidateAssignment(string arg, string? assignment)
+    protected (string, string) ValidateAssignment(string arg, string? assignment)
     {
         assignment = ValidateString(arg, assignment, "assignment")!;
         
@@ -563,7 +495,7 @@ public class CommandLineOptions
         return (parts[0], parts[1]);
     }
 
-    private static IEnumerable<(string, string)> ValidateAssignments(string arg, IEnumerable<string> assignments)
+    protected IEnumerable<(string, string)> ValidateAssignments(string arg, IEnumerable<string> assignments)
     {
         if (!assignments.Any())
         {
@@ -573,7 +505,7 @@ public class CommandLineOptions
         return assignments.Select(x => ValidateAssignment(arg, x));
     }
 
-    private static string ValidateOkFileName(string? arg)
+    protected string ValidateOkFileName(string? arg)
     {
         if (string.IsNullOrEmpty(arg))
         {
@@ -583,7 +515,7 @@ public class CommandLineOptions
         return arg;
     }
 
-    private static IEnumerable<string> ValidateFilesExist(IEnumerable<string> args)
+    protected IEnumerable<string> ValidateFilesExist(IEnumerable<string> args)
     {
         args = args.ToList();
         foreach (var arg in args)
@@ -602,7 +534,7 @@ public class CommandLineOptions
         return args;
     }
 
-    private static string? ValidateFileExists(string? arg)
+    protected string? ValidateFileExists(string? arg)
     {
         if (string.IsNullOrEmpty(arg))
         {
@@ -617,7 +549,7 @@ public class CommandLineOptions
         return arg;
     }
 
-    private static int ValidateInt(string arg, string? countStr, string argDescription)
+    protected int ValidateInt(string arg, string? countStr, string argDescription)
     {
         if (string.IsNullOrEmpty(countStr))
         {
@@ -632,7 +564,7 @@ public class CommandLineOptions
         return count;
     }
 
-    private static CommandLineException InvalidArgException(Command? command, string arg)
+    protected CommandLineException InvalidArgException(Command? command, string arg)
     {
         var message = $"Invalid argument: {arg}";
         var ex = new CommandLineException(message);
@@ -640,7 +572,4 @@ public class CommandLineOptions
     }
 
     private static Func<Command>? _newDefaultCommand;
-    private const string DefaultSimpleChatHistoryFileName = "chat-history.jsonl";
-    private const string DefaultOutputChatHistoryFileNameTemplate = "chat-history-{time}.jsonl";
-    private const string DefaultOutputTrajectoryFileNameTemplate = "trajectory-{time}.md";
 }

@@ -31,9 +31,9 @@ jobs:
     
     - name: Publish chatx for multiple platforms (verification)
       run: |
-        dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r linux-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r osx-x64
+        dotnet publish src/cycod/chatx.csproj -c Release -r win-x64
+        dotnet publish src/cycod/chatx.csproj -c Release -r linux-x64
+        dotnet publish src/cycod/chatx.csproj -c Release -r osx-x64
 
     - name: Publish cycodt for multiple platforms (verification)
       run: |

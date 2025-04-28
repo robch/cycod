@@ -39,9 +39,7 @@ public class Program
 
     private static async Task<int> DoProgram(string[] args)
     {
-        // CommandLineOptions.SetDefaultCommandHandler(() => new ChatCommand());
-		
-        if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
+        if (!CycoDtCommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
             DisplayBanner();
             if (ex != null)
