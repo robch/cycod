@@ -4,12 +4,6 @@ using System.Text;
 
 public class CmdShellSession : ShellSession
 {
-    // Ensure only one session is active.
-    private static CmdShellSession? _instance;
-    public static CmdShellSession Instance => _instance ??= new CmdShellSession();
-
-    public override string Marker => "___CMD_COMMAND_DONE___";
-
     protected override ProcessStartInfo GetProcessStartInfo()
     {
         return new ProcessStartInfo
@@ -36,4 +30,8 @@ public class CmdShellSession : ShellSession
         markerOutput = markerOutput.Replace(Marker, "").TrimStart();
         return int.TryParse(markerOutput, out int ec) ? ec : 0;
     }
+
+    public override string Marker => "___CMD_COMMAND_DONE___";
+    public static CmdShellSession Instance => _instance ??= new CmdShellSession();
+    private static CmdShellSession? _instance;
 }
