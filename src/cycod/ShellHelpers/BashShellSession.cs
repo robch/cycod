@@ -5,12 +5,6 @@ using System.Text;
 
 public class BashShellSession : ShellSession
 {
-    // Ensure only one session is active.
-    private static BashShellSession? _instance;
-    public static BashShellSession Instance => _instance ??= new BashShellSession();
-
-    public override string Marker => "___BEGIN_END_COMMAND_MARKER___";
-
     protected override ProcessStartInfo GetProcessStartInfo()
     {
         var arguments = Environment.OSVersion.Platform == PlatformID.Win32NT
@@ -43,4 +37,8 @@ public class BashShellSession : ShellSession
         markerOutput = markerOutput.Replace(Marker, "").TrimStart();
         return int.TryParse(markerOutput, out int ec) ? ec : 0;
     }
+
+    public override string Marker => "___BEGIN_END_COMMAND_MARKER___";
+    public static BashShellSession Instance => _instance ??= new BashShellSession();
+    private static BashShellSession? _instance;
 }
