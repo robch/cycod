@@ -7,8 +7,8 @@ public static class ForEachVarHelpers
 {
     public static List<Command> ExpandForEachVars(List<Command> commands)
     {
-        return commands.SelectMany(command => command is ChatCommand chatCommand
-            ? ExpandChatCommand(chatCommand)
+        return commands.SelectMany(command => command is CommandWithVariables commandWithVars
+            ? ExpandCommandWithVars(commandWithVars)
             : new List<Command> { command }).ToList();
     }
 
@@ -59,22 +59,22 @@ public static class ForEachVarHelpers
         return true;
     }
 
-    private static IEnumerable<Command> ExpandChatCommand(ChatCommand chatCommand)
+    private static IEnumerable<Command> ExpandCommandWithVars(CommandWithVariables commandWithVars)
     {
-        var foreachVars = chatCommand.ForEachVariables;
+        var foreachVars = commandWithVars.ForEachVariables;
         if (foreachVars.Count == 0)
         {
-            return new List<ChatCommand> { chatCommand };
+            return new List<CommandWithVariables> { commandWithVars };
         }
 
         // Generate all combinations of variable values (Cartesian product)
         var combinations = GenerateValueCombinations(foreachVars);
         
         // Create a new command for each combination
-        var expandedCommands = new List<ChatCommand>();
+        var expandedCommands = new List<CommandWithVariables>();
         foreach (var combination in combinations)
         {
-            var clonedCommand = chatCommand.Clone();
+            var clonedCommand = commandWithVars.Clone();
             
             // Set variables for this combination
             for (int i = 0; i < foreachVars.Count; i++)

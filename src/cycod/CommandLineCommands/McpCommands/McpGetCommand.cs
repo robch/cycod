@@ -43,16 +43,18 @@ class McpGetCommand : McpBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        if (string.IsNullOrWhiteSpace(Name))
+        return await Task.Run(() => 
         {
-            ConsoleHelpers.WriteErrorLine("Error: MCP server name is required.");
-            return Task.FromResult(1);
-        }
+            if (string.IsNullOrWhiteSpace(Name))
+            {
+                ConsoleHelpers.WriteErrorLine("Error: MCP server name is required.");
+                return 1;
+            }
 
-        var result = ExecuteGet(Name, Scope ?? ConfigFileScope.Any);
-        return Task.FromResult(result);
+            return ExecuteGet(Name, Scope ?? ConfigFileScope.Any);
+        });
     }
 
     /// <summary>

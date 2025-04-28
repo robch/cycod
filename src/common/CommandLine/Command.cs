@@ -19,4 +19,6 @@ abstract public class Command
         var ok = !string.IsNullOrEmpty(topic);
         return ok ? topic : "usage";
     }
+
+    abstract public Task<int> ExecuteAsync(bool interactive);
 }

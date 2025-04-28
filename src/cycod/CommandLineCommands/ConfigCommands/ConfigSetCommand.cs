@@ -18,10 +18,9 @@ class ConfigSetCommand : ConfigBaseCommand
         return "config set";
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteSet(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteSet(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName));
     }
 
     private int ExecuteSet(string? key, string? value, ConfigFileScope scope, string? configFileName)

@@ -15,12 +15,14 @@ class ConfigListCommand : ConfigBaseCommand
         Scope = ConfigFileScope.Any;
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = Scope == ConfigFileScope.FileName
-            ? ExecuteList(this.ConfigFileName!)
-            : ExecuteList(Scope ?? ConfigFileScope.Any);
-        return Task.FromResult(result);
+        return await Task.Run(() => 
+        {
+            return Scope == ConfigFileScope.FileName
+                ? ExecuteList(this.ConfigFileName!)
+                : ExecuteList(Scope ?? ConfigFileScope.Any);
+        });
     }
 
     private int ExecuteList(string configFileName)

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents a foreach variable used in command line expansion.
 /// The variable has a name and a list of values that will be used
-/// to create multiple ChatCommand instances during expansion.
+/// to create multiple CommandWithVariables instances during expansion.
 /// </summary>
 public class ForEachVariable
 {

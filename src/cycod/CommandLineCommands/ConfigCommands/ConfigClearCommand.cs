@@ -16,10 +16,9 @@ class ConfigClearCommand : ConfigBaseCommand
         return "config clear";
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteClear(Key, Scope ?? ConfigFileScope.Local, ConfigFileName);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteClear(Key, Scope ?? ConfigFileScope.Local, ConfigFileName));
     }
 
     private int ExecuteClear(string? key, ConfigFileScope scope, string? configFileName)

@@ -81,15 +81,17 @@ class McpAddCommand : McpBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        if (IsEmpty())
+        return await Task.Run(() => 
         {
-            throw new InvalidOperationException("mcp add requires name and either command or url");
-        }
+            if (IsEmpty())
+            {
+                throw new InvalidOperationException("mcp add requires name and either command or url");
+            }
 
-        var result = ExecuteAdd(Name!, Command, Args, Transport, EnvironmentVars, Url, Scope ?? ConfigFileScope.Local);
-        return Task.FromResult(result);
+            return ExecuteAdd(Name!, Command, Args, Transport, EnvironmentVars, Url, Scope ?? ConfigFileScope.Local);
+        });
     }
 
     /// <summary>

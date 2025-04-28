@@ -47,22 +47,24 @@ class PromptCreateCommand : PromptBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        if (string.IsNullOrWhiteSpace(PromptName))
+        return await Task.Run(() => 
         {
-            ConsoleHelpers.WriteErrorLine("Error: Prompt name is required.");
-            return Task.FromResult(1);
-        }
-        
-        if (string.IsNullOrWhiteSpace(PromptText))
-        {
-            ConsoleHelpers.WriteErrorLine("Error: Prompt text is required.");
-            return Task.FromResult(1);
-        }
+            if (string.IsNullOrWhiteSpace(PromptName))
+            {
+                ConsoleHelpers.WriteErrorLine("Error: Prompt name is required.");
+                return 1;
+            }
+            
+            if (string.IsNullOrWhiteSpace(PromptText))
+            {
+                ConsoleHelpers.WriteErrorLine("Error: Prompt text is required.");
+                return 1;
+            }
 
-        var result = ExecuteCreate(PromptName, PromptText, Scope ?? ConfigFileScope.Local);
-        return Task.FromResult(result);
+            return ExecuteCreate(PromptName, PromptText, Scope ?? ConfigFileScope.Local);
+        });
     }
 
     /// <summary>

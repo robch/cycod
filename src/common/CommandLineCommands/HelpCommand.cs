@@ -1,10 +1,11 @@
+
 public class HelpCommand : Command
 {
     public HelpCommand()
     {
     }
 
-    override public string GetCommandName()
+    public override string GetCommandName()
     {
         return "help";
     }
@@ -12,5 +13,10 @@ public class HelpCommand : Command
     public override bool IsEmpty()
     {
         return false;
+    }
+
+    public override Task<int> ExecuteAsync(bool interactive)
+    {
+        throw new NotImplementedException();
     }
 }

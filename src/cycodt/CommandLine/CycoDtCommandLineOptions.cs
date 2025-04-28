@@ -1,17 +1,18 @@
 public class CycoDtCommandLineOptions : CommandLineOptions
 {
-    public static bool Parse(string[] args, out CycoDtCommandLineOptions? options, out CommandLineException? ex)
+    public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
     {
         options = new CycoDtCommandLineOptions();
         return options.Parse(args, out ex);
     }
-    override protected Command? CommandFromName(string commandName)
+
+    override protected Command? NewCommandFromName(string commandName)
     {
         return commandName switch
         {
             "list" => new TestListCommand(),
             "run" => new TestRunCommand(),
-            _ => base.CommandFromName(commandName)
+            _ => base.NewCommandFromName(commandName)
         };
     }
 

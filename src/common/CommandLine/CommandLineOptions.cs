@@ -43,11 +43,6 @@ public class CommandLineOptions
     public string? SaveAliasName;
     public ConfigFileScope? SaveAliasScope;
 
-    public static void SetDefaultCommandHandler(Func<Command> newDefaultCommand)
-    {
-        _newDefaultCommand = newDefaultCommand;
-    }
-
     virtual public bool Parse(string[] args, out CommandLineException? ex)
     {
         ex = null;
@@ -83,7 +78,7 @@ public class CommandLineOptions
         return false;
     }
 
-    virtual protected Command? CommandFromName(string commandName)
+    virtual protected Command? NewCommandFromName(string commandName)
     {
         return commandName switch
         {
@@ -91,6 +86,11 @@ public class CommandLineOptions
             "version" => new VersionCommand(),
             _ => null
         };
+    }
+
+    virtual protected Command? NewDefaultCommand()
+    {
+        return null;
     }
 
     virtual protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
@@ -161,7 +161,7 @@ public class CommandLineOptions
 
         if (args.Count() == 0)
         {
-            command = _newDefaultCommand?.Invoke();
+            command = NewDefaultCommand();
         }
 
         if (string.IsNullOrEmpty(this.HelpTopic) && command != null && command.IsEmpty())
@@ -231,7 +231,7 @@ public class CommandLineOptions
                 return true;
             }
 
-            command = CommandFromName(commandName);
+            command = NewCommandFromName(commandName);
 
             var parsedCommand = command != null;
             if (parsedCommand)
@@ -241,7 +241,7 @@ public class CommandLineOptions
                 return true;
             }
 
-            command = _newDefaultCommand?.Invoke();
+            command = NewDefaultCommand();
         }
 
         var parsedOption = TryParseGlobalCommandLineOptions(args, ref i, arg) ||
@@ -570,6 +570,4 @@ public class CommandLineOptions
         var ex = new CommandLineException(message);
         return ex;
     }
-
-    private static Func<Command>? _newDefaultCommand;
 }

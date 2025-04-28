@@ -17,10 +17,9 @@ class ConfigAddCommand : ConfigBaseCommand
         return "config add";
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteAdd(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteAdd(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName));
     }
 
     private int ExecuteAdd(string? key, string? value, ConfigFileScope scope, string? configFileName)

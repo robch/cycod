@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 public class CycoDevCommandLineOptions : CommandLineOptions
 {
-    public static bool Parse(string[] args, out CycoDevCommandLineOptions? options, out CommandLineException? ex)
+    public static bool Parse(string[] args, out CommandLineOptions? options, out CommandLineException? ex)
     {
         options = new CycoDevCommandLineOptions();
 
@@ -48,7 +48,12 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                commandName == "prompt";
     }
 
-    override protected Command? CommandFromName(string commandName)
+    override protected Command? NewDefaultCommand()
+    {
+        return new ChatCommand();
+    }
+
+    override protected Command? NewCommandFromName(string commandName)
     {
         return commandName switch
         {
@@ -71,7 +76,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             "mcp get" => new McpGetCommand(),
             "mcp add" => new McpAddCommand(),
             "mcp remove" => new McpRemoveCommand(),
-            _ => base.CommandFromName(commandName)
+            _ => base.NewCommandFromName(commandName)
         };
     }
 

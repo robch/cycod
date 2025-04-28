@@ -12,17 +12,17 @@ class GitHubLoginCommand : Command
         ConfigFileName = null;
     }
 
-    override public bool IsEmpty()
+    public override bool IsEmpty()
     {
         return false;
     }
 
-    override public string GetCommandName()
+    public override string GetCommandName()
     {
         return "github login";
     }
 
-    public async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
         ConsoleHelpers.WriteDebugLine("Initiating GitHub login...");
         

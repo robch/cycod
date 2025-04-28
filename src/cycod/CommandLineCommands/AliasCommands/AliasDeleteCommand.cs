@@ -43,10 +43,9 @@ class AliasDeleteCommand : AliasBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteDelete(AliasName, Scope ?? ConfigFileScope.Any);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteDelete(AliasName, Scope ?? ConfigFileScope.Any));
     }
 
     /// <summary>

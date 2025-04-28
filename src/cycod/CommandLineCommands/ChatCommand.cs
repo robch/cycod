@@ -1,27 +1,23 @@
 using Microsoft.Extensions.AI;
 using System.Text;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using System.Linq;
-using ModelContextProtocol.Client;
 
-public class ChatCommand : Command
+public class ChatCommand : CommandWithVariables
 {
     public ChatCommand()
     {
     }
 
-    override public bool IsEmpty()
+    public override bool IsEmpty()
     {
         return false;
     }
 
-    override public string GetCommandName()
+    public override string GetCommandName()
     {
         return "";
     }
 
-    public ChatCommand Clone()
+    public override ChatCommand Clone()
     {
         var clone = new ChatCommand();
         
@@ -44,7 +40,7 @@ public class ChatCommand : Command
         return clone;
     }
 
-    public async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
@@ -622,9 +618,6 @@ public class ChatCommand : Command
 
     public List<string> InputInstructions = new();
     public bool UseTemplates = true;
-
-    public Dictionary<string, string> Variables { get; set; } = new Dictionary<string, string>();
-    public List<ForEachVariable> ForEachVariables { get; set; } = new List<ForEachVariable>();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

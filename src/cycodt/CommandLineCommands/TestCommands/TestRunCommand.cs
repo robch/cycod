@@ -18,10 +18,9 @@ class TestRunCommand : TestBaseCommand
         return "run";
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteTestRun();
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteTestRun());
     }
 
     private int ExecuteTestRun()

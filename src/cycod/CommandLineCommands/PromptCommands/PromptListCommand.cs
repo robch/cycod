@@ -31,10 +31,9 @@ class PromptListCommand : PromptBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success.</returns>
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteList(Scope ?? ConfigFileScope.Any);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteList(Scope ?? ConfigFileScope.Any));
     }
 
     /// <summary>

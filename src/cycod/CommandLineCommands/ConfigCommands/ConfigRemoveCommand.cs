@@ -17,10 +17,9 @@ class ConfigRemoveCommand : ConfigBaseCommand
         return "config remove";
     }
 
-    public Task<int> Execute(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        var result = ExecuteRemove(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName);
-        return Task.FromResult(result);
+        return await Task.Run(() => ExecuteRemove(Key, Value, Scope ?? ConfigFileScope.Local, ConfigFileName));
     }
 
     private int ExecuteRemove(string? key, string? value, ConfigFileScope scope, string? configFileName)

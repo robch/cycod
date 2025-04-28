@@ -5,7 +5,7 @@ public class VersionCommand : Command
     {
     }
 
-    override public string GetCommandName()
+    public override string GetCommandName()
     {
         return "version";
     }
@@ -15,9 +15,12 @@ public class VersionCommand : Command
         return false;
     }
 
-    public Task<int> ExecuteAsync(bool interactive)
+    public override async Task<int> ExecuteAsync(bool interactive)
     {
-        Console.WriteLine($"Version: {VersionInfo.GetVersion()}");
-        return Task.FromResult(0);
+        return await Task.Run(() => 
+        {
+            Console.WriteLine($"Version: {VersionInfo.GetVersion()}");
+            return 0;
+        });
     }
 }
