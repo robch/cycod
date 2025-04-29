@@ -15,6 +15,16 @@ jobs:
   build-and-publish:
     runs-on: ubuntu-latest
     environment: production # Adds protection and approval requirements
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
+      AZURE_OPENAI_SYSTEM_PROMPT: ${{ secrets.AZURE_OPENAI_SYSTEM_PROMPT }}
+      BING_SEARCH_V7_ENDPOINT: ${{ secrets.BING_SEARCH_V7_ENDPOINT }}
+      BING_SEARCH_V7_KEY: ${{ secrets.BING_SEARCH_V7_KEY }}
+      GOOGLE_SEARCH_ENDPOINT: ${{ secrets.GOOGLE_SEARCH_ENDPOINT }}
+      GOOGLE_SEARCH_KEY: ${{ secrets.GOOGLE_SEARCH_KEY }}
+      GOOGLE_SEARCH_ENGINE_ID: ${{ secrets.GOOGLE_SEARCH_ENGINE_ID }}
     
     steps:
     - uses: actions/checkout@v3
@@ -85,21 +95,25 @@ jobs:
     
     - name: Update project versions
       run: |
-        # Update both projects with the same version information
+        # Update all projects with the same version information
         # Apply semantic version (can include pre-release tags)
         sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycod/cycod.csproj
         sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycodt/cycodt.csproj
+        sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycodmd/mdx.csproj
         
         # Apply informational version (can include pre-release tags)
         sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycod/cycod.csproj
         sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycodt/cycodt.csproj
+        sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycodmd/mdx.csproj
         
         # Apply numeric versions for assembly and file versions (must be numeric only)
         sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycod/cycod.csproj
         sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycodt/cycodt.csproj
+        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycodmd/mdx.csproj
         
         sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycod/cycod.csproj
         sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycodt/cycodt.csproj
+        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycodmd/mdx.csproj
     
     - name: Restore dependencies
       run: dotnet restore
@@ -145,6 +159,16 @@ jobs:
         
         # Then pack the NuGet package (will include all published runtimes)
         dotnet pack src/cycodt/cycodt.csproj --configuration Release --no-build -o nuget-packages
+        
+    - name: Pack mdx
+      run: |
+        # Publish for multiple platforms first
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r win-x64
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r linux-x64
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r osx-x64
+        
+        # Then pack the NuGet package (will include all published runtimes)
+        dotnet pack src/cycodmd/mdx.csproj --configuration Release --no-build -o nuget-packages
     
     - name: Generate package checksums
       run: |
@@ -157,7 +181,7 @@ jobs:
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
-        name: chatx-cycodt-nuget-packages
+        name: chatx-cycodt-mdx-nuget-packages
         path: nuget-packages/*
     
     - name: Publish to NuGet

@@ -14,6 +14,16 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
+      AZURE_OPENAI_SYSTEM_PROMPT: ${{ secrets.AZURE_OPENAI_SYSTEM_PROMPT }}
+      BING_SEARCH_V7_ENDPOINT: ${{ secrets.BING_SEARCH_V7_ENDPOINT }}
+      BING_SEARCH_V7_KEY: ${{ secrets.BING_SEARCH_V7_KEY }}
+      GOOGLE_SEARCH_ENDPOINT: ${{ secrets.GOOGLE_SEARCH_ENDPOINT }}
+      GOOGLE_SEARCH_KEY: ${{ secrets.GOOGLE_SEARCH_KEY }}
+      GOOGLE_SEARCH_ENGINE_ID: ${{ secrets.GOOGLE_SEARCH_ENGINE_ID }}
     
     steps:
     - uses: actions/checkout@v3
@@ -40,6 +50,12 @@ jobs:
         dotnet publish src/cycodt/cycodt.csproj -c Release -r win-x64
         dotnet publish src/cycodt/cycodt.csproj -c Release -r linux-x64
         dotnet publish src/cycodt/cycodt.csproj -c Release -r osx-x64
+        
+    - name: Publish mdx for multiple platforms (verification)
+      run: |
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r win-x64
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r linux-x64
+        dotnet publish src/cycodmd/mdx.csproj -c Release -r osx-x64
     
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
@@ -79,3 +95,13 @@ jobs:
           src/cycodt/bin/Release/net8.0/win-x64/publish/
           src/cycodt/bin/Release/net8.0/linux-x64/publish/
           src/cycodt/bin/Release/net8.0/osx-x64/publish/
+          
+    - name: Upload mdx build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: mdx-build
+        path: |
+          src/cycodmd/bin/Release/net8.0/
+          src/cycodmd/bin/Release/net8.0/win-x64/publish/
+          src/cycodmd/bin/Release/net8.0/linux-x64/publish/
+          src/cycodmd/bin/Release/net8.0/osx-x64/publish/
