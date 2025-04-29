@@ -28,22 +28,27 @@ public class PptxFileConverter : IFileConverter
         }
     }
 
-    private string TryConvertToMarkdown(string fileName)
+    private string? TryConvertToMarkdown(string fileName)
     {
         using var presentationDoc = PresentationDocument.Open(fileName, false);
         var sb = new StringBuilder();
 
         var presentationPart = presentationDoc.PresentationPart;
-        if (presentationPart == null)
-        {
-            return string.Empty;
-        }
+        if (presentationPart == null) return null;
+
+        var slideIds = presentationPart.Presentation.SlideIdList?.Elements<SlideId>();
+        var noSlides = slideIds == null || !slideIds.Any();
+        if (noSlides) return null;
 
         var slideNumber = 1;
-        var slideIdList = presentationPart.Presentation.SlideIdList;
-        foreach (var slideId in slideIdList.Elements<SlideId>())
+        foreach (var slideId in slideIds!)
         {
-            var slidePart = presentationPart.GetPartById(slideId.RelationshipId) as SlidePart;
+            var noSlide = slideId.RelationshipId == null;
+            if (noSlide) continue;
+
+            var slidePart = presentationPart.GetPartById(slideId.RelationshipId!) as SlidePart;
+            if (slidePart == null) continue;
+
             sb.AppendLine(ConvertSlideToMarkdown(slidePart, slideNumber++));
         }
 
@@ -276,9 +281,11 @@ public class PptxFileConverter : IFileConverter
 
     private string GetCellText(SlidePart slidePart, A.TableCell cell)
     {
-        var cellText = new StringBuilder();
+        var elements = cell.TextBody?.Elements<A.Paragraph>() ?? Enumerable.Empty<A.Paragraph>();
+
         var isFirst = true;
-        foreach (var paragraph in cell.TextBody.Elements<A.Paragraph>())
+        var cellText = new StringBuilder();
+        foreach (var paragraph in elements)
         {
             var paragraphText = GetParagraphText(slidePart, paragraph, "<br/>").TrimEnd();
             if (string.IsNullOrWhiteSpace(paragraphText)) continue;

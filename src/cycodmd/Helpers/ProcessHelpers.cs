@@ -6,7 +6,7 @@ using System.Threading;
 
 static class ProcessHelpers
 {
-    public static async Task<(string, int)> RunShellCommandAsync(string script, string shell, int timeout = int.MaxValue)
+    public static async Task<(string, int)> RunShellCommandAsync(string script, string? shell, int timeout = int.MaxValue)
     {
         GetShellProcessNameAndArgs(script, shell, out var processName, out var arguments);
         return await RunProcessAsync(processName, arguments, timeout);
@@ -50,7 +50,7 @@ static class ProcessHelpers
         return (sbMerged.ToString(), process.ExitCode);
     }
 
-    private static void GetShellProcessNameAndArgs(string script, string shell, out string processName, out string arguments)
+    private static void GetShellProcessNameAndArgs(string script, string? shell, out string processName, out string arguments)
     {
         switch (shell)
         {
@@ -81,7 +81,7 @@ static class ProcessHelpers
         }
     }
 
-    private static void AppendLineOrSignal(string text, StringBuilder sb1, StringBuilder sb2, ManualResetEvent signal)
+    private static void AppendLineOrSignal(string? text, StringBuilder sb1, StringBuilder sb2, ManualResetEvent signal)
     {
         if (text != null)
         {

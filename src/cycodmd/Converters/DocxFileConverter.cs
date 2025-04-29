@@ -67,7 +67,7 @@ public class DocxFileConverter : IFileConverter
             _ => string.Empty
         };
 
-        var style = paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value;
+        var style = paragraph.ParagraphProperties?.ParagraphStyleId?.Val?.Value ?? string.Empty;
         var headingLevel = GetHeadingLevel(style, doc);
         if (headingLevel > 0)
         {
@@ -185,17 +185,17 @@ public class DocxFileConverter : IFileConverter
         var numberingId = para.ParagraphProperties?.NumberingProperties?.NumberingId?.Val;
         if (numberingId is null) return ListType.None;
 
-        var numberingPart = doc.MainDocumentPart.NumberingDefinitionsPart;
+        var numberingPart = doc.MainDocumentPart?.NumberingDefinitionsPart;
         if (numberingPart == null) return ListType.None;
 
         var abstractNumId = numberingPart.Numbering
              .Elements<NumberingInstance>()
-             .First(i => i.NumberID.Value == numberingId.Value)
-             ?.AbstractNumId.Val;
+             .First(i => i.NumberID?.Value == numberingId.Value)
+             ?.AbstractNumId?.Val;
 
         var abstractNum = numberingPart.Numbering
             .Elements<AbstractNum>()
-            .FirstOrDefault(an => an.AbstractNumberId?.Value == abstractNumId.Value);
+            .FirstOrDefault(an => an.AbstractNumberId?.Value == abstractNumId?.Value);
 
         var level = abstractNum?.Elements<Level>()
             .FirstOrDefault(lvl => lvl.LevelIndex?.Value == 0);
@@ -251,7 +251,7 @@ public class DocxFileConverter : IFileConverter
         var relationshipId = hyperlink.Id?.Value;
         if (relationshipId == null) return string.Empty;
 
-        var hyperlinkPart = doc.MainDocumentPart.HyperlinkRelationships.FirstOrDefault(r => r.Id == relationshipId);
+        var hyperlinkPart = doc.MainDocumentPart?.HyperlinkRelationships.FirstOrDefault(r => r.Id == relationshipId);
         if (hyperlinkPart == null) return string.Empty;
 
         var uri = hyperlinkPart.Uri.OriginalString;

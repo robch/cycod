@@ -3,18 +3,18 @@ using System.IO;
 
 class ImageTypeDetector
 {
-    public static string GetContentType(string fileName)
+    public static string? GetContentType(string fileName)
     {
         var imageBytes = File.ReadAllBytes(fileName);
         return GetContentType(fileName, imageBytes);
     }
 
-    public static string GetContentType(string fileName, byte[] imageBytes)
+    public static string? GetContentType(string fileName, byte[] imageBytes)
     {
         return GetContentTypeFromImage(imageBytes) ?? GetContentTypeFromFileName(fileName);
     }
 
-    public static string GetContentTypeFromImage(byte[] imageBytes)
+    public static string? GetContentTypeFromImage(byte[] imageBytes)
     {
         var imageType = GetImageType(imageBytes);
         return imageType switch
@@ -27,7 +27,7 @@ class ImageTypeDetector
         };
     }
 
-    public static string GetContentTypeFromFileName(string fileName)
+    public static string? GetContentTypeFromFileName(string fileName)
     {
         var extension = Path.GetExtension(fileName).ToLower();
         return extension switch

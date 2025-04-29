@@ -75,7 +75,7 @@ class FindFilesCommand : CycoDmdCommand
 
     public List<Tuple<string, string>> FileInstructionsList;
 
-    public string SaveFileOutput;
+    public string? SaveFileOutput;
 
     private void AddExclusions(string mdxIgnoreFile)
     {

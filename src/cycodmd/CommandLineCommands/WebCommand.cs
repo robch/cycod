@@ -17,8 +17,6 @@ abstract class WebCommand : CycoDmdCommand
         GetContent = false;
         StripHtml = false;
 
-        SaveFolder = null;
-
         PageInstructionsList = new();
     }
 
@@ -32,9 +30,9 @@ abstract class WebCommand : CycoDmdCommand
     public bool GetContent { get; set; }
     public bool StripHtml { get; set; }
 
-    public string SaveFolder { get; set; }
+    public string? SaveFolder { get; set; }
 
     public List<Tuple<string, string>> PageInstructionsList;
 
-    public string SavePageOutput { get; set; }
+    public string? SavePageOutput { get; set; }
 }

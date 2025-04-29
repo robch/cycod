@@ -604,7 +604,7 @@ public class CommandLineOptions
         }
     }
 
-    protected int ValidateLineCount(string arg, string countStr)
+    protected int ValidateLineCount(string arg, string? countStr)
     {
         return ValidateInt(arg, countStr, "line count");
     }

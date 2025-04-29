@@ -48,7 +48,7 @@ class PlaywrightHelpers
         return urls;
     }
 
-    public static async Task<(string, string)> GetPageAndTitle(string url, bool stripHtml, string saveToFolder, BrowserType browserType, bool interactive)
+    public static async Task<(string, string)> GetPageAndTitle(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive)
     {
         // Initialize Playwright
         using var playwright = await Playwright.CreateAsync();
@@ -242,7 +242,7 @@ class PlaywrightHelpers
         }
     }
 
-    private static async Task<string> FetchPageContent(IPage page, string url, bool stripHtml, string saveToFolder)
+    private static async Task<string> FetchPageContent(IPage page, string url, bool stripHtml, string? saveToFolder)
     {
         try
         {

@@ -7,7 +7,7 @@ class AiInstructionProcessor
 {
     public const string DefaultSaveChatHistoryTemplate = "chat-history-{time}.jsonl";
 
-    public static string ApplyAllInstructions(List<string> instructionsList, string content, bool useBuiltInFunctions, string saveChatHistory, int retries = 1)
+    public static string ApplyAllInstructions(List<string> instructionsList, string content, bool useBuiltInFunctions, string? saveChatHistory, int retries = 1)
     {
         try
         {
@@ -20,7 +20,7 @@ class AiInstructionProcessor
         }
     }
 
-    public static string ApplyInstructions(string instructions, string content, bool useBuiltInFunctions, string saveChatHistory, int retries = 1)
+    public static string ApplyInstructions(string instructions, string content, bool useBuiltInFunctions, string? saveChatHistory, int retries = 1)
     {
         while (true)
         {
@@ -38,11 +38,11 @@ class AiInstructionProcessor
         }
     }
 
-    private static void ApplyInstructions(string instructions, string content, bool useBuiltInFunctions, string saveChatHistory, out int returnCode, out string stdOut, out string stdErr, out Exception exception)
+    private static void ApplyInstructions(string instructions, string content, bool useBuiltInFunctions, string? saveChatHistory, out int returnCode, out string stdOut, out string stdErr, out Exception? exception)
     {
         returnCode = 0;
-        stdOut = null;
-        stdErr = null;
+        stdOut = string.Empty;
+        stdErr = string.Empty;
         exception = null;
 
         var userPromptFileName = Path.GetTempFileName();
@@ -178,7 +178,8 @@ class AiInstructionProcessor
         foreach (System.Text.RegularExpressions.Match match in matches)
         {
             var fileName = match.Groups[1].Value;
-            var filePath = Path.Combine(Path.GetDirectoryName(userPromptFileName), fileName);
+            var directoryName = Path.GetDirectoryName(userPromptFileName) ?? string.Empty;
+            var filePath = Path.Combine(directoryName, fileName);
             if (File.Exists(filePath))
             {
                 var fileContent = File.ReadAllText(filePath);

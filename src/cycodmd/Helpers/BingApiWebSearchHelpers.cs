@@ -45,9 +45,12 @@ public static class BingApiWebSearchHelpers
             foreach (var result in searchResults)
             {
                 var url = result.GetProperty("url").GetString();
-                if (!excludeURLContainsPatternList.Any(pattern => pattern.IsMatch(url)))
+                var noUrl = string.IsNullOrEmpty(url);
+                if (noUrl) continue;
+
+                if (!excludeURLContainsPatternList.Any(pattern => pattern.IsMatch(url!)))
                 {
-                    urls.Add(url);
+                    urls.Add(url!);
                     if (urls.Count == maxResults)
                     {
                         break;

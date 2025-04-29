@@ -53,7 +53,7 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
                TryParseSharedMdxCommandOptions(command as CycoDmdCommand, args, ref i, arg);
     }
 
-    private bool TryParseRunCommandOptions(RunCommand command, string[] args, ref int i, string arg)
+    private bool TryParseRunCommandOptions(RunCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -97,7 +97,7 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         return parsed;
     }
 
-    private bool TryParseFindFilesCommandOptions(FindFilesCommand command, string[] args, ref int i, string arg)
+    private bool TryParseFindFilesCommandOptions(FindFilesCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -211,7 +211,7 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         return parsed;
     }
 
-    private bool TryParseWebCommandOptions(WebCommand command, string[] args, ref int i, string arg)
+    private bool TryParseWebCommandOptions(WebCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 
@@ -315,7 +315,7 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         return parsed;
     }
 
-    private bool TryParseSharedMdxCommandOptions(CycoDmdCommand command, string[] args, ref int i, string arg)
+    private bool TryParseSharedMdxCommandOptions(CycoDmdCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
 

@@ -33,8 +33,8 @@ public class OpenAIChatCompletionsClass
         _openAISystemPrompt = openAISystemPrompt;
 
         _client = string.IsNullOrEmpty(openAIAPIKey)
-            ? new AzureOpenAIClient(new Uri(openAIEndpoint), new DefaultAzureCredential())
-            : new AzureOpenAIClient(new Uri(openAIEndpoint), new AzureKeyCredential(openAIAPIKey));
+            ? new AzureOpenAIClient(new Uri(openAIEndpoint!), new DefaultAzureCredential())
+            : new AzureOpenAIClient(new Uri(openAIEndpoint!), new AzureKeyCredential(openAIAPIKey));
 
         _chatClient = _client.GetChatClient(openAIChatDeploymentName);
         _messages = new List<ChatMessage>();

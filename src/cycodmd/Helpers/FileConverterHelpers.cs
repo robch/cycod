@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 class FileConverterHelpers
 {
-    public static string ReadAllText(string fileName, out bool isStdin, out bool isMarkdown, out bool isBinary)
+    public static string? ReadAllText(string fileName, out bool isStdin, out bool isMarkdown, out bool isBinary)
     {
         isStdin = fileName == "-";
         isBinary = !isStdin && File.ReadAllBytes(fileName).Any(x => x == 0);

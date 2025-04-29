@@ -113,7 +113,7 @@ class Program
 
                 if (shouldSaveOutput)
                 {
-                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", mdxCommand!.SaveOutput);
+                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", mdxCommand!.SaveOutput)!;
                     FileHelpers.WriteAllText(saveFileName, commandOutput);
                 }
             }
@@ -316,7 +316,7 @@ class Program
 
             if (!string.IsNullOrEmpty(command.SaveOutput))
             {
-                var saveFileName = FileHelpers.GetFileNameFromTemplate("command-output.md", command.SaveOutput);
+                var saveFileName = FileHelpers.GetFileNameFromTemplate("command-output.md", command.SaveOutput)!;
                 FileHelpers.WriteAllText(saveFileName, finalContent);
                 ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
@@ -378,7 +378,7 @@ class Program
         }
     }
 
-    private static Task<string> GetCheckSaveFileContentAsync(string fileName, SemaphoreSlim throttler, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string saveChatHistory, string saveFileOutput)
+    private static Task<string> GetCheckSaveFileContentAsync(string fileName, SemaphoreSlim throttler, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
     {
         var getCheckSaveFileContent = new Func<string>(() =>
             GetCheckSaveFileContent(
@@ -413,7 +413,7 @@ class Program
         });
     }
 
-    private static string GetCheckSaveFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string saveChatHistory, string saveFileOutput)
+    private static string GetCheckSaveFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
     {
         try
         {
@@ -432,7 +432,7 @@ class Program
 
             if (!string.IsNullOrEmpty(saveFileOutput))
             {
-                var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, saveFileOutput);
+                var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, saveFileOutput)!;
                 FileHelpers.WriteAllText(saveFileName, finalContent);
                 ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
@@ -445,7 +445,7 @@ class Program
         }
     }
 
-    private static string GetFinalFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string saveChatHistory)
+    private static string GetFinalFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
     {
         var formatted = GetFormattedFileContent(
             fileName,
@@ -598,7 +598,7 @@ class Program
         return string.Join("\n", output);
     }
 
-    private static async Task<string> GetCheckSaveWebPageContentAsync(string url, bool stripHtml, string saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string saveChatHistory, string savePageOutput)
+    private static async Task<string> GetCheckSaveWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? savePageOutput)
     {
         try
         {
@@ -608,7 +608,7 @@ class Program
             if (!string.IsNullOrEmpty(savePageOutput))
             {
                 var fileName = FileHelpers.GenerateUniqueFileNameFromUrl(url, saveToFolder ?? "web-pages");
-                var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, savePageOutput);
+                var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, savePageOutput)!;
                 FileHelpers.WriteAllText(saveFileName, finalContent);
                 ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
@@ -621,7 +621,7 @@ class Program
         }
     }
 
-    private static async Task<string> GetFinalWebPageContentAsync(string url, bool stripHtml, string saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string saveChatHistory)
+    private static async Task<string> GetFinalWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
     {
         var formatted = await GetFormattedWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive);
 
@@ -644,7 +644,7 @@ class Program
             url == webPageCriteria;
     }
 
-    private static async Task<string> GetFormattedWebPageContentAsync(string url, bool stripHtml, string saveToFolder, BrowserType browserType, bool interactive)
+    private static async Task<string> GetFormattedWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive)
     {
         try
         {
