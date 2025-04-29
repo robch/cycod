@@ -30,11 +30,11 @@ public class HelpHelpers
         return EmbeddedFileHelpers.ReadEmbeddedStream($"help.{topic}.txt");
     }
 
-    public static void DisplayUsage(string command)
+    public static void DisplayUsage(string? helpTopic)
     {
-        var validTopic = !string.IsNullOrEmpty(command) && HelpTopicExists(command);
+        var validTopic = !string.IsNullOrEmpty(helpTopic) && HelpTopicExists(helpTopic);
         var helpContent = validTopic
-            ? GetHelpTopicText(command)
+            ? GetHelpTopicText(helpTopic!)
             : GetHelpTopicText(UsageHelpTopic);
 
         helpContent ??= $"USAGE: {ProgramInfo.Name} [...]";

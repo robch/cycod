@@ -30,7 +30,7 @@ class PlaywrightHelpers
             "duckduckgo" => $"https://duckduckgo.com/?q={Uri.EscapeDataString(query)}",
             _ => throw new ArgumentException($"Unsupported search engine: {searchEngine}")
         };
-        ConsoleHelpers.PrintDebugLine($"Navigating to {searchUrl}");
+        ConsoleHelpers.WriteDebugLine($"Navigating to {searchUrl}");
 
         // Navigate to the URL
         await page.GotoAsync(searchUrl);
@@ -98,7 +98,7 @@ class PlaywrightHelpers
         {
             var content = await FetchPageContentWithRetries(page);
             var title = await page.TitleAsync();
-            ConsoleHelpers.PrintDebugLine($"No search results found, page title: {title}\n\n{content}");
+            ConsoleHelpers.WriteDebugLine($"No search results found, page title: {title}\n\n{content}");
             if (interactive) Task.Delay(10000).Wait();
         }
 
@@ -136,7 +136,7 @@ class PlaywrightHelpers
         {
             var content = await FetchPageContentWithRetries(page);
             var title = await page.TitleAsync();
-            ConsoleHelpers.PrintDebugLine($"No search results found, page title: {title}\n\n{content}");
+            ConsoleHelpers.WriteDebugLine($"No search results found, page title: {title}\n\n{content}");
             if (interactive) Task.Delay(10000).Wait();
         }
 
@@ -174,7 +174,7 @@ class PlaywrightHelpers
         {
             var content = await FetchPageContentWithRetries(page);
             var title = await page.TitleAsync();
-            ConsoleHelpers.PrintDebugLine($"No search results found, page title: {title}\n\n{content}");
+            ConsoleHelpers.WriteDebugLine($"No search results found, page title: {title}\n\n{content}");
             if (interactive) Task.Delay(10000).Wait();
         }
 
@@ -212,7 +212,7 @@ class PlaywrightHelpers
         {
             var content = await FetchPageContentWithRetries(page);
             var title = await page.TitleAsync();
-            ConsoleHelpers.PrintDebugLine($"No search results found, page title: {title}\n\n{content}");
+            ConsoleHelpers.WriteDebugLine($"No search results found, page title: {title}\n\n{content}");
             if (interactive) Task.Delay(10000).Wait();
         }
 
@@ -315,7 +315,7 @@ class PlaywrightHelpers
             var element = await page.QuerySelectorAsync(selector);
             if (element == null)
             {
-                ConsoleHelpers.PrintDebugLine($"Element {selector} not found, will scroll and retry...");
+                ConsoleHelpers.WriteDebugLine($"Element {selector} not found, will scroll and retry...");
                 await page.EvaluateAsync("window.scrollTo(0, document.body.scrollHeight)");
                 await Task.Delay(retryInterval);
                 continue;
@@ -329,7 +329,7 @@ class PlaywrightHelpers
             }
             catch (Exception)
             {
-                ConsoleHelpers.PrintDebugLine($"Failed to click element {selector}, will retry...");
+                ConsoleHelpers.WriteDebugLine($"Failed to click element {selector}, will retry...");
                 await Task.Delay(retryInterval);
             }
         }

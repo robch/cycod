@@ -40,7 +40,7 @@ public class ChatCommand : CommandWithVariables
         return clone;
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);

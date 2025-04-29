@@ -46,7 +46,7 @@ abstract public class ProgramRunner
             if (ex != null)
             {
                 DisplayException(ex);
-                HelpHelpers.DisplayUsage(ex.GetCommand());
+                HelpHelpers.DisplayUsage(ex.GetHelpTopic());
                 return 2;
             }
             else
@@ -98,7 +98,7 @@ abstract public class ProgramRunner
             parallelism = 1;
         }
 
-        var allTasks = new List<Task<int>>();
+        var allTasks = new List<Task<object>>();
         var throttler = new SemaphoreSlim(parallelism);
 
         var commands = ForEachVarHelpers.ExpandForEachVars(commandLineOptions.Commands).ToList();
@@ -120,10 +120,10 @@ abstract public class ProgramRunner
         await Task.WhenAll(allTasks.ToArray());
         ConsoleHelpers.DisplayStatusErase();
 
-        return 0;
+        return ExitCodeFromResults(allTasks);
     }
 
-    private static Task<int> WrapRunAndRelease(SemaphoreSlim throttler, Task<int> startedTask)
+    private static Task<object> WrapRunAndRelease(SemaphoreSlim throttler, Task<object> startedTask)
     {
         return Task.Run(async () =>
         {
@@ -136,6 +136,30 @@ abstract public class ProgramRunner
                 throttler.Release();
             }
         });
+    }
+
+    private static int ExitCodeFromResults(List<Task<object>> allTasks)
+    {
+        var exitCode = allTasks
+            .Where(t => t.Result is int)
+            .Select(t => (int)t.Result)
+            .Where(t => t != 0)
+            .FirstOrDefault();
+
+        var soFarSoGood = exitCode == 0;
+        var checkNullStrings = soFarSoGood;
+        if (checkNullStrings)
+        {
+            var nullStrings = allTasks
+                .Where(t => t.Result is string)
+                .Select(t => (string)t.Result)
+                .Where(t => string.IsNullOrEmpty(t))
+                .ToList();
+            var stringsOk = nullStrings.Count == 0;
+            exitCode = stringsOk ? 0 : 1;
+        }
+
+        return exitCode;
     }
 
     private static void DisplayBanner()

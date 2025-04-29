@@ -15,7 +15,7 @@ class ConfigListCommand : ConfigBaseCommand
         Scope = ConfigFileScope.Any;
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         return await Task.Run(() => 
         {

@@ -1,6 +1,6 @@
 using System;
 
-class RunCommand : Command
+class RunCommand : CycoDmdCommand
 {
     public enum ScriptType
     {
@@ -26,7 +26,7 @@ class RunCommand : Command
         return string.IsNullOrWhiteSpace(ScriptToRun);
     }
 
-    override public Command Validate()
+    override public CycoDmdCommand Validate()
     {
         return this;
     }

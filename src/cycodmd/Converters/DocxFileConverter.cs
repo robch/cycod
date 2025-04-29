@@ -14,7 +14,7 @@ public class DocxFileConverter : IFileConverter
         return fileName.EndsWith(".docx", StringComparison.OrdinalIgnoreCase);
     }
 
-    public string ConvertToMarkdown(string fileName)
+    public string? ConvertToMarkdown(string fileName)
     {
         try
         {

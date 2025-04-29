@@ -8,5 +8,5 @@ public interface IFileConverter
     /// <summary>
     /// Performs the actual conversion to Markdown.
     /// </summary>
-    string ConvertToMarkdown(string fileName);
+    string? ConvertToMarkdown(string fileName);
 }

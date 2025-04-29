@@ -21,7 +21,7 @@ class WebGetCommand : WebCommand
         return !Urls.Any();
     }
 
-    override public Command Validate()
+    override public CycoDmdCommand Validate()
     {
         return this;
     }

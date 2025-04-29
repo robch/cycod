@@ -20,7 +20,7 @@ class WebSearchCommand : WebCommand
         return !Terms.Any();
     }
 
-    override public Command Validate()
+    override public CycoDmdCommand Validate()
     {
         var noContent = !GetContent;
         var hasInstructions = PageInstructionsList.Any() || InstructionsList.Any();

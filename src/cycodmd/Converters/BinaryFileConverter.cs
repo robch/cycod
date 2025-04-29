@@ -5,7 +5,7 @@ public class BinaryFileConverter : IFileConverter
         return true;
     }
 
-    public string ConvertToMarkdown(string fileName)
+    public string? ConvertToMarkdown(string fileName)
     {
         return null;
     }

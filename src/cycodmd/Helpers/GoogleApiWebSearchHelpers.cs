@@ -8,11 +8,11 @@ using System.Linq;
 
 public static class GoogleApiWebSearchHelpers
 {
-    private static string endpoint = null;
-    private static string apiKey = null;
-    private static string engineId = null;
+    private static string? endpoint = null;
+    private static string? apiKey = null;
+    private static string? engineId = null;
 
-    public static void ConfigureEndpoint(string apiEndpoint, string api_Key, string searchEngineId)
+    public static void ConfigureEndpoint(string? apiEndpoint, string? api_Key, string? searchEngineId)
     {
         endpoint = apiEndpoint;
         apiKey = api_Key;
@@ -31,7 +31,7 @@ public static class GoogleApiWebSearchHelpers
         while (urls.Count < maxResults)
         {
             var requestUri = $"{endpoint}?q={Uri.EscapeDataString(query)}&key={apiKey}&cx={engineId}&start={start}";
-            ConsoleHelpers.PrintDebugLine($"Sending request to Google API: {requestUri}");
+            ConsoleHelpers.WriteDebugLine($"Sending request to Google API: {requestUri}");
 
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
 
@@ -57,7 +57,7 @@ public static class GoogleApiWebSearchHelpers
 
             if (!searchResults.Any())
             {
-                ConsoleHelpers.PrintDebugLine($"No more search results found, json response: {jsonResponse}");
+                ConsoleHelpers.WriteDebugLine($"No more search results found, json response: {jsonResponse}");
                 break;
             }
 

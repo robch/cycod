@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,59 +12,71 @@ class Program
 {
     static async Task<int> Main(string[] args)
     {
+        CycoDmdProgramInfo _programInfo = new ();
+
         var playwrightCommand = args.Length >= 1 && args[0] == "playwright";
         if (playwrightCommand) return PlaywrightHelpers.RunCli(args.Skip(1).ToArray());
 
-        if (!CommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
+        if (!CycoDmdCommandLineOptions.Parse(args, out var commandLineOptions, out var ex))
         {
-            PrintBanner();
+            DisplayBanner();
             if (ex != null)
             {
-                PrintException(ex);
-                HelpHelpers.PrintUsage(ex.GetCommand());
+                DisplayException(ex);
+                HelpHelpers.DisplayUsage(ex.GetHelpTopic());
                 return 2;
             }
             else
             {
-                HelpHelpers.PrintUsage(commandLineOptions.HelpTopic);
+                HelpHelpers.DisplayUsage(commandLineOptions!.HelpTopic);
                 return 1;
             }
         }
 
-        ConsoleHelpers.Configure(commandLineOptions.Debug, commandLineOptions.Verbose);
+        ConsoleHelpers.Configure(commandLineOptions!.Debug, commandLineOptions.Verbose, commandLineOptions.Quiet);
         BingApiWebSearchHelpers.ConfigureEndpoint(
-            EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_ENDPOINT"),
-            EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_KEY"));
+            EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_ENDPOINT", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_KEY", searchDotEnvFile: true));
         GoogleApiWebSearchHelpers.ConfigureEndpoint(
-            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_ENDPOINT"),
-            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_KEY"),
-            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_ENGINE_ID"));
+            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_ENDPOINT", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_KEY", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("GOOGLE_SEARCH_ENGINE_ID", searchDotEnvFile: true));
         OpenAIChatCompletionsClass.Configure(
-            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT"),
-            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY"),
-            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT"),
-            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_SYSTEM_PROMPT"));
+            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_ENDPOINT", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT", searchDotEnvFile: true),
+            EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_SYSTEM_PROMPT", searchDotEnvFile: true));
 
         var helpCommand = commandLineOptions.Commands.OfType<HelpCommand>().FirstOrDefault();
         if (helpCommand != null)
         {
-            PrintBanner();
-            HelpHelpers.PrintHelpTopic(commandLineOptions.HelpTopic, commandLineOptions.ExpandHelpTopics);
+            DisplayBanner();
+            HelpHelpers.DisplayHelpTopic(commandLineOptions.HelpTopic, commandLineOptions.ExpandHelpTopics);
             return 0;
         }
 
         var shouldSaveAlias = !string.IsNullOrEmpty(commandLineOptions.SaveAliasName);
         if (shouldSaveAlias)
         {
-            var filesSaved = commandLineOptions.SaveAlias(commandLineOptions.SaveAliasName);
+            var filesSaved = AliasFileHelpers.SaveAlias(
+                commandLineOptions.SaveAliasName!,
+                commandLineOptions.AllOptions,
+                commandLineOptions.SaveAliasScope ?? ConfigFileScope.Local);
 
-            PrintBanner();
-            PrintSavedAliasFiles(filesSaved);
+            DisplayBanner();
+            AliasDisplayHelpers.DisplaySavedAliasFiles(filesSaved);
 
             return 0;
         }
 
-        var threadCountMax = commandLineOptions.Commands.Max(x => x.ThreadCount);
+        var shouldSetWorkingDir = !string.IsNullOrEmpty(commandLineOptions.WorkingDirectory);
+        if (shouldSetWorkingDir)
+        {
+            DirectoryHelpers.EnsureDirectoryExists(commandLineOptions.WorkingDirectory!);
+            Directory.SetCurrentDirectory(commandLineOptions.WorkingDirectory!);
+        }
+
+        var threadCountMax = commandLineOptions.ThreadCount;
         var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
 
         var allTasks = new List<Task<string>>();
@@ -71,7 +84,8 @@ class Program
 
         foreach (var command in commandLineOptions.Commands)
         {
-            bool delayOutputToApplyInstructions = command.InstructionsList.Any();
+            var mdxCommand = command as CycoDmdCommand;
+            bool delayOutputToApplyInstructions = mdxCommand?.InstructionsList.Any() ?? false;
 
             var tasksThisCommand = command switch
             {
@@ -79,13 +93,13 @@ class Program
                 WebSearchCommand webSearchCommand => await HandleWebSearchCommandAsync(commandLineOptions, webSearchCommand, throttler, delayOutputToApplyInstructions),
                 WebGetCommand webGetCommand => HandleWebGetCommand(commandLineOptions, webGetCommand, throttler, delayOutputToApplyInstructions),
                 RunCommand runCommand => HandleRunCommand(commandLineOptions, runCommand, throttler, delayOutputToApplyInstructions),
-                VersionCommand versionCommand => versionCommand.ExecuteAsync(),
+                VersionCommand versionCommand => HandleVersionCommand(commandLineOptions, versionCommand, throttler, delayOutputToApplyInstructions),
                 _ => new List<Task<string>>()
             };
 
             allTasks.AddRange(tasksThisCommand);
 
-            var shouldSaveOutput = !string.IsNullOrEmpty(command.SaveOutput);
+            var shouldSaveOutput = mdxCommand != null && !string.IsNullOrEmpty(mdxCommand.SaveOutput);
             if (shouldSaveOutput || delayOutputToApplyInstructions)
             {
                 await Task.WhenAll(tasksThisCommand.ToArray());
@@ -93,58 +107,36 @@ class Program
 
                 if (delayOutputToApplyInstructions)
                 {
-                    commandOutput = AiInstructionProcessor.ApplyAllInstructions(command.InstructionsList, commandOutput, command.UseBuiltInFunctions, command.SaveChatHistory);
-                    ConsoleHelpers.PrintLine(commandOutput);
+                    commandOutput = AiInstructionProcessor.ApplyAllInstructions(mdxCommand!.InstructionsList, commandOutput, mdxCommand.UseBuiltInFunctions, mdxCommand.SaveChatHistory);
+                    ConsoleHelpers.WriteLine(commandOutput);
                 }
 
                 if (shouldSaveOutput)
                 {
-                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", command.SaveOutput);
+                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", mdxCommand!.SaveOutput);
                     FileHelpers.WriteAllText(saveFileName, commandOutput);
                 }
             }
         }
 
         await Task.WhenAll(allTasks.ToArray());
-        ConsoleHelpers.PrintStatusErase();
+        ConsoleHelpers.DisplayStatusErase();
 
         return 0;
     }
 
-    private static void PrintBanner()
+    private static void DisplayBanner()
     {
         var programNameUppercase = Program.Name.ToUpper();
-        ConsoleHelpers.PrintLine(
+        ConsoleHelpers.WriteLine(
             $"{programNameUppercase} - The AI-Powered Markdown Generator CLI, Version {VersionInfo.GetVersion()}\n" +
             "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
     }
 
-    private static void PrintException(CommandLineException ex)
+    private static void DisplayException(CommandLineException ex)
     {
         var printMessage = !string.IsNullOrEmpty(ex.Message);
-        if (printMessage) ConsoleHelpers.PrintLine($"  {ex.Message}\n\n");
-    }
-
-    private static void PrintSavedAliasFiles(List<string> filesSaved)
-    {
-        var firstFileSaved = filesSaved.First();
-        var additionalFiles = filesSaved.Skip(1).ToList();
-
-        ConsoleHelpers.PrintLine($"Saved: {firstFileSaved}\n");
-
-        var hasAdditionalFiles = additionalFiles.Any();
-        if (hasAdditionalFiles)
-        {
-            foreach (var additionalFile in additionalFiles)
-            {
-                ConsoleHelpers.PrintLine($"  and: {additionalFile}");
-            }
-         
-            ConsoleHelpers.PrintLine();
-        }
-
-        var aliasName = Path.GetFileNameWithoutExtension(firstFileSaved);
-        ConsoleHelpers.PrintLine($"USAGE: {Program.Name} [...] --" + aliasName);
+        if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n");
     }
 
     private static List<Task<string>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
@@ -182,7 +174,7 @@ class Program
                 ? getCheckSaveTask
                 : getCheckSaveTask.ContinueWith(t =>
                 {
-                    ConsoleHelpers.PrintLineIfNotEmpty(t.Result);
+                    ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
                     return t.Result;
                 });
 
@@ -224,7 +216,7 @@ class Program
             ? $"{searchSectionHeader}\n\nNo results found\n"
             : $"{searchSectionHeader}\n\n" + string.Join("\n", urls) + "\n";
 
-        if (!delayOutputToApplyInstructions) ConsoleHelpers.PrintLine(searchSection);
+        if (!delayOutputToApplyInstructions) ConsoleHelpers.WriteLine(searchSection);
 
         if (urls.Count == 0 || !getContent)
         {
@@ -241,7 +233,7 @@ class Program
                 ? getCheckSaveTask
                 : getCheckSaveTask.ContinueWith(t =>
                 {
-                    ConsoleHelpers.PrintLineIfNotEmpty(t.Result);
+                    ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
                     return t.Result;
                 });
 
@@ -280,7 +272,7 @@ class Program
                 ? getCheckSaveTask
                 : getCheckSaveTask.ContinueWith(t =>
                 {
-                    ConsoleHelpers.PrintLineIfNotEmpty(t.Result);
+                    ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
                     return t.Result;
                 });
 
@@ -299,7 +291,7 @@ class Program
             ? getCheckSaveTask
             : getCheckSaveTask.ContinueWith(t =>
             {
-                ConsoleHelpers.PrintLineIfNotEmpty(t.Result);
+                ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
                 return t.Result;
             });
 
@@ -307,25 +299,33 @@ class Program
         return tasks;
     }
 
+    private static List<Task<string>> HandleVersionCommand(CommandLineOptions commandLineOptions, VersionCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    {
+        var version = command.ExecuteAsync(false).Result.ToString()!;
+        var tasks = new List<Task<string>>();
+        tasks.Add(Task.FromResult(version));
+        return tasks;
+    }
+
     private static async Task<string> GetCheckSaveRunCommandContentAsync(RunCommand command)
     {
         try
         {
-            ConsoleHelpers.PrintStatus($"Executing: {command.ScriptToRun} ...");
+            ConsoleHelpers.DisplayStatus($"Executing: {command.ScriptToRun} ...");
             var finalContent = await GetFinalRunCommandContentAsync(command);
 
             if (!string.IsNullOrEmpty(command.SaveOutput))
             {
                 var saveFileName = FileHelpers.GetFileNameFromTemplate("command-output.md", command.SaveOutput);
                 FileHelpers.WriteAllText(saveFileName, finalContent);
-                ConsoleHelpers.PrintStatus($"Saving to: {saveFileName} ... Done!");
+                ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
 
             return finalContent;
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
         }
     }
 
@@ -417,7 +417,7 @@ class Program
     {
         try
         {
-            ConsoleHelpers.PrintStatus($"Processing: {fileName} ...");
+            ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
             var finalContent = GetFinalFileContent(
                 fileName,
                 wrapInMarkdown,
@@ -434,14 +434,14 @@ class Program
             {
                 var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, saveFileOutput);
                 FileHelpers.WriteAllText(saveFileName, finalContent);
-                ConsoleHelpers.PrintStatus($"Saving to: {saveFileName} ... Done!");
+                ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
 
             return finalContent;
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
         }
     }
 
@@ -479,7 +479,7 @@ class Program
     {
         try
         {
-            var content = FileHelpers.ReadAllText(fileName, out var isMarkdown, out var isStdin, out var isBinary);
+            var content = FileConverterHelpers.ReadAllText(fileName, out var isMarkdown, out var isStdin, out var isBinary);
             if (content == null) return string.Empty;
 
             var backticks = isMarkdown || isStdin
@@ -602,7 +602,7 @@ class Program
     {
         try
         {
-            ConsoleHelpers.PrintStatus($"Processing: {url} ...");
+            ConsoleHelpers.DisplayStatus($"Processing: {url} ...");
             var finalContent = await GetFinalWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory);
 
             if (!string.IsNullOrEmpty(savePageOutput))
@@ -610,14 +610,14 @@ class Program
                 var fileName = FileHelpers.GenerateUniqueFileNameFromUrl(url, saveToFolder ?? "web-pages");
                 var saveFileName = FileHelpers.GetFileNameFromTemplate(fileName, savePageOutput);
                 FileHelpers.WriteAllText(saveFileName, finalContent);
-                ConsoleHelpers.PrintStatus($"Saving to: {saveFileName} ... Done!");
+                ConsoleHelpers.DisplayStatus($"Saving to: {saveFileName} ... Done!");
             }
 
             return finalContent;
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
         }
     }
 

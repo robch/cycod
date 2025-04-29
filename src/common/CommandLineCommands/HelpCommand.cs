@@ -15,7 +15,7 @@ public class HelpCommand : Command
         return false;
     }
 
-    public override Task<int> ExecuteAsync(bool interactive)
+    public override Task<object> ExecuteAsync(bool interactive)
     {
         throw new NotImplementedException();
     }

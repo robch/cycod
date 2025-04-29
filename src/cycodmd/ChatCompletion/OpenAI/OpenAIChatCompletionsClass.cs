@@ -10,7 +10,7 @@ using System.Linq;
 
 public class OpenAIChatCompletionsClass
 {    
-    public static void Configure(string openAIEndpoint, string openAIAPIKey, string openAIChatDeploymentName, string openAISystemPrompt)
+    public static void Configure(string? openAIEndpoint, string? openAIAPIKey, string? openAIChatDeploymentName, string? openAISystemPrompt)
     {
         _configuredOpenAIEndpoint = openAIEndpoint;
         _configuredOpenAIAPIKey = openAIAPIKey;
@@ -23,7 +23,7 @@ public class OpenAIChatCompletionsClass
         return !string.IsNullOrEmpty(_configuredOpenAIEndpoint) && !string.IsNullOrEmpty(_configuredOpenAIAPIKey) && !string.IsNullOrEmpty(_configuredOpenAIChatDeploymentName) && !string.IsNullOrEmpty(_configuredOpenAISystemPrompt);
     }
 
-    public OpenAIChatCompletionsClass(string openAIEndpoint = null, string openAIAPIKey = null, string openAIChatDeploymentName = null, string openAISystemPrompt = null)
+    public OpenAIChatCompletionsClass(string? openAIEndpoint = null, string? openAIAPIKey = null, string? openAIChatDeploymentName = null, string? openAISystemPrompt = null)
     {
         openAIEndpoint = string.IsNullOrEmpty(openAIEndpoint) ? _configuredOpenAIEndpoint : openAIEndpoint;
         openAIAPIKey = string.IsNullOrEmpty(openAIAPIKey) ? _configuredOpenAIAPIKey : openAIAPIKey;
@@ -80,13 +80,13 @@ public class OpenAIChatCompletionsClass
         return responseContent;
     }
 
-    private string _openAISystemPrompt;
+    private string? _openAISystemPrompt;
     private OpenAIClient _client;
     private ChatClient _chatClient;
     private List<ChatMessage> _messages;
 
-    private static string _configuredOpenAIEndpoint;
-    private static string _configuredOpenAIAPIKey;
-    private static string _configuredOpenAIChatDeploymentName;
-    private static string _configuredOpenAISystemPrompt;
+    private static string? _configuredOpenAIEndpoint;
+    private static string? _configuredOpenAIAPIKey;
+    private static string? _configuredOpenAIChatDeploymentName;
+    private static string? _configuredOpenAISystemPrompt;
 }

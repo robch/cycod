@@ -17,7 +17,7 @@ public class PdfFileConverter : IFileConverter
         return fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
     }
 
-    public string ConvertToMarkdown(string fileName)
+    public string? ConvertToMarkdown(string fileName)
     {
         var sb = new StringBuilder();
         using (var document = PdfDocument.Open(fileName))

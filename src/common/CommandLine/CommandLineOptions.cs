@@ -1,8 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 public class CommandLineOptions
 {
@@ -208,7 +204,7 @@ public class CommandLineOptions
         var isEndOfCommand = arg == "--" && command != null && !command.IsEmpty();
         if (isEndOfCommand)
         {
-            this.Commands.Add(command!);
+            this.Commands.Add(command!.Validate());
             command = null;
             return true;
         }
@@ -448,11 +444,12 @@ public class CommandLineOptions
         return parsed;
     }
 
-    protected IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue)
+    protected IEnumerable<string> GetInputOptionArgs(int startAt, string[] args, int max = int.MaxValue, int required = 0)
     {
-        for (int i = startAt; i < args.Length && i - startAt < max; i++)
+        var found = 0;
+        for (int i = startAt; i < args.Length && i - startAt < max; i++, found++)
         {
-            if (args[i].StartsWith("--"))
+            if (args[i].StartsWith("--") && found >= required)
             {
                 yield break;
             }
@@ -480,6 +477,17 @@ public class CommandLineOptions
         }
 
         return strings.Select(x => ValidateString(arg, x, argDescription)!);
+    }
+
+    protected static string ValidateJoinedString(string arg, string seed, IEnumerable<string> values, string separator, string argDescription)
+    {
+        seed = string.Join(separator, values.Prepend(seed)).Trim();
+        if (string.IsNullOrEmpty(seed))
+        {
+            throw new CommandLineException($"Missing {argDescription} for {arg}");
+        }
+
+        return seed;
     }
 
     protected (string, string) ValidateAssignment(string arg, string? assignment)
@@ -549,6 +557,58 @@ public class CommandLineOptions
         return arg;
     }
 
+    protected IEnumerable<Regex> ValidateRegExPatterns(string arg, IEnumerable<string> patterns)
+    {
+        patterns = patterns.ToList();
+        if (!patterns.Any())
+        {
+            throw new CommandLineException($"Missing regular expression patterns for {arg}");
+        }
+
+        return patterns.Select(x => ValidateRegExPattern(arg, x));
+    }
+
+    protected Regex ValidateRegExPattern(string arg, string pattern)
+    {
+        try
+        {
+            return new Regex(pattern);
+        }
+        catch (Exception)
+        {
+            throw new CommandLineException($"Invalid regular expression pattern for {arg}: {pattern}");
+        }
+    }
+
+    protected Regex ValidateFilePatternToRegExPattern(string arg, string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern))
+        {
+            throw new CommandLineException($"Missing file pattern for {arg}");
+        }
+
+        var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
+        var patternPrefix = isWindows ? "(?i)^" : "^";
+        var regexPattern = patternPrefix + pattern
+            .Replace(".", "\\.")
+            .Replace("*", ".*")
+            .Replace("?", ".") + "$";
+
+        try
+        {
+            return new Regex(regexPattern);
+        }
+        catch (Exception)
+        {
+            throw new CommandLineException($"Invalid file pattern for {arg}: {pattern}");
+        }
+    }
+
+    protected int ValidateLineCount(string arg, string countStr)
+    {
+        return ValidateInt(arg, countStr, "line count");
+    }
+
     protected int ValidateInt(string arg, string? countStr, string argDescription)
     {
         if (string.IsNullOrEmpty(countStr))
@@ -567,7 +627,6 @@ public class CommandLineOptions
     protected CommandLineException InvalidArgException(Command? command, string arg)
     {
         var message = $"Invalid argument: {arg}";
-        var ex = new CommandLineException(message);
-        return ex;
+        return new CommandLineException(message, command?.GetHelpTopic() ?? "");
     }
 }

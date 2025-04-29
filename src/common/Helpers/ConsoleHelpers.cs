@@ -116,6 +116,12 @@ public class ConsoleHelpers
         }
     }
 
+    public static void WriteLineIfNotEmpty(string message)
+    {
+        if (string.IsNullOrEmpty(message)) return;
+        WriteLine(message);
+    }
+
     public static void WriteWarning(string message)
     {
         Write(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);

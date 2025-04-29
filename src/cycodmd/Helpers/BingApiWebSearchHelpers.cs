@@ -8,10 +8,10 @@ using System.Linq;
 
 public static class BingApiWebSearchHelpers
 {
-    private static string endpoint = null;
-    private static string apiKey = null;
+    private static string? endpoint = null;
+    private static string? apiKey = null;
 
-    public static void ConfigureEndpoint(string apiEndpoint, string api_Key)
+    public static void ConfigureEndpoint(string? apiEndpoint, string? api_Key)
     {
         endpoint = apiEndpoint;
         apiKey = api_Key;
@@ -30,7 +30,7 @@ public static class BingApiWebSearchHelpers
         while (urls.Count < maxResults)
         {
             var requestUri = $"{endpoint}?q={Uri.EscapeDataString(query)}&count={count}&offset={offset}";
-            ConsoleHelpers.PrintDebugLine($"Sending request to Bing API: {requestUri}");
+            ConsoleHelpers.WriteDebugLine($"Sending request to Bing API: {requestUri}");
 
             using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
             request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
@@ -57,7 +57,7 @@ public static class BingApiWebSearchHelpers
 
             if (!searchResults.Any())
             {
-                ConsoleHelpers.PrintDebugLine($"No more search results found, json response: {jsonResponse}");
+                ConsoleHelpers.WriteDebugLine($"No more search results found, json response: {jsonResponse}");
                 break;
             }
 

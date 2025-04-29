@@ -5,7 +5,7 @@ class TestListCommand : TestBaseCommand
         return "list";
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         return await Task.Run(() => ExecuteList());
     }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-abstract class WebCommand : Command
+abstract class WebCommand : CycoDmdCommand
 {
     public WebCommand()
     {

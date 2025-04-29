@@ -17,7 +17,7 @@ class ConfigGetCommand : ConfigBaseCommand
         return "config get";
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         return await Task.Run(() => ExecuteGet(Key, Scope ?? ConfigFileScope.Any, ConfigFileName));
     }

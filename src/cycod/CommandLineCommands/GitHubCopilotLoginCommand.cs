@@ -22,7 +22,7 @@ class GitHubLoginCommand : Command
         return "github login";
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         ConsoleHelpers.WriteDebugLine("Initiating GitHub login...");
         

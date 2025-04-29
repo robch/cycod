@@ -13,12 +13,15 @@ public class CommandLineException : Exception
     {
     }
 
-    public CommandLineException(string message) : base(message)
+    public CommandLineException(string message, string? helpTopic = null) : base(message)
     {
+        _helpTopic = helpTopic;
     }
 
-    virtual public string GetCommand()
+    public string? GetHelpTopic()
     {
-        return "";
+        return _helpTopic;
     }
+
+    private string? _helpTopic;
 }

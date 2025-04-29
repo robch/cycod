@@ -14,7 +14,7 @@ public class PptxFileConverter : IFileConverter
         return fileName.EndsWith(".pptx", StringComparison.OrdinalIgnoreCase);
     }
 
-    public string ConvertToMarkdown(string fileName)
+    public string? ConvertToMarkdown(string fileName)
     {
         try
         {

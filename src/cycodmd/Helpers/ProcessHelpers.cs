@@ -101,37 +101,37 @@ static class ProcessHelpers
         {
             var name = process.ProcessName;
             var message = $"Timedout! Stopping process ({name})...";
-            ConsoleHelpers.PrintDebugLine(message);
+            ConsoleHelpers.WriteDebugLine(message);
 
             try
             {
                 message = $"Timedout! Sending <ctrl-c> ...";
-                ConsoleHelpers.PrintDebugLine(message);
+                ConsoleHelpers.WriteDebugLine(message);
 
                 process.StandardInput.WriteLine("\x3"); // try ctrl-c first
                 process.StandardInput.Close();
 
-                ConsoleHelpers.PrintDebugLine($"{message} Sent!");
+                ConsoleHelpers.WriteDebugLine($"{message} Sent!");
 
                 completed = process.WaitForExit(200);
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.PrintDebugLine($"Timedout! Failed to send <ctrl-c>: {ex.Message}");
+                ConsoleHelpers.WriteDebugLine($"Timedout! Failed to send <ctrl-c>: {ex.Message}");
             }
 
             message = "Timedout! Sent <ctrl-c>" + (completed ? "; stopped" : "; trying Kill()");
-            ConsoleHelpers.PrintDebugLine(message);
+            ConsoleHelpers.WriteDebugLine(message);
 
             if (!completed)
             {
                 message = $"Timedout! Killing process ({name})...";
-                ConsoleHelpers.PrintDebugLine(message);
+                ConsoleHelpers.WriteDebugLine(message);
 
                 process.Kill();
 
                 message = process.HasExited ? $"{message} Done." : $"{message} Failed!";
-                ConsoleHelpers.PrintDebugLine(message);
+                ConsoleHelpers.WriteDebugLine(message);
             }
         }
 

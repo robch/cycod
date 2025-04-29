@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-class FindFilesCommand : Command
+class FindFilesCommand : CycoDmdCommand
 {
     public FindFilesCommand()
     {
@@ -41,18 +41,17 @@ class FindFilesCommand : Command
             IncludeLineCountAfter == 0 &&
             IncludeLineNumbers == false &&
             !RemoveAllLineContainsPatternList.Any() &&
-            !FileInstructionsList.Any() &&
-            ThreadCount == 0;
+            !FileInstructionsList.Any();
     }
 
-    override public Command Validate()
+    override public CycoDmdCommand Validate()
     {
         if (!Globs.Any()) 
         {
             Globs.Add("**");
         }
 
-        var mdxIgnoreFile = FileHelpers.ParentFindFile(".mdxignore");
+        var mdxIgnoreFile = FileHelpers.FindFileSearchParents(".mdxignore");
         if (mdxIgnoreFile != null)
         {
             AddExclusions(mdxIgnoreFile);

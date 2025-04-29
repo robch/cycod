@@ -13,12 +13,17 @@ abstract public class Command
     abstract public bool IsEmpty();
     abstract public string GetCommandName();
 
-    public string GetHelpTopic()
+    virtual public string GetHelpTopic()
     {
         var topic = GetCommandName();
         var ok = !string.IsNullOrEmpty(topic);
         return ok ? topic : "usage";
     }
 
-    abstract public Task<int> ExecuteAsync(bool interactive);
+    virtual public Command Validate()
+    {
+        return this;
+    }
+
+    abstract public Task<object> ExecuteAsync(bool interactive);
 }

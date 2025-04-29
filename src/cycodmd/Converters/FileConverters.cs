@@ -30,7 +30,7 @@ public static class FileConverters
         return converter != null && converter.CanConvert(fileName);
     }
 
-    public static string ConvertToMarkdown(string fileName)
+    public static string? ConvertToMarkdown(string fileName)
     {
         var converter = GetConverter(fileName);        
         return converter.ConvertToMarkdown(fileName);

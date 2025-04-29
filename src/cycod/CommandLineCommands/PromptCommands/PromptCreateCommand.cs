@@ -47,7 +47,7 @@ class PromptCreateCommand : PromptBaseCommand
     /// </summary>
     /// <param name="interactive">Whether the command is running in interactive mode.</param>
     /// <returns>Exit code, 0 for success, non-zero for failure.</returns>
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         return await Task.Run(() => 
         {

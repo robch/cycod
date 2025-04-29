@@ -11,12 +11,12 @@ class AiInstructionProcessor
     {
         try
         {
-            ConsoleHelpers.PrintStatus("Applying instructions ...");
+            ConsoleHelpers.DisplayStatus("Applying instructions ...");
             return instructionsList.Aggregate(content, (current, instruction) => ApplyInstructions(instruction, current, useBuiltInFunctions, saveChatHistory, retries));
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
         }
     }
 
@@ -57,9 +57,9 @@ class AiInstructionProcessor
             File.WriteAllText(instructionsFileName, instructions);
             File.WriteAllText(contentFileName, content);
 
-            ConsoleHelpers.PrintDebugLine($"user:\n{File.ReadAllText(userPromptFileName)}\n\n");
-            ConsoleHelpers.PrintDebugLine($"system:\n{File.ReadAllText(systemPromptFileName)}\n\n");
-            ConsoleHelpers.PrintDebugLine($"instructions:\n{File.ReadAllText(instructionsFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"user:\n{File.ReadAllText(userPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"system:\n{File.ReadAllText(systemPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"instructions:\n{File.ReadAllText(instructionsFileName)}\n\n");
 
             var useChatX = UseChatX();
             var arguments = useChatX
@@ -89,8 +89,8 @@ class AiInstructionProcessor
             process.StartInfo.RedirectStandardOutput = true;
             process.Start();
 
-            ConsoleHelpers.PrintDebugLine(process.StartInfo.Arguments);
-            ConsoleHelpers.PrintStatus("Applying instructions ...");
+            ConsoleHelpers.WriteDebugLine(process.StartInfo.Arguments);
+            ConsoleHelpers.DisplayStatus("Applying instructions ...");
 
             stdOut = process.StandardOutput.ReadToEnd();
             stdErr = process.StandardError.ReadToEnd();
@@ -104,7 +104,7 @@ class AiInstructionProcessor
         }
         finally
         {
-            ConsoleHelpers.PrintStatusErase();
+            ConsoleHelpers.DisplayStatusErase();
             if (File.Exists(userPromptFileName)) File.Delete(userPromptFileName);
             if (File.Exists(systemPromptFileName)) File.Delete(systemPromptFileName);
             if (File.Exists(instructionsFileName)) File.Delete(instructionsFileName);
@@ -114,12 +114,12 @@ class AiInstructionProcessor
 
     private static string GetSystemPrompt()
     {
-        return FileHelpers.ReadEmbeddedStream("prompts.system.md");
+        return EmbeddedFileHelpers.ReadEmbeddedStream("prompts.system.md")!;
     }
 
     private static string GetUserPrompt(string backticks, string contentFile, string instructionsFile)
     {
-        return FileHelpers.ReadEmbeddedStream("prompts.user.md")
+        return EmbeddedFileHelpers.ReadEmbeddedStream("prompts.user.md")!
             .Replace("{instructionsFile}", instructionsFile)
             .Replace("{contentFile}", contentFile)
             .Replace("{backticks}", backticks);
@@ -142,7 +142,7 @@ class AiInstructionProcessor
                 process.StartInfo.RedirectStandardOutput = true;
                 process.Start();
 
-                ConsoleHelpers.PrintDebugLine("Checking chatx installation ...");
+                ConsoleHelpers.WriteDebugLine("Checking chatx installation ...");
 
                 process.StandardInput.Close();
                 process.WaitForExit();
@@ -151,7 +151,7 @@ class AiInstructionProcessor
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.PrintDebugLine($"Error checking chatx installation: {ex.Message}");
+                ConsoleHelpers.WriteDebugLine($"Error checking chatx installation: {ex.Message}");
                 _useChatX = false;
             }
             finally
@@ -161,7 +161,7 @@ class AiInstructionProcessor
                     _useChatX = false;
                 }
             }
-            ConsoleHelpers.PrintDebugLine($"ChatX installed: {_useChatX}");
+            ConsoleHelpers.WriteDebugLine($"ChatX installed: {_useChatX}");
         }
 
         return _useChatX.Value;

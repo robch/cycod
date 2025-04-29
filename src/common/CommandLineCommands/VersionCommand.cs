@@ -15,7 +15,7 @@ public class VersionCommand : Command
         return false;
     }
 
-    public override async Task<int> ExecuteAsync(bool interactive)
+    public override async Task<object> ExecuteAsync(bool interactive)
     {
         return await Task.Run(() => 
         {
