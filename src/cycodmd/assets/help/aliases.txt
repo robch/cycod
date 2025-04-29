@@ -1,0 +1,38 @@
+MDX ALIASES
+
+  Use aliases to save and reuse sets of options for common commands.
+
+USAGE: mdx [...] --save-alias ALIAS
+   OR: mdx [...] --ALIAS
+
+OPTIONS
+
+  SAVING ALIASES
+
+    --save-alias ALIAS    Save the current options under the specified alias name.
+                          Example: mdx --save-alias myalias --lines 5 --file-contains "example"
+
+  USING ALIASES
+
+    --ALIAS               Use the options saved under the specified alias name.
+                          Example: mdx --myalias FILE1 FILE2
+
+EXAMPLES
+
+  EXAMPLE 1: Save an alias for a common set of options
+
+    mdx --lines 3 --file-contains "IMPORTANT" --save-alias important
+
+  EXAMPLE 2: Use the saved alias in a command
+
+    mdx **/*.md --important
+
+SEE ALSO
+
+  mdx help
+  mdx help examples
+  mdx help options
+
+  mdx help run
+  mdx help web search
+  mdx help web get

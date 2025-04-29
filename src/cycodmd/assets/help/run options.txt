@@ -1,0 +1,31 @@
+MDX RUN
+
+  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+
+USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+
+OPTIONS
+
+  SCRIPT
+
+    --script [COMMAND]            Specify the script or command to run
+                                  (On Windows, the default is cmd. On Linux/Mac, the default is bash)
+
+    --cmd [COMMAND]               Specify the script or command to run
+    --bash [COMMAND]              Specify the script or command to run
+    --powershell [COMMAND]        Specify the script or command to run
+
+  AI PROCESSING
+
+    --instructions "..."          Apply the specified instructions to command output (uses AI CLI).
+    --built-in-functions          Enable built-in functions (AI CLI can use file system).
+
+  OUTPUT
+
+    --save-output [FILE]          Save command output to the specified template file.
+    --save-alias ALIAS            Save current options as an alias (usable via --{ALIAS}).
+
+SEE ALSO
+
+  mdx help run
+  mdx help run examples

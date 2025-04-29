@@ -1,0 +1,103 @@
+tests:
+
+  - name: Test --exclude
+    parallelize: true
+    bash: |
+      mdx **/tests/al*.md --exclude "alphabet.md"
+    expect-regex: |
+      - No files found
+
+  - name: Test alphabet.md file contains 'Apple'
+    parallelize: true
+    bash: |
+      mdx **/*.md --file-contains "Apple"
+    expect-regex: |
+      A - Apple
+      B - Banana
+      C - Cat
+
+  - name: Test alphabet.md file does not contain 'Zebra'
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --file-not-contains "Zebra"
+    expect-regex: |
+      - No files matched criteria
+
+  - name: Test remove lines containing 'Cat'
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --remove-all-lines "Cat"
+    expect-regex: |
+      A - Apple
+      B - Banana
+      D - Dog
+      E - Elephant
+    not-expect-regex: |
+      C - Cat
+
+  - name: Test alphabet.md file with line numbers
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --line-numbers
+    expect-regex: |
+      1: # Alphabet Words
+      2:
+      3: A - Apple
+      4: B - Banana
+      5: C - Cat
+
+  - name: Test alphabet.md file with --lines
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --contains "E - Elephant" --lines 2
+    expect-regex: |
+      C - Cat
+      D - Dog
+      E - Elephant
+      F - Fish
+      G - Grape
+    not-expect-regex: |
+      A - Apple
+      B - Banana
+      H - House
+      I - Ice
+
+  - name: Test alphabet.md and --lines-after
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --lines-after 2 --contains "B - Banana"
+    expect-regex: |
+      B - Banana
+      C - Cat
+      D - Dog
+    not-expect-regex: |
+      A - Apple
+      E - Elephant
+
+  - name: Test alphabet.md and --lines-before
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --lines-before 2 --contains "E - Elephant"
+    expect-regex: |
+      C - Cat
+      D - Dog
+      E - Elephant
+    not-expect-regex: |
+      A - Apple
+      B - Banana
+      F - Fish
+      G - Grape
+
+  - name: Test alphabet.md and --remove-all-lines
+    parallelize: true
+    bash: |
+      mdx **/alphabet.md --remove-all-lines "Cat" --remove-all-lines "Dog"
+    expect-regex: |
+      A - Apple
+      B - Banana
+      E - Elephant
+      F - Fish
+      G - Grape
+    not-expect-regex: |
+      C - Cat
+      D - Dog

@@ -1,0 +1,31 @@
+MDX BING API
+
+  The `--bing-api` option allows you to use the Bing Web Search API for web searches
+  instead of UI automated scraping of Bing or Google search results (the default).
+
+USAGE: mdx web search "TERMS" --bing-api [...]
+
+SETUP
+
+  To use the Bing Web Search API, you need to get an API key and endpoint from Microsoft. You can
+  use the free tier, which allows for up to 3 requests per second and 1000 requests per month, or
+  you can upgrade to a paid tier for more requests.
+
+  https://learn.microsoft.com/bing/search-apis/bing-web-search/create-bing-search-service-resource
+
+  Once you have created your resource, you can get your API key from the Azure portal on the Keys
+  and Endpoint page. Using those values, you can set these two environment variables, either in
+  the active shell or in a file called `.env` in the current directory.
+
+    BING_SEARCH_V7_ENDPOINT=https://api.bing.microsoft.com/v7.0/search
+    BING_SEARCH_V7_KEY=436172626F6E20697320636F6F6C2121
+
+EXAMPLE
+
+  mdx web search "yaml site:learnxinyminutes.com" --bing-api --max 1 --get --strip
+
+SEE ALSO
+
+  mdx help web search
+  mdx help web search examples
+  mdx help web search options

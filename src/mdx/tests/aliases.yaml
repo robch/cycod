@@ -1,0 +1,43 @@
+tests:
+
+  - area: Test --save-alias 
+    steps:
+    - name: Test --save-alias (part 1)
+      bash: |
+        mdx **/alphabet.md --contains Cat --save-alias cat
+      expect-regex: |
+        Saved: .*cat.alias
+
+    - name: Test --save-alias (part 2)
+      bash: |
+        mdx --cat
+      expect-regex: |
+        C - Cat
+
+  - area: Test web get --save-alias
+    steps:
+    - name: Test web get --save-alias (part 1)
+      bash: |
+        mdx web get https://example.com --save-alias example.com
+      expect-regex: |
+        Saved: .*example.com.alias
+
+    - name: Test web get --save-alias (part 2)
+      bash: |
+        mdx --example.com
+      expect-regex: |
+        <title>Example Domain</title>
+
+  - area: Test run --save-alias
+    steps:
+    - name: Test run --save-alias (part 1)
+      bash: |
+        mdx run --script "echo Hello, World!" --save-alias hello
+      expect-regex: |
+        Saved: .*hello.alias
+
+    - name: Test run --save-alias (part 2)
+      bash: |
+        mdx --hello
+      expect-regex: |
+        Hello, World!

@@ -1,0 +1,32 @@
+MDX GOOGLE API
+
+  The `--google-api` option allows you to use the Google Custom Web Search API for web searches
+  instead of UI automated scraping of Bing or Google search results (the default).
+
+USAGE: mdx web search "TERMS" --google-api [...]
+
+SETUP
+
+  To use the Google Custom Web Search API, you need to get an API key and endpoint from Google. You can
+  use the free tier, which allows for up to 100 requests per day, or you can upgrade to a paid tier for
+  more requests.
+
+  https://developers.google.com/custom-search/v1/overview
+
+  Once you have created your resource, you can get your API key from the Google Cloud Console on the
+  Credentials page. Using that value, you can set these three environment variables, either in the
+  active shell or in a file called `.env` in the current directory.
+
+    GOOGLE_SEARCH_API_KEY=********************************
+    GOOGLE_SEARCH_ENGINE_ID=********************************
+    GOOGLE_SEARCH_ENDPOINT=https://www.googleapis.com/customsearch/v1
+    
+EXAMPLE
+
+  mdx web search "yaml site:learnxinyminutes.com" --google-api --max 1 --get --strip
+
+SEE ALSO
+
+  mdx help web search
+  mdx help web search examples
+  mdx help web search options

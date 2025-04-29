@@ -1,0 +1,69 @@
+﻿tests:
+
+- name: Test running a shell script
+  bash: |
+    mdx run --script "echo Hello World&&echo Goodbye World"
+  expect-regex: |
+    Hello World
+    Goodbye World
+
+- name: Test running a bash script
+  bash: |
+    mdx run --bash "ls -l"
+  expect: |
+    The output should look like typical output for `ls -l`
+
+- name: Test running a cmd.exe script
+  bash: |
+    mdx run --cmd "dir"
+  expect: |
+    The output should look like typical output for `dir`
+
+- name: Test running a PowerShell script with instructions
+  bash: |
+    mdx run --powershell "Get-Process" --instructions "Keep the ones for mdx and ai, put them in a markdown table, with process id, process name, and memory usage (in that order)"
+  expect-regex: |
+    (?i)id.*name.*memory
+
+- area: Test running a multi-line bash script
+  steps:
+  - bash: |
+      cat > script.sh <<EOF
+      echo Hello World
+      echo Goodbye World
+      EOF
+  - bash: |
+      mdx run --script "$(cat script.sh)"
+  expect-regex: |
+    Hello World
+    Goodbye World
+
+- area: Test running a multi-line cmd.exe script
+  steps:
+  - bash: |
+      cat > script.cmd <<EOF
+      @echo off
+      echo Hello World
+      dir
+      echo Goodbye World
+      EOF
+  - bash: |
+      mdx run --cmd "$(cat script.cmd)"
+  expect-regex: |
+    Hello World
+    Directory of 
+    Goodbye World
+
+- area: Test running a multi-line PowerShell script
+  steps:
+  - bash: |
+      cat > script.ps1 <<EOF
+      Write-Output "Hello World"
+      Get-Process
+      Write-Output "Goodbye World"
+      EOF
+  - bash: |
+      mdx run --powershell "$(cat script.ps1)"
+  expect-regex: |
+    Hello World
+    Goodbye World

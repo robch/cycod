@@ -1,0 +1,34 @@
+MDX WEB GET
+
+  Use the 'mdx web get' command to create markdown from one or more web pages.
+
+USAGE: mdx web get "URL" ["URL2" [...]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Create markdown for web page content
+
+    mdx web get https://example.com
+    mdx web get https://mbers.us/bio --strip
+
+  EXAMPLE 2: Apply AI processing on each web page
+
+    mdx web get https://example.com https://mbers.us/bio --page-instructions "what's the title of this page?"
+
+  EXAMPLE 3: Apply AI multi-step instructions
+
+    mdx web get https://learnxinyminutes.com/yaml/ --page-instructions @step1-instructions.txt @step2-instructions.txt
+
+  EXAMPLE 4: Apply AI to the final output
+
+    mdx web get https://example.com https://mbers.us/bio --instructions "style example.com as the other site"    
+
+SEE ALSO
+
+  mdx help web get
+  mdx help web get options
+
+  mdx help web search
+  mdx help web search examples
+  mdx help web search options
+

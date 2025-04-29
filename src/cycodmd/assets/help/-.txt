@@ -1,0 +1,24 @@
+MDX STDIN (`-`)
+
+  The `-` symbol is used to represent the standard input (stdin) for file
+  content. When you use `-` as a file name, MDX will read from the standard
+  input instead of a file. This is useful when you want to pipe content
+  directly into MDX from another command or script.
+
+USAGE: mdx - [FILE1 [FILE2]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Pipe output from git diff into MDX and summarize
+
+    git diff | mdx - --instructions "summarize the changes"
+
+  EXAMPLE 2: Pipe output from gh issues into MDX and summarize in a table
+
+    gh issue list | mdx - --instructions "summarize in table"
+
+SEE ALSO
+
+  mdx help
+  mdx help examples
+  mdx help options

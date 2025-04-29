@@ -1,0 +1,3 @@
+USAGE: mdx help topics
+   OR: mdx help topics --expand
+   OR: mdx help find "TERMS"

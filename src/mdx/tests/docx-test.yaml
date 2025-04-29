@@ -1,0 +1,19 @@
+tests:
+
+- name: Test .docx file
+  parallelize: true
+  bash: mdx test.docx
+  expect-regex: |
+    # This is a header, of the first kind
+    This is text
+    ## This is a header of the second kind
+    This is more text
+    This is some more text
+    And some more text also.
+    Following is a bullet list:
+    - Bullet 1
+    - Bullet 2
+    Following is a numbered list:
+    1. Number 1
+    1. Number 2
+    1. Number 3

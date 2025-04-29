@@ -1,0 +1,45 @@
+MDX IMAGES
+
+  MDX can convert images to markdown by extracting a rich description and all visible text
+  using Azure OpenAI's vision capabilities.
+
+USAGE: mdx IMAGE_FILE1 [FILE2 [...]] [...]
+   OR: mdx IMAGE_PATTERN1 [PATTERN2 [...]] [...]
+
+SETUP
+
+  To use the Azure OpenAI vision capabilities, you'll need to create and deploy a resource and
+  vision compatible model in the Azure AI Foundry portal or using the Azure AI CLI.
+
+    TRY: https://ai.azure.com/
+     OR: https://thebookof.ai/setup/openai/
+
+  Once you have created your resource and deployed a compatible model, you can get your API key
+  from the Azure portal or using the `ai dev new .env` command. Using those values, you can set
+  these environment variables, either in the active shell or in a file called `.env` in the
+  current directory.
+
+    AZURE_OPENAI_API_KEY=********************************
+    AZURE_OPENAI_ENDPOINT=https://{resource}.cognitiveservices.azure.com/
+    AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4o
+
+EXAMPLES
+
+  EXAMPLE 1: Setup resource, deployment, and environment variables
+
+    ai init openai
+    ai dev new .env
+
+  EXAMPLE 2: Convert an image to markdown
+
+    mdx test.png
+
+  EXAMPLE 3: Convert multiple images to markdown
+
+    mdx **\*.png **\*.jpg **\*.jpeg **\*.gif **\*.bmp
+
+SEE ALSO
+
+  mdx help
+  mdx help examples
+  mdx help options

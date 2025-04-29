@@ -1,0 +1,30 @@
+tests:
+
+- name: Check mdx version
+  parallelize: true
+  bash: mdx
+  expect-regex: |
+    MDX - The AI-Powered Markdown Generator CLI, Version \d+\.\d+\.\d+
+    Copyright\(c\) 2024, Rob Chambers. All rights reserved.
+
+- name: Find text in single file found recursively
+  parallelize: true
+  bash: |
+    mdx **\basic-test.yaml
+  expect-regex: |
+    Find this test in output
+
+- name: Find text in when using --contains option
+  parallelize: true
+  bash: |
+    mdx **\basic-test.yaml --contains "Find text in when using --contains option"
+  expect-regex: |
+    Find text in when using --contains option
+
+- name: Test file instructions
+  parallelize: true
+  bash: |
+    mdx **\basic-test.yaml --instructions "In the `basic-test.yaml` file, there should be exactly 4 tests with names, including this test (named 'Test file instructions'). If there are exactly that many, output a single line that says 'Yes.'... otherwise, output a single line that says 'No.'... If you output 'No.' you must also output exactly what you found, and why you think there are not exactly that many tests with names in the file analyzed. Remember, you must count the test that counts the number of tests as one of the tests." 
+  expect-regex: |
+    Yes.
+

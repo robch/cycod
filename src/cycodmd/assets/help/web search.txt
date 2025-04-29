@@ -1,0 +1,28 @@
+MDX WEB SEARCH
+
+  Use the 'mdx web search' command to search the web and create markdown from the results.
+
+USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Create markdown for web search URL results
+
+    mdx web search "Azure AI" --google
+    mdx web search "Azure AI" --bing
+
+  EXAMPLE 2: Create markdown for web search result content
+
+    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+
+SEE ALSO
+
+  mdx help web search examples
+  mdx help web search options
+
+  mdx help web get
+  mdx help web get examples
+  mdx help web get options
+  
+  mdx help bing api
+  mdx help google api

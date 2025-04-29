@@ -1,0 +1,96 @@
+﻿tests:
+
+- name: Test single web page with HTML tags
+  parallelize: true
+  bash: |
+    mdx web get "https://learnxinyminutes.com/docs/yaml/"
+  expect-regex: |
+    SCALAR TYPES
+    COLLECTION TYPES
+    YAML FEATURES
+    YAML TYPES
+    Leigh Brenecki
+    <footer>
+    </html>
+
+- name: Test single web page without HTML tags
+  parallelize: true
+  bash: |
+    mdx web get "https://learnxinyminutes.com/docs/yaml/" --strip
+  expect-regex: |
+    SCALAR TYPES
+    COLLECTION TYPES
+    YAML FEATURES
+    YAML TYPES
+    Leigh Brenecki
+  not-expect-regex: |
+    <footer>
+    </html>
+
+- name: Test multiple web pages
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" "https://learnxinyminutes.com/docs/yaml/"
+  expect: |
+    The output should contain two different web pages content.
+
+- name: Test AI processing on web page
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --page-instructions "what's the title?"
+  expect-regex: |
+    Example Domain
+
+- name: Test AI multi-step instructions
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --page-instructions "translate this into spanish" "translate this into german"
+  expect: |
+    The output should be in German.
+
+- name: Test AI processing on final output
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" "https://learnxinyminutes.com/docs/yaml/" --instructions "Combine and summarize the content of both pages; do not keep any URLs."
+  expect: |
+    The output should NOT contain URLs for https://example.com or https://learnxinyminutes.com/docs/yaml/.
+
+- name: Test saving web page output to file
+  parallelize: true
+  bash: |
+    if [ -f "output-example-com.md" ]; then rm "output-example-com.md"; fi
+    mdx web get "https://example.com" --save-page-output "output-{fileBase}.md"
+    if [ ! -f "output-example-com.md" ]; then exit 1; fi
+
+- name: Test web page with interactive browser mode
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --interactive
+  expect-regex: |
+    Example Domain
+    This domain is for use in illustrative examples in documents.
+
+- name: Test web page with Chromium browser
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --chromium
+  expect-regex: |
+    Example Domain
+    This domain is for use in illustrative examples in documents.
+
+- name: Test web page with Firefox browser
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --firefox
+  expect-regex: |
+    Example Domain
+    This domain is for use in illustrative examples in documents.
+
+- name: Test web page with WebKit browser
+  parallelize: true
+  bash: |
+    mdx web get "https://example.com" --webkit
+  expect-regex: |
+    Example Domain
+    This domain is for use in illustrative examples in documents.
+

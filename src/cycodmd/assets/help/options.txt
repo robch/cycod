@@ -1,0 +1,68 @@
+USAGE: mdx FILE1 [FILE2 [...]] [...]
+   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
+
+OPTIONS
+
+  FILE/LINE FILTERING
+
+    --exclude PATTERN              Exclude files that match the specified pattern
+
+    --contains REGEX               Match only files and lines that contain the specified regex pattern
+    --file-contains REGEX          Match only files that contain the specified regex pattern
+    --file-not-contains REGEX      Exclude files that contain the specified regex pattern
+
+    --line-contains REGEX          Match only lines that contain the specified regex pattern
+    --remove-all-lines REGEX       Remove lines that contain the specified regex pattern
+
+  LINE FORMATTING
+
+    --lines N                      Include N lines both before and after matching lines
+    --lines-after N                Include N lines after matching lines (default 0)
+    --lines-before N               Include N lines before matching lines (default 0)
+
+    --line-numbers                 Include line numbers in the output
+
+  AI PROCESSING
+
+    --file-instructions "..."      Apply the specified instructions to each file (uses AI CLI)
+    --EXT-file-instructions "..."  Apply the specified instructions to each file with the specified extension
+
+    --instructions "..."           Apply the specified instructions to command output (uses AI CLI)
+
+    --built-in-functions           Enable built-in functions (AI CLI can use file system)
+    --threads N                    Limit the number of concurrent file processing threads
+
+    --save-chat-history [FILE]     Save the chat history to the specified file
+                                   (e.g. chat-history-{time}.jsonl)
+
+  OUTPUT
+
+    --save-file-output [FILE]      Save each file output to the specified template file
+                                   (e.g. {filePath}/{fileBase}-output.md)
+
+    --save-output [FILE]           Save command output to the specified template file
+    --save-alias ALIAS             Save current options as an alias (usable via --{ALIAS})
+
+SUB COMMANDS
+
+  run [...]                        Create markdown from shell commands output
+  web search [...]                 Create markdown from web search results
+  web get [...]                    Create markdown from web page content
+
+SEE ALSO
+
+  mdx help
+  mdx help examples
+
+  mdx help run
+  mdx help run examples
+  mdx help run options
+
+  mdx help web search
+  mdx help web search examples
+  mdx help web search options
+
+  mdx help web get
+  mdx help web get examples
+  mdx help web get options
+  
