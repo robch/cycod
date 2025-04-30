@@ -1,17 +1,17 @@
-CHATX CHAT HISTORY
+CYCOD CHAT HISTORY
 
-  ChatX provides two ways to save your conversation history:
+  CycoD provides two ways to save your conversation history:
 
   1. Chat History (JSONL format) - Machine-readable format for reloading context
   2. Trajectory (formatted text) - Human-readable format for reviewing conversations
 
 AUTOMATIC SAVING
 
-  By default, ChatX automatically saves both your chat history and trajectory
+  By default, CycoD automatically saves both your chat history and trajectory
   files to a 'history' directory under your user profile:
 
-    - Windows: %USERPROFILE%\.chatx\history\
-    - Mac/Linux: ~/.chatx/history\
+    - Windows: %USERPROFILE%\.cycod\history\
+    - Mac/Linux: ~/.cycod/history\
 
   Files are saved with timestamp-based names:
     - Chat history: chat-history-{time}.jsonl
@@ -22,16 +22,16 @@ MANAGE AUTO-SAVING
   You can disable automatic saving using the config command with the appropriate scope:
 
   DISABLE FOR THE CURRENT DIRECTORY ONLY (LOCAL SCOPE):
-    chatx config set App.AutoSaveChatHistory false --local
-    chatx config set App.AutoSaveTrajectory false --local
+    cycod config set App.AutoSaveChatHistory false --local
+    cycod config set App.AutoSaveTrajectory false --local
 
   DISABLE FOR ALL DIRECTORIES FOR CURRENT USER (USER SCOPE):
-    chatx config set App.AutoSaveChatHistory false --user
-    chatx config set App.AutoSaveTrajectory false --user
+    cycod config set App.AutoSaveChatHistory false --user
+    cycod config set App.AutoSaveTrajectory false --user
 
   DISABLE FOR ALL USERS ON THIS COMPUTER (GLOBAL SCOPE):
-    chatx config set App.AutoSaveChatHistory false --global
-    chatx config set App.AutoSaveTrajectory false --global
+    cycod config set App.AutoSaveChatHistory false --global
+    cycod config set App.AutoSaveTrajectory false --global
 
   To re-enable automatic saving, use the same commands with 'true' instead of 'false'.
 
@@ -41,8 +41,8 @@ MANAGE AUTO-SAVING
     - Use --global when managing a shared system or setting company policy
 
   VERIFY YOUR SETTINGS:
-    chatx config get App.AutoSaveChatHistory
-    chatx config get App.AutoSaveTrajectory
+    cycod config get App.AutoSaveChatHistory
+    cycod config get App.AutoSaveTrajectory
 
 MANUAL SAVING
 
@@ -62,15 +62,15 @@ LOADING HISTORY
 
 TOKEN MANAGEMENT
 
-  ChatX automatically manages token usage for long conversations:
+  CycoD automatically manages token usage for long conversations:
 
     --trim-token-target <number>    Set a target for maximum tokens (default: 160000)
 
-  When loading or continuing chat histories, ChatX will automatically trim the
+  When loading or continuing chat histories, CycoD will automatically trim the
   history to stay under the token target. This prevents errors from exceeding
   model context limits while preserving the most relevant conversation parts.
 
-  ChatX optimizes this by:
+  CycoD optimizes this by:
   - Trimming before loading chat histories
   - Trimming during the conversation as needed
   - Preserving essential context while removing less important details
@@ -78,6 +78,6 @@ TOKEN MANAGEMENT
 
 SEE ALSO
 
-  chatx help
-  chatx help config
-  chatx help options
+  cycod help
+  cycod help config
+  cycod help options

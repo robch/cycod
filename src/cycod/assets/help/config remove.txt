@@ -1,8 +1,8 @@
-CHATX CONFIG REMOVE
+CYCOD CONFIG REMOVE
 
   Remove a value from a list configuration setting.
 
-USAGE: chatx config remove KEY VALUE [--scope]
+USAGE: cycod config remove KEY VALUE [--scope]
 
 ARGUMENTS
 
@@ -21,17 +21,17 @@ EXAMPLES
 
   EXAMPLE 1: Remove a custom feature flag from a list in local configuration
 
-    chatx config remove CUSTOM_FEATURES experimental_mode
+    cycod config remove CUSTOM_FEATURES experimental_mode
 
   EXAMPLE 2: Remove a trusted domain from a global list
 
-    chatx config remove TRUSTED_DOMAINS example.com --global
+    cycod config remove TRUSTED_DOMAINS example.com --global
 
-NOTE: The CHATX core environment variables (OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, etc.)
+NOTE: The CYCOD core environment variables (OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, etc.)
       are typically set as single values, not lists. This command is useful for
       custom list-type configuration settings in your own scripts.
 
 SEE ALSO
 
-  chatx help config
-  chatx help config add
+  cycod help config
+  cycod help config add

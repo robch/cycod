@@ -1,8 +1,8 @@
-CHATX MCP REMOVE
+CYCOD MCP REMOVE
 
   Delete a Model Context Protocol (MCP) server configuration.
 
-USAGE: chatx mcp remove SERVER_NAME [--scope]
+USAGE: cycod mcp remove SERVER_NAME [--scope]
 
 OPTIONS
 
@@ -19,11 +19,11 @@ EXAMPLES
 
   EXAMPLE 1: Remove an MCP server from any scope
 
-    chatx mcp remove unused-server
+    cycod mcp remove unused-server
 
   EXAMPLE 2: Remove an MCP server only from the user scope
 
-    chatx mcp remove postgres-server --user
+    cycod mcp remove postgres-server --user
 
 NOTES
 
@@ -33,5 +33,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help mcp
-  chatx help mcp list
+  cycod help mcp
+  cycod help mcp list

@@ -14,7 +14,7 @@ public class ConfigStoreFileNameTests
     public void Setup()
     {
         // Create a temporary directory for test configuration files
-        _testDir = Path.Combine(Path.GetTempPath(), "ChatXConfigTests_" + Guid.NewGuid().ToString());
+        _testDir = Path.Combine(Path.GetTempPath(), "CycoDConfigTests_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(_testDir);
         
         // Create a specific test config file

@@ -1,4 +1,4 @@
-USAGE: chatx [...]
+USAGE: cycod [...]
 
   MODEL INPUTS
     --system-prompt "PROMPT|NAME"         Replace system prompt given to AI model
@@ -17,7 +17,7 @@ USAGE: chatx [...]
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates fal
 
-  CHAT HISTORY                            (see: chatx help chat history)
+  CHAT HISTORY                            (see: cycod help chat history)
     --continue                            Continue the most recent chat history
     --chat-history [FILE]                 Load from and save to the same JSONL file
     --input-chat-history [FILE]           Load chat history from the specified JSONL file
@@ -50,9 +50,9 @@ USAGE: chatx [...]
 
   CONFIGURATION
     --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
-    --profile NAME                        Load a specific profile's configuration from .chatx/profiles/NAME.yaml
+    --profile NAME                        Load a specific profile's configuration from .cycod/profiles/NAME.yaml
       
-  ALIASES                                 (see: chatx help aliases)
+  ALIASES                                 (see: cycod help aliases)
     --save-alias ALIAS                    Same as --save-local-alias
     --save-local-alias ALIAS              Save current options as an alias in local scope
     --save-user-alias ALIAS               Save current options as an alias in user scope
@@ -78,8 +78,8 @@ USAGE: chatx [...]
 
 SEE ALSO
 
-  chatx help
-  chatx help examples
-  chatx help provider
-  chatx help config
-  chatx help alias
+  cycod help
+  cycod help examples
+  cycod help provider
+  cycod help config
+  cycod help alias

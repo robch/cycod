@@ -1,8 +1,8 @@
-CHATX PROMPT LIST
+CYCOD PROMPT LIST
 
   List all available prompts across all scopes or in a specific scope.
 
-USAGE: chatx prompt list [--scope]
+USAGE: cycod prompt list [--scope]
 
 OPTIONS
 
@@ -17,13 +17,13 @@ EXAMPLES
 
   EXAMPLE 1: List all prompts from all scopes
 
-    chatx prompt list
+    cycod prompt list
 
   EXAMPLE 2: List only user prompts
 
-    chatx prompt list --user
+    cycod prompt list --user
 
 SEE ALSO
 
-  chatx help prompt
-  chatx help prompts
+  cycod help prompt
+  cycod help prompts

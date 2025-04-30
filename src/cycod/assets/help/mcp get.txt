@@ -1,8 +1,8 @@
-CHATX MCP GET
+CYCOD MCP GET
 
   Display the details of a specific Model Context Protocol (MCP) server.
 
-USAGE: chatx mcp get SERVER_NAME [--scope]
+USAGE: cycod mcp get SERVER_NAME [--scope]
 
 OPTIONS
 
@@ -19,11 +19,11 @@ EXAMPLES
 
   EXAMPLE 1: Display an MCP server from any scope
 
-    chatx mcp get postgres-server
+    cycod mcp get postgres-server
 
   EXAMPLE 2: Display an MCP server only if it exists in the user scope
 
-    chatx mcp get weather-api --user
+    cycod mcp get weather-api --user
 
 NOTES
 
@@ -35,5 +35,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help mcp
-  chatx help mcp list
+  cycod help mcp
+  cycod help mcp list

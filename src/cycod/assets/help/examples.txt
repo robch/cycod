@@ -1,58 +1,58 @@
-USAGE: chatx [...]
+USAGE: cycod [...]
 
 EXAMPLES
 
   EXAMPLE 1: Ask a single question
 
-    chatx --question "What time is it?"
+    cycod --question "What time is it?"
 
   EXAMPLE 2: Use multiple sequential inline inputs
 
-    chatx --inputs "What's today's date?" "show me a calendar for this month"
+    cycod --inputs "What's today's date?" "show me a calendar for this month"
     
   EXAMPLE 3: Continue the most recent chat history
 
-    chatx --continue --question "Next month?"
+    cycod --continue --question "Next month?"
 
   EXAMPLE 4: Save chat history in JSONL format
 
-    chatx --question "Tell me a joke" --output-chat-history chat-history.jsonl
+    cycod --question "Tell me a joke" --output-chat-history chat-history.jsonl
 
   EXAMPLE 5: Continue chat, after loading chat history from a JSONL file
 
-    chatx --input-chat-history chat-history.jsonl --question "Tell me another"
+    cycod --input-chat-history chat-history.jsonl --question "Tell me another"
 
   EXAMPLE 6: Save chat history in human readable trajectory format
   
-    chatx --question "What time is it?" --output-trajectory trajectory.md
+    cycod --question "What time is it?" --output-trajectory trajectory.md
 
   EXAMPLE 7: Use additional system prompt with the base system prompt
   
-    chatx --add-system-prompt "Never access files outside the current directory."
+    cycod --add-system-prompt "Never access files outside the current directory."
 
   EXAMPLE 8: Add a user prompt that will be included when starting a new chat
   
-    chatx --add-user-prompt "Always answer in french."
+    cycod --add-user-prompt "Always answer in french."
     
   EXAMPLE 9: Use foreach variables to run multiple versions of a command
   
-    chatx --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
+    cycod --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
     
   EXAMPLE 10: Combine multiple foreach variables (creates all combinations)
   
-    chatx --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
+    cycod --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
 
   EXAMPLE 11: Use numeric range with foreach
   
-    chatx --foreach var day in 1..7 --input "What day of the week is day {day}?"
+    cycod --foreach var day in 1..7 --input "What day of the week is day {day}?"
 
   EXAMPLE 12: Process multiple commands in parallel with threads
   
-    chatx --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
+    cycod --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
 
   EXAMPLE 13: Using slash commands in interactive mode
   
-    chatx
+    cycod
     > What are the largest files in this directory?
     Assistant: You can find the largest files using the following command...
     > /files *.cs
@@ -61,4 +61,4 @@ EXAMPLES
 
 SEE ALSO
 
-  chatx help options
+  cycod help options

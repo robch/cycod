@@ -30,7 +30,7 @@ class GitHubLoginCommand : Command
         var githubToken = await helper.GetGitHubTokenAsync();
         helper.SaveGitHubTokenToConfig(githubToken, Scope, ConfigFileName);
         
-        ConsoleHelpers.WriteLine("GitHub login successful! You can now use chatx with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
+        ConsoleHelpers.WriteLine("GitHub login successful! You can now use cycod with GitHub Copilot.", ConsoleColor.Green, overrideQuiet: true);
             
         return 0;
     }

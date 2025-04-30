@@ -1,5 +1,5 @@
 # PowerShell script to fetch and display download statistics for NuGet packages
-# Specifically targeting MDX and ChatX packages
+# Specifically targeting MDX and CycoD packages
 #
 # Usage:
 #   .\get-nuget-download-stats.ps1 [options]
@@ -90,8 +90,8 @@ Write-Host ""
 # Get stats for MDX
 Get-NuGetStats -PackageId "MDX"
 
-# Get stats for ChatX
-Get-NuGetStats -PackageId "ChatX"
+# Get stats for CycoD
+Get-NuGetStats -PackageId "CycoD"
 
 Write-Host "=========================================" -ForegroundColor Cyan
 Write-Host "Note: Statistics are retrieved directly from NuGet.org." -ForegroundColor Yellow

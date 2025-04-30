@@ -1,8 +1,8 @@
-CHATX PROMPT GET
+CYCOD PROMPT GET
 
   Display the content of a specific prompt.
 
-USAGE: chatx prompt get PROMPT_NAME [--scope]
+USAGE: cycod prompt get PROMPT_NAME [--scope]
 
 OPTIONS
 
@@ -19,11 +19,11 @@ EXAMPLES
 
   EXAMPLE 1: Display a prompt from any scope
 
-    chatx prompt get myPrompt
+    cycod prompt get myPrompt
 
   EXAMPLE 2: Display a prompt only if it exists in the user scope
 
-    chatx prompt get myPrompt --user
+    cycod prompt get myPrompt --user
 
 NOTES
 
@@ -35,5 +35,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help prompt
-  chatx help prompts
+  cycod help prompt
+  cycod help prompts

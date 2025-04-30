@@ -29,9 +29,9 @@ public static class TestAssemblyInitializer
     private class CycoDevTestsProgramInfo : ProgramInfo
     {
         public CycoDevTestsProgramInfo() : base(
-            () => "chatx",
+            () => "cycod",
             () => "CYCOD 'dotnet test' tests",
-            () => ".chatx-tests",
+            () => ".cycod-tests",
             () => typeof(CycoDevTestsProgramInfo).Assembly)
         {
         }

@@ -1,4 +1,4 @@
-Using CHATX, you can:
+Using CYCOD, you can:
 
   - Chat with an AI model (interactively/programmatically)
   - Provide one or more inputs to the AI model
@@ -7,22 +7,22 @@ Using CHATX, you can:
     - Execute shell commands/scripts
     - Use MCP (Model Context Protocol) tools
 
-USAGE: chatx <command> [...]
+USAGE: cycod <command> [...]
 
 COMMANDS
 
-  chatx [...]             (aka: chatx chat)
-  chatx chat [...]        (see: chatx help chat)
+  cycod [...]             (aka: cycod chat)
+  cycod chat [...]        (see: cycod help chat)
 
-  chatx config [...]      (see: chatx help config)
-  chatx github login      (see: chatx help github login)
+  cycod config [...]      (see: cycod help config)
+  cycod github login      (see: cycod help github login)
 
-  chatx mcp [...]         (see: chatx help mcp)
-  chatx alias [...]       (see: chatx help alias)
-  chatx prompt [...]      (see: chatx help prompt)
+  cycod mcp [...]         (see: cycod help mcp)
+  cycod alias [...]       (see: cycod help alias)
+  cycod prompt [...]      (see: cycod help prompt)
 
 SEE ALSO
 
-  chatx help
-  chatx help examples
-  chatx help github login
+  cycod help
+  cycod help examples
+  cycod help github login

@@ -1,6 +1,6 @@
-# Chatx Tests
+# CycoD Tests
 
-This directory contains all tests for the Chatx project. The test structure mirrors the source code structure for easy navigation and maintenance.
+This directory contains all tests for the CycoD project. The test structure mirrors the source code structure for easy navigation and maintenance.
 
 ## Test Structure
 

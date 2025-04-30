@@ -1,8 +1,8 @@
-CHATX CONFIG CLEAR
+CYCOD CONFIG CLEAR
 
   Clear a configuration setting (remove it completely).
 
-USAGE: chatx config clear KEY [--scope]
+USAGE: cycod config clear KEY [--scope]
 
 ARGUMENTS
 
@@ -20,13 +20,13 @@ EXAMPLES
 
   EXAMPLE 1: Clear the OpenAI model name in local configuration
 
-    chatx config clear OPENAI_CHAT_MODEL_NAME
+    cycod config clear OPENAI_CHAT_MODEL_NAME
 
   EXAMPLE 2: Clear the OpenAI API key in user configuration
 
-    chatx config clear OPENAI_API_KEY --user
+    cycod config clear OPENAI_API_KEY --user
 
 SEE ALSO
 
-  chatx help config
-  chatx help config set
+  cycod help config
+  cycod help config set

@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides a reference for the various APIs and interfaces used in ChatX.
+This document provides a reference for the various APIs and interfaces used in CycoD.
 
 ## Chat Client API
 

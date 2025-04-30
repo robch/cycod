@@ -1,6 +1,6 @@
-# Using MCP (Model Context Protocol) Servers with ChatX
+# Using MCP (Model Context Protocol) Servers with CycoD
 
-ChatX supports the Model Context Protocol (MCP) for integrating with external tools and services. This document explains how to configure and use MCP servers with ChatX.
+CycoD supports the Model Context Protocol (MCP) for integrating with external tools and services. This document explains how to configure and use MCP servers with CycoD.
 
 ## What is MCP?
 
@@ -14,31 +14,31 @@ Some examples of what you can do with MCP:
 
 ## Configuring MCP Servers
 
-You can configure MCP servers using the `chatx mcp` commands:
+You can configure MCP servers using the `cycod mcp` commands:
 
 ```bash
 # List all configured MCP servers
-chatx mcp list
+cycod mcp list
 
 # Add a new stdio-based MCP server
-chatx mcp add postgres-db --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgres://user:pass@localhost:5432/mydb"
+cycod mcp add postgres-db --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgres://user:pass@localhost:5432/mydb"
 
 # Add a new SSE-based MCP server
-chatx mcp add rest-api --url https://example.com/mcp-sse-endpoint
+cycod mcp add rest-api --url https://example.com/mcp-sse-endpoint
 
 # Add environment variables to an MCP server
-chatx mcp add weather-api --command /path/to/weather-tool --env API_KEY=abc123 --env CACHE_DIR=/tmp
+cycod mcp add weather-api --command /path/to/weather-tool --env API_KEY=abc123 --env CACHE_DIR=/tmp
 
 # Get details of a specific MCP server
-chatx mcp get postgres-db
+cycod mcp get postgres-db
 
 # Remove an MCP server
-chatx mcp remove postgres-db
+cycod mcp remove postgres-db
 ```
 
-## How ChatX Uses MCP Servers
+## How CycoD Uses MCP Servers
 
-When you start a chat session, ChatX automatically:
+When you start a chat session, CycoD automatically:
 
 1. Finds all configured MCP servers
 2. Connects to each server
@@ -53,7 +53,7 @@ After configuring an MCP server, you can use it in a chat session:
 
 ```bash
 # Start a chat session
-chatx
+cycod
 
 # Ask a question that might use an MCP tool
 User: What is the current weather in New York?
@@ -75,14 +75,14 @@ Basic steps:
 4. Define tool methods with the `[McpServerTool]` attribute
 5. Configure the server to use stdio or SSE transport
 6. Build and run your server
-7. Add it to ChatX using `chatx mcp add`
+7. Add it to CycoD using `cycod mcp add`
 
 ## Troubleshooting
 
 If you encounter issues with MCP servers:
 
-- Use `chatx mcp get <server-name>` to check the server configuration
+- Use `cycod mcp get <server-name>` to check the server configuration
 - Verify that the server executable exists and is accessible
 - Check that any required environment variables or arguments are correctly set
 - Try running the MCP server manually to see if it starts correctly
-- Enable verbose output with `chatx --verbose` to see more details about MCP connections
+- Enable verbose output with `cycod --verbose` to see more details about MCP connections

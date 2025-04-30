@@ -27,7 +27,7 @@ class TestRunCommand : TestBaseCommand
     {
         try
         {
-            Logger.Log(new ChatxTestFrameworkLogger());
+            Logger.Log(new CycoDtTestFrameworkLogger());
 
             var tests = FindAndFilterTests();
             Console.WriteLine(tests.Count() == 1

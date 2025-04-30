@@ -17,7 +17,7 @@ public class GitHubLoginCommandTests
     {
         // Arrange
         var helper = new GitHubCopilotHelper();
-        var testDir = Path.Combine(Path.GetTempPath(), "ChatXConfigTests_" + Guid.NewGuid().ToString());
+        var testDir = Path.Combine(Path.GetTempPath(), "CycoDConfigTests_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(testDir);
         var testConfigFile = Path.Combine(testDir, "test-config.yml");
         

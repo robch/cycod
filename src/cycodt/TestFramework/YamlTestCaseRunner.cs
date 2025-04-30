@@ -407,7 +407,7 @@ public class YamlTestCaseRunner
         }
         else
         {
-            var clis = new[] { "chatx" };
+            var clis = new[] { "cycod" };
             var found = PickCliOrNull(clis);
             return found != null
                 ? PickCliFound(clis, found)         // use what we found
@@ -806,7 +806,7 @@ public class YamlTestCaseRunner
 
         try
         {
-            var startProcess = FindCacheCli("chatx");
+            var startProcess = FindCacheCli("cycod");
             var startArgs = $"--question @{questionTempFile}";
             var startInfo = new ProcessStartInfo(startProcess, startArgs)
             {

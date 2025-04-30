@@ -1,16 +1,16 @@
 # Creating Aliases
 
-Aliases in ChatX allow you to save frequently used command configurations as shortcuts, making it easier to reuse complex or common configurations without having to type them out each time.
+Aliases in CycoD allow you to save frequently used command configurations as shortcuts, making it easier to reuse complex or common configurations without having to type them out each time.
 
 ## How Aliases Work
 
-Aliases are stored as plain text files in an `aliases` directory within the ChatX configuration folders. Aliases can be stored in three different scopes:
+Aliases are stored as plain text files in an `aliases` directory within the CycoD configuration folders. Aliases can be stored in three different scopes:
 
-1. **Local scope** - stored in the `.chatx/aliases` directory of the current working directory
-2. **User scope** - stored in the user's ChatX configuration directory (`~/.chatx/aliases` on Unix, `%USERPROFILE%\.chatx\aliases` on Windows)
-3. **Global scope** - stored in the system-wide ChatX configuration directory
+1. **Local scope** - stored in the `.cycod/aliases` directory of the current working directory
+2. **User scope** - stored in the user's CycoD configuration directory (`~/.cycod/aliases` on Unix, `%USERPROFILE%\.cycod\aliases` on Windows)
+3. **Global scope** - stored in the system-wide CycoD configuration directory
 
-When looking for an alias, ChatX searches in the local scope first, then the user scope, and finally the global scope.
+When looking for an alias, CycoD searches in the local scope first, then the user scope, and finally the global scope.
 
 ## Creating an Alias
 
@@ -23,7 +23,7 @@ To create an alias, use one of the following options followed by a name for your
 Example:
 
 ```bash
-chatx --system-prompt "You are an expert Python programmer who gives concise code examples." --save-alias python-helper
+cycod --system-prompt "You are an expert Python programmer who gives concise code examples." --save-alias python-helper
 ```
 
 This will save all the command line options (except the save-alias option itself) to an alias named `python-helper` in the local scope.
@@ -31,7 +31,7 @@ This will save all the command line options (except the save-alias option itself
 To save an alias in the user scope:
 
 ```bash
-chatx --system-prompt "You are an expert Python programmer who gives concise code examples." --save-user-alias python-helper
+cycod --system-prompt "You are an expert Python programmer who gives concise code examples." --save-user-alias python-helper
 ```
 
 ## Using an Alias
@@ -39,7 +39,7 @@ chatx --system-prompt "You are an expert Python programmer who gives concise cod
 To use a previously saved alias, simply prefix the alias name with `--`:
 
 ```bash
-chatx --python-helper --input "Write a function that sorts a list of dictionaries by a given key"
+cycod --python-helper --input "Write a function that sorts a list of dictionaries by a given key"
 ```
 
 This will apply all the options stored in the `python-helper` alias (in this case, setting the system prompt) and then apply any additional options provided in the command.
@@ -49,29 +49,29 @@ This will apply all the options stored in the `python-helper` alias (in this cas
 ### Creating a Role-Specific Alias
 
 ```bash
-chatx --system-prompt "You are an expert Linux system administrator. Provide clear and concise answers to technical questions about Linux systems." --save-alias linux-admin
+cycod --system-prompt "You are an expert Linux system administrator. Provide clear and concise answers to technical questions about Linux systems." --save-alias linux-admin
 ```
 
 ### Creating a User-Scoped Workflow Alias
 
 ```bash
-chatx --system-prompt "You are an assistant focused on helping with Git operations and best practices." --save-user-alias git-helper
+cycod --system-prompt "You are an assistant focused on helping with Git operations and best practices." --save-user-alias git-helper
 ```
 
 ### Creating a Global Alias for All Users
 
 ```bash
-chatx --system-prompt "You are a technical documentation writer who creates clear and thorough explanations." --save-global-alias tech-writer
+cycod --system-prompt "You are a technical documentation writer who creates clear and thorough explanations." --save-global-alias tech-writer
 ```
 
 ### Combining Aliases with Additional Options
 
 ```bash
 # First create the alias
-chatx --system-prompt "You are a technical documentation writer who creates clear and thorough explanations." --save-alias tech-writer
+cycod --system-prompt "You are a technical documentation writer who creates clear and thorough explanations." --save-alias tech-writer
 
 # Later, use the alias with additional options
-chatx --tech-writer --input "Write documentation for a REST API endpoint that creates user accounts" --output-chat-history "api-docs.jsonl"
+cycod --tech-writer --input "Write documentation for a REST API endpoint that creates user accounts" --output-chat-history "api-docs.jsonl"
 ```
 
 ## Managing Aliases

@@ -1,8 +1,8 @@
-CHATX CONFIG LIST
+CYCOD CONFIG LIST
 
   List all configuration settings.
 
-USAGE: chatx config list [--scope]
+USAGE: cycod config list [--scope]
 
 OPTIONS
 
@@ -17,13 +17,13 @@ EXAMPLES
 
   EXAMPLE 1: List all configuration settings from all scopes
 
-    chatx config list
+    cycod config list
 
   EXAMPLE 2: List only user configuration settings
 
-    chatx config list --user
+    cycod config list --user
 
 SEE ALSO
 
-  chatx help config
-  chatx help config get
+  cycod help config
+  cycod help config get

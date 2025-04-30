@@ -1,8 +1,8 @@
-CHATX GITHUB COMMANDS
+CYCOD GITHUB COMMANDS
 
-  These commands allow you to integrate CHATX with GitHub.
+  These commands allow you to integrate CYCOD with GitHub.
 
-USAGE: chatx github login
+USAGE: cycod github login
 
 COMMANDS
 
@@ -10,5 +10,5 @@ COMMANDS
 
 SEE ALSO
 
-  chatx help github login
-  chatx help config
+  cycod help github login
+  cycod help config

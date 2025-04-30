@@ -88,10 +88,10 @@ public static class KnownSettings
         
         // Application settings
         { AppMaxTokens, "APP_MAX_TOKENS" },
-        { AppPreferredProvider, "CHATX_PREFERRED_PROVIDER" },
-        { AppAutoSaveChatHistory, "CHATX_AUTO_SAVE_CHAT_HISTORY" },
-        { AppAutoSaveTrajectory, "CHATX_AUTO_SAVE_TRAJECTORY" },
-        { AppChatCompletionTimeout, "CHATX_CHAT_COMPLETION_TIMEOUT" }
+        { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
+        { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
+        { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
+        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" }
     };
     
     /// <summary>

@@ -1,6 +1,6 @@
-# Contributing to ChatX
+# Contributing to CycoD
 
-Thank you for your interest in contributing to ChatX! This document provides guidelines and instructions for contributing to this project.
+Thank you for your interest in contributing to CycoD! This document provides guidelines and instructions for contributing to this project.
 
 ## Code of Conduct
 
@@ -11,8 +11,8 @@ Please be respectful and considerate of others when contributing to this project
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
    ```
-   git clone https://github.com/yourusername/chatx.git
-   cd chatx
+   git clone https://github.com/yourusername/cycod.git
+   cd cycod
    ```
 3. **Set up the development environment**:
    - Install .NET 8.0 SDK or later

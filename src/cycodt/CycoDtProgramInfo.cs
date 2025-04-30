@@ -3,7 +3,7 @@ public class CycoDtProgramInfo : ProgramInfo
     public CycoDtProgramInfo() : base(
         () => "cycodt",
         () => "AI-powered CLI Test Framework",
-        () => ".chatx",
+        () => ".cycod",
         () => typeof(CycoDtProgramInfo).Assembly)
     {
     }

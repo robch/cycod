@@ -1,6 +1,6 @@
-# ChatX Provider Selection
+# CycoD Provider Selection
 
-ChatX supports multiple AI providers for chat functionality:
+CycoD supports multiple AI providers for chat functionality:
 
 - OpenAI API
 - Azure OpenAI API
@@ -23,11 +23,11 @@ Use these flags to explicitly select which provider to use:
 
 You can create named profiles to store different configurations:
 
-1. Create a YAML file at `.chatx/profiles/<name>.yaml`
+1. Create a YAML file at `.cycod/profiles/<name>.yaml`
 2. Add provider settings to the file
 3. Use `--profile <name>` to load that profile
 
-For example, create `.chatx/profiles/work.yaml`:
+For example, create `.cycod/profiles/work.yaml`:
 ```yaml
 app:
   preferredProvider: "azure-openai"
@@ -38,20 +38,20 @@ azure:
     chatDeployment: "gpt-4"
 ```
 
-Then use: `chatx --profile work`
+Then use: `cycod --profile work`
 
 ## Default Provider
 
 You can set a default preferred provider in your configuration:
 
 ```
-chatx config set app.preferredProvider openai
+cycod config set app.preferredProvider openai
 ```
 
 Or set the environment variable:
 
 ```
-CHATX_PREFERRED_PROVIDER=azure-openai
+CYCOD_PREFERRED_PROVIDER=azure-openai
 ```
 
 ## See Also

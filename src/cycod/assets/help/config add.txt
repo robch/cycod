@@ -1,8 +1,8 @@
-CHATX CONFIG ADD
+CYCOD CONFIG ADD
 
   Add a value to a list configuration setting.
 
-USAGE: chatx config add KEY VALUE [--scope]
+USAGE: cycod config add KEY VALUE [--scope]
 
 ARGUMENTS
 
@@ -21,18 +21,18 @@ EXAMPLES
 
   EXAMPLE 1: Add a custom feature flag to a list in local configuration
 
-    chatx config add CUSTOM_FEATURES experimental_mode
+    cycod config add CUSTOM_FEATURES experimental_mode
 
   EXAMPLE 2: Add a trusted domain to a global list
 
-    chatx config add TRUSTED_DOMAINS example.com --global
+    cycod config add TRUSTED_DOMAINS example.com --global
 
-NOTE: The CHATX core environment variables (OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, etc.)
+NOTE: The CYCOD core environment variables (OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, etc.)
       are typically set as single values, not lists. This command is useful for
       custom list-type configuration settings in your own scripts.
 
 SEE ALSO
 
-  chatx help config
-  chatx help config list
-  chatx help config remove
+  cycod help config
+  cycod help config list
+  cycod help config remove

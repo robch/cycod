@@ -1,8 +1,8 @@
-CHATX MCP LIST
+CYCOD MCP LIST
 
   List all available Model Context Protocol (MCP) servers.
 
-USAGE: chatx mcp list [--scope]
+USAGE: cycod mcp list [--scope]
 
 OPTIONS
 
@@ -17,11 +17,11 @@ EXAMPLES
 
   EXAMPLE 1: List all available MCP servers
 
-    chatx mcp list
+    cycod mcp list
 
   EXAMPLE 2: List only MCP servers in the user scope
 
-    chatx mcp list --user
+    cycod mcp list --user
 
 NOTES
 
@@ -33,5 +33,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help mcp
-  chatx help mcp get
+  cycod help mcp
+  cycod help mcp get

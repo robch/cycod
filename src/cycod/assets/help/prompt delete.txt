@@ -1,8 +1,8 @@
-CHATX PROMPT DELETE
+CYCOD PROMPT DELETE
 
   Delete a specific prompt.
 
-USAGE: chatx prompt delete PROMPT_NAME [--scope]
+USAGE: cycod prompt delete PROMPT_NAME [--scope]
 
 OPTIONS
 
@@ -19,11 +19,11 @@ EXAMPLES
 
   EXAMPLE 1: Delete a prompt from any scope
 
-    chatx prompt delete myPrompt
+    cycod prompt delete myPrompt
 
   EXAMPLE 2: Delete a prompt only if it exists in the user scope
 
-    chatx prompt delete myPrompt --user
+    cycod prompt delete myPrompt --user
 
 NOTES
 
@@ -34,5 +34,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help prompt
-  chatx help prompts
+  cycod help prompt
+  cycod help prompts

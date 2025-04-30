@@ -1,8 +1,8 @@
-CHATX PROMPT CREATE
+CYCOD PROMPT CREATE
 
   Create a new custom prompt.
 
-USAGE: chatx prompt create PROMPT_NAME PROMPT_TEXT [--scope]
+USAGE: cycod prompt create PROMPT_NAME PROMPT_TEXT [--scope]
 
 OPTIONS
 
@@ -19,15 +19,15 @@ EXAMPLES
 
   EXAMPLE 1: Create a simple prompt in local scope
 
-    chatx prompt create summarize "Please summarize the following text in three bullet points:"
+    cycod prompt create summarize "Please summarize the following text in three bullet points:"
 
   EXAMPLE 2: Create a prompt in user scope (available in all directories)
 
-    chatx prompt create explain "Explain the following like I'm five:" --user
+    cycod prompt create explain "Explain the following like I'm five:" --user
 
   EXAMPLE 3: Create a prompt with multiline text
 
-    chatx prompt create translate "Translate the following text to Spanish:
+    cycod prompt create translate "Translate the following text to Spanish:
     Then format the translation with bullet points for each sentence.
     Finally, provide pronunciation tips."
 
@@ -40,5 +40,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help prompt
-  chatx help prompts
+  cycod help prompt
+  cycod help prompts

@@ -1,4 +1,4 @@
-CHATX SLASH COMMANDS
+CYCOD SLASH COMMANDS
 
   During an interactive chat session, you can use slash commands to quickly 
   access various functions without exiting your conversation.
@@ -52,10 +52,10 @@ NOTES
     For more information about MDX, visit: https://github.com/robch/mdx
 
   - Custom prompts can be created using the prompt create command.
-    Example: chatx prompt create summarize "Please summarize this text:"
+    Example: cycod prompt create summarize "Please summarize this text:"
 
 SEE ALSO
 
-  chatx help prompts
-  chatx help prompt create
-  chatx help prompt list
+  cycod help prompts
+  cycod help prompt create
+  cycod help prompt list

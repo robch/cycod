@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
-    <AssemblyName>chatx</AssemblyName>
+    <AssemblyName>cycod</AssemblyName>
     <OutputType>Exe</OutputType>
     <Version>1.0.0</Version>
     <AssemblyVersion>1.0.0</AssemblyVersion>
@@ -16,17 +16,17 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>ChatX</PackageId>
+    <PackageId>CycoD</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>AI-powered CLI application for chat-based interaction with AI assistants</Description>
     <PackageTags>cli;ai;chat;openai;azure;github-copilot</PackageTags>
-    <PackageProjectUrl>https://github.com/robch/chatx</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     
     <!-- .NET Tool Configuration -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>chatx</ToolCommandName>
+    <ToolCommandName>cycod</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 

@@ -1,8 +1,8 @@
-CHATX ALIAS LIST
+CYCOD ALIAS LIST
 
   List all available aliases across all scopes or in a specific scope.
 
-USAGE: chatx alias list [--scope]
+USAGE: cycod alias list [--scope]
 
 OPTIONS
 
@@ -17,13 +17,13 @@ EXAMPLES
 
   EXAMPLE 1: List all aliases from all scopes
 
-    chatx alias list
+    cycod alias list
 
   EXAMPLE 2: List only user aliases
 
-    chatx alias list --user
+    cycod alias list --user
 
 SEE ALSO
 
-  chatx help alias
-  chatx help aliases
+  cycod help alias
+  cycod help aliases

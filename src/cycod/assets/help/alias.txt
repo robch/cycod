@@ -1,10 +1,10 @@
-CHATX ALIAS COMMANDS
+CYCOD ALIAS COMMANDS
 
-  These commands allow you to manage CHATX command aliases.
+  These commands allow you to manage CYCOD command aliases.
 
-USAGE: chatx alias list [--scope]
-   OR: chatx alias get ALIAS_NAME [--scope]
-   OR: chatx alias delete ALIAS_NAME [--scope]
+USAGE: cycod alias list [--scope]
+   OR: cycod alias get ALIAS_NAME [--scope]
+   OR: cycod alias delete ALIAS_NAME [--scope]
 
 OPTIONS
 
@@ -23,7 +23,7 @@ COMMANDS
 
 SEE ALSO
 
-  chatx help alias list
-  chatx help alias get
-  chatx help alias delete
-  chatx help aliases
+  cycod help alias list
+  cycod help alias get
+  cycod help alias delete
+  cycod help aliases

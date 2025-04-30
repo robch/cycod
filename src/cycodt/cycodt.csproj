@@ -19,7 +19,7 @@
     <Authors>Rob Chambers</Authors>
     <Description>AI-powered CLI Test Framework</Description>
     <PackageTags>cli;ai;chat;openai;azure;github-copilot</PackageTags>
-    <PackageProjectUrl>https://github.com/robch/chatx</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     

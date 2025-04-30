@@ -14,7 +14,7 @@ public class ConfigListOperationsTests
     public void Setup()
     {
         // Create a temporary directory for test configuration files
-        _testDir = Path.Combine(Path.GetTempPath(), "ChatXConfigListTests_" + Guid.NewGuid().ToString());
+        _testDir = Path.Combine(Path.GetTempPath(), "CycoDConfigListTests_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(_testDir);
         _testConfigFile = Path.Combine(_testDir, "test-config.yaml");
 

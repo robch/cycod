@@ -1,8 +1,8 @@
-CHATX MCP ADD
+CYCOD MCP ADD
 
   Create a new Model Context Protocol (MCP) server.
 
-USAGE: chatx mcp add SERVER_NAME --command COMMAND [--arg ARG...] [--env ENV...] [--url URL] [--scope]
+USAGE: cycod mcp add SERVER_NAME --command COMMAND [--arg ARG...] [--env ENV...] [--url URL] [--scope]
 
 OPTIONS
 
@@ -23,19 +23,19 @@ EXAMPLES
 
   EXAMPLE 1: Create a basic stdio MCP server
 
-    chatx mcp add postgres-server --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgresql://user:pass@localhost:5432/mydb"
+    cycod mcp add postgres-server --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgresql://user:pass@localhost:5432/mydb"
 
   EXAMPLE 2: Create an MCP server with environment variables
 
-    chatx mcp add weather-api --command /path/to/weather-cli --env API_KEY=abc123 --env CACHE_DIR=/tmp
+    cycod mcp add weather-api --command /path/to/weather-cli --env API_KEY=abc123 --env CACHE_DIR=/tmp
 
   EXAMPLE 3: Create an SSE MCP server
 
-    chatx mcp add sse-backend --url https://example.com/sse-endpoint
+    cycod mcp add sse-backend --url https://example.com/sse-endpoint
 
   EXAMPLE 4: Create a user-level MCP server
 
-    chatx mcp add shared-tool --command /usr/local/bin/tool-server --arg --config --arg /path/to/config.json --user
+    cycod mcp add shared-tool --command /usr/local/bin/tool-server --arg --config --arg /path/to/config.json --user
 
 NOTES
 
@@ -44,5 +44,5 @@ NOTES
 
 SEE ALSO
 
-  chatx help mcp
-  chatx help mcp get
+  cycod help mcp
+  cycod help mcp get

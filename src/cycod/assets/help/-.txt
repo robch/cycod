@@ -1,24 +1,24 @@
-CHATX STDIN (`-`)
+CYCOD STDIN (`-`)
 
   The `-` symbol is used to represent the standard input (stdin) for file
-  content. When you use `-` as a file name, CHATX will read from the standard
+  content. When you use `-` as a file name, CYCOD will read from the standard
   input instead of a file. This is useful when you want to pipe content
-  directly into CHATX from another command or script.
+  directly into CYCOD from another command or script.
 
-USAGE: chatx - [FILE1 [FILE2]] [...]
+USAGE: cycod - [FILE1 [FILE2]] [...]
 
 EXAMPLES
 
-  EXAMPLE 1: Pipe output from git diff into CHATX and summarize
+  EXAMPLE 1: Pipe output from git diff into CYCOD and summarize
 
-    git diff | chatx --input "summarize these changes:" @-
+    git diff | cycod --input "summarize these changes:" @-
 
-  EXAMPLE 2: Pipe output from gh issues into CHATX and summarize in a table
+  EXAMPLE 2: Pipe output from gh issues into CYCOD and summarize in a table
 
-    gh issue list | chatx --input "summarize the issues in a table" @-
+    gh issue list | cycod --input "summarize the issues in a table" @-
 
 SEE ALSO
 
-  chatx help
-  chatx help examples
-  chatx help options
+  cycod help
+  cycod help examples
+  cycod help options

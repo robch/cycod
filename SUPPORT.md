@@ -1,15 +1,15 @@
 # Support
 
-This document provides information about how to get help with ChatX.
+This document provides information about how to get help with CycoD.
 
 ## How to Get Help
 
-If you're looking for help with ChatX, here are some resources:
+If you're looking for help with CycoD, here are some resources:
 
 1. **Documentation**
    - Check the [README.md](README.md) for basic usage instructions
    - Look in the [docs/](docs/) directory for more detailed documentation
-   - Run `chatx help` for command-line help
+   - Run `cycod help` for command-line help
 
 2. **Troubleshooting Common Issues**
    - API connection issues: Verify your environment variables are set correctly
@@ -25,14 +25,14 @@ If you're looking for help with ChatX, here are some resources:
 
 ## Reporting Issues
 
-If you encounter a bug or problem with ChatX:
+If you encounter a bug or problem with CycoD:
 
 1. Search existing issues to see if your problem has already been reported
 2. If not, open a new issue with:
    - A clear description of the problem
    - Steps to reproduce the issue
    - Expected and actual behavior
-   - Version of ChatX and your environment (OS, .NET version)
+   - Version of CycoD and your environment (OS, .NET version)
    - Any relevant error messages or screenshots
 
 ## Feature Requests

@@ -61,12 +61,12 @@ class AiInstructionProcessor
             ConsoleHelpers.WriteDebugLine($"system:\n{File.ReadAllText(systemPromptFileName)}\n\n");
             ConsoleHelpers.WriteDebugLine($"instructions:\n{File.ReadAllText(instructionsFileName)}\n\n");
 
-            var useChatX = UseChatX();
-            var arguments = useChatX
+            var useCycoD = UseCycoD();
+            var arguments = useCycoD
                 ? $"--input \"@{userPromptFileName}\" --system-prompt \"@{systemPromptFileName}\" --quiet --interactive false --no-templates"
                 : $"chat --user \"@{userPromptFileName}\" --system \"@{systemPromptFileName}\" --quiet true";
 
-            if (useBuiltInFunctions && !useChatX) arguments += " --built-in-functions";
+            if (useBuiltInFunctions && !useCycoD) arguments += " --built-in-functions";
 
             if (!string.IsNullOrEmpty(saveChatHistory))
             {
@@ -74,14 +74,14 @@ class AiInstructionProcessor
                 arguments += $" --output-chat-history \"{fileName}\"";
             }
 
-            if (useChatX)
+            if (useCycoD)
             {
                 RewriteExpandedFile(userPromptFileName);
                 RewriteExpandedFile(systemPromptFileName);
             }
 
             var process = new System.Diagnostics.Process();
-            process.StartInfo.FileName = useChatX ? "chatx" : "ai";
+            process.StartInfo.FileName = useCycoD ? "cycod" : "ai";
             process.StartInfo.Arguments = arguments;
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardInput = false;
@@ -125,16 +125,16 @@ class AiInstructionProcessor
             .Replace("{backticks}", backticks);
     }
 
-    private static bool UseChatX()
+    private static bool UseCycoD()
     {
-        if (_useChatX == null)
+        if (_useCycoD == null)
         {
-            _useChatX = false;
+            _useCycoD = false;
 
             try
             {
                 var process = new System.Diagnostics.Process();
-                process.StartInfo.FileName = "chatx";
+                process.StartInfo.FileName = "cycod";
                 process.StartInfo.Arguments = "version";
                 process.StartInfo.UseShellExecute = false;
                 process.StartInfo.RedirectStandardInput = true;
@@ -142,29 +142,29 @@ class AiInstructionProcessor
                 process.StartInfo.RedirectStandardOutput = true;
                 process.Start();
 
-                ConsoleHelpers.WriteDebugLine("Checking chatx installation ...");
+                ConsoleHelpers.WriteDebugLine("Checking cycod installation ...");
 
                 process.StandardInput.Close();
                 process.WaitForExit();
                 
-                _useChatX = process.ExitCode == 0;
+                _useCycoD = process.ExitCode == 0;
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteDebugLine($"Error checking chatx installation: {ex.Message}");
-                _useChatX = false;
+                ConsoleHelpers.WriteDebugLine($"Error checking cycod installation: {ex.Message}");
+                _useCycoD = false;
             }
             finally
             {
-                if (_useChatX == null)
+                if (_useCycoD == null)
                 {
-                    _useChatX = false;
+                    _useCycoD = false;
                 }
             }
-            ConsoleHelpers.WriteDebugLine($"ChatX installed: {_useChatX}");
+            ConsoleHelpers.WriteDebugLine($"CycoD installed: {_useCycoD}");
         }
 
-        return _useChatX.Value;
+        return _useCycoD.Value;
     }
 
     private static void RewriteExpandedFile(string userPromptFileName)
@@ -190,5 +190,5 @@ class AiInstructionProcessor
         File.WriteAllText(userPromptFileName, content);
     }
 
-    private static bool? _useChatX;
+    private static bool? _useCycoD;
 }

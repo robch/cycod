@@ -1,8 +1,8 @@
-CHATX ALIAS GET
+CYCOD ALIAS GET
 
   Display the content of a specific alias.
 
-USAGE: chatx alias get ALIAS_NAME [--scope]
+USAGE: cycod alias get ALIAS_NAME [--scope]
 
 ARGUMENTS
 
@@ -21,13 +21,13 @@ EXAMPLES
 
   EXAMPLE 1: Get an alias from any scope
 
-    chatx alias get my-alias
+    cycod alias get my-alias
 
   EXAMPLE 2: Get an alias from user scope
 
-    chatx alias get my-alias --user
+    cycod alias get my-alias --user
 
 SEE ALSO
 
-  chatx help alias
-  chatx help aliases
+  cycod help alias
+  cycod help aliases

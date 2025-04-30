@@ -1,6 +1,6 @@
 ﻿
 - name: help
-  command: chatx --input "Hi"
+  command: cycod --input "Hi"
 
 - name: cmd
   script: echo hello
@@ -8,4 +8,4 @@
 
 - name: bash
   bash: pwd
-  expect-regex: .chatx/tests
+  expect-regex: .cycod/tests

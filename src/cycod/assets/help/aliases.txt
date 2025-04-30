@@ -1,12 +1,12 @@
-CHATX ALIASES
+CYCOD ALIASES
 
   Use aliases to save and reuse sets of options for common commands.
 
-USAGE: chatx [...] --save-alias ALIAS
-   OR: chatx [...] --save-local-alias ALIAS
-   OR: chatx [...] --save-user-alias ALIAS
-   OR: chatx [...] --save-global-alias ALIAS
-   OR: chatx [...] --ALIAS
+USAGE: cycod [...] --save-alias ALIAS
+   OR: cycod [...] --save-local-alias ALIAS
+   OR: cycod [...] --save-user-alias ALIAS
+   OR: cycod [...] --save-global-alias ALIAS
+   OR: cycod [...] --ALIAS
 
 OPTIONS
 
@@ -20,15 +20,15 @@ OPTIONS
   USING ALIASES
 
     --ALIAS                     Use the options saved under the specified alias name.
-                                Example: chatx --get-time
+                                Example: cycod --get-time
 
   SCOPE SEARCH ORDER
   
-    When looking for an alias, ChatX searches in the local scope first, then the user scope,
+    When looking for an alias, CycoD searches in the local scope first, then the user scope,
     and finally the global scope.
 
 SEE ALSO
 
-  chatx help
-  chatx help examples
-  chatx help options
+  cycod help
+  cycod help examples
+  cycod help options

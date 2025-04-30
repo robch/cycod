@@ -1,11 +1,11 @@
-CHATX PROMPT COMMANDS
+CYCOD PROMPT COMMANDS
 
-  These commands allow you to manage custom CHATX prompts.
+  These commands allow you to manage custom CYCOD prompts.
 
-USAGE: chatx prompt list [--scope]
-   OR: chatx prompt get PROMPT_NAME [--scope]
-   OR: chatx prompt delete PROMPT_NAME [--scope]
-   OR: chatx prompt create PROMPT_NAME PROMPT_TEXT [--scope]
+USAGE: cycod prompt list [--scope]
+   OR: cycod prompt get PROMPT_NAME [--scope]
+   OR: cycod prompt delete PROMPT_NAME [--scope]
+   OR: cycod prompt create PROMPT_NAME PROMPT_TEXT [--scope]
 
 OPTIONS
 
@@ -25,8 +25,8 @@ COMMANDS
 
 SEE ALSO
 
-  chatx help prompt list
-  chatx help prompt get
-  chatx help prompt delete
-  chatx help prompt create
-  chatx help prompts
+  cycod help prompt list
+  cycod help prompt get
+  cycod help prompt delete
+  cycod help prompt create
+  cycod help prompts

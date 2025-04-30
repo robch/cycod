@@ -39,11 +39,11 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
     
-    - name: Publish chatx for multiple platforms (verification)
+    - name: Publish cycod for multiple platforms (verification)
       run: |
-        dotnet publish src/cycod/chatx.csproj -c Release -r win-x64
-        dotnet publish src/cycod/chatx.csproj -c Release -r linux-x64
-        dotnet publish src/cycod/chatx.csproj -c Release -r osx-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r linux-x64
+        dotnet publish src/cycod/cycod.csproj -c Release -r osx-x64
 
     - name: Publish cycodt for multiple platforms (verification)
       run: |
@@ -76,10 +76,10 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: false
     
-    - name: Upload chatx build artifacts
+    - name: Upload cycod build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: chatx-build
+        name: cycod-build
         path: |
           src/cycod/bin/Release/net8.0/
           src/cycod/bin/Release/net8.0/win-x64/publish/

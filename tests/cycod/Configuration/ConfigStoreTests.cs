@@ -13,11 +13,11 @@ public class ConfigStoreTests
     public void Setup()
     {
         // Create a temporary directory for test configuration files
-        _testDir = Path.Combine(Path.GetTempPath(), "ChatXConfigTests_" + Guid.NewGuid().ToString());
+        _testDir = Path.Combine(Path.GetTempPath(), "CycoDConfigTests_" + Guid.NewGuid().ToString());
         Directory.CreateDirectory(_testDir);
 
         // Create a test environment
-        Environment.SetEnvironmentVariable("CHATX_TEST_DIR", _testDir);
+        Environment.SetEnvironmentVariable("CYCOD_TEST_DIR", _testDir);
 
         // Initialize the config store
         _configStore = ConfigStore.Instance;
@@ -27,7 +27,7 @@ public class ConfigStoreTests
     public void Cleanup()
     {
         // Remove test environment variables
-        Environment.SetEnvironmentVariable("CHATX_TEST_DIR", null);
+        Environment.SetEnvironmentVariable("CYCOD_TEST_DIR", null);
         Environment.SetEnvironmentVariable("AZURE_OPENAI_API_KEY", null);
 
         // Clean up test directory

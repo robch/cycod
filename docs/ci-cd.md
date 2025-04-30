@@ -1,6 +1,6 @@
-# CI/CD Workflows for ChatX
+# CI/CD Workflows for CycoD
 
-This document provides an overview of the CI/CD workflows configured for the ChatX project.
+This document provides an overview of the CI/CD workflows configured for the CycoD project.
 
 ## Available Workflows
 
@@ -62,7 +62,7 @@ This document provides an overview of the CI/CD workflows configured for the Cha
 
 ## Cross-Platform Support
 
-ChatX is built with cross-platform compatibility in mind and includes runtime components for:
+CycoD is built with cross-platform compatibility in mind and includes runtime components for:
 - Windows (win-x64)
 - Linux (linux-x64)
 - macOS (osx-x64)

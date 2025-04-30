@@ -14,7 +14,7 @@ class TestListCommand : TestBaseCommand
     {
         try
         {
-            Logger.Log(new ChatxTestFrameworkLogger());
+            Logger.Log(new CycoDtTestFrameworkLogger());
             var tests = FindAndFilterTests();
             
             Console.ForegroundColor = ConsoleColor.DarkGray;

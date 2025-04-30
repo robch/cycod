@@ -1,8 +1,8 @@
-CHATX ALIAS DELETE
+CYCOD ALIAS DELETE
 
   Delete an alias from a specific scope.
 
-USAGE: chatx alias delete ALIAS_NAME [--scope]
+USAGE: cycod alias delete ALIAS_NAME [--scope]
 
 ARGUMENTS
 
@@ -21,13 +21,13 @@ EXAMPLES
 
   EXAMPLE 1: Delete an alias from any scope
 
-    chatx alias delete my-alias
+    cycod alias delete my-alias
 
   EXAMPLE 2: Delete an alias from user scope
 
-    chatx alias delete my-alias --user
+    cycod alias delete my-alias --user
 
 SEE ALSO
 
-  chatx help alias
-  chatx help aliases
+  cycod help alias
+  cycod help aliases

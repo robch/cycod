@@ -37,7 +37,7 @@ public static class ChatClientFactory
     {
         var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
-        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new EnvVarSettingException("GITHUB_TOKEN is not set. Run 'chatx github login' to authenticate with GitHub Copilot.");
+        var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new EnvVarSettingException("GITHUB_TOKEN is not set. Run 'cycod github login' to authenticate with GitHub Copilot.");
         var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
         var editorVersion = EnvironmentHelpers.FindEnvVar("COPILOT_EDITOR_VERSION") ?? "vscode/1.80.1";
 
@@ -47,7 +47,7 @@ public static class ChatClientFactory
         
         if (string.IsNullOrEmpty(tokenDetails.token))
         {
-            throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'chatx github login' to authenticate.");
+            throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'cycod github login' to authenticate.");
         }
 
         // Create options with the initial auth header

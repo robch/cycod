@@ -1,9 +1,9 @@
 public class CycoDevProgramInfo : ProgramInfo
 {
     public CycoDevProgramInfo() : base(
-        () => "chatx",
+        () => "cycod",
         () => "AI-powered Developer CLI",
-        () => ".chatx",
+        () => ".cycod",
         () => typeof(CycoDevProgramInfo).Assembly)
     {
     }

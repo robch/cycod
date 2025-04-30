@@ -1,10 +1,10 @@
 # Function Calling
 
-One of the most powerful features of ChatX is the ability for the AI assistant to call functions that can interact with your system. This document explains how function calling works in ChatX and the available functions.
+One of the most powerful features of CycoD is the ability for the AI assistant to call functions that can interact with your system. This document explains how function calling works in CycoD and the available functions.
 
 ## Available Functions
 
-ChatX provides three main categories of functions that the AI assistant can use:
+CycoD provides three main categories of functions that the AI assistant can use:
 
 ### Shell Command Functions
 
@@ -63,7 +63,7 @@ Simple utility functions for getting current time information:
 When the AI suggests using a function, the following process occurs:
 
 1. The AI analyzes your request and determines a function should be called
-2. ChatX interprets the function call and executes it with the provided parameters
+2. CycoD interprets the function call and executes it with the provided parameters
 3. The function result is sent back to the AI as a tool message
 4. The AI continues its response, taking into account the function's output
 
@@ -71,7 +71,7 @@ Function calls are displayed in the terminal with function name, arguments, and 
 
 ## Example Usage
 
-When using ChatX interactively, you can ask the AI to perform tasks that use these functions:
+When using CycoD interactively, you can ask the AI to perform tasks that use these functions:
 
 ### Shell Command Example
 
@@ -97,7 +97,7 @@ Since these functions can execute commands and modify files on your system, cons
 
 1. Be careful about the prompts you provide to the AI
 2. Review suggested changes before confirming them
-3. Don't use ChatX with elevated privileges unless necessary
+3. Don't use CycoD with elevated privileges unless necessary
 4. Be cautious when allowing the AI to modify important files
 5. Use the `--debug` flag to see detailed information about all function calls
 6. Remember that persistent shell sessions remain active between commands

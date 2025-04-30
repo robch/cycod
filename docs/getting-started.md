@@ -1,6 +1,6 @@
-# Getting Started with ChatX
+# Getting Started with CycoD
 
-This guide will help you get up and running with ChatX quickly.
+This guide will help you get up and running with CycoD quickly.
 
 ## Prerequisites
 
@@ -15,26 +15,26 @@ Before you begin, ensure you have:
 
 ### Installing as a .NET Tool
 
-The easiest way to install ChatX is as a .NET global tool:
+The easiest way to install CycoD is as a .NET global tool:
 
 ```bash
-dotnet tool install --global ChatX --prerelease
+dotnet tool install --global CycoD --prerelease
 ```
 
-This will make the `chatx` command available in your terminal. If you prefer a local installation that's only available in the current directory:
+This will make the `cycod` command available in your terminal. If you prefer a local installation that's only available in the current directory:
 
 ```bash
-dotnet tool install --local ChatX --prerelease
+dotnet tool install --local CycoD --prerelease
 ```
 
-Note: Local tools require you to run them through the .NET CLI: `dotnet chatx`
+Note: Local tools require you to run them through the .NET CLI: `dotnet cycod`
 
 ### Building from Source
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/robch/chatx.git
-   cd chatx
+   git clone https://github.com/robch/cycod.git
+   cd cycod
    ```
 
 2. Build the project:
@@ -49,11 +49,11 @@ Note: Local tools require you to run them through the .NET CLI: `dotnet chatx`
 
 ## Setting Up Environment Variables
 
-ChatX uses environment variables to configure API access. You can set these in your shell or add them to a `.chatx/config` file in your home or project directory.
+CycoD uses environment variables to configure API access. You can set these in your shell or add them to a `.cycod/config` file in your home or project directory.
 
 ### Configuration File
 
-Create a `.chatx/config` file with your variables:
+Create a `.cycod/config` file with your variables:
 
 ```
 OPENAI_API_KEY=your_api_key_here
@@ -95,10 +95,10 @@ GitHub Copilot API can be accessed using two authentication methods:
 The easiest way to authenticate with GitHub Copilot is to use the built-in login command:
 
 ```bash
-chatx github login
+cycod github login
 ```
 
-This will guide you through the GitHub device flow authentication process and save the token to your `.chatx/config` file.
+This will guide you through the GitHub device flow authentication process and save the token to your `.cycod/config` file.
 
 Alternatively, you can manually set the following environment variables:
 
@@ -137,7 +137,7 @@ export COPILOT_MODEL_NAME=claude-3.7-sonnet
 Start a basic conversation with:
 
 ```bash
-chatx
+cycod
 ```
 
 This will start an interactive session where you can talk with the AI assistant.
@@ -147,7 +147,7 @@ This will start an interactive session where you can talk with the AI assistant.
 To ask a single question without entering interactive mode:
 
 ```bash
-chatx --input "What is the capital of France?"
+cycod --input "What is the capital of France?"
 ```
 
 ### Using a Custom System Prompt
@@ -155,15 +155,15 @@ chatx --input "What is the capital of France?"
 You can customize the AI's behavior with a system prompt:
 
 ```bash
-chatx --system-prompt "You are an expert programmer who gives concise code examples."
+cycod --system-prompt "You are an expert programmer who gives concise code examples."
 ```
 
 ### Working with Files
 
-ChatX can help you work with files and code:
+CycoD can help you work with files and code:
 
 ```bash
-chatx --input "Can you help me understand the file at src/Program.cs?"
+cycod --input "Can you help me understand the file at src/Program.cs?"
 ```
 
 The AI will analyze the file and provide explanations or suggestions.
@@ -173,7 +173,7 @@ The AI will analyze the file and provide explanations or suggestions.
 The AI can execute shell commands to help with tasks:
 
 ```bash
-chatx --input "How much disk space do I have left?"
+cycod --input "How much disk space do I have left?"
 ```
 
 The AI might use `RunBashCommandAsync` to execute `df -h` and explain the results.
@@ -183,13 +183,13 @@ The AI might use `RunBashCommandAsync` to execute `df -h` and explain the result
 To save your conversation for later reference:
 
 ```bash
-chatx --output-chat-history "my-chat.jsonl"
+cycod --output-chat-history "my-chat.jsonl"
 ```
 
 To continue a previous conversation:
 
 ```bash
-chatx --input-chat-history "my-chat.jsonl"
+cycod --input-chat-history "my-chat.jsonl"
 ```
 
 ## Creating and Using Aliases
@@ -197,13 +197,13 @@ chatx --input-chat-history "my-chat.jsonl"
 If you frequently use the same options, you can create an alias:
 
 ```bash
-chatx --system-prompt "You are an expert Python programmer." --save-alias python-expert
+cycod --system-prompt "You are an expert Python programmer." --save-alias python-expert
 ```
 
 Then use it later:
 
 ```bash
-chatx --python-expert --input "How do I work with async functions in Python?"
+cycod --python-expert --input "How do I work with async functions in Python?"
 ```
 
 ## Troubleshooting

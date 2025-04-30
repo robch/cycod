@@ -140,7 +140,7 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: false
     
-    - name: Pack chatx
+    - name: Pack cycod
       run: |
         # Publish for multiple platforms first
         dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
@@ -181,7 +181,7 @@ jobs:
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
-        name: chatx-cycodt-mdx-nuget-packages
+        name: cycod-cycodt-mdx-nuget-packages
         path: nuget-packages/*
     
     - name: Publish to NuGet
