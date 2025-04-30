@@ -6,21 +6,21 @@ using System.Text;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Handles slash commands by translating them to MDX commands
+/// Handles slash commands by translating them to CYCODMD commands
 /// </summary>
-public class SlashMdxCommandHandler
+public class SlashCycoDmdCommandHandler
 {
-    public SlashMdxCommandHandler()
+    public SlashCycoDmdCommandHandler()
     {
-        _mdxWrapper = new MdxCliWrapper();
+        _cycoDmdWrapper = new CycoDmdCliWrapper();
         
         // Initialize command handlers
         _commandHandlers = new Dictionary<string, Func<string, Task<string>>>
         {
-            // File searching commands - all map to basic MDX
-            { "/files", HandleMdxPassthroughCommand },
-            { "/file", HandleMdxPassthroughCommand },
-            { "/find", HandleMdxPassthroughCommand },
+            // File searching commands - all map to basic CYCODMD
+            { "/files", HandleCycoDmdPassthroughCommand },
+            { "/file", HandleCycoDmdPassthroughCommand },
+            { "/find", HandleCycoDmdPassthroughCommand },
             
             // Web commands
             { "/search", HandleWebSearchCommand },
@@ -102,31 +102,31 @@ public class SlashMdxCommandHandler
     }
 
     /// <summary>
-    /// Handles commands that are passed directly to MDX without modification
+    /// Handles commands that are passed directly to CYCODMD without modification
     /// </summary>
-    private async Task<string> HandleMdxPassthroughCommand(string arguments)
+    private async Task<string> HandleCycoDmdPassthroughCommand(string arguments)
     {
-        return await _mdxWrapper.ExecuteMdxCommandAsync(arguments);
+        return await _cycoDmdWrapper.ExecuteCycoDmdCommandAsync(arguments);
     }
 
     /// <summary>
-    /// Handles the /search command by translating to MDX web search
+    /// Handles the /search command by translating to CYCODMD web search
     /// </summary>
     private async Task<string> HandleWebSearchCommand(string arguments)
     {
-        return await _mdxWrapper.ExecuteMdxCommandAsync($"web search {arguments}");
+        return await _cycoDmdWrapper.ExecuteCycoDmdCommandAsync($"web search {arguments}");
     }
     
     /// <summary>
-    /// Handles the /get command by translating to MDX web get
+    /// Handles the /get command by translating to CYCODMD web get
     /// </summary>
     private async Task<string> HandleWebGetCommand(string arguments)
     {
-        return await _mdxWrapper.ExecuteMdxCommandAsync($"web get {arguments}");
+        return await _cycoDmdWrapper.ExecuteCycoDmdCommandAsync($"web get {arguments}");
     }
     
     /// <summary>
-    /// Handles the /run command by translating to MDX run
+    /// Handles the /run command by translating to CYCODMD run
     /// </summary>
     private async Task<string> HandleRunCommand(string arguments)
     {
@@ -157,12 +157,12 @@ public class SlashMdxCommandHandler
 
         var shouldEscape = !arguments.StartsWith('"') || shellSpecified;
         arguments = shouldEscape
-            ? _mdxWrapper.EscapeArgument(arguments)
+            ? _cycoDmdWrapper.EscapeArgument(arguments)
             : arguments;
 
-        return await _mdxWrapper.ExecuteMdxCommandAsync($"run {prefixArgsWithShell}{arguments}");
+        return await _cycoDmdWrapper.ExecuteCycoDmdCommandAsync($"run {prefixArgsWithShell}{arguments}");
     }
 
-    private readonly MdxCliWrapper _mdxWrapper;
+    private readonly CycoDmdCliWrapper _cycoDmdWrapper;
     private readonly Dictionary<string, Func<string, Task<string>>> _commandHandlers;
 }

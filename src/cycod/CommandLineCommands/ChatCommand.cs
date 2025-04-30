@@ -216,9 +216,9 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = HandleHelpCommand();
         }
-        else if (_mdxCommandHandler.IsCommand(userPrompt))
+        else if (_cycoDmdCommandHandler.IsCommand(userPrompt))
         {
-            skipAssistant = await HandleMdxCommand(chat, userPrompt);
+            skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
         }
         else if (_promptCommandHandler.IsCommand(userPrompt))
         {
@@ -240,12 +240,12 @@ public class ChatCommand : CommandWithVariables
         return !string.IsNullOrEmpty(giveAssistant);
     }
 
-    private async Task<bool> HandleMdxCommand(FunctionCallingChat chat, string userPrompt)
+    private async Task<bool> HandleCycoDmdCommand(FunctionCallingChat chat, string userPrompt)
     {
-        var userFunctionName = _mdxCommandHandler.GetCommandName(userPrompt);
+        var userFunctionName = _cycoDmdCommandHandler.GetCommandName(userPrompt);
         DisplayUserFunctionCall(userFunctionName, null);
 
-        var result = await _mdxCommandHandler.HandleCommand(userPrompt);
+        var result = await _cycoDmdCommandHandler.HandleCommand(userPrompt);
         if (result != null) chat.AddUserMessage(result);
 
         DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
@@ -292,7 +292,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /help     Show this help message");
         helpBuilder.AppendLine();
         
-        // MDX integration commands
+        // CYCODMD integration commands
         helpBuilder.AppendLine("EXTERNAL");
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /files    List files matching pattern");
@@ -624,7 +624,7 @@ public class ChatCommand : CommandWithVariables
 
     private INamedValues? _namedValues;
     private TrajectoryFile? _trajectoryFile;
-    private SlashMdxCommandHandler _mdxCommandHandler = new();
+    private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
     private SlashPromptCommandHandler _promptCommandHandler = new();
 
     private long _totalTokensIn = 0;

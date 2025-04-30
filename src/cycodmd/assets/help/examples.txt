@@ -1,63 +1,63 @@
-USAGE: mdx FILE1 [FILE2 [...]] [...]
-   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for one or more files
 
-    mdx BackgroundInfo.docx
-    mdx Presentation2.pptx
-    mdx ResearchPaper.pdf
-    mdx "../plans/*.md"
-    mdx *.png *.jpg *.gif *.bmp
+    cycodmd BackgroundInfo.docx
+    cycodmd Presentation2.pptx
+    cycodmd ResearchPaper.pdf
+    cycodmd "../plans/*.md"
+    cycodmd *.png *.jpg *.gif *.bmp
 
   EXAMPLE 2: Find files recursively, exclude certain files
 
-    mdx "**/*.cs" "**/*.md"
-    mdx "**/*.cs" --exclude "**/bin/" "**/obj/"
+    cycodmd "**/*.cs" "**/*.md"
+    cycodmd "**/*.cs" --exclude "**/bin/" "**/obj/"
 
   EXAMPLE 3: Filter and format based on file or line content
 
-    mdx "**/*.js" --file-contains "export"
-    mdx "**/*.cs" --file-contains "public class"
-    mdx "**/*.cs" --remove-all-lines "^\s//"
+    cycodmd "**/*.js" --file-contains "export"
+    cycodmd "**/*.cs" --file-contains "public class"
+    cycodmd "**/*.cs" --remove-all-lines "^\s//"
 
-    mdx "**/*.md" --contains "TODO" --line-numbers
-    mdx "**/*.md" --contains "(?i)LLM" --lines-after 10
+    cycodmd "**/*.md" --contains "TODO" --line-numbers
+    cycodmd "**/*.md" --contains "(?i)LLM" --lines-after 10
 
   EXAMPLE 4: Apply AI processing on each found file
 
-    mdx "**/*.json" --file-instructions "convert the JSON to YAML"
-    mdx "**/*.json" --file-instructions @instructions.md --threads 5
+    cycodmd "**/*.json" --file-instructions "convert the JSON to YAML"
+    cycodmd "**/*.json" --file-instructions @instructions.md --threads 5
 
   EXAMPLE 5: Apply AI to specific file types; multi-step instructions
 
-    mdx --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
-    mdx --file-instructions @step1-instructions.md @step2-instructions.md
+    cycodmd --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
+    cycodmd --file-instructions @step1-instructions.md @step2-instructions.md
 
   EXAMPLE 6: Apply AI to the final output
 
-    mdx "**/*.md" --instructions "Create a markdown summary table for each file"
-    mdx README.md "**/*.cs" --instructions "Output only an updated README.md"
+    cycodmd "**/*.md" --instructions "Create a markdown summary table for each file"
+    cycodmd README.md "**/*.cs" --instructions "Output only an updated README.md"
 
   EXAMPLE 7: Save each file output to a specified template file
 
-    mdx "**/*.cs" --save-file-output "outputs/{fileBase}.md"
+    cycodmd "**/*.cs" --save-file-output "outputs/{fileBase}.md"
 
   EXAMPLE 8: Save the current options as an alias, and then use it
 
-    mdx "**/*.cs" --save-alias cs
-    mdx --cs
+    cycodmd "**/*.cs" --save-alias cs
+    cycodmd --cs
 
 SEE ALSO
 
-  mdx help options
+  cycodmd help options
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   

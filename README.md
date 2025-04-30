@@ -20,7 +20,7 @@ CycoD is a command-line interface (CLI) application that provides a chat-based i
 - **Command Aliases**: Create shortcuts for frequently used command configurations
 - **Token Management**: Automatically manages token usage for long conversations
 - **Chat Commands**: Special commands like `/clear`, `/save`, `/cost` during chat sessions
-  - MDX integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
+  - CYCODMD integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
 
 ## Installation
 
@@ -197,7 +197,7 @@ CycoD supports several slash commands that can be used during interactive chat s
 - `/save` - Save the current chat history to a file
 - `/cost` - Show token usage and estimated cost of the session
 
-### MDX Integration Commands
+### CYCODMD Integration Commands
 - `/file <pattern>` - Search files matching pattern
 - `/files <pattern>` - List files matching pattern
 - `/find <pattern>` - Find occurrences of pattern in files
@@ -205,4 +205,4 @@ CycoD supports several slash commands that can be used during interactive chat s
 - `/get <url>` - Get and display content from a URL
 - `/run <command>` - Run a command and display the result
 
-These MDX integration commands require the [MDX](https://github.com/robch/mdx) tool to be installed and available on your system.
+These CYCODMD integration commands require the [CYCODMD](https://github.com/robch/cycodmd) tool to be installed and available on your system.

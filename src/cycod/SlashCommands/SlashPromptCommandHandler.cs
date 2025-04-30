@@ -1,5 +1,5 @@
 /// <summary>
-/// Handles slash commands by translating them to MDX commands
+/// Handles slash commands by translating them to CYCODMD commands
 /// </summary>
 public class SlashPromptCommandHandler
 {

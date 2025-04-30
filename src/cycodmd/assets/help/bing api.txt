@@ -1,9 +1,9 @@
-MDX BING API
+CYCODMD BING API
 
   The `--bing-api` option allows you to use the Bing Web Search API for web searches
   instead of UI automated scraping of Bing or Google search results (the default).
 
-USAGE: mdx web search "TERMS" --bing-api [...]
+USAGE: cycodmd web search "TERMS" --bing-api [...]
 
 SETUP
 
@@ -22,10 +22,10 @@ SETUP
 
 EXAMPLE
 
-  mdx web search "yaml site:learnxinyminutes.com" --bing-api --max 1 --get --strip
+  cycodmd web search "yaml site:learnxinyminutes.com" --bing-api --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options

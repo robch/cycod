@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
-    <AssemblyName>mdx</AssemblyName>
+    <AssemblyName>cycodmd</AssemblyName>
   
     <OutputType>Exe</OutputType>
     <Version>1.0.0</Version>
@@ -17,17 +17,17 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>mdx</PackageId>
+    <PackageId>cycodmd</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>The AI-Powered Markdown Generator</Description>
     <PackageTags>cli;ai;markdown;document;conversion</PackageTags>
-    <PackageProjectUrl>https://github.com/robch/mdx</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/robch/cycodmd</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     
     <!-- .NET Tool Configuration -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>mdx</ToolCommandName>
+    <ToolCommandName>cycodmd</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 

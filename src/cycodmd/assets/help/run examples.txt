@@ -1,28 +1,28 @@
-MDX RUN
+CYCODMD RUN
 
-  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
 
-USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Run a simple command and process the output
 
-    mdx run "echo Hello, World!" --instructions "translate strings to german"
+    cycodmd run "echo Hello, World!" --instructions "translate strings to german"
 
   EXAMPLE 2: Run a script using PowerShell and process the output
 
-    mdx run --powershell "Get-Process" --instructions "list running processes"
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
 
   EXAMPLE 3: Run a bash script and apply multi-step AI instructions
 
-    mdx run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 4: Run multiple commands
 
-    mdx run "echo Hello, World!" "echo Goodbye, World!"
+    cycodmd run "echo Hello, World!" "echo Goodbye, World!"
     
 SEE ALSO
 
-  mdx help run
-  mdx help options
+  cycodmd help run
+  cycodmd help options

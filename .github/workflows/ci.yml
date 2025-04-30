@@ -51,11 +51,11 @@ jobs:
         dotnet publish src/cycodt/cycodt.csproj -c Release -r linux-x64
         dotnet publish src/cycodt/cycodt.csproj -c Release -r osx-x64
         
-    - name: Publish mdx for multiple platforms (verification)
+    - name: Publish cycodmd for multiple platforms (verification)
       run: |
-        dotnet publish src/cycodmd/mdx.csproj -c Release -r win-x64
-        dotnet publish src/cycodmd/mdx.csproj -c Release -r linux-x64
-        dotnet publish src/cycodmd/mdx.csproj -c Release -r osx-x64
+        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r win-x64
+        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r linux-x64
+        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r osx-x64
     
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
@@ -96,10 +96,10 @@ jobs:
           src/cycodt/bin/Release/net8.0/linux-x64/publish/
           src/cycodt/bin/Release/net8.0/osx-x64/publish/
           
-    - name: Upload mdx build artifacts
+    - name: Upload cycodmd build artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: mdx-build
+        name: cycodmd-build
         path: |
           src/cycodmd/bin/Release/net8.0/
           src/cycodmd/bin/Release/net8.0/win-x64/publish/

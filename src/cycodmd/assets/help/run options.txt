@@ -1,8 +1,8 @@
-MDX RUN
+CYCODMD RUN
 
-  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
 
-USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
 
 OPTIONS
 
@@ -27,5 +27,5 @@ OPTIONS
 
 SEE ALSO
 
-  mdx help run
-  mdx help run examples
+  cycodmd help run
+  cycodmd help run examples

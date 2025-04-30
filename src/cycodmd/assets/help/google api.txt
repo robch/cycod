@@ -1,9 +1,9 @@
-MDX GOOGLE API
+CYCODMD GOOGLE API
 
   The `--google-api` option allows you to use the Google Custom Web Search API for web searches
   instead of UI automated scraping of Bing or Google search results (the default).
 
-USAGE: mdx web search "TERMS" --google-api [...]
+USAGE: cycodmd web search "TERMS" --google-api [...]
 
 SETUP
 
@@ -23,10 +23,10 @@ SETUP
     
 EXAMPLE
 
-  mdx web search "yaml site:learnxinyminutes.com" --google-api --max 1 --get --strip
+  cycodmd web search "yaml site:learnxinyminutes.com" --google-api --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options

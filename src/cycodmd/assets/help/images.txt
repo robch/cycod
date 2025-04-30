@@ -1,10 +1,10 @@
-MDX IMAGES
+CYCODMD IMAGES
 
-  MDX can convert images to markdown by extracting a rich description and all visible text
+  CYCODMD can convert images to markdown by extracting a rich description and all visible text
   using Azure OpenAI's vision capabilities.
 
-USAGE: mdx IMAGE_FILE1 [FILE2 [...]] [...]
-   OR: mdx IMAGE_PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd IMAGE_FILE1 [FILE2 [...]] [...]
+   OR: cycodmd IMAGE_PATTERN1 [PATTERN2 [...]] [...]
 
 SETUP
 
@@ -32,14 +32,14 @@ EXAMPLES
 
   EXAMPLE 2: Convert an image to markdown
 
-    mdx test.png
+    cycodmd test.png
 
   EXAMPLE 3: Convert multiple images to markdown
 
-    mdx **\*.png **\*.jpg **\*.jpeg **\*.gif **\*.bmp
+    cycodmd **\*.png **\*.jpg **\*.jpeg **\*.gif **\*.bmp
 
 SEE ALSO
 
-  mdx help
-  mdx help examples
-  mdx help options
+  cycodmd help
+  cycodmd help examples
+  cycodmd help options

@@ -1,42 +1,42 @@
-MDX WEB SEARCH
+CYCODMD WEB SEARCH
 
-  Use the 'mdx web search' command to search the web and create markdown from the results.
+  Use the 'cycodmd web search' command to search the web and create markdown from the results.
 
-USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+USAGE: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for web search URL results
 
-    mdx web search "Azure AI"
-    mdx web search "Azure AI" --bing
-    mdx web search "Azure AI" --exclude youtube.com reddit.com
+    cycodmd web search "Azure AI"
+    cycodmd web search "Azure AI" --bing
+    cycodmd web search "Azure AI" --exclude youtube.com reddit.com
 
   EXAMPLE 2: Create markdown for web search result content
 
-    mdx web search "Azure AI" --max 5 --get --strip
-    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+    cycodmd web search "Azure AI" --max 5 --get --strip
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
 
   EXAMPLE 3: Apply AI processing on each web page
 
-    mdx web search "web components" --get --strip --page-instructions "reformat markdown"
+    cycodmd web search "web components" --get --strip --page-instructions "reformat markdown"
 
   EXAMPLE 4: Apply AI multi-step instructions
 
-    mdx web search "how to fly kite" --get --strip --page-instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd web search "how to fly kite" --get --strip --page-instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 5: Apply AI to the final output
 
-    mdx web search "how to fly kite" --max 2 --get --strip --instructions "Create a markdown summary from all pages"
+    cycodmd web search "how to fly kite" --max 2 --get --strip --instructions "Create a markdown summary from all pages"
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
 
-  mdx help bing api
-  mdx help google api
+  cycodmd help bing api
+  cycodmd help google api

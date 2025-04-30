@@ -84,8 +84,8 @@ class Program
 
         foreach (var command in commandLineOptions.Commands)
         {
-            var mdxCommand = command as CycoDmdCommand;
-            bool delayOutputToApplyInstructions = mdxCommand?.InstructionsList.Any() ?? false;
+            var cycoDmdCommand = command as CycoDmdCommand;
+            bool delayOutputToApplyInstructions = cycoDmdCommand?.InstructionsList.Any() ?? false;
 
             var tasksThisCommand = command switch
             {
@@ -99,7 +99,7 @@ class Program
 
             allTasks.AddRange(tasksThisCommand);
 
-            var shouldSaveOutput = mdxCommand != null && !string.IsNullOrEmpty(mdxCommand.SaveOutput);
+            var shouldSaveOutput = cycoDmdCommand != null && !string.IsNullOrEmpty(cycoDmdCommand.SaveOutput);
             if (shouldSaveOutput || delayOutputToApplyInstructions)
             {
                 await Task.WhenAll(tasksThisCommand.ToArray());
@@ -107,13 +107,13 @@ class Program
 
                 if (delayOutputToApplyInstructions)
                 {
-                    commandOutput = AiInstructionProcessor.ApplyAllInstructions(mdxCommand!.InstructionsList, commandOutput, mdxCommand.UseBuiltInFunctions, mdxCommand.SaveChatHistory);
+                    commandOutput = AiInstructionProcessor.ApplyAllInstructions(cycoDmdCommand!.InstructionsList, commandOutput, cycoDmdCommand.UseBuiltInFunctions, cycoDmdCommand.SaveChatHistory);
                     ConsoleHelpers.WriteLine(commandOutput);
                 }
 
                 if (shouldSaveOutput)
                 {
-                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", mdxCommand!.SaveOutput)!;
+                    var saveFileName = FileHelpers.GetFileNameFromTemplate("output.md", cycoDmdCommand!.SaveOutput)!;
                     FileHelpers.WriteAllText(saveFileName, commandOutput);
                 }
             }
@@ -665,5 +665,5 @@ class Program
         }
     }
 
-    public const string Name = "mdx";
+    public const string Name = "cycodmd";
 }

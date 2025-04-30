@@ -2,18 +2,18 @@
 
 This is an analysis of the [cycod](https://github.com/robch/cycod/) codebase compared to [Anthropic's Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) feature by feature, along with a list of tasks to update cycod to have all of [Claude Code's capabilities](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials).
 
-This comparison was done using [mdx](https://github.com/robch/mdx) and [cycod](https://github.com/robch/cycod/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) and compare them to the cycod codebase.
+This comparison was done using [cycodmd](https://github.com/robch/cycodmd) and [cycod](https://github.com/robch/cycod/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) and compare them to the cycod codebase.
 
-1. Use `mdx` to search for claude code tutorials on the web, and summarize in markdown:
+1. Use `cycodmd` to search for claude code tutorials on the web, and summarize in markdown:
 
    ```bash
-   mdx web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.jsonl"
+   cycodmd web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.jsonl"
    ```
 
-2. Use `cycod` to compare claude code tutorials/summary to the cycod codebase, obtained using `mdx`:
+2. Use `cycod` to compare claude code tutorials/summary to the cycod codebase, obtained using `cycodmd`:
 
    ```bash
-   mdx src\**\*.cs | cycod --input-chat-history "claude-code-tutorial-summary.jsonl" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the cycod codebase you see here. At the end list the tasks to update the cycod codebase to have all the features that claude code has."
+   cycodmd src\**\*.cs | cycod --input-chat-history "claude-code-tutorial-summary.jsonl" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the cycod codebase you see here. At the end list the tasks to update the cycod codebase to have all the features that claude code has."
    ```
 
 ## Command Structure Comparison

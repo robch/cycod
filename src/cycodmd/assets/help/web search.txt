@@ -1,28 +1,28 @@
-MDX WEB SEARCH
+CYCODMD WEB SEARCH
 
-  Use the 'mdx web search' command to search the web and create markdown from the results.
+  Use the 'cycodmd web search' command to search the web and create markdown from the results.
 
-USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+USAGE: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for web search URL results
 
-    mdx web search "Azure AI" --google
-    mdx web search "Azure AI" --bing
+    cycodmd web search "Azure AI" --google
+    cycodmd web search "Azure AI" --bing
 
   EXAMPLE 2: Create markdown for web search result content
 
-    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   
-  mdx help bing api
-  mdx help google api
+  cycodmd help bing api
+  cycodmd help google api

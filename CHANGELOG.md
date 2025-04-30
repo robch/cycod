@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Slash Commands:
-  - Added new slash commands (/find, /file, /files, /get, /search) that integrate with MDX functionality
+  - Added new slash commands (/find, /file, /files, /get, /search) that integrate with CYCODMD functionality
   - These provide convenient shortcuts for common operations like file searching and web content retrieval
 - Range Support for --foreach:
   - Added support for numeric ranges in --foreach using the #..# syntax

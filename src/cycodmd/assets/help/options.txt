@@ -1,5 +1,5 @@
-USAGE: mdx FILE1 [FILE2 [...]] [...]
-   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
 
 OPTIONS
 
@@ -51,18 +51,18 @@ SUB COMMANDS
 
 SEE ALSO
 
-  mdx help
-  mdx help examples
+  cycodmd help
+  cycodmd help examples
 
-  mdx help run
-  mdx help run examples
-  mdx help run options
+  cycodmd help run
+  cycodmd help run examples
+  cycodmd help run options
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   

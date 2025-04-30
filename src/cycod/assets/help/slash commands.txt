@@ -15,7 +15,7 @@ BUILT-IN COMMANDS
 
     /<promptname>           Insert a custom prompt into the chat
 
-  MDX INTEGRATION
+  CYCODMD INTEGRATION
 
     /file <pattern>         Search files matching pattern
     /files <pattern>        List files matching pattern
@@ -48,8 +48,8 @@ EXAMPLES
 
 NOTES
 
-  - The MDX integration commands require MDX to be installed and available.
-    For more information about MDX, visit: https://github.com/robch/mdx
+  - The CYCODMD integration commands require CYCODMD to be installed and available.
+    For more information about CYCODMD, visit: https://github.com/robch/cycodmd
 
   - Custom prompts can be created using the prompt create command.
     Example: cycod prompt create summarize "Please summarize this text:"

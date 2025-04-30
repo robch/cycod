@@ -1,6 +1,6 @@
-# MDX - AI-Powered Markdown Generator CLI
+# CYCODMD - AI-Powered Markdown Generator CLI
 
-MDX is a command-line tool that helps build markdown files from various sources. It can process files, search the web, and apply AI processing to create markdown content. The tool supports file and line filtering, line formatting, AI processing, and output options. It can be used to create markdown files for documentation, research, and other purposes.
+CYCODMD is a command-line tool that helps build markdown files from various sources. It can process files, search the web, and apply AI processing to create markdown content. The tool supports file and line filtering, line formatting, AI processing, and output options. It can be used to create markdown files for documentation, research, and other purposes.
 
 ## Features
 - Integrates AI processing for applying instructions to files, pages, or command outputs.
@@ -17,58 +17,58 @@ MDX is a command-line tool that helps build markdown files from various sources.
 
 ## Installation
 
-There are several ways to install and run MDX.
+There are several ways to install and run CYCODMD.
 
 ### OPTION 1: Install as .NET Tool
 
-MDX is available as a .NET global tool that can be installed from NuGet.
+CYCODMD is available as a .NET global tool that can be installed from NuGet.
 
 For global installation (available from any directory):
 ```bash
-dotnet tool install --global MDX --prerelease
+dotnet tool install --global CYCODMD --prerelease
 ```
 
 For local installation (available only in current directory):
 ```bash
-dotnet tool install --local MDX --prerelease
+dotnet tool install --local CYCODMD --prerelease
 ```
 
-After installation, you can run MDX directly from your terminal:
+After installation, you can run CYCODMD directly from your terminal:
 ```bash
-mdx --help
+cycodmd --help
 ```
 
 ### OPTION 2: Local Build
 
-To build and run MDX locally:
+To build and run CYCODMD locally:
 
 1. Install [.NET SDK 8.0](https://dotnet.microsoft.com/download/dotnet/8.0)
 2. Clone this repository
 ```bash
-git clone https://github.com/robch/mdx
+git clone https://github.com/robch/cycodmd
 ```
 3. Build the project:
 ```bash
-cd mdx
+cd cycodmd
 dotnet build
 ```
 
 ### OPTION 3: Docker Build
 
-To run MDX in a Docker container with all dependencies pre-installed:
+To run CYCODMD in a Docker container with all dependencies pre-installed:
 
 1. Clone this repository
 ```bash
-git clone https://github.com/robch/mdx
+git clone https://github.com/robch/cycodmd
 ```
 2. Build the Docker image:
 ```bash
-cd mdx
-docker build -t mdx .
+cd cycodmd
+docker build -t cycodmd .
 ```
-3. Run MDX commands using the container:
+3. Run CYCODMD commands using the container:
 ```bash
-docker run mdx [command arguments]
+docker run cycodmd [command arguments]
 ```
 
 ### OPTION 4: VS Code Dev Container
@@ -76,29 +76,29 @@ docker run mdx [command arguments]
 1. Install [VS Code](https://code.visualstudio.com/) and the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 2. Clone this repository
 ```bash
-git clone https://github.com/robch/mdx
+git clone https://github.com/robch/cycodmd
 ```
 3. Open in VS Code and click "Reopen in Container" when prompted
 ```bash
-code mdx
+code cycodmd
 ```
 
 ### OPTION 5: GitHub Codespaces
 
-- Visit [codespaces.new/robch/mdx](https://codespaces.new/robch/mdx?quickstart=1)
+- Visit [codespaces.new/robch/cycodmd](https://codespaces.new/robch/cycodmd?quickstart=1)
 - Or open in GitHub and click the "Code" button > "Create codespace"
 
 ## Usage
 
-`mdx`
+`cycodmd`
 
 ```
-MDX - The AI-Powered Markdown Generator CLI, Version 1.0.0
+CYCODMD - The AI-Powered Markdown Generator CLI, Version 1.0.0
 Copyright(c) 2024, Rob Chambers. All rights reserved.
 
-Welcome to MDX, the AI-Powered Markdown Generator!
+Welcome to CYCODMD, the AI-Powered Markdown Generator!
 
-Using MDX, you can:
+Using CYCODMD, you can:
 
   - Convert files to markdown
   - Run scripts and convert output to markdown
@@ -107,112 +107,112 @@ Using MDX, you can:
 
   AND ... You can apply AI processing to the output!
 
-USAGE: mdx FILE1 [FILE2 [...]] [...]
-   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
-   OR: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
-   OR: mdx web search "TERMS" ["TERMS2" [...]] [...]
-   OR: mdx web get "URL" ["URL2" [...]] [...]
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
+   OR: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
+   OR: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
+   OR: cycodmd web get "URL" ["URL2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for one or more files
 
-    mdx BackgroundInfo.docx
-    mdx Presentation2.pptx
-    mdx *.pdf *.png *.jpg *.gif *.bmp
+    cycodmd BackgroundInfo.docx
+    cycodmd Presentation2.pptx
+    cycodmd *.pdf *.png *.jpg *.gif *.bmp
 
   EXAMPLE 2: Find files recursively and create markdown
 
-    mdx **/*.cs
+    cycodmd **/*.cs
 
   EXAMPLE 3: Create markdown running a script
 
-    mdx run --powershell "Get-Process" --instructions "list running processes"
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
 
   EXAMPLE 4: Create markdown from a web search
 
-    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help
-  mdx help examples
-  mdx help options
+  cycodmd help
+  cycodmd help examples
+  cycodmd help options
 ```
 
-`mdx help examples`
+`cycodmd help examples`
 
 ```
-USAGE: mdx FILE1 [FILE2 [...]] [...]
-   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for one or more files
 
-    mdx BackgroundInfo.docx
-    mdx Presentation2.pptx
-    mdx ResearchPaper.pdf
-    mdx "../plans/*.md"
-    mdx *.png *.jpg *.gif *.bmp
+    cycodmd BackgroundInfo.docx
+    cycodmd Presentation2.pptx
+    cycodmd ResearchPaper.pdf
+    cycodmd "../plans/*.md"
+    cycodmd *.png *.jpg *.gif *.bmp
 
   EXAMPLE 2: Find files recursively, exclude certain files
 
-    mdx "**/*.cs" "**/*.md"
-    mdx "**/*.cs" --exclude "**/bin/" "**/obj/"
+    cycodmd "**/*.cs" "**/*.md"
+    cycodmd "**/*.cs" --exclude "**/bin/" "**/obj/"
 
   EXAMPLE 3: Filter and format based on file or line content
 
-    mdx "**/*.js" --file-contains "export"
-    mdx "**/*.cs" --file-contains "public class"
-    mdx "**/*.cs" --remove-all-lines "^\s//"
+    cycodmd "**/*.js" --file-contains "export"
+    cycodmd "**/*.cs" --file-contains "public class"
+    cycodmd "**/*.cs" --remove-all-lines "^\s//"
 
-    mdx "**/*.md" --contains "TODO" --line-numbers
-    mdx "**/*.md" --contains "(?i)LLM" --lines-after 10
+    cycodmd "**/*.md" --contains "TODO" --line-numbers
+    cycodmd "**/*.md" --contains "(?i)LLM" --lines-after 10
 
   EXAMPLE 4: Apply AI processing on each found file
 
-    mdx "**/*.json" --file-instructions "convert the JSON to YAML"
-    mdx "**/*.json" --file-instructions @instructions.md --threads 5
+    cycodmd "**/*.json" --file-instructions "convert the JSON to YAML"
+    cycodmd "**/*.json" --file-instructions @instructions.md --threads 5
 
   EXAMPLE 5: Apply AI to specific file types; multi-step instructions
 
-    mdx --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
-    mdx --file-instructions @step1-instructions.md @step2-instructions.md
+    cycodmd --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
+    cycodmd --file-instructions @step1-instructions.md @step2-instructions.md
 
   EXAMPLE 6: Apply AI to the final output
 
-    mdx "**/*.md" --instructions "Create a markdown summary table for each file"
-    mdx README.md "**/*.cs" --instructions "Output only an updated README.md"
+    cycodmd "**/*.md" --instructions "Create a markdown summary table for each file"
+    cycodmd README.md "**/*.cs" --instructions "Output only an updated README.md"
 
   EXAMPLE 7: Save each file output to a specified template file
 
-    mdx "**/*.cs" --save-file-output "outputs/{fileBase}.md"
+    cycodmd "**/*.cs" --save-file-output "outputs/{fileBase}.md"
 
   EXAMPLE 8: Save the current options as an alias, and then use it
 
-    mdx "**/*.cs" --save-alias cs
-    mdx --cs
+    cycodmd "**/*.cs" --save-alias cs
+    cycodmd --cs
 
 SEE ALSO
 
-  mdx help options
+  cycodmd help options
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   
 ```
 
-`mdx help options`
+`cycodmd help options`
 
 ```
-USAGE: mdx FILE1 [FILE2 [...]] [...]
-   OR: mdx PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
 
 OPTIONS
 
@@ -264,95 +264,95 @@ SUB COMMANDS
 
 SEE ALSO
 
-  mdx help
-  mdx help examples
+  cycodmd help
+  cycodmd help examples
 
-  mdx help run
-  mdx help run examples
-  mdx help run options
+  cycodmd help run
+  cycodmd help run examples
+  cycodmd help run options
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   
 ```
 
-`mdx help run`
+`cycodmd help run`
 
 ```
-MDX RUN
+CYCODMD RUN
 
-  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
 
-USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Run a simple command and process the output
 
-    mdx run "echo Hello, World!" --instructions "translate strings to german"
+    cycodmd run "echo Hello, World!" --instructions "translate strings to german"
 
   EXAMPLE 2: Run a script using PowerShell and process the output
 
-    mdx run --powershell "Get-Process" --instructions "list running processes"
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
 
   EXAMPLE 3: Run a bash script and apply multi-step AI instructions
 
-    mdx run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
 
 SEE ALSO
 
-  mdx help run examples
-  mdx help run options
+  cycodmd help run examples
+  cycodmd help run options
 
 ```
 
-`mdx help run examples`
+`cycodmd help run examples`
 
 ```
-MDX RUN
+CYCODMD RUN
 
-  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
 
-USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Run a simple command and process the output
 
-    mdx run "echo Hello, World!" --instructions "translate strings to german"
+    cycodmd run "echo Hello, World!" --instructions "translate strings to german"
 
   EXAMPLE 2: Run a script using PowerShell and process the output
 
-    mdx run --powershell "Get-Process" --instructions "list running processes"
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
 
   EXAMPLE 3: Run a bash script and apply multi-step AI instructions
 
-    mdx run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 4: Run multiple commands
 
-    mdx run "echo Hello, World!" "echo Goodbye, World!"
+    cycodmd run "echo Hello, World!" "echo Goodbye, World!"
     
 SEE ALSO
 
-  mdx help run
-  mdx help options
+  cycodmd help run
+  cycodmd help options
 
 ```
 
-`mdx help run options`
+`cycodmd help run options`
 
 ```
-MDX RUN
+CYCODMD RUN
 
-  Use the 'mdx run' command to execute scripts or commands and create markdown from the output.
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
 
-USAGE: mdx run [COMMAND1 [COMMAND2 [...]]] [...]
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
 
 OPTIONS
 
@@ -377,89 +377,89 @@ OPTIONS
 
 SEE ALSO
 
-  mdx help run
-  mdx help run examples
+  cycodmd help run
+  cycodmd help run examples
 
 ```
 
-`mdx help web get`
+`cycodmd help web get`
 
 ```
-MDX WEB GET
+CYCODMD WEB GET
 
-  Use the 'mdx web get' command to create markdown from one or more web pages.
+  Use the 'cycodmd web get' command to create markdown from one or more web pages.
 
-USAGE: mdx web get "URL" ["URL2" [...]] [...]
+USAGE: cycodmd web get "URL" ["URL2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown from a web page, keeping HTML tags
 
-    mdx web get "https://learnxinyminutes.com/docs/yaml/"
+    cycodmd web get "https://learnxinyminutes.com/docs/yaml/"
 
   EXAMPLE 2: Create markdown from a web page, stripping HTML tags
 
-    mdx web get "https://learnxinyminutes.com/docs/yaml/" --strip
+    cycodmd web get "https://learnxinyminutes.com/docs/yaml/" --strip
 
 SEE ALSO
 
-  mdx help web get options
-  mdx help web get examples
+  cycodmd help web get options
+  cycodmd help web get examples
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
   
 ```
 
-`mdx help web get examples`
+`cycodmd help web get examples`
 
 ```
-MDX WEB GET
+CYCODMD WEB GET
 
-  Use the 'mdx web get' command to create markdown from one or more web pages.
+  Use the 'cycodmd web get' command to create markdown from one or more web pages.
 
-USAGE: mdx web get "URL" ["URL2" [...]] [...]
+USAGE: cycodmd web get "URL" ["URL2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for web page content
 
-    mdx web get https://example.com
-    mdx web get https://mbers.us/bio --strip
+    cycodmd web get https://example.com
+    cycodmd web get https://mbers.us/bio --strip
 
   EXAMPLE 2: Apply AI processing on each web page
 
-    mdx web get https://example.com https://mbers.us/bio --page-instructions "what's the title of this page?"
+    cycodmd web get https://example.com https://mbers.us/bio --page-instructions "what's the title of this page?"
 
   EXAMPLE 3: Apply AI multi-step instructions
 
-    mdx web get https://learnxinyminutes.com/yaml/ --page-instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd web get https://learnxinyminutes.com/yaml/ --page-instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 4: Apply AI to the final output
 
-    mdx web get https://example.com https://mbers.us/bio --instructions "style example.com as the other site"    
+    cycodmd web get https://example.com https://mbers.us/bio --instructions "style example.com as the other site"    
 
 SEE ALSO
 
-  mdx help web get
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get options
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 
-
-```
-
-`mdx help web get options`
 
 ```
-MDX WEB GET
 
-  Use the 'mdx web get' command to create markdown from one or more web pages.
+`cycodmd help web get options`
 
-USAGE: mdx web get "URL" ["URL2" [...]] [...]
+```
+CYCODMD WEB GET
+
+  Use the 'cycodmd web get' command to create markdown from one or more web pages.
+
+USAGE: cycodmd web get "URL" ["URL2" [...]] [...]
 
 OPTIONS
 
@@ -494,103 +494,103 @@ OPTIONS
 
 SEE ALSO
 
-  mdx help web get
-  mdx help web get examples
+  cycodmd help web get
+  cycodmd help web get examples
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
   
 ```
 
-`mdx help web search`
+`cycodmd help web search`
 
 ```
-MDX WEB SEARCH
+CYCODMD WEB SEARCH
 
-  Use the 'mdx web search' command to search the web and create markdown from the results.
+  Use the 'cycodmd web search' command to search the web and create markdown from the results.
 
-USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+USAGE: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for web search URL results
 
-    mdx web search "Azure AI" --google
-    mdx web search "Azure AI" --bing
+    cycodmd web search "Azure AI" --google
+    cycodmd web search "Azure AI" --bing
 
   EXAMPLE 2: Create markdown for web search result content
 
-    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search examples
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   
-  mdx help bing api
-  mdx help google api
+  cycodmd help bing api
+  cycodmd help google api
 ```
 
-`mdx help web search examples`
+`cycodmd help web search examples`
 
 ```
-MDX WEB SEARCH
+CYCODMD WEB SEARCH
 
-  Use the 'mdx web search' command to search the web and create markdown from the results.
+  Use the 'cycodmd web search' command to search the web and create markdown from the results.
 
-USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+USAGE: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
 
 EXAMPLES
 
   EXAMPLE 1: Create markdown for web search URL results
 
-    mdx web search "Azure AI"
-    mdx web search "Azure AI" --bing
-    mdx web search "Azure AI" --exclude youtube.com reddit.com
+    cycodmd web search "Azure AI"
+    cycodmd web search "Azure AI" --bing
+    cycodmd web search "Azure AI" --exclude youtube.com reddit.com
 
   EXAMPLE 2: Create markdown for web search result content
 
-    mdx web search "Azure AI" --max 5 --get --strip
-    mdx web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+    cycodmd web search "Azure AI" --max 5 --get --strip
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
 
   EXAMPLE 3: Apply AI processing on each web page
 
-    mdx web search "web components" --get --strip --page-instructions "reformat markdown"
+    cycodmd web search "web components" --get --strip --page-instructions "reformat markdown"
 
   EXAMPLE 4: Apply AI multi-step instructions
 
-    mdx web search "how to fly kite" --get --strip --page-instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd web search "how to fly kite" --get --strip --page-instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 5: Apply AI to the final output
 
-    mdx web search "how to fly kite" --max 2 --get --strip --instructions "Create a markdown summary from all pages"
+    cycodmd web search "how to fly kite" --max 2 --get --strip --instructions "Create a markdown summary from all pages"
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search options
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
 
-  mdx help bing api
-  mdx help google api
+  cycodmd help bing api
+  cycodmd help google api
 ```
 
-`mdx help web search options`
+`cycodmd help web search options`
 
 ```
-MDX WEB SEARCH
+CYCODMD WEB SEARCH
 
-  Use the 'mdx web search' command to search the web and create markdown from the results.
+  Use the 'cycodmd web search' command to search the web and create markdown from the results.
 
-USAGE: mdx web search "TERMS" ["TERMS2" [...]] [...]
+USAGE: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
 
 OPTIONS
 
@@ -640,27 +640,27 @@ OPTIONS
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search examples
+  cycodmd help web search
+  cycodmd help web search examples
 
-  mdx help web get
-  mdx help web get examples
-  mdx help web get options
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
   
-  mdx help bing api
-  mdx help google api
+  cycodmd help bing api
+  cycodmd help google api
 ```
 
-`mdx help images`
+`cycodmd help images`
 
 ```
-MDX IMAGES
+CYCODMD IMAGES
 
-  MDX can convert images to markdown by extracting a rich description and all visible text
+  CYCODMD can convert images to markdown by extracting a rich description and all visible text
   using Azure OpenAI's vision capabilities.
 
-USAGE: mdx IMAGE_FILE1 [FILE2 [...]] [...]
-   OR: mdx IMAGE_PATTERN1 [PATTERN2 [...]] [...]
+USAGE: cycodmd IMAGE_FILE1 [FILE2 [...]] [...]
+   OR: cycodmd IMAGE_PATTERN1 [PATTERN2 [...]] [...]
 
 SETUP
 
@@ -688,28 +688,28 @@ EXAMPLES
 
   EXAMPLE 2: Convert an image to markdown
 
-    mdx test.png
+    cycodmd test.png
 
   EXAMPLE 3: Convert multiple images to markdown
 
-    mdx **\*.png **\*.jpg **\*.jpeg **\*.gif **\*.bmp
+    cycodmd **\*.png **\*.jpg **\*.jpeg **\*.gif **\*.bmp
 
 SEE ALSO
 
-  mdx help
-  mdx help examples
-  mdx help options
+  cycodmd help
+  cycodmd help examples
+  cycodmd help options
 ```
 
-`mdx help bing api`
+`cycodmd help bing api`
 
 ```
-MDX BING API
+CYCODMD BING API
 
   The `--bing-api` option allows you to use the Bing Web Search API for web searches
   instead of UI automated scraping of Bing or Google search results (the default).
 
-USAGE: mdx web search "TERMS" --bing-api [...]
+USAGE: cycodmd web search "TERMS" --bing-api [...]
 
 SETUP
 
@@ -728,24 +728,24 @@ SETUP
 
 EXAMPLE
 
-  mdx web search "yaml site:learnxinyminutes.com" --bing-api --max 1 --get --strip
+  cycodmd web search "yaml site:learnxinyminutes.com" --bing-api --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 ```
 
-`mdx help google api`
+`cycodmd help google api`
 
 ```
-MDX GOOGLE API
+CYCODMD GOOGLE API
 
   The `--google-api` option allows you to use the Google Custom Web Search API for web searches
   instead of UI automated scraping of Bing or Google search results (the default).
 
-USAGE: mdx web search "TERMS" --google-api [...]
+USAGE: cycodmd web search "TERMS" --google-api [...]
 
 SETUP
 
@@ -765,11 +765,11 @@ SETUP
     
 EXAMPLE
 
-  mdx web search "yaml site:learnxinyminutes.com" --google-api --max 1 --get --strip
+  cycodmd web search "yaml site:learnxinyminutes.com" --google-api --max 1 --get --strip
 
 SEE ALSO
 
-  mdx help web search
-  mdx help web search examples
-  mdx help web search options
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
 ```

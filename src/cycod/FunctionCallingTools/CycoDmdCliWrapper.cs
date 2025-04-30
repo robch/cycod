@@ -5,17 +5,17 @@ using System.Threading;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Wrapper class for executing MDX CLI commands and processing their output.
+/// Wrapper class for executing CYCODMD CLI commands and processing their output.
 /// </summary>
-public class MdxCliWrapper
+public class CycoDmdCliWrapper
 {
     /// <summary>
-    /// Executes an MDX command and returns the output.
+    /// Executes an CYCODMD command and returns the output.
     /// </summary>
-    /// <param name="arguments">The arguments to pass to the MDX command</param>
+    /// <param name="arguments">The arguments to pass to the CYCODMD command</param>
     /// <param name="timeoutMs">Timeout in milliseconds</param>
     /// <returns>The command output as a string</returns>
-    public async Task<string> ExecuteMdxCommandAsync(string arguments, int timeoutMs = 120000)
+    public async Task<string> ExecuteCycoDmdCommandAsync(string arguments, int timeoutMs = 120000)
     {
         var stdoutBuffer = new StringBuilder();
         var stderrBuffer = new StringBuilder();
@@ -27,7 +27,7 @@ public class MdxCliWrapper
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "mdx",
+                    FileName = "cycodmd",
                     Arguments = arguments,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -39,7 +39,7 @@ public class MdxCliWrapper
 
             if (ConsoleHelpers.IsVerbose())
             {
-                ConsoleHelpers.WriteLine($"Executing MDX command: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
+                ConsoleHelpers.WriteLine($"Executing CYCODMD command: {process.StartInfo.FileName} {process.StartInfo.Arguments}");
             }
 
             process.OutputDataReceived += (sender, e) => {
@@ -81,7 +81,7 @@ public class MdxCliWrapper
                 if (completedTask == timeoutTask)
                 {
                     try { process.Kill(); } catch { }
-                    return $"<waiting {timeoutMs}ms for mdx to finish, timed out>\n{mergedBuffer}";
+                    return $"<waiting {timeoutMs}ms for cycodmd to finish, timed out>\n{mergedBuffer}";
                 }
                 
                 cts.Cancel(); // Cancel the timeout task
@@ -90,7 +90,7 @@ public class MdxCliWrapper
                 var output = mergedBuffer.ToString().TrimEnd();
                 if (process.ExitCode != 0)
                 {
-                    output += Environment.NewLine + $"<mdx command exited with code {process.ExitCode}>";
+                    output += Environment.NewLine + $"<cycodmd command exited with code {process.ExitCode}>";
                 }
                 
                 return output;
@@ -98,17 +98,17 @@ public class MdxCliWrapper
         }
         catch (Exception ex)
         {
-            return $"<mdx command exited with error: {ex.Message}>";
+            return $"<cycodmd command exited with error: {ex.Message}>";
         }
         finally 
         {
             if (ConsoleHelpers.IsVerbose())
             {
-                var baseFileName = FileHelpers.GetFileNameFromTemplate("mdx_command.txt", "mdx-debug-{time}");
+                var baseFileName = FileHelpers.GetFileNameFromTemplate("cycodmd_command.txt", "cycodmd-debug-{time}");
                 Thread.Sleep(10); // Wait a bit, so template filename w/ time doesn't conflict with anything else
 
-                ConsoleHelpers.WriteLine($"ExecuteMdxCommandAsync inputs/outputs: {baseFileName}-*", ConsoleColor.DarkMagenta, overrideQuiet: true);
-                FileHelpers.WriteAllText($"{baseFileName}-command.txt", $"mdx {arguments}");
+                ConsoleHelpers.WriteLine($"ExecuteCycoDmdCommandAsync inputs/outputs: {baseFileName}-*", ConsoleColor.DarkMagenta, overrideQuiet: true);
+                FileHelpers.WriteAllText($"{baseFileName}-command.txt", $"cycodmd {arguments}");
                 FileHelpers.WriteAllText($"{baseFileName}-stdout.txt", stdoutBuffer.ToString());
                 FileHelpers.WriteAllText($"{baseFileName}-stderr.txt", stderrBuffer.ToString());
                 FileHelpers.WriteAllText($"{baseFileName}-merged.txt", mergedBuffer.ToString());
@@ -137,7 +137,7 @@ public class MdxCliWrapper
     #region Search Codebase Methods
     
     /// <summary>
-    /// Executes MDX command to search codebase for specific patterns.
+    /// Executes CYCODMD command to search codebase for specific patterns.
     /// </summary>
     public async Task<string> ExecuteSearchCodebaseCommand(
         string[] filePatterns,
@@ -155,7 +155,7 @@ public class MdxCliWrapper
             contextLines, 
             processingInstructions);
             
-        var output = await ExecuteMdxCommandAsync(arguments);
+        var output = await ExecuteCycoDmdCommandAsync(arguments);
         var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
         var wasntRecursive = !contentPattern.Contains("**");
         if (noFilesFound && wasntRecursive)
@@ -224,7 +224,7 @@ public class MdxCliWrapper
     }
     
     /// <summary>
-    /// Executes MDX command to find files containing specific patterns.
+    /// Executes CYCODMD command to find files containing specific patterns.
     /// </summary>
     public async Task<string> ExecuteFindFilesContainingPatternCommand(
         string[] filePatterns,
@@ -238,7 +238,7 @@ public class MdxCliWrapper
             excludePatterns,
             processingInstructions);
             
-        var output = await ExecuteMdxCommandAsync(arguments);
+        var output = await ExecuteCycoDmdCommandAsync(arguments);
         var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
         var wasntRecursive = !contentPattern.Contains("**");
         if (noFilesFound && wasntRecursive)
@@ -297,7 +297,7 @@ public class MdxCliWrapper
     #region Documentation Generation Methods
     
     /// <summary>
-    /// Executes MDX command to convert files to markdown.
+    /// Executes CYCODMD command to convert files to markdown.
     /// </summary>
     public async Task<string> ExecuteConvertFilesToMarkdownCommand(
         string[] filePaths,
@@ -309,7 +309,7 @@ public class MdxCliWrapper
             formattingInstructions, 
             showLineNumbers);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        return await ExecuteCycoDmdCommandAsync(arguments);
     }
     
     /// <summary>
@@ -348,7 +348,7 @@ public class MdxCliWrapper
     #region Web Research Methods
     
     /// <summary>
-    /// Executes MDX command to research web topics.
+    /// Executes CYCODMD command to research web topics.
     /// </summary>
     public async Task<string> ExecuteResearchWebTopicCommand(
         string searchQuery,
@@ -366,7 +366,7 @@ public class MdxCliWrapper
             stripHtml, 
             processingInstructions);
             
-        return await ExecuteMdxCommandAsync($"{arguments} --firefox");
+        return await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
     }
     
     /// <summary>
@@ -416,7 +416,7 @@ public class MdxCliWrapper
     }
     
     /// <summary>
-    /// Executes MDX command to extract content from web pages.
+    /// Executes CYCODMD command to extract content from web pages.
     /// </summary>
     public async Task<string> ExecuteExtractContentFromWebPagesCommand(
         string[] urls,
@@ -430,7 +430,7 @@ public class MdxCliWrapper
             pageProcessingInstructions, 
             finalProcessingInstructions);
             
-        return await ExecuteMdxCommandAsync($"{arguments} --firefox");
+        return await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
     }
     
     /// <summary>
@@ -479,7 +479,7 @@ public class MdxCliWrapper
     #region Command Analysis Methods
     
     /// <summary>
-    /// Executes MDX command to run commands and format their output.
+    /// Executes CYCODMD command to run commands and format their output.
     /// </summary>
     public async Task<string> ExecuteRunCommandsAndFormatOutputCommand(
         string[] commands,
@@ -491,7 +491,7 @@ public class MdxCliWrapper
             shell, 
             processingInstructions);
             
-        return await ExecuteMdxCommandAsync(arguments);
+        return await ExecuteCycoDmdCommandAsync(arguments);
     }
     
     /// <summary>

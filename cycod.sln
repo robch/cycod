@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycodt", "src\cycodt\cycodt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "common", "src\common\common.csproj", "{5D816D53-01B3-48A2-B8B1-DB23E86586CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "mdx", "src\cycodmd\mdx.csproj", "{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycodmd", "src\cycodmd\cycodmd.csproj", "{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
