@@ -20,6 +20,10 @@ abstract public class ProgramRunner
             ConsoleHelpers.WriteLine($"Error: {ex.Message}");
             return 2;
         }
+        catch (GitHubTokenExpiredException)
+        {
+            return 1;
+        }
         catch (CalcException ex)
         {
             ExceptionHelpers.SaveAndDisplayException(ex);
