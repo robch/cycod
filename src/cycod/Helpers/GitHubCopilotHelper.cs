@@ -125,24 +125,35 @@ public class GitHubCopilotHelper
         request.Headers.Add("editor-plugin-version", "copilot.vim/1.16.0");
         request.Headers.Add("user-agent", "GithubCopilot/1.155.0");
         
-        var response = await _httpClient.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        
-        var responseJson = await response.Content.ReadAsStringAsync();
-        ConsoleHelpers.WriteDebugLine($"Copilot token response: {responseJson}");
-        foreach (var header in response.Headers)
+        try
         {
-            ConsoleHelpers.WriteDebugLine($"Header: {header.Key} = {string.Join(", ", header.Value)}");
-        }
+            var response = await _httpClient.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+            
+            var responseJson = await response.Content.ReadAsStringAsync();
+            ConsoleHelpers.WriteDebugLine($"Copilot token response: {responseJson}");
+            foreach (var header in response.Headers)
+            {
+                ConsoleHelpers.WriteDebugLine($"Header: {header.Key} = {string.Join(", ", header.Value)}");
+            }
 
-        var tokenData = JsonSerializer.Deserialize<CopilotTokenResponse>(responseJson);
-        
-        if (tokenData == null || string.IsNullOrEmpty(tokenData.token))
-        {
-            throw new InvalidOperationException("Failed to get Copilot token");
+            var tokenData = JsonSerializer.Deserialize<CopilotTokenResponse>(responseJson);
+            
+            if (tokenData == null || string.IsNullOrEmpty(tokenData.token))
+            {
+                throw new InvalidOperationException("Failed to get Copilot token");
+            }
+            
+            return tokenData;
         }
-        
-        return tokenData;
+        catch (HttpRequestException ex) when (ex.Message.Contains("401") || (ex.StatusCode.HasValue && (int)ex.StatusCode.Value == 401))
+        {
+            // GitHub token has expired or is invalid
+            ConsoleHelpers.WriteLine("Your GitHub authentication has expired.", ConsoleColor.Yellow, overrideQuiet: true);
+            ConsoleHelpers.WriteLine("Please run 'cycod github login' to re-authenticate with GitHub.", ConsoleColor.Yellow, overrideQuiet: true);
+            
+            throw new GitHubTokenExpiredException("GitHub authentication has expired. Please run 'cycod github login' to re-authenticate.", ex);
+        }
     }
     
     /// <summary>
@@ -163,6 +174,11 @@ public class GitHubCopilotHelper
         {
             return GetCopilotTokenAsync(githubToken).GetAwaiter().GetResult();
         }
+        catch (GitHubTokenExpiredException)
+        {
+            // Just re-throw GitHubTokenExpiredException directly since it already has the user-friendly message
+            throw;
+        }
         catch (Exception ex)
         {
             throw new InvalidOperationException($"Failed to get Copilot token: {ex.Message}", ex);
@@ -177,6 +193,11 @@ public class GitHubCopilotHelper
         try
         {
             return GetCopilotTokenDetailsAsync(githubToken).GetAwaiter().GetResult();
+        }
+        catch (GitHubTokenExpiredException)
+        {
+            // Just re-throw GitHubTokenExpiredException directly since it already has the user-friendly message
+            throw;
         }
         catch (Exception ex)
         {
