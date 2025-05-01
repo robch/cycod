@@ -149,7 +149,7 @@ public class GitHubCopilotHelper
         catch (HttpRequestException ex) when (ex.Message.Contains("401") || (ex.StatusCode.HasValue && (int)ex.StatusCode.Value == 401))
         {
             // GitHub token has expired or is invalid
-            ConsoleHelpers.WriteLine("Your GitHub authentication has expired.", ConsoleColor.Yellow, overrideQuiet: true);
+            ConsoleHelpers.WriteLine("Your GitHub authentication has expired or is invalid.", ConsoleColor.Yellow, overrideQuiet: true);
             ConsoleHelpers.WriteLine("Please run 'cycod github login' to re-authenticate with GitHub.", ConsoleColor.Yellow, overrideQuiet: true);
             
             throw new GitHubTokenExpiredException("GitHub authentication has expired. Please run 'cycod github login' to re-authenticate.", ex);

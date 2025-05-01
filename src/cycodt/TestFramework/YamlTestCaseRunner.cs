@@ -411,7 +411,7 @@ public class YamlTestCaseRunner
             var found = PickCliOrNull(clis);
             return found != null
                 ? PickCliFound(clis, found)         // use what we found
-                : PickCliNotFound(clis, clis[0]);   // use ai
+                : PickCliNotFound(clis, clis[0]);   // use cycod
         }
     }
 

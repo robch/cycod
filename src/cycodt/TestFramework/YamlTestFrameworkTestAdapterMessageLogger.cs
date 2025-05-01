@@ -40,7 +40,7 @@ public class YamlTestFrameworkTestAdapterMessageLogger : IYamlTestFrameworkLogge
     {
         var pid = Process.GetCurrentProcess().Id.ToString();
         var time = DateTime.Now.ToFileTime().ToString();
-        return $"log-ai-cli-test-framework-{time}-{pid}.log";
+        return $"log-cycodt-cli-test-framework-{time}-{pid}.log";
     }
 
     private IMessageLogger logger;

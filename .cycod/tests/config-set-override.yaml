@@ -1,0 +1,138 @@
+# - area: Config Set and Override
+#   tests:
+#   - name: Override values in different scopes
+#     steps:
+#     # Clean up test keys
+#     - name: Clear test keys in all scopes
+#       command: cycod config clear OverrideTestKey --any
+#       skipOnFailure: true
+    
+#     # Test override in local scope
+#     - name: Set initial value in local scope
+#       command: cycod config set OverrideTestKey InitialValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: InitialValue
+    
+#     - name: Override with new value in local scope
+#       command: cycod config set OverrideTestKey OverriddenValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: OverriddenValue
+    
+#     - name: Verify local value was overridden
+#       command: cycod config get OverrideTestKey --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: OverriddenValue
+    
+#     # Test override in user scope
+#     - name: Set initial value in user scope
+#       command: cycod config set OverrideTestKey InitialUserValue --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         OverrideTestKey: InitialUserValue
+    
+#     - name: Override with new value in user scope
+#       command: cycod config set OverrideTestKey OverriddenUserValue --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         OverrideTestKey: OverriddenUserValue
+    
+#     - name: Verify user value was overridden
+#       command: cycod config get OverrideTestKey --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         OverrideTestKey: OverriddenUserValue
+    
+#     # Test override in global scope
+#     - name: Set initial value in global scope
+#       command: cycod config set OverrideTestKey InitialGlobalValue --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         OverrideTestKey: InitialGlobalValue
+    
+#     - name: Override with new value in global scope
+#       command: cycod config set OverrideTestKey OverriddenGlobalValue --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         OverrideTestKey: OverriddenGlobalValue
+    
+#     - name: Verify global value was overridden
+#       command: cycod config get OverrideTestKey --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         OverrideTestKey: OverriddenGlobalValue
+    
+#     # Test overriding with special values
+#     - name: Override with empty string
+#       command: cycod config set OverrideTestKey "" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: 
+    
+#     - name: Override with numeric value
+#       command: cycod config set OverrideTestKey 12345 --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: 12345
+    
+#     - name: Override with boolean value
+#       command: cycod config set OverrideTestKey true --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         OverrideTestKey: true
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       command: cycod config clear OverrideTestKey --any
+#       skipOnFailure: true
+
+#   - name: Override list with scalar value
+#     steps:
+#     # Clean up test key
+#     - name: Clean up test key
+#       command: cycod config clear ListOverrideTest --any
+#       skipOnFailure: true
+    
+#     # Set up list to test override
+#     - name: Set up list to test override
+#       command: cycod config add ListOverrideTest Item1 --local
+#       expect-regex: |
+#         ListOverrideTest:
+#         - Item1
+#     - command: cycod config add ListOverrideTest Item2 --local
+#       expect-regex: |
+#         ListOverrideTest:
+#         - Item1
+#         - Item2
+    
+#     # Verify the list was created properly
+#     - name: Verify list was created
+#       command: cycod config get ListOverrideTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ListOverrideTest:
+#           - Item1
+#           - Item2
+    
+#     # Override list with scalar value
+#     - name: Override list with scalar value
+#       command: cycod config set ListOverrideTest ScalarValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ListOverrideTest: ScalarValue
+    
+#     # Verify the override worked
+#     - name: Verify override worked
+#       command: cycod config get ListOverrideTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ListOverrideTest: ScalarValue
+    
+#     # Clean up
+#     - name: Clean up test key
+#       command: cycod config clear ListOverrideTest --local
+#       expect-regex: |
+#         ListOverrideTest: \(cleared\)
+

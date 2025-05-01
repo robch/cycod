@@ -1,0 +1,302 @@
+# - area: Config Inheritance
+#   tests:
+#   - name: Set value in different scopes
+#     steps:
+#     - name: Clear test values in all scopes
+#       command: cycod config clear TestInheritance --any
+#       skipOnFailure: true
+    
+#     - name: Set global value
+#       command: cycod config set TestInheritance GlobalValue --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestInheritance: GlobalValue
+    
+#     - name: Set user value
+#       command: cycod config set TestInheritance UserValue --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestInheritance: UserValue
+    
+#     - name: Set local value
+#       command: cycod config set TestInheritance LocalValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TestInheritance: LocalValue
+    
+#     - name: Get value with any scope (should get local)
+#       command: cycod config get TestInheritance --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TestInheritance: LocalValue
+    
+#     - name: Clear local value
+#       command: cycod config clear TestInheritance --local
+#       expect-regex: |
+#         TestInheritance: \(cleared\)
+    
+#     - name: Get value with any scope after clearing local (should get user)
+#       command: cycod config get TestInheritance --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestInheritance: UserValue
+    
+#     - name: Clear user value
+#       command: cycod config clear TestInheritance --user
+#       expect-regex: |
+#         TestInheritance: \(cleared\)
+    
+#     - name: Get value with any scope after clearing local and user (should get global)
+#       command: cycod config get TestInheritance --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestInheritance: GlobalValue
+    
+#     - name: Clean up global value
+#       command: cycod config clear TestInheritance --global
+#       expect-regex: |
+#         TestInheritance: \(cleared\)
+  
+#   - name: Complex scope inheritance with multiple keys
+#     steps:
+#     - name: Clear all test keys in all scopes for clean testing environment
+#       command: cycod config clear TestKey1 --any
+#       skipOnFailure: true
+#     - command: cycod config clear TestKey2 --any
+#       skipOnFailure: true
+#     - command: cycod config clear TestKey3 --any
+#       skipOnFailure: true
+    
+#     # Set up test environment with multiple keys in different scopes
+#     - name: Set values in global scope
+#       command: cycod config set TestKey1 GlobalValue1 --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestKey1: GlobalValue1
+#     - command: cycod config set TestKey2 GlobalValue2 --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestKey2: GlobalValue2
+#     - command: cycod config set TestKey3 GlobalValue3 --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestKey3: GlobalValue3
+    
+#     - name: Set some values in user scope (overriding globals)
+#       command: cycod config set TestKey1 UserValue1 --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestKey1: UserValue1
+#     - command: cycod config set TestKey2 UserValue2 --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestKey2: UserValue2
+#       # Note: Deliberately not setting TestKey3 in user scope
+    
+#     - name: Set one value in local scope (overriding user)
+#       command: cycod config set TestKey1 LocalValue1 --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TestKey1: LocalValue1
+#       # Note: Deliberately not setting TestKey2 and TestKey3 in local scope
+    
+#     # Verify proper inheritance across all scopes
+#     - name: Get TestKey1 with --any scope should retrieve local value
+#       command: cycod config get TestKey1 --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TestKey1: LocalValue1
+    
+#     - name: Get TestKey2 with --any scope should retrieve user value
+#       command: cycod config get TestKey2 --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestKey2: UserValue2
+    
+#     - name: Get TestKey3 with --any scope should retrieve global value
+#       command: cycod config get TestKey3 --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestKey3: GlobalValue3
+    
+#     # Test progressive value removal to see inheritance through the chain
+#     - name: Clear TestKey1 in local scope
+#       command: cycod config clear TestKey1 --local
+#       expect-regex: |
+#         TestKey1: \(cleared\)
+    
+#     - name: Getting TestKey1 should now retrieve user value
+#       command: cycod config get TestKey1 --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestKey1: UserValue1
+    
+#     - name: Clear TestKey1 in user scope
+#       command: cycod config clear TestKey1 --user
+#       expect-regex: |
+#         TestKey1: \(cleared\)
+    
+#     - name: Getting TestKey1 should now retrieve global value
+#       command: cycod config get TestKey1 --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestKey1: GlobalValue1
+    
+#     # Cleanup
+#     - name: Clean up all test keys
+#       command: cycod config clear TestKey1 --any
+#       skipOnFailure: true
+#     - command: cycod config clear TestKey2 --any
+#       skipOnFailure: true
+#     - command: cycod config clear TestKey3 --any
+#       skipOnFailure: true
+    
+#   - name: List values inheritance across scopes
+#     steps:
+#     - name: Clear test list in all scopes
+#       command: cycod config clear InheritanceTestList --any
+#       skipOnFailure: true
+    
+#     # Create lists with different items in different scopes
+#     - name: Create list in global scope
+#       command: cycod config add InheritanceTestList GlobalItem1 --global
+#       expect-regex: |
+#         InheritanceTestList:
+#         - GlobalItem1
+#     - command: cycod config add InheritanceTestList GlobalItem2 --global
+#       expect-regex: |
+#         InheritanceTestList:
+#         - GlobalItem1
+#         - GlobalItem2
+    
+#     - name: Create list in user scope
+#       command: cycod config add InheritanceTestList UserItem1 --user
+#       expect-regex: |
+#         InheritanceTestList:
+#         - UserItem1
+#     - command: cycod config add InheritanceTestList UserItem2 --user
+#       expect-regex: |
+#         InheritanceTestList:
+#         - UserItem1
+#         - UserItem2
+    
+#     - name: Create list in local scope
+#       command: cycod config add InheritanceTestList LocalItem1 --local
+#       expect-regex: |
+#         InheritanceTestList:
+#         - LocalItem1
+#     - command: cycod config add InheritanceTestList LocalItem2 --local
+#       expect-regex: |
+#         InheritanceTestList:
+#         - LocalItem1
+#         - LocalItem2
+    
+#     # Verify proper inheritance - --any should return local list
+#     - name: Get list with any scope should retrieve local list
+#       command: cycod config get InheritanceTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         InheritanceTestList:
+#           - LocalItem1
+#           - LocalItem2
+    
+#     # Test inheritance by clearing local list
+#     - name: Clear local list
+#       command: cycod config clear InheritanceTestList --local
+#       expect-regex: |
+#         InheritanceTestList: \(cleared\)
+    
+#     # Verify --any now returns user list
+#     - name: Get list with any scope after clearing local should retrieve user list
+#       command: cycod config get InheritanceTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         InheritanceTestList:
+#           - UserItem1
+#           - UserItem2
+    
+#     # Test inheritance by clearing user list
+#     - name: Clear user list
+#       command: cycod config clear InheritanceTestList --user
+#       expect-regex: |
+#         InheritanceTestList: \(cleared\)
+    
+#     # Verify --any now returns global list
+#     - name: Get list with any scope after clearing local and user should retrieve global list
+#       command: cycod config get InheritanceTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         InheritanceTestList:
+#           - GlobalItem1
+#           - GlobalItem2
+    
+#     # Clean up
+#     - name: Clean up global list
+#       command: cycod config clear InheritanceTestList --global
+#       expect-regex: |
+#         InheritanceTestList: \(cleared\)
+  
+#   - name: Nested configuration keys inheritance
+#     steps:
+#     - name: Clear test nested keys in all scopes
+#       command: cycod config clear App.Setting.SubSetting --any
+#       skipOnFailure: true
+    
+#     # Set up nested keys in different scopes
+#     - name: Set nested key in global scope
+#       command: cycod config set App.Setting.SubSetting GlobalNestedValue --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         App.Setting.SubSetting: GlobalNestedValue
+    
+#     - name: Set nested key in user scope
+#       command: cycod config set App.Setting.SubSetting UserNestedValue --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         App.Setting.SubSetting: UserNestedValue
+    
+#     - name: Set nested key in local scope
+#       command: cycod config set App.Setting.SubSetting LocalNestedValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         App.Setting.SubSetting: LocalNestedValue
+    
+#     # Test inheritance with nested keys
+#     - name: Get nested key with any scope (should return local value)
+#       command: cycod config get App.Setting.SubSetting --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         App.Setting.SubSetting: LocalNestedValue
+    
+#     # Test inheritance by clearing local value
+#     - name: Clear nested key in local scope
+#       command: cycod config clear App.Setting.SubSetting --local
+#       expect-regex: |
+#         App.Setting.SubSetting: \(cleared\)
+    
+#     # Verify we now get the user value
+#     - name: Get nested key with any scope after clearing local (should return user value)
+#       command: cycod config get App.Setting.SubSetting --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         App.Setting.SubSetting: UserNestedValue
+    
+#     # Test inheritance by clearing user value
+#     - name: Clear nested key in user scope
+#       command: cycod config clear App.Setting.SubSetting --user
+#       expect-regex: |
+#         App.Setting.SubSetting: \(cleared\)
+    
+#     # Verify we now get the global value
+#     - name: Get nested key with any scope after clearing local and user (should return global value)
+#       command: cycod config get App.Setting.SubSetting --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         App.Setting.SubSetting: GlobalNestedValue
+    
+#     # Clean up
+#     - name: Clean up global nested key
+#       command: cycod config clear App.Setting.SubSetting --global
+#       expect-regex: |
+#         App.Setting.SubSetting: \(cleared\)
+
