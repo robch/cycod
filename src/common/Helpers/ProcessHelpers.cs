@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Threading;
 
-static class ProcessHelpers
+public static class ProcessHelpers
 {
     public static async Task<(string, int)> RunShellCommandAsync(string script, string? shell, int timeout = int.MaxValue)
     {
