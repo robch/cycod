@@ -138,11 +138,8 @@ CycoD supports a flexible configuration system with multiple scopes (global, use
 - `COPILOT_MODEL_NAME`: Model name to use (default: claude-3.7-sonnet)
 - `COPILOT_INTEGRATION_ID`: Your Copilot integration ID (required for both auth methods)
 
-*Alternative HMAC authentication:*
-- `COPILOT_HMAC_KEY`: Your Copilot HMAC key
-
 #### App Configuration
-- `CYCOD_PREFERRED_PROVIDER`: Set default AI provider (openai, azure-openai, copilot, copilot-hmac)
+- `CYCOD_PREFERRED_PROVIDER`: Set default AI provider (openai, azure-openai, copilot)
 
 ### Configuration Profiles
 

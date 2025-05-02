@@ -11,16 +11,14 @@ CycoD currently supports the following AI providers:
 | OpenAI | `OPENAI_API_KEY` | Standard OpenAI API |
 | Azure OpenAI | `AZURE_OPENAI_API_KEY` | OpenAI models hosted on Azure |
 | GitHub Copilot | `GITHUB_TOKEN` | GitHub Copilot models |
-| GitHub Copilot HMAC | `COPILOT_HMAC_KEY` | GitHub Copilot with HMAC authentication |
 
 ## Default Provider Selection
 
 By default, CycoD selects a provider by checking for the necessary environment variables in the following order:
 
 1. GitHub Copilot (if `GITHUB_TOKEN` is set)
-2. GitHub Copilot with HMAC authentication (if `COPILOT_HMAC_KEY` is set)
-3. Azure OpenAI (if `AZURE_OPENAI_API_KEY` is set)
-4. OpenAI (if `OPENAI_API_KEY` is set)
+2. Azure OpenAI (if `AZURE_OPENAI_API_KEY` is set)
+3. OpenAI (if `OPENAI_API_KEY` is set)
 
 This means that if you have multiple sets of credentials in your environment, CycoD will use the first one it finds according to this priority order.
 
@@ -35,9 +33,7 @@ Use these command-line flags to explicitly select a provider:
 ```bash
 cycod --use-openai        # Use OpenAI API
 cycod --use-azure-openai  # Use Azure OpenAI API
-cycod --use-copilot       # Use GitHub Copilot (either token or HMAC)
-cycod --use-copilot-token # Use GitHub Copilot with token authentication
-cycod --use-copilot-hmac  # Use GitHub Copilot with HMAC authentication
+cycod --use-copilot       # Use GitHub Copilot
 ```
 
 These flags override the default provider selection order. All necessary credentials must still be available in your environment or configuration files.
@@ -48,7 +44,7 @@ Set your preferred provider in any configuration file (global, user, or local):
 
 ```yaml
 app:
-  preferredProvider: "openai"  # Can be "openai", "azure-openai", "copilot", or "copilot-hmac"
+  preferredProvider: "openai"  # Can be "openai", "azure-openai", "copilot"
 ```
 
 Or using the config command:

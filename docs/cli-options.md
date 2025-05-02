@@ -68,9 +68,7 @@ These options control which AI provider to use:
 | `--use-openai` | Use OpenAI API as the chat provider |
 | `--use-azure-openai` | Use Azure OpenAI API as the chat provider |
 | `--use-azure` | Alias for `--use-azure-openai` |
-| `--use-copilot` | Use GitHub Copilot (either token or HMAC) |
-| `--use-copilot-token` | Use GitHub Copilot with token authentication |
-| `--use-copilot-hmac` | Use GitHub Copilot with HMAC authentication |
+| `--use-copilot` | Use GitHub Copilot
 | `--profile <n>` | Load a named profile from `.cycod/profiles/<n>.yaml` |
 
 ## Configuration Options

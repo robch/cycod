@@ -21,7 +21,7 @@
     <Authors>Rob Chambers</Authors>
     <Description>The AI-Powered Markdown Generator</Description>
     <PackageTags>cli;ai;markdown;document;conversion</PackageTags>
-    <PackageProjectUrl>https://github.com/robch/cycodmd</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     
@@ -42,7 +42,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\README.md" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>

@@ -551,10 +551,6 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
         }
-        else if (arg == "--use-copilot-hmac") 
-        {
-            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-hmac");
-        }
         else
         {
             parsed = false;

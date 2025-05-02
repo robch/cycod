@@ -26,7 +26,6 @@ public static class KnownSettings
     public const string CopilotModelName = "Copilot.ModelName";
     public const string CopilotApiEndpoint = "Copilot.ApiEndpoint";
     public const string CopilotIntegrationId = "Copilot.IntegrationId";
-    public const string CopilotHmacKey = "Copilot.HmacKey";
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
 
     // Application settings
@@ -53,9 +52,6 @@ public static class KnownSettings
         
         // GitHub secrets
         GitHubToken,
-        
-        // Copilot secrets
-        CopilotHmacKey
     };
     
     #endregion
@@ -83,7 +79,6 @@ public static class KnownSettings
         { CopilotModelName, "COPILOT_MODEL_NAME" },
         { CopilotApiEndpoint, "COPILOT_API_ENDPOINT" },
         { CopilotIntegrationId, "COPILOT_INTEGRATION_ID" },
-        { CopilotHmacKey, "COPILOT_HMAC_KEY" },
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
         
         // Application settings
@@ -115,7 +110,6 @@ public static class KnownSettings
         { CopilotModelName, "--copilot-model-name" },
         { CopilotApiEndpoint, "--copilot-api-endpoint" },
         { CopilotIntegrationId, "--copilot-integration-id" },
-        { CopilotHmacKey, "--copilot-hmac-key" },
         { CopilotEditorVersion, "--copilot-editor-version" },
         
         // Application settings
@@ -174,7 +168,6 @@ public static class KnownSettings
         CopilotModelName,
         CopilotApiEndpoint,
         CopilotIntegrationId,
-        CopilotHmacKey,
         CopilotEditorVersion
     };
     

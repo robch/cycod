@@ -75,23 +75,6 @@ public static class ChatClientFactory
         return chatClient.AsChatClient();
     }
 
-    public static IChatClient CreateCopilotChatClientWithHmacKey()
-    {
-        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
-        var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
-        var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? throw new EnvVarSettingException("COPILOT_INTEGRATION_ID is not set.");
-        var hmacKey = EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY") ?? throw new EnvVarSettingException("COPILOT_HMAC_KEY is not set.");
-
-        var options = InitOpenAIClientOptions(endpoint, "");
-        options.AddPolicy(new CustomHeaderPolicy("Request-HMAC", HMACHelper.Encode(hmacKey)), PipelinePosition.BeforeTransport);
-        options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId), PipelinePosition.BeforeTransport);
-
-        var chatClient = new ChatClient(model, new ApiKeyCredential(" "), options);
-        
-        ConsoleHelpers.WriteDebugLine("Using HMAC for Copilot authentication");
-        return chatClient.AsChatClient();
-    }
-
     private static IChatClient? TryCreateChatClientFromPreferredProvider()
     {
         // Check for explicit provider preference from configuration or environment variables
@@ -105,10 +88,6 @@ public static class ChatClientFactory
             if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
             {
                 return CreateCopilotChatClientWithGitHubToken();
-            }
-            else if ((preferredProvider == "copilot-hmac" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY")))
-            {
-                return CreateCopilotChatClientWithHmacKey();
             }
             else if ((preferredProvider == "azure-openai" || preferredProvider == "azure") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
             {
@@ -136,11 +115,6 @@ public static class ChatClientFactory
             return CreateCopilotChatClientWithGitHubToken();
         }
         
-        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("COPILOT_HMAC_KEY")))
-        {
-            return CreateCopilotChatClientWithHmacKey();
-        }
-
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
         {
             return CreateAzureOpenAIChatClientWithApiKey();
@@ -183,12 +157,6 @@ public static class ChatClientFactory
                     - COPILOT_API_ENDPOINT (optional)
                     - COPILOT_INTEGRATION_ID (optional)
                     - COPILOT_EDITOR_VERSION (optional)
-                    - COPILOT_MODEL_NAME (optional)
-
-                    To use GitHub Copilot with HMAC authentication, please set:
-                    - COPILOT_HMAC_KEY
-                    - COPILOT_INTEGRATION_ID
-                    - COPILOT_API_ENDPOINT (optional)
                     - COPILOT_MODEL_NAME (optional)"
                 .Split(new[] { '\n' })
                 .Select(line => line.Trim()));
@@ -214,7 +182,7 @@ public static class ChatClientFactory
         var endpointOk = !string.IsNullOrEmpty(endpoint);
         if (endpointOk) options.Endpoint = new Uri(endpoint!);
 
-        var authHeaderOk = authHeader != null; // string.Empty Authorization header is required for Copilot API w/HMAC authentication
+        var authHeaderOk = authHeader != null;
         if (authHeaderOk) options.AddPolicy(new CustomHeaderPolicy("Authorization", authHeader!), PipelinePosition.BeforeTransport);
 
         return options;

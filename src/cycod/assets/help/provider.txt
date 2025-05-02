@@ -14,9 +14,7 @@ Use these flags to explicitly select which provider to use:
 --use-openai           Use OpenAI API
 --use-azure-openai     Use Azure OpenAI API  
 --use-azure            Same as --use-azure-openai
---use-copilot          Use GitHub Copilot (either token or HMAC)
---use-copilot-token    Use GitHub Copilot with token authentication
---use-copilot-hmac     Use GitHub Copilot with HMAC authentication
+--use-copilot          Use GitHub Copilot
 ```
 
 ## Named Profiles

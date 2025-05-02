@@ -80,7 +80,7 @@ This comparison was done using [cycodmd](https://github.com/robch/cycodmd) and [
   - OpenAI API
   - Azure OpenAI API
   - GitHub Copilot
-  - Support for different authentication methods (API key, HMAC, GitHub token)
+  - Support for different authentication methods (API key, GitHub token)
 
 ## Interactive Features
 

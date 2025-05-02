@@ -9,7 +9,7 @@ Before you begin, ensure you have:
 - **.NET 8.0 SDK** or later installed
 - An **OpenAI API key** if you plan to use OpenAI's models
 - An **Azure OpenAI API key** if you plan to use Azure OpenAI
-- A **GitHub token** or **Copilot HMAC key** if you plan to use GitHub Copilot
+- A **GitHub token** if you plan to use GitHub Copilot
 
 ## Installation
 
@@ -116,21 +116,6 @@ export COPILOT_API_ENDPOINT=https://api.githubcopilot.com
 export COPILOT_MODEL_NAME=claude-3.7-sonnet
 ```
 
-#### HMAC Authentication
-
-```bash
-# Windows
-set COPILOT_HMAC_KEY=your_hmac_key_here
-set COPILOT_INTEGRATION_ID=your_integration_id_here
-set COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-set COPILOT_MODEL_NAME=claude-3.7-sonnet
-
-# Linux/macOS
-export COPILOT_HMAC_KEY=your_hmac_key_here
-export COPILOT_INTEGRATION_ID=your_integration_id_here
-export COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-export COPILOT_MODEL_NAME=claude-3.7-sonnet
-```
 
 ## Your First Chat
 
