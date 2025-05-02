@@ -1,0 +1,32 @@
+CYCOD MCP COMMANDS
+
+  These commands allow you to manage Model Context Protocol (MCP) servers.
+  MCP servers provide capabilities like database access, API integrations, or tool execution.
+
+USAGE: cycod mcp list [--scope]
+   OR: cycod mcp get SERVER_NAME [--scope]
+   OR: cycod mcp add SERVER_NAME --command COMMAND [--arg ARG...] [--env ENV...] [--url URL] [--scope]
+   OR: cycod mcp remove SERVER_NAME [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include servers from all scopes (default for 'list' and 'get' commands)
+
+COMMANDS
+
+    list            List all available MCP servers
+    get             Display the details of a specific MCP server
+    add             Create a new MCP server configuration
+    remove          Delete an MCP server configuration
+
+SEE ALSO
+
+  cycod help mcp list
+  cycod help mcp get
+  cycod help mcp add
+  cycod help mcp remove

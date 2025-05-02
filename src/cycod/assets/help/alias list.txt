@@ -1,0 +1,29 @@
+CYCOD ALIAS LIST
+
+  List all available aliases across all scopes or in a specific scope.
+
+USAGE: cycod alias list [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    List only global aliases (all users)
+    --user, -u      List only user aliases (current user)
+    --local, -l     List only local aliases (current directory)
+    --any, -a       List aliases from all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: List all aliases from all scopes
+
+    cycod alias list
+
+  EXAMPLE 2: List only user aliases
+
+    cycod alias list --user
+
+SEE ALSO
+
+  cycod help alias
+  cycod help aliases

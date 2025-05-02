@@ -1,6 +1,6 @@
-# NuGet Publishing Guide for ChatX
+# NuGet Publishing Guide for CycoD
 
-This document explains how to set up NuGet publishing for the ChatX application, allowing for automatic or manual publishing of the package when new versions are released.
+This document explains how to set up NuGet publishing for the CycoD application, allowing for automatic or manual publishing of the package when new versions are released.
 
 ## Setting Up a NuGet Feed
 
@@ -14,8 +14,8 @@ This document explains how to set up NuGet publishing for the ChatX application,
    - Navigate to your account settings.
    - Select "API Keys" from the menu.
    - Click "Create" to generate a new API key.
-   - Provide a name for your key (e.g., "ChatX Publishing").
-   - Select either "Global" scope or specify the "chatx" package name.
+   - Provide a name for your key (e.g., "CycoD Publishing").
+   - Select either "Global" scope or specify the "cycod" package name.
    - Set an expiration date (recommended: 1 year).
    - Click "Create" to generate the key.
    - **Important**: Copy and securely store your API key, as you won't be able to see it again.
@@ -57,7 +57,7 @@ If you prefer to publish manually or need to publish a package outside of the CI
 1. **Build the package**:
    ```
    dotnet build --configuration Release
-   dotnet pack src/chatx.csproj --configuration Release -o nuget-packages
+   dotnet pack src/cycod.csproj --configuration Release -o nuget-packages
    ```
 
 2. **Publish to NuGet.org**:
@@ -72,7 +72,7 @@ If you prefer to publish manually or need to publish a package outside of the CI
 
 ## Versioning Convention
 
-ChatX uses the following versioning format:
+CycoD uses the following versioning format:
 - `X.Y.Z-YYYYMMDD` (e.g., `1.0.0-20250330`)
 
 Where:
@@ -97,16 +97,16 @@ If you want to build packages but not publish them automatically:
 
 ## Additional NuGet Package Configuration
 
-For more control over your NuGet package, you can add these properties to the `PropertyGroup` section in `src/chatx.csproj`:
+For more control over your NuGet package, you can add these properties to the `PropertyGroup` section in `src/cycod.csproj`:
 
 ```xml
 <PropertyGroup>
     <!-- Existing properties -->
-    <PackageId>ChatX</PackageId>
+    <PackageId>CycoD</PackageId>
     <Authors>Your Name</Authors>
     <Description>AI-powered CLI tool for chat-based interactions</Description>
     <PackageTags>cli;ai;chat</PackageTags>
-    <PackageProjectUrl>https://github.com/yourusername/chatx</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/yourusername/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>icon.png</PackageIcon>

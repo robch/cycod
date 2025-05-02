@@ -1,0 +1,226 @@
+# - area: Config Set with Empty Values
+#   tests:
+#   - name: Set and get empty values
+#     steps:
+#     # Clean up test keys
+#     - name: Clear test keys in all scopes
+#       command: cycod config clear EmptyValueTest --any
+#       skipOnFailure: true
+#     - command: cycod config clear ExistingValueTest --any
+#       skipOnFailure: true
+    
+#     # Test setting empty string values in different scopes
+#     - name: Set empty value in local scope
+#       command: cycod config set EmptyValueTest "" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EmptyValueTest: 
+    
+#     - name: Set empty value in user scope
+#       command: cycod config set EmptyValueTest "" --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         EmptyValueTest: 
+    
+#     - name: Set empty value in global scope
+#       command: cycod config set EmptyValueTest "" --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         EmptyValueTest: 
+    
+#     # Test retrieving empty values
+#     - name: Get empty value from local scope
+#       command: cycod config get EmptyValueTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EmptyValueTest: 
+    
+#     - name: Get empty value from user scope
+#       command: cycod config get EmptyValueTest --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         EmptyValueTest: 
+    
+#     - name: Get empty value from global scope
+#       command: cycod config get EmptyValueTest --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         EmptyValueTest: 
+    
+#     # Test overriding existing value with empty string
+#     - name: Set initial non-empty value
+#       command: cycod config set ExistingValueTest "Initial Value" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ExistingValueTest: Initial Value
+    
+#     - name: Override with empty value
+#       command: cycod config set ExistingValueTest "" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ExistingValueTest: 
+    
+#     # Verify empty value is different from non-existent key
+#     - name: Get empty value
+#       command: cycod config get ExistingValueTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ExistingValueTest: 
+    
+#     - name: Get non-existent key
+#       command: cycod config get NonExistentKey --local
+#       expect-regex: |
+#         NonExistentKey: \(not found or empty\)
+    
+#     # Test list operations after setting empty value
+#     - name: Clear key with empty value to test list operations
+#       command: cycod config clear ExistingValueTest --local
+#       expect-regex: |
+#         ExistingValueTest: \(cleared\)
+    
+#     - name: Add value to list after having an empty value
+#       command: cycod config add ExistingValueTest "New List Item" --local
+#       expect-regex: |
+#         ExistingValueTest:
+#         - New List Item
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       command: cycod config clear EmptyValueTest --any
+#       skipOnFailure: true
+#     - command: cycod config clear ExistingValueTest --any
+#       skipOnFailure: true
+      
+#   - name: Set and get whitespace-only values
+#     steps:
+#     # Clean up test keys
+#     - name: Clear test keys
+#       command: cycod config clear WhitespaceTest --any
+#       skipOnFailure: true
+#     - command: cycod config clear TabTest --any
+#       skipOnFailure: true
+    
+#     # Test setting whitespace-only values
+#     - name: Set value with spaces only
+#       command: cycod config set WhitespaceTest "   " --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         WhitespaceTest: \ \ \ 
+    
+#     - name: Set value with tabs only
+#       command: cycod config set TabTest "\t\t" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TabTest: \t\t
+    
+#     # Test retrieving whitespace-only values
+#     - name: Get value with spaces only
+#       command: cycod config get WhitespaceTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         WhitespaceTest: \ \ \ 
+    
+#     - name: Get value with tabs only
+#       command: cycod config get TabTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TabTest: \t\t
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       command: cycod config clear WhitespaceTest --local
+#       expect-regex: |
+#         WhitespaceTest: \(cleared\)
+#     - command: cycod config clear TabTest --local
+#       expect-regex: |
+#         TabTest: \(cleared\)
+  
+#   - name: Test quoted vs unquoted empty values
+#     steps:
+#     # Clean up test keys
+#     - name: Clear test keys
+#       command: cycod config clear QuotedEmptyTest --any
+#       skipOnFailure: true
+      
+#     # Test setting quoted empty value
+#     - name: Set quoted empty value
+#       command: cycod config set QuotedEmptyTest "" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         QuotedEmptyTest: 
+    
+#     # Verify the value
+#     - name: Get quoted empty value
+#       command: cycod config get QuotedEmptyTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         QuotedEmptyTest: 
+    
+#     # Clear and set unquoted empty value
+#     - name: Clear test key
+#       command: cycod config clear QuotedEmptyTest --local
+#       expect-regex: |
+#         QuotedEmptyTest: \(cleared\)
+    
+#     - name: Set unquoted empty value (if supported)
+#       command: cycod config set QuotedEmptyTest  --local
+#       expect-regex: |
+#         (?:LOCATION: .*\\\.cycod\\config\.yaml \(local\)|Error: Missing value parameter)
+    
+#     # Clean up
+#     - name: Clean up test key
+#       command: cycod config clear QuotedEmptyTest --local
+#       skipOnFailure: true
+      
+#   - name: Empty values in lists
+#     steps:
+#     # Clean up test list
+#     - name: Clear test list
+#       command: cycod config clear EmptyListTest --any
+#       skipOnFailure: true
+      
+#     # Add non-empty value to list first
+#     - name: Add non-empty value to list
+#       command: cycod config add EmptyListTest "Regular Item" --local
+#       expect-regex: |
+#         EmptyListTest:
+#         - Regular Item
+    
+#     # Add empty value to list
+#     - name: Add empty value to list
+#       command: cycod config add EmptyListTest "" --local
+#       expect-regex: |
+#         EmptyListTest:
+#         - Regular Item
+#         - 
+    
+#     # Verify list with empty value
+#     - name: Get list with empty value
+#       command: cycod config get EmptyListTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EmptyListTest:
+#           - Regular Item
+#           - 
+    
+#     # Try to remove empty value from list
+#     - name: Remove empty value from list
+#       command: cycod config remove EmptyListTest "" --local
+#       expect-regex: |
+#         EmptyListTest:
+#         - Regular Item
+    
+#     # Verify empty value was removed
+#     - name: Verify empty value was removed
+#       command: cycod config get EmptyListTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EmptyListTest:
+#           - Regular Item
+    
+#     # Clean up
+#     - name: Clean up test list
+#       command: cycod config clear EmptyListTest --local
+#       expect-regex: |
+#         EmptyListTest: \(cleared\)
+

@@ -1,4 +1,4 @@
-# CI/CD Security Considerations for ChatX
+# CI/CD Security Considerations for CycoD
 
 This document outlines important security considerations and best practices for the CI/CD pipeline and NuGet package publishing process.
 
@@ -13,7 +13,7 @@ The NuGet API key used for publishing packages is a sensitive credential:
    - Update the `NUGET_API_KEY` GitHub secret after rotation
 
 2. **Scope Limitation**:
-   - Create scoped API keys on NuGet.org that only have access to the ChatX package
+   - Create scoped API keys on NuGet.org that only have access to the CycoD package
    - Use expiration dates when generating API keys
 
 3. **Monitoring**:

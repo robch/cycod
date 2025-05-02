@@ -1,0 +1,33 @@
+CYCOD ALIAS DELETE
+
+  Delete an alias from a specific scope.
+
+USAGE: cycod alias delete ALIAS_NAME [--scope]
+
+ARGUMENTS
+
+  ALIAS_NAME        The name of the alias to delete.
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Delete the alias from global scope (all users)
+    --user, -u      Delete the alias from user scope (current user)
+    --local, -l     Delete the alias from local scope (current directory)
+    --any, -a       Delete the alias from the first scope it's found in (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Delete an alias from any scope
+
+    cycod alias delete my-alias
+
+  EXAMPLE 2: Delete an alias from user scope
+
+    cycod alias delete my-alias --user
+
+SEE ALSO
+
+  cycod help alias
+  cycod help aliases

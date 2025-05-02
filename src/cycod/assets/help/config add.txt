@@ -1,0 +1,38 @@
+CYCOD CONFIG ADD
+
+  Add a value to a list configuration setting.
+
+USAGE: cycod config add KEY VALUE [--scope]
+
+ARGUMENTS
+
+  KEY              The name of the configuration setting
+  VALUE            The value to add to the list
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Add a custom feature flag to a list in local configuration
+
+    cycod config add CUSTOM_FEATURES experimental_mode
+
+  EXAMPLE 2: Add a trusted domain to a global list
+
+    cycod config add TRUSTED_DOMAINS example.com --global
+
+NOTE: The CYCOD core environment variables (OPENAI_API_KEY, AZURE_OPENAI_ENDPOINT, etc.)
+      are typically set as single values, not lists. This command is useful for
+      custom list-type configuration settings in your own scripts.
+
+SEE ALSO
+
+  cycod help config
+  cycod help config list
+  cycod help config remove

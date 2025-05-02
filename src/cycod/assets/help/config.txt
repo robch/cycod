@@ -1,0 +1,42 @@
+CYCOD CONFIG COMMANDS
+
+  The 'config' commands allow you to manage CYCOD configuration settings.
+
+  CYCOD supports three configuration scopes:
+    - Global: Applied to all users on the computer
+    - User: Applied to current user across all folders
+    - Local: Applied only to the current directory
+
+USAGE: cycod config list [--scope]
+   OR: cycod config get KEY [--scope]
+   OR: cycod config set KEY VALUE [--scope]
+   OR: cycod config clear KEY [--scope]
+   OR: cycod config add KEY VALUE [--scope]
+   OR: cycod config remove KEY VALUE [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include settings from all scopes (default for 'list' command)
+
+COMMANDS
+
+    list            List configuration settings
+    get             Get the value of a configuration setting
+    set             Set the value of a configuration setting
+    clear           Clear a configuration setting
+    add             Add a value to a list setting
+    remove          Remove a value from a list setting
+
+SEE ALSO
+
+  cycod help config list
+  cycod help config get
+  cycod help config set
+  cycod help config clear
+  cycod help config add
+  cycod help config remove

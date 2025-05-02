@@ -1,0 +1,32 @@
+CYCOD PROMPT COMMANDS
+
+  These commands allow you to manage custom CYCOD prompts.
+
+USAGE: cycod prompt list [--scope]
+   OR: cycod prompt get PROMPT_NAME [--scope]
+   OR: cycod prompt delete PROMPT_NAME [--scope]
+   OR: cycod prompt create PROMPT_NAME PROMPT_TEXT [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include prompts from all scopes (default for 'list' and 'get' commands)
+
+COMMANDS
+
+    list            List all available prompts
+    get             Display the content of a specific prompt
+    delete          Delete a prompt
+    create          Create a new prompt
+
+SEE ALSO
+
+  cycod help prompt list
+  cycod help prompt get
+  cycod help prompt delete
+  cycod help prompt create
+  cycod help prompts

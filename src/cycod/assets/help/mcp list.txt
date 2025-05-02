@@ -1,0 +1,37 @@
+CYCOD MCP LIST
+
+  List all available Model Context Protocol (MCP) servers.
+
+USAGE: cycod mcp list [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    List only global MCP servers (all users)
+    --user, -u      List only user MCP servers (current user)
+    --local, -l     List only local MCP servers (current directory)
+    --any, -a       List MCP servers from all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: List all available MCP servers
+
+    cycod mcp list
+
+  EXAMPLE 2: List only MCP servers in the user scope
+
+    cycod mcp list --user
+
+NOTES
+
+  This command displays MCP servers from the specified scope(s).
+  The information shown for each server includes:
+  - Name
+  - Brief description (if available)
+  - Command path or URL
+
+SEE ALSO
+
+  cycod help mcp
+  cycod help mcp get

@@ -1,0 +1,63 @@
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Create markdown for one or more files
+
+    cycodmd BackgroundInfo.docx
+    cycodmd Presentation2.pptx
+    cycodmd ResearchPaper.pdf
+    cycodmd "../plans/*.md"
+    cycodmd *.png *.jpg *.gif *.bmp
+
+  EXAMPLE 2: Find files recursively, exclude certain files
+
+    cycodmd "**/*.cs" "**/*.md"
+    cycodmd "**/*.cs" --exclude "**/bin/" "**/obj/"
+
+  EXAMPLE 3: Filter and format based on file or line content
+
+    cycodmd "**/*.js" --file-contains "export"
+    cycodmd "**/*.cs" --file-contains "public class"
+    cycodmd "**/*.cs" --remove-all-lines "^\s//"
+
+    cycodmd "**/*.md" --contains "TODO" --line-numbers
+    cycodmd "**/*.md" --contains "(?i)LLM" --lines-after 10
+
+  EXAMPLE 4: Apply AI processing on each found file
+
+    cycodmd "**/*.json" --file-instructions "convert the JSON to YAML"
+    cycodmd "**/*.json" --file-instructions @instructions.md --threads 5
+
+  EXAMPLE 5: Apply AI to specific file types; multi-step instructions
+
+    cycodmd --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
+    cycodmd --file-instructions @step1-instructions.md @step2-instructions.md
+
+  EXAMPLE 6: Apply AI to the final output
+
+    cycodmd "**/*.md" --instructions "Create a markdown summary table for each file"
+    cycodmd README.md "**/*.cs" --instructions "Output only an updated README.md"
+
+  EXAMPLE 7: Save each file output to a specified template file
+
+    cycodmd "**/*.cs" --save-file-output "outputs/{fileBase}.md"
+
+  EXAMPLE 8: Save the current options as an alias, and then use it
+
+    cycodmd "**/*.cs" --save-alias cs
+    cycodmd --cs
+
+SEE ALSO
+
+  cycodmd help options
+
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
+
+  cycodmd help web get
+  cycodmd help web get examples
+  cycodmd help web get options
+  

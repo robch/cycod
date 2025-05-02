@@ -1,0 +1,3 @@
+USAGE: cycodt help topics
+   OR: cycodt help topics --expand
+   OR: cycodt help find "TERMS"

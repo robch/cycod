@@ -1,16 +1,16 @@
 # Command Line Options
 
-ChatX provides a variety of command line options to customize its behavior. This document provides a comprehensive overview of all available options.
+CycoD provides a variety of command line options to customize its behavior. This document provides a comprehensive overview of all available options.
 
 ## Basic Usage
 
 ```
-chatx [options]
+cycod [options]
 ```
 
 ## Commands
 
-ChatX supports the following commands:
+CycoD supports the following commands:
 
 | Command | Description |
 |---------|-------------|
@@ -22,7 +22,7 @@ ChatX supports the following commands:
 
 ## Global Options
 
-These options apply to the overall behavior of ChatX:
+These options apply to the overall behavior of CycoD:
 
 | Option | Description |
 |--------|-------------|
@@ -68,10 +68,8 @@ These options control which AI provider to use:
 | `--use-openai` | Use OpenAI API as the chat provider |
 | `--use-azure-openai` | Use Azure OpenAI API as the chat provider |
 | `--use-azure` | Alias for `--use-azure-openai` |
-| `--use-copilot` | Use GitHub Copilot (either token or HMAC) |
-| `--use-copilot-token` | Use GitHub Copilot with token authentication |
-| `--use-copilot-hmac` | Use GitHub Copilot with HMAC authentication |
-| `--profile <n>` | Load a named profile from `.chatx/profiles/<n>.yaml` |
+| `--use-copilot` | Use GitHub Copilot
+| `--profile <n>` | Load a named profile from `.cycod/profiles/<n>.yaml` |
 
 ## Configuration Options
 
@@ -97,19 +95,19 @@ These options control the help system:
 ### Basic Chat Session
 
 ```bash
-chatx
+cycod
 ```
 
 ### Using a Custom System Prompt
 
 ```bash
-chatx --system-prompt "You are an expert Linux system administrator who gives concise answers."
+cycod --system-prompt "You are an expert Linux system administrator who gives concise answers."
 ```
 
 ### Adding User Prompts That Persist Through Chat Clearing
 
 ```bash
-chatx --add-user-prompt "Remember that I prefer code examples with extensive comments."
+cycod --add-user-prompt "Remember that I prefer code examples with extensive comments."
 ```
 
 This user prompt will be automatically inserted when starting a new chat or when using the /clear command.
@@ -117,26 +115,26 @@ This user prompt will be automatically inserted when starting a new chat or when
 ### Asking a Specific Question
 
 ```bash
-chatx --input "How do I find the largest files in a directory using bash?"
+cycod --input "How do I find the largest files in a directory using bash?"
 ```
 
 ### Multiple Questions in Sequence
 
 ```bash
-chatx --inputs "What is a shell script?" "How do I make a shell script executable?" "How do I add error handling to a shell script?"
+cycod --inputs "What is a shell script?" "How do I make a shell script executable?" "How do I add error handling to a shell script?"
 ```
 
 ### Loading and Saving Chat History
 
 ```bash
-chatx --output-chat-history "programming-help.jsonl"
-chatx --input-chat-history "programming-help.jsonl" --input "Can you explain that last example again?"
+cycod --output-chat-history "programming-help.jsonl"
+cycod --input-chat-history "programming-help.jsonl" --input "Can you explain that last example again?"
 ```
 
 ### Saving Conversation in Trajectory Format
 
 ```bash
-chatx --output-trajectory "conversation.md" --input "What is the most efficient sorting algorithm?"
+cycod --output-trajectory "conversation.md" --input "What is the most efficient sorting algorithm?"
 ```
 
 This saves the conversation in a more human-readable format.
@@ -144,13 +142,13 @@ This saves the conversation in a more human-readable format.
 ### Creating an Alias
 
 ```bash
-chatx --system-prompt "You are a helpful coding assistant." --save-alias coding-helper
+cycod --system-prompt "You are a helpful coding assistant." --save-alias coding-helper
 ```
 
 Using the alias:
 
 ```bash
-chatx --coding-helper --input "Help me write a Python function to sort a list of dictionaries by a specific key."
+cycod --coding-helper --input "Help me write a Python function to sort a list of dictionaries by a specific key."
 ```
 
 ### Managing Token Usage
@@ -158,7 +156,7 @@ chatx --coding-helper --input "Help me write a Python function to sort a list of
 If you're having long conversations that might exceed the AI model's context window:
 
 ```bash
-chatx --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl"
+cycod --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl"
 ```
 
 This will automatically trim tool call content when the history approaches the specified token target.
@@ -168,7 +166,7 @@ This will automatically trim tool call content when the history approaches the s
 If you're experiencing timeouts with API calls:
 
 ```bash
-chatx --chat-completion-timeout 120 --input "Please write a comprehensive analysis of this long text..."
+cycod --chat-completion-timeout 120 --input "Please write a comprehensive analysis of this long text..."
 ```
 
 This sets a 120-second timeout for chat completion API calls, useful for complex queries that take longer to process.
@@ -178,9 +176,9 @@ This sets a 120-second timeout for chat completion API calls, useful for complex
 You can explicitly select which AI provider to use:
 
 ```bash
-chatx --use-openai --input "Tell me about OpenAI's models"
-chatx --use-azure-openai --input "Tell me about Azure OpenAI services"
-chatx --use-copilot --input "Tell me about GitHub Copilot"
+cycod --use-openai --input "Tell me about OpenAI's models"
+cycod --use-azure-openai --input "Tell me about Azure OpenAI services"
+cycod --use-copilot --input "Tell me about GitHub Copilot"
 ```
 
 ### Using Configuration Profiles
@@ -188,7 +186,7 @@ chatx --use-copilot --input "Tell me about GitHub Copilot"
 Load a named configuration profile:
 
 ```bash
-chatx --profile work --input "What's on my schedule today?"
+cycod --profile work --input "What's on my schedule today?"
 ```
 
 ### Configuration Management
@@ -196,27 +194,27 @@ chatx --profile work --input "What's on my schedule today?"
 View and manage configuration settings:
 
 ```bash
-chatx config list --any           # List all configuration settings from all scopes
-chatx config get OPENAI_API_KEY   # Get the value of a specific setting
-chatx config set OPENAI_API_KEY value123  # Set a configuration value
+cycod config list --any           # List all configuration settings from all scopes
+cycod config get OPENAI_API_KEY   # Get the value of a specific setting
+cycod config set OPENAI_API_KEY value123  # Set a configuration value
 ```
 
 ### GitHub Copilot Authentication
 
-To use GitHub Copilot with ChatX, you need to authenticate:
+To use GitHub Copilot with CycoD, you need to authenticate:
 
 ```bash
-chatx github login
+cycod github login
 ```
 
-This will initiate the GitHub device flow authentication process, displaying a code and URL to visit. After authenticating, ChatX will store your GitHub token in the `.chatx/config` file and you'll be able to use Copilot for chat completions.
+This will initiate the GitHub device flow authentication process, displaying a code and URL to visit. After authenticating, CycoD will store your GitHub token in the `.cycod/config` file and you'll be able to use Copilot for chat completions.
 
 ### Non-Interactive Mode
 
 For scripting or automation:
 
 ```bash
-chatx --interactive false --input "What is the current date?" > result.txt
+cycod --interactive false --input "What is the current date?" > result.txt
 ```
 
 ## Command Line Input from Files
@@ -228,7 +226,7 @@ You can read input content from files in several ways:
 Use the @ symbol to read a single input from a file:
 
 ```bash
-chatx --system-prompt @system-prompt.txt --input @question.txt
+cycod --system-prompt @system-prompt.txt --input @question.txt
 ```
 
 ### Multiple Inputs from a File
@@ -236,20 +234,20 @@ chatx --system-prompt @system-prompt.txt --input @question.txt
 Use @@ to read multiple inputs from a file (one per line):
 
 ```bash
-chatx --inputs @@questions-list.txt
+cycod --inputs @@questions-list.txt
 ```
 
 ### Stdin Input
 
-You can also pipe content to ChatX:
+You can also pipe content to CycoD:
 
 ```bash
-echo "What is the capital of France?" | chatx
+echo "What is the capital of France?" | cycod
 ```
 
 ## Environment Configuration
 
-In addition to command line options, ChatX can be configured through environment variables. See the [Getting Started guide](getting-started.md) for more details on environment variables.
+In addition to command line options, CycoD can be configured through environment variables. See the [Getting Started guide](getting-started.md) for more details on environment variables.
 
 ## Advanced Usage
 
@@ -258,7 +256,7 @@ In addition to command line options, ChatX can be configured through environment
 You can combine aliases with additional options:
 
 ```bash
-chatx --python-expert --input "Explain decorators in Python" --output-chat-history "python-learning.jsonl"
+cycod --python-expert --input "Explain decorators in Python" --output-chat-history "python-learning.jsonl"
 ```
 
 This applies all options from the `python-expert` alias and then adds the additional options specified.
@@ -273,10 +271,10 @@ You can use special commands during chat:
 
 ### Debugging Problems
 
-If you're having issues with ChatX, you can enable debug output:
+If you're having issues with CycoD, you can enable debug output:
 
 ```bash
-chatx --debug --input "Test question"
+cycod --debug --input "Test question"
 ```
 
 This will show detailed information about API calls, token usage, and other internals.

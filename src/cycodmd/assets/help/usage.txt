@@ -1,0 +1,42 @@
+Welcome to CYCODMD, the AI-Powered Markdown Generator!
+
+Using CYCODMD, you can:
+
+  - Convert files to markdown
+  - Run scripts and convert output to markdown
+  - Search the web and convert search results to markdown
+  - Get web pages and convert them to markdown
+
+  AND ... You can apply AI processing to the output!
+
+USAGE: cycodmd FILE1 [FILE2 [...]] [...]
+   OR: cycodmd PATTERN1 [PATTERN2 [...]] [...]
+   OR: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
+   OR: cycodmd web search "TERMS" ["TERMS2" [...]] [...]
+   OR: cycodmd web get "URL" ["URL2" [...]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Create markdown for one or more files
+
+    cycodmd BackgroundInfo.docx
+    cycodmd Presentation2.pptx
+    cycodmd *.pdf *.png *.jpg *.gif *.bmp
+
+  EXAMPLE 2: Find files recursively and create markdown
+
+    cycodmd **/*.cs
+
+  EXAMPLE 3: Create markdown running a script
+
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
+
+  EXAMPLE 4: Create markdown from a web search
+
+    cycodmd web search "yaml site:learnxinyminutes.com" --max 1 --get --strip
+
+SEE ALSO
+
+  cycodmd help
+  cycodmd help examples
+  cycodmd help options

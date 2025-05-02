@@ -1,6 +1,6 @@
-# ChatX - AI-powered CLI
+# CycoD - AI-powered CLI
 
-ChatX is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. Built in C#, it leverages AI chat models from multiple providers with function calling capabilities to create a powerful tool for AI-assisted command-line operations.
+CycoD is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. Built in C#, it leverages AI chat models from multiple providers with function calling capabilities to create a powerful tool for AI-assisted command-line operations.
 
 ## Features
 
@@ -20,7 +20,7 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 - **Command Aliases**: Create shortcuts for frequently used command configurations
 - **Token Management**: Automatically manages token usage for long conversations
 - **Chat Commands**: Special commands like `/clear`, `/save`, `/cost` during chat sessions
-  - MDX integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
+  - CYCODMD integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
 
 ## Installation
 
@@ -30,30 +30,30 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 
 ### Installing as a .NET Tool
 
-Once published to NuGet, ChatX can be installed globally:
+Once published to NuGet, CycoD can be installed globally:
 
 ```bash
-dotnet tool install --global ChatX --prerelease
+dotnet tool install --global CycoD --prerelease
 ```
 
 Or locally in your current directory:
 
 ```bash
-dotnet tool install --local ChatX --prerelease
+dotnet tool install --local CycoD --prerelease
 ```
 
-After installation, you can run ChatX directly from your terminal:
+After installation, you can run CycoD directly from your terminal:
 
 ```bash
-chatx --input "Hello, how can you help me?"
+cycod --input "Hello, how can you help me?"
 ```
 
 ### Building from Source
 
 1. Clone this repository:
    ```
-   git clone https://github.com/robch/chatx.git
-   cd chatx
+   git clone https://github.com/robch/cycod.git
+   cd cycod
    ```
 
 2. Build the project:
@@ -71,7 +71,7 @@ chatx --input "Hello, how can you help me?"
 Basic usage:
 
 ```
-chatx [options]
+cycod [options]
 ```
 
 ### Common Options
@@ -92,34 +92,34 @@ chatx [options]
 
 Start a chat session:
 ```
-chatx
+cycod
 ```
 
 Ask a specific question:
 ```
-chatx --input "How do I find the largest files in a directory using bash?"
+cycod --input "How do I find the largest files in a directory using bash?"
 ```
 
 Use a custom system prompt:
 ```
-chatx --system-prompt "You are an expert Linux system administrator who gives concise answers."
+cycod --system-prompt "You are an expert Linux system administrator who gives concise answers."
 ```
 
 Save and load chat history:
 ```
-chatx --output-chat-history "linux-help-session.jsonl"
-chatx --input-chat-history "linux-help-session.jsonl"
+cycod --output-chat-history "linux-help-session.jsonl"
+cycod --input-chat-history "linux-help-session.jsonl"
 ```
 
 ## Environment Variables and Configuration
 
-ChatX supports a flexible configuration system with multiple scopes (global, user, local) and formats (YAML, INI). You can:
+CycoD supports a flexible configuration system with multiple scopes (global, user, local) and formats (YAML, INI). You can:
 
 1. Use environment variables
 2. Use configuration files at:
-   - Global: `%ProgramData%\.chatx\config` (Windows) or `/etc/.chatx/config` (Linux/macOS)
-   - User: `%AppData%\.chatx\config` (Windows) or `~/.chatx/config` (Linux/macOS)
-   - Local: `.chatx\config` in the current directory
+   - Global: `%ProgramData%\.cycod\config` (Windows) or `/etc/.cycod/config` (Linux/macOS)
+   - User: `%AppData%\.cycod\config` (Windows) or `~/.cycod/config` (Linux/macOS)
+   - Local: `.cycod\config` in the current directory
 
 ### Common Configuration Settings
 
@@ -138,20 +138,17 @@ ChatX supports a flexible configuration system with multiple scopes (global, use
 - `COPILOT_MODEL_NAME`: Model name to use (default: claude-3.7-sonnet)
 - `COPILOT_INTEGRATION_ID`: Your Copilot integration ID (required for both auth methods)
 
-*Alternative HMAC authentication:*
-- `COPILOT_HMAC_KEY`: Your Copilot HMAC key
-
 #### App Configuration
-- `CHATX_PREFERRED_PROVIDER`: Set default AI provider (openai, azure-openai, copilot, copilot-hmac)
+- `CYCOD_PREFERRED_PROVIDER`: Set default AI provider (openai, azure-openai, copilot)
 
 ### Configuration Profiles
 
 You can create named profiles to store different provider configurations:
 
-1. Create YAML files at `.chatx/profiles/<name>.yaml`
+1. Create YAML files at `.cycod/profiles/<name>.yaml`
 2. Use `--profile <name>` to load that profile
 
-Example profile at `.chatx/profiles/work.yaml`:
+Example profile at `.cycod/profiles/work.yaml`:
 ```yaml
 app:
   preferredProvider: "azure-openai"
@@ -167,11 +164,11 @@ azure:
 Manage configurations from the command line:
 
 ```bash
-chatx config list              # List all settings in current scope
-chatx config list --any        # List all settings from all scopes
-chatx config get KEY           # Get a configuration value
-chatx config set KEY VALUE     # Set a configuration value
-chatx config clear KEY         # Clear a configuration value
+cycod config list              # List all settings in current scope
+cycod config list --any        # List all settings from all scopes
+cycod config get KEY           # Get a configuration value
+cycod config set KEY VALUE     # Set a configuration value
+cycod config clear KEY         # Clear a configuration value
 ```
 
 ## Documentation
@@ -190,14 +187,14 @@ Copyright(c) 2025, Rob Chambers. All rights reserved.
 
 ## Chat Commands
 
-ChatX supports several slash commands that can be used during interactive chat sessions:
+CycoD supports several slash commands that can be used during interactive chat sessions:
 
 ### Basic Commands
 - `/clear` - Clear the current chat history
 - `/save` - Save the current chat history to a file
 - `/cost` - Show token usage and estimated cost of the session
 
-### MDX Integration Commands
+### CYCODMD Integration Commands
 - `/file <pattern>` - Search files matching pattern
 - `/files <pattern>` - List files matching pattern
 - `/find <pattern>` - Find occurrences of pattern in files
@@ -205,4 +202,4 @@ ChatX supports several slash commands that can be used during interactive chat s
 - `/get <url>` - Get and display content from a URL
 - `/run <command>` - Run a command and display the result
 
-These MDX integration commands require the [MDX](https://github.com/robch/mdx) tool to be installed and available on your system.
+These CYCODMD integration commands require the [CYCODMD](https://github.com/robch/cycodmd) tool to be installed and available on your system.

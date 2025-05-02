@@ -1,19 +1,19 @@
-﻿# Claude Code vs ChatX: Feature Comparison Analysis
+﻿# Claude Code vs CycoD: Feature Comparison Analysis
 
-This is an analysis of the [chatx](https://github.com/robch/chatx/) codebase compared to [Anthropic's Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) feature by feature, along with a list of tasks to update chatx to have all of [Claude Code's capabilities](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials).
+This is an analysis of the [cycod](https://github.com/robch/cycod/) codebase compared to [Anthropic's Claude Code](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/overview) feature by feature, along with a list of tasks to update cycod to have all of [Claude Code's capabilities](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials).
 
-This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](https://github.com/robch/chatx/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) and compare them to the chatx codebase.
+This comparison was done using [cycodmd](https://github.com/robch/cycodmd) and [cycod](https://github.com/robch/cycod/) to retrieve the [Claude Code Tutorials](https://docs.anthropic.com/en/docs/agents-and-tools/claude-code/tutorials) and compare them to the cycod codebase.
 
-1. Use `mdx` to search for claude code tutorials on the web, and summarize in markdown:
+1. Use `cycodmd` to search for claude code tutorials on the web, and summarize in markdown:
 
    ```bash
-   mdx web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.jsonl"
+   cycodmd web search "anthropic claude code tutorials" --get --strip --max 5 --instructions "Summarize in markdown, features of claude code terminal/console application, including brief tutorial on key features." --duckduckgo --interactive --save-chat-history "claude-code-tutorial-summary.jsonl"
    ```
 
-2. Use `chatx` to compare claude code tutorials/summary to the chatx codebase, obtained using `mdx`:
+2. Use `cycod` to compare claude code tutorials/summary to the cycod codebase, obtained using `cycodmd`:
 
    ```bash
-   mdx src\**\*.cs | chatx --input-chat-history "claude-code-tutorial-summary.jsonl" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the chatx codebase you see here. At the end list the tasks to update the chatx codebase to have all the features that claude code has."
+   cycodmd src\**\*.cs | cycod --input-chat-history "claude-code-tutorial-summary.jsonl" --input - "See the feature summary for claude code? I want you to make a point by point comparison/analysis for claude code vs the cycod codebase you see here. At the end list the tasks to update the cycod codebase to have all the features that claude code has."
    ```
 
 ## Command Structure Comparison
@@ -25,8 +25,8 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - `claude "query"` - Start with an initial query
 - `claude -p "query"` - Non-interactive one-off queries
 
-**ChatX:**
-- `chatx` - Interactive mode conversation
+**CycoD:**
+- `cycod` - Interactive mode conversation
 - Supports direct input via arguments (similar to `claude "query"`)
 - Uses `--input` and variations for non-interactive queries, but lacks a direct equivalent to `-p` flag
 
@@ -37,8 +37,8 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Global vs project-level configuration
 - Rich settings ecosystem
 
-**ChatX:**
-- Complete `chatx config` command system with equivalent subcommands:
+**CycoD:**
+- Complete `cycod config` command system with equivalent subcommands:
   - `config get` - Retrieve configuration values
   - `config set` - Set configuration values
   - `config list` - List all configuration values with source attribution
@@ -65,7 +65,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Pipe support via `cat file | claude -p "query"`
 - Full integration with Unix-style command chains
 
-**ChatX:**
+**CycoD:**
 - Has input redirection support via `@filename` and `@@filename` syntax
 - Supports reading from stdin with `-` syntax
 - More explicit about I/O with `--input-chat-history` and `--output-chat-history` parameters
@@ -75,12 +75,12 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 **Claude Code:**
 - Primarily uses Anthropic's Claude models
 
-**ChatX:**
+**CycoD:**
 - Supports multiple AI providers:
   - OpenAI API
   - Azure OpenAI API
   - GitHub Copilot
-  - Support for different authentication methods (API key, HMAC, GitHub token)
+  - Support for different authentication methods (API key, GitHub token)
 
 ## Interactive Features
 
@@ -91,7 +91,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Project initialization with `/init`
 - Code review with `/review`
 
-**ChatX:**
+**CycoD:**
 - Very limited slash command system
 - Only has `/save` for saving chat history
 - Comprehensive embedded help system with:
@@ -107,7 +107,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Token usage tracking with `/cost`
 - Bug reporting with `/bug`
 
-**ChatX:**
+**CycoD:**
 - Token usage tracking with `/cost`
 - Does implement token trimming for long conversations
 - No formalized bug/feedback mechanism equivalent to `/bug` command
@@ -118,7 +118,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Supports vim mode for text editing
 - Terminal setup for key bindings
 
-**ChatX:**
+**CycoD:**
 - Basic console-based interaction
 - Color-coded outputs for user, assistant, and function calls
 - Simple but effective UI without advanced text editing functionality
@@ -131,7 +131,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Model Context Protocol (MCP) for external tools
 - Fine-grained permissions system for tools
 
-**ChatX:**
+**CycoD:**
 - Advanced function calling system
 - Comprehensive set of helper functions including:
   - Shell command execution (Bash, Cmd, PowerShell) with persistent sessions, timeout handling, and detailed output control
@@ -149,7 +149,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Git integration
 - Team collaboration features
 
-**ChatX:**
+**CycoD:**
 - Comprehensive file editing capabilities
   - Viewing files with optional line numbers and line range selection
   - Creating new files with specified content
@@ -167,9 +167,9 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Project and personal custom slash commands
 - Arguments support
 
-**ChatX:**
+**CycoD:**
 - Advanced alias system for command reuse via `--save-alias`
-- Structured organization of aliases in `.chatx/aliases` directory
+- Structured organization of aliases in `.cycod/aliases` directory
 - Lacks the custom slash-command approach of Claude Code
 - Template system provides infrastructure for implementing sophisticated reasoning patterns with `if/else` conditions, variable assignments, and expression evaluation
 - Implemented an advanced template processor that enables complex conditional logic and variable manipulation
@@ -182,7 +182,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - "Think deeply" commands for complex reasoning
 - Displays reasoning process in gray text
 
-**ChatX:**
+**CycoD:**
 - Has a dedicated `Think()` helper function for reasoning
 - Displays thinking results in cyan text, similar to Claude Code
 
@@ -193,7 +193,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Smart token trimming strategies
 - Persistent context across sessions
 
-**ChatX:**
+**CycoD:**
 - Implements intelligent context window management
 - Features sophisticated token estimation and tracking
 - Includes smart trimming strategies that prioritize tool call content reduction:
@@ -207,7 +207,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Can analyze screenshots, diagrams, mockups
 - Drag and drop, clipboard paste, file path support
 
-**ChatX:**
+**CycoD:**
 - No evidence of image support in the codebase
 
 ### CI/CD Integration
@@ -216,7 +216,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Headless execution for CI pipelines
 - Support for automation in GitHub Actions and git hooks
 
-**ChatX:**
+**CycoD:**
 - Could potentially be used in CI/CD via command-line arguments
 - Not purpose-built for CI/CD integration
 
@@ -226,7 +226,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - `/cost` command for tracking usage
 - Integration with Anthropic Console for limits
 
-**ChatX:**
+**CycoD:**
 - No built-in cost management or tracking
 
 ### External Data Sources
@@ -235,7 +235,7 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - MCP for database access
 - Team-sharing of MCP servers
 
-**ChatX:**
+**CycoD:**
 - Comprehensive web research capabilities including:
   - Multi-search engine support (Google, Bing, DuckDuckGo, Yahoo) via `ResearchWebTopic`
   - Customizable web content extraction with processing instructions
@@ -254,20 +254,20 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
 - Focused on Claude models specifically
 - Tight integration with Anthropic ecosystem
 
-**ChatX:**
+**CycoD:**
 - Provider-agnostic architecture
 - Pluggable model support
 - More flexible for different AI services, but less deeply integrated with any single one
 
-# Tasks to Update ChatX with Claude Code Features
+# Tasks to Update CycoD with Claude Code Features
 
 1. **Enhance Command Structure**
    - Add a `-p` flag for one-off non-interactive queries
-   - Implement consistent piping support (`cat file | chatx "query"`)
+   - Implement consistent piping support (`cat file | cycod "query"`)
    - Extend alias system to be more like Claude's custom commands
 
 2. **Develop Comprehensive Config System**
-   - ✅ Create a full `chatx config` command with subcommands (list, get, set, add, remove)
+   - ✅ Create a full `cycod config` command with subcommands (list, get, set, add, remove)
    - ✅ Implement hierarchical config (global vs project)
    - ✅ `--question`/`-q` similar to `-p` for one-off queries
    - Add schema validation for configuration
@@ -343,4 +343,4 @@ This comparison was done using [mdx](https://github.com/robch/mdx) and [chatx](h
     - Still needed: Implement a bug reporting system
     - Still needed: Add telemetry for usage patterns (opt-in)
 
-This task list would transform ChatX to include all the features of Claude Code while maintaining its multi-model flexibility. Significant progress has been made on configuration management, context handling, thinking visualization, and error reporting. The most significant remaining changes would be implementing the MCP equivalent, image support, and the slash command systems.
+This task list would transform CycoD to include all the features of Claude Code while maintaining its multi-model flexibility. Significant progress has been made on configuration management, context handling, thinking visualization, and error reporting. The most significant remaining changes would be implementing the MCP equivalent, image support, and the slash command systems.

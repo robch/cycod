@@ -1,0 +1,12 @@
+USAGE: cycodt <command> [...]
+
+COMMANDS
+
+  cycodt list [...]       Lists CLI YAML tests
+  cycodt run [...]        Runs CLI YAML tests
+
+ADDITIONAL TOPICS
+
+  cycodt help examples
+  cycodt help list
+  cycodt help run

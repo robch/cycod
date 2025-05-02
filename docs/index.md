@@ -1,6 +1,6 @@
-# ChatX Documentation
+# CycoD Documentation
 
-Welcome to the ChatX documentation. This documentation provides detailed information about the ChatX AI-powered CLI tool.
+Welcome to the CycoD documentation. This documentation provides detailed information about the CycoD AI-powered CLI tool.
 
 ## Table of Contents
 
@@ -16,7 +16,7 @@ Welcome to the ChatX documentation. This documentation provides detailed informa
 
 ## Overview
 
-ChatX is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. It enables you to leverage the power of AI directly from your terminal, with capabilities to execute shell commands, manipulate files, and more.
+CycoD is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. It enables you to leverage the power of AI directly from your terminal, with capabilities to execute shell commands, manipulate files, and more.
 
 ## Key Features
 
@@ -34,11 +34,11 @@ ChatX is a command-line interface (CLI) application that provides a chat-based i
 For quick help, use the built-in command:
 
 ```
-chatx help
+cycod help
 ```
 
 ## Additional Resources
 
-- [GitHub Repository](https://github.com/username/chatx)
-- [Report Issues](https://github.com/username/chatx/issues)
+- [GitHub Repository](https://github.com/username/cycod)
+- [Report Issues](https://github.com/username/cycod/issues)
 - [SUPPORT.md](../SUPPORT.md) for how to get help

@@ -1,0 +1,14 @@
+CYCOD GITHUB COMMANDS
+
+  These commands allow you to integrate CYCOD with GitHub.
+
+USAGE: cycod github login
+
+COMMANDS
+
+  login           Authenticate with GitHub
+
+SEE ALSO
+
+  cycod help github login
+  cycod help config

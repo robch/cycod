@@ -1,0 +1,48 @@
+CYCOD MCP ADD
+
+  Create a new Model Context Protocol (MCP) server.
+
+USAGE: cycod mcp add SERVER_NAME --command COMMAND [--arg ARG...] [--env ENV...] [--url URL] [--scope]
+
+OPTIONS
+
+  SERVER_NAME       The name for the new MCP server
+
+  --command         The command to execute for the MCP server (for STDIO transport)
+  --arg             An argument to pass to the command (can be used multiple times)
+  --env, -e         An environment variable in KEY=VALUE format (can be used multiple times)
+  --url             The URL for the SSE endpoint (for SSE transport)
+
+  SCOPE OPTIONS
+
+    --global, -g    Create in global scope (all users)
+    --user, -u      Create in user scope (current user)
+    --local, -l     Create in local scope (current directory, default)
+
+EXAMPLES
+
+  EXAMPLE 1: Create a basic stdio MCP server
+
+    cycod mcp add postgres-server --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgresql://user:pass@localhost:5432/mydb"
+
+  EXAMPLE 2: Create an MCP server with environment variables
+
+    cycod mcp add weather-api --command /path/to/weather-cli --env API_KEY=abc123 --env CACHE_DIR=/tmp
+
+  EXAMPLE 3: Create an SSE MCP server
+
+    cycod mcp add sse-backend --url https://example.com/sse-endpoint
+
+  EXAMPLE 4: Create a user-level MCP server
+
+    cycod mcp add shared-tool --command /usr/local/bin/tool-server --arg --config --arg /path/to/config.json --user
+
+NOTES
+
+  MCP servers provide Claude and other LLMs with access to external tools and data sources.
+  The server configurations are stored as JSON files that can be shared with a team.
+
+SEE ALSO
+
+  cycod help mcp
+  cycod help mcp get

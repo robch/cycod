@@ -1,0 +1,24 @@
+CYCODMD STDIN (`-`)
+
+  The `-` symbol is used to represent the standard input (stdin) for file
+  content. When you use `-` as a file name, CYCODMD will read from the standard
+  input instead of a file. This is useful when you want to pipe content
+  directly into CYCODMD from another command or script.
+
+USAGE: cycodmd - [FILE1 [FILE2]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Pipe output from git diff into CYCODMD and summarize
+
+    git diff | cycodmd - --instructions "summarize the changes"
+
+  EXAMPLE 2: Pipe output from gh issues into CYCODMD and summarize in a table
+
+    gh issue list | cycodmd - --instructions "summarize in table"
+
+SEE ALSO
+
+  cycodmd help
+  cycodmd help examples
+  cycodmd help options

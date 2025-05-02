@@ -1,0 +1,119 @@
+CYCOD CONFIGURATION FEATURES
+
+  CycoD offers multiple configuration features for different needs:
+  - Aliases: Command-line shortcuts
+  - Prompts: In-chat text templates
+  - Configs: Persistent settings
+  - Profiles: Bundled configurations
+
+  All features use a common scoping system (local, user, global).
+
+SCOPING SYSTEM
+
+  LOCAL SCOPE
+    - Stored in .cycod/[feature] directory of current location
+    - Only applies to the current directory
+    - Takes precedence over user and global scopes
+
+  USER SCOPE
+    - Stored in user's .cycod/[feature] directory
+    - Applies to the current user in any directory
+    - Takes precedence over global scope
+
+  GLOBAL SCOPE
+    - Stored in system-wide configuration
+    - Available to all users on the system
+
+ALIASES
+
+  PURPOSE
+    Command-line shortcuts for launching CycoD with specific parameters.
+
+  USAGE
+    cycod --aliasname
+    
+  CREATION
+    cycod [...] --save-alias ALIAS            Local scope (default)
+    cycod [...] --save-user-alias ALIAS       User scope
+    cycod [...] --save-global-alias ALIAS     Global scope
+
+  MANAGEMENT
+    cycod alias list                          List all aliases
+    cycod alias get ALIAS_NAME                Show an alias
+    cycod alias delete ALIAS_NAME             Delete an alias
+
+CUSTOM PROMPTS
+
+  PURPOSE
+    Text templates for quick insertion into chat conversations.
+
+  USAGE
+    In a chat session: /promptname
+    
+  CREATION
+    cycod prompt create NAME "TEXT"           Local scope (default)
+    cycod prompt create NAME "TEXT" --user    User scope
+    cycod prompt create NAME "TEXT" --global  Global scope
+
+  MANAGEMENT
+    cycod prompt list                         List all prompts
+    cycod prompt get PROMPT_NAME              Show a prompt
+    cycod prompt delete PROMPT_NAME           Delete a prompt
+
+CONFIG FILES
+
+  PURPOSE
+    Store persistent settings for the application.
+
+  MANAGEMENT
+    cycod config list                         List all settings
+    cycod config get KEY                      Show a setting
+    cycod config set KEY VALUE                Change a setting
+    cycod config clear KEY                    Remove a setting
+    cycod config add KEY VALUE                Add to a list setting
+    cycod config remove KEY VALUE             Remove from a list setting
+
+  SCOPE OPTIONS
+    --local, -l     Local scope (default for most commands)
+    --user, -u      User scope (current user)
+    --global, -g    Global scope (all users)
+    --any, -a       All scopes (default for 'list' and 'get' commands)
+
+PROFILES
+
+  PURPOSE
+    Collections of settings that can be loaded as a unit.
+
+  USAGE
+    cycod --profile PROFILENAME
+    
+  STORAGE
+    Profiles are YAML files stored in:
+    - .cycod/profiles/ (local)
+    - ~/.cycod/profiles/ (user)
+    - [system]/.cycod/profiles/ (global)
+
+WHEN TO USE EACH FEATURE
+
+  ALIASES
+    When you want to save command-line options for reuse.
+    Example: cycod --python-expert
+
+  PROMPTS
+    When you need quick access to text templates during chat.
+    Example: /code-review
+
+  CONFIG
+    For persistent application settings.
+    Example: cycod config set default-model gpt-4o
+
+  PROFILES
+    When you want to switch between sets of configurations.
+    Example: cycod --profile development
+
+SEE ALSO
+
+  cycod help alias
+  cycod help prompt
+  cycod help config
+  cycod help options

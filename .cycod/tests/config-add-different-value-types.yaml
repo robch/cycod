@@ -1,0 +1,108 @@
+# - area: Config Add with Different Value Types
+#   tests:
+#   - name: Adding various value types to lists
+#     steps:
+#     # Clean up any existing test lists
+#     - name: Clean up test list
+#       command: cycod config clear TypeTestList --any
+#       skipOnFailure: true
+    
+#     # Test adding string values
+#     - name: Add string value to list
+#       command: cycod config add TypeTestList "SimpleString"
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+    
+#     - name: Add quoted string with spaces to list
+#       command: cycod config add TypeTestList "String with spaces"
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+#         - String with spaces
+    
+#     # Test adding numeric values
+#     - name: Add integer value to list
+#       command: cycod config add TypeTestList 42
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+#         - String with spaces
+#         - 42
+    
+#     - name: Add decimal value to list
+#       command: cycod config add TypeTestList 3.14
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+#         - String with spaces
+#         - 42
+#         - 3.14
+    
+#     # Test adding boolean values
+#     - name: Add boolean true value to list
+#       command: cycod config add TypeTestList true
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+#         - String with spaces
+#         - 42
+#         - 3.14
+#         - true
+    
+#     - name: Add boolean false value to list
+#       command: cycod config add TypeTestList false
+#       expect-regex: |
+#         TypeTestList:
+#         - SimpleString
+#         - String with spaces
+#         - 42
+#         - 3.14
+#         - true
+#         - false
+    
+#     # Test retrieving the mixed-type list
+#     - name: Get the mixed-type list
+#       command: cycod config get TypeTestList
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(.*\)
+#         TypeTestList:
+#           - SimpleString
+#           - String with spaces
+#           - 42
+#           - 3.14
+#           - true
+#           - false
+    
+#     # Clean up
+#     - name: Clean up the test list
+#       command: cycod config clear TypeTestList
+#       expect-regex: |
+#         TypeTestList: \(cleared\)
+  
+#   - name: Adding special values to list
+#     steps:
+#     - name: Clean up test list
+#       command: cycod config clear SpecialTestList --any
+#       skipOnFailure: true
+    
+#     # Test adding values that might be treated specially
+#     - name: Add empty string to list
+#       command: cycod config add SpecialTestList ""
+#       expect-regex: |
+#         SpecialTestList:
+#         - 
+    
+#     - name: Add zero value to list
+#       command: cycod config add SpecialTestList 0
+#       expect-regex: |
+#         SpecialTestList:
+#         - 
+#         - 0
+    
+#     # Clean up
+#     - name: Clean up special test list
+#       command: cycod config clear SpecialTestList
+#       expect-regex: |
+#         SpecialTestList: \(cleared\)
+

@@ -1,0 +1,61 @@
+CYCOD SLASH COMMANDS
+
+  During an interactive chat session, you can use slash commands to quickly 
+  access various functions without exiting your conversation.
+
+BUILT-IN COMMANDS
+
+  SESSION MANAGEMENT
+
+    /clear                  Clear the current chat history
+    /save                   Save the current chat history to a file
+    /cost                   Show token usage and estimated cost of this session
+
+  CUSTOM PROMPTS
+
+    /<promptname>           Insert a custom prompt into the chat
+
+  CYCODMD INTEGRATION
+
+    /file <pattern>         Search files matching pattern
+    /files <pattern>        List files matching pattern
+    /find <pattern>         Find occurrences of pattern in files
+    /search <query>         Search the web for the given query
+    /get <url>              Get and display content from a URL
+    /run <command>          Run a command and display the result
+
+EXAMPLES
+
+  EXAMPLE 1: Clear the current chat session
+
+    /clear
+
+  EXAMPLE 2: Search for files in the current directory
+
+    /file *.cs              List all C# files in current directory
+
+  EXAMPLE 3: Find text within files
+
+    /find "class Program"   Find occurrences of "class Program" in files
+
+  EXAMPLE 4: Use the web search integration
+
+    /search python lists    Search the web for information about Python lists
+
+  EXAMPLE 5: Insert a custom prompt (if defined)
+
+    /translate              Insert a custom "translate" prompt
+
+NOTES
+
+  - The CYCODMD integration commands require CYCODMD to be installed and available.
+    For more information about CYCODMD, visit: https://github.com/robch/cycodmd
+
+  - Custom prompts can be created using the prompt create command.
+    Example: cycod prompt create summarize "Please summarize this text:"
+
+SEE ALSO
+
+  cycod help prompts
+  cycod help prompt create
+  cycod help prompt list

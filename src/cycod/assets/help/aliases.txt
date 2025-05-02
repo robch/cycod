@@ -1,0 +1,34 @@
+CYCOD ALIASES
+
+  Use aliases to save and reuse sets of options for common commands.
+
+USAGE: cycod [...] --save-alias ALIAS
+   OR: cycod [...] --save-local-alias ALIAS
+   OR: cycod [...] --save-user-alias ALIAS
+   OR: cycod [...] --save-global-alias ALIAS
+   OR: cycod [...] --ALIAS
+
+OPTIONS
+
+  SAVING ALIASES
+
+    --save-alias ALIAS          Same as --save-local-alias
+    --save-local-alias ALIAS    Save the current options under the specified alias name in the local scope
+    --save-user-alias ALIAS     Save the current options under the specified alias name in the user scope
+    --save-global-alias ALIAS   Save the current options under the specified alias name in the global scope
+
+  USING ALIASES
+
+    --ALIAS                     Use the options saved under the specified alias name.
+                                Example: cycod --get-time
+
+  SCOPE SEARCH ORDER
+  
+    When looking for an alias, CycoD searches in the local scope first, then the user scope,
+    and finally the global scope.
+
+SEE ALSO
+
+  cycod help
+  cycod help examples
+  cycod help options

@@ -1,0 +1,85 @@
+USAGE: cycod [...]
+
+  MODEL INPUTS
+    --system-prompt "PROMPT|NAME"         Replace system prompt given to AI model
+    --add-system-prompt "PROMPT|NAME"     Add text to the system prompt, to re-inforce critical instructions
+    --add-user-prompt "PROMPT|NAME"       Add user prompt(s), prepended to the first input/question/instruction
+    --prompt "NAME"                       Alias for --add-user-prompt
+
+    --input "LINE1" "LINE2" ...           Provide one or more lines of inputs to the AI model.
+    --question ...                        Alias for --interactive false --quiet --input
+    --instruction ...                     Alias for --input
+
+    --inputs "INPUT1" "INPUT2" ...        Provide one or more inputs, sequentially, to the AI model.
+    --questions ...                       Alias for --interactive false --quiet --inputs
+    --instructions ...                    Alias for --inputs
+
+    --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
+    --no-templates                        Alias for --use-templates fal
+
+  CHAT HISTORY                            (see: cycod help chat history)
+    --continue                            Continue the most recent chat history
+    --chat-history [FILE]                 Load from and save to the same JSONL file
+    --input-chat-history [FILE]           Load chat history from the specified JSONL file
+    --output-chat-history [FILE]          Save chat history to the specified file
+    --output-trajectory [FILE]            Save chat history in human readable trajectory format
+
+  MODEL OPTIONS
+    --max-tokens TOKENS                   AI model should output no more than TOKENS
+    --trim-token-target TOKENS            Specify chat history maximum tokens target (default: 18000
+
+  MODEL PROVIDERS
+    --use-copilot                         Prefer use of GitHub Copilot
+    --use-openai                          Prefer use of OpenAI API as the chat provider
+    --use-azure-openai                    Prefer use of Azure OpenAI API as the chat provider
+    --use-azure                           Alias for --use-azure-open
+
+  AZURE OPENAI OPTIONS
+    --azure-openai-api-key KEY            Use a specific authentication key
+    --azure-openai-endpoint URL           Use a specific API endpoint
+    --azure-openai-chat-deployment NAME   Use a specific chat model deployment
+
+  COPILOT OPTIONS
+    --copilot-model-name NAME             Use a specific model by name (default: claude-3.7-sonnet)
+    --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
+    --github-token TOKEN                  Use a specific GitHub authentication tok
+
+  OPENAI OPTIONS
+    --openai-api-key KEY                  Use a specific API key
+    --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
+
+  CONFIGURATION
+    --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
+    --profile NAME                        Load a specific profile's configuration from .cycod/profiles/NAME.yaml
+      
+  ALIASES                                 (see: cycod help aliases)
+    --save-alias ALIAS                    Same as --save-local-alias
+    --save-local-alias ALIAS              Save current options as an alias in local scope
+    --save-user-alias ALIAS               Save current options as an alias in user scope
+    --save-global-alias ALIAS             Save current options as an alias in global scope
+    --{ALIAS}                             Use options saved under the specified alias name
+
+  VARIABLES
+    --var NAME=VALUE                      Set a variable for template substitution
+    --vars NAME1=VALUE1 NAME2=VALUE2 ...  Set multiple variables for template substitution
+    --foreach var NAME in VALUE1 [...]    Define a loop variable with multiple values (expands to multiple commands)
+    --foreach var NAME in @FILE           Define a loop variable with values from a file (one per line)
+    --foreach var NAME in #..#            Define a loop variable with a numeric range (e.g., 1..5)
+
+  ADDITIONAL OPTIONS
+    --interactive TRUE/FALSE              Allow interactive use (default: true, unless stdin redirected)
+    --threads COUNT                       Number of parallel threads for non-interactive mode (default: CPU core count)
+    --folder PATH                         Change to the specified folder path before executing commands
+    --cwd PATH                            Same as --folder
+    --debug                               Turn on diagnostics/debug outputs
+    --quiet                               Turn off all but the most critical console outputs
+    --verbose                             Turn on additional diagnostics/debug outputs
+    --chat-completion-timeout SECONDS     Set a timeout in seconds for chat completion API calls
+
+SEE ALSO
+
+  cycod help
+  cycod help examples
+  cycod help provider
+  cycod help config
+  cycod help alias

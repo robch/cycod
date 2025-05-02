@@ -1,6 +1,6 @@
 # Troubleshooting
 
-This guide provides solutions for common issues you might encounter when using ChatX.
+This guide provides solutions for common issues you might encounter when using CycoD.
 
 ## API Connection Issues
 
@@ -35,7 +35,7 @@ This guide provides solutions for common issues you might encounter when using C
 - Permission errors when running commands
 
 **Possible Solutions:**
-1. **Check Permissions**: Ensure ChatX has the necessary permissions to execute commands.
+1. **Check Permissions**: Ensure CycoD has the necessary permissions to execute commands.
 
 2. **Path Issues**: For commands that rely on specific tools, ensure they are installed and in your PATH.
    ```bash
@@ -73,10 +73,10 @@ This guide provides solutions for common issues you might encounter when using C
 1. **Check Syntax**: Ensure you're using the correct syntax for options.
    ```bash
    # Correct syntax for system prompt
-   chatx --system-prompt "Your prompt here"
+   cycod --system-prompt "Your prompt here"
    
    # Incorrect (missing quotes for multi-word prompt)
-   chatx --system-prompt Your prompt here
+   cycod --system-prompt Your prompt here
    ```
 
 2. **Escape Special Characters**: If your arguments contain special characters, ensure they're properly escaped.
@@ -90,7 +90,7 @@ This guide provides solutions for common issues you might encounter when using C
 - Error messages when trying to use aliases
 
 **Possible Solutions:**
-1. **Check Alias Path**: Ensure the alias file exists in the `.chatx/aliases` directory.
+1. **Check Alias Path**: Ensure the alias file exists in the `.cycod/aliases` directory.
 
 2. **Check Alias Format**: Verify the alias file contains valid command options.
 
@@ -146,13 +146,13 @@ This guide provides solutions for common issues you might encounter when using C
    dotnet build
    ```
 
-3. **Check for Updates**: Ensure you're using the latest version of ChatX.
+3. **Check for Updates**: Ensure you're using the latest version of CycoD.
 
 ## Getting More Help
 
 If you're experiencing issues not covered in this guide:
 
-1. **Check GitHub Issues**: Visit the [GitHub Issues page](https://github.com/username/chatx/issues) to see if others have reported similar problems.
+1. **Check GitHub Issues**: Visit the [GitHub Issues page](https://github.com/username/cycod/issues) to see if others have reported similar problems.
 
 2. **Create a New Issue**: If your problem hasn't been reported, consider creating a new issue with:
    - A clear description of the problem

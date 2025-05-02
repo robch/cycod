@@ -1,0 +1,46 @@
+CYCODMD WEB GET
+
+  Use the 'cycodmd web get' command to create markdown from one or more web pages.
+
+USAGE: cycodmd web get "URL" ["URL2" [...]] [...]
+
+OPTIONS
+
+  BROWSER/HTML
+
+    --interactive                      Run in browser interactive mode (default: false)
+    --chromium                         Use Chromium browser (default)
+    --firefox                          Use Firefox browser
+    --webkit                           Use WebKit browser
+    --strip                            Strip HTML tags from downloaded content (default: false)
+
+  AI PROCESSING
+
+    --page-instructions "..."          Apply the specified instructions to each page (uses AI CLI)
+    --SITE-page-instructions "..."     Apply the specified instructions to each page (for matching SITEs)
+
+    --instructions "..."               Apply the specified instructions to command output (uses AI CLI)
+
+    --built-in-functions               Enable built-in functions (AI CLI can use file system)
+    --threads N                        Limit the number of concurrent file processing threads
+
+    --save-chat-history [FILE]         Save the chat history to the specified file
+                                       (e.g. chat-history-{time}.jsonl)
+
+  OUTPUT
+
+    --save-page-output [FILE]          Save each web page output to the specified template file
+                                       (e.g. {filePath}/{fileBase}-output.md)
+
+    --save-output [FILE]               Save command output to the specified template file
+    --save-alias ALIAS                 Save current options as an alias (usable via --{ALIAS})
+
+SEE ALSO
+
+  cycodmd help web get
+  cycodmd help web get examples
+
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
+  

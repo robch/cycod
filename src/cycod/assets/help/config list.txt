@@ -1,0 +1,29 @@
+CYCOD CONFIG LIST
+
+  List all configuration settings.
+
+USAGE: cycod config list [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    List only global configuration settings (all users)
+    --user, -u      List only user configuration settings (current user)
+    --local, -l     List only local configuration settings (current directory)
+    --any, -a       List settings from all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: List all configuration settings from all scopes
+
+    cycod config list
+
+  EXAMPLE 2: List only user configuration settings
+
+    cycod config list --user
+
+SEE ALSO
+
+  cycod help config
+  cycod help config get

@@ -1,0 +1,66 @@
+CYCOD PROMPTS
+
+  Custom prompts are reusable text templates that can be quickly inserted
+  into your chat conversations by typing /promptname.
+
+USING PROMPTS
+
+  In any chat session, type a forward slash (/) followed by a prompt name:
+
+    /explain
+    /translate
+    /summarize
+
+  You can also view available prompts by typing a slash and
+  pressing TAB to see prompt suggestions.
+
+PROMPT STORAGE
+
+  Prompts are stored in different locations based on scope:
+
+  - Local: In the .cycod/prompts directory of your current working directory
+  - User: In the .cycod/prompts directory of your user profile
+  - Global: In a system-wide directory available to all users
+
+MANAGING PROMPTS
+
+  Create a new prompt:
+    cycod prompt create myprompt "This is my custom prompt text"
+
+  List all available prompts:
+    cycod prompt list
+
+  View a specific prompt:
+    cycod prompt get myprompt
+
+  Delete a prompt:
+    cycod prompt delete myprompt
+
+EXAMPLES
+
+  EXAMPLE 1: Creating and using a code review prompt
+
+    cycod prompt create review "Please review this code and suggest improvements:
+    1. Identify any bugs or edge cases
+    2. Suggest performance optimizations
+    3. Comment on style and readability"
+
+    Then in chat, you can use:
+    /review
+    [paste code here]
+
+  EXAMPLE 2: Creating a translate prompt for quick translations
+
+    cycod prompt create translate "Translate the following text to Spanish:" --user
+
+    Then in any chat from any directory:
+    /translate
+    [paste text to translate]
+
+SEE ALSO
+
+  cycod help prompt
+  cycod help prompt create
+  cycod help prompt list
+  cycod help prompt get
+  cycod help prompt delete

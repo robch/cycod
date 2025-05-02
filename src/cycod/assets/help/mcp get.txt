@@ -1,0 +1,39 @@
+CYCOD MCP GET
+
+  Display the details of a specific Model Context Protocol (MCP) server.
+
+USAGE: cycod mcp get SERVER_NAME [--scope]
+
+OPTIONS
+
+  SERVER_NAME       The name of the MCP server to display
+
+  SCOPE OPTIONS
+
+    --global, -g    Look only in global scope (all users)
+    --user, -u      Look only in user scope (current user)
+    --local, -l     Look only in local scope (current directory)
+    --any, -a       Look in all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: Display an MCP server from any scope
+
+    cycod mcp get postgres-server
+
+  EXAMPLE 2: Display an MCP server only if it exists in the user scope
+
+    cycod mcp get weather-api --user
+
+NOTES
+
+  When an MCP server is found, the command displays:
+  - The server name
+  - The file location and scope
+  - Command and arguments
+  - Environment variables
+
+SEE ALSO
+
+  cycod help mcp
+  cycod help mcp list

@@ -1,0 +1,29 @@
+CYCOD ALIAS COMMANDS
+
+  These commands allow you to manage CYCOD command aliases.
+
+USAGE: cycod alias list [--scope]
+   OR: cycod alias get ALIAS_NAME [--scope]
+   OR: cycod alias delete ALIAS_NAME [--scope]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Use global scope (all users)
+    --user, -u      Use user scope (current user)
+    --local, -l     Use local scope (default for most commands)
+    --any, -a       Include aliases from all scopes (default for 'list' command)
+
+COMMANDS
+
+    list            List all available aliases
+    get             Display the content of a specific alias
+    delete          Delete an alias
+
+SEE ALSO
+
+  cycod help alias list
+  cycod help alias get
+  cycod help alias delete
+  cycod help aliases

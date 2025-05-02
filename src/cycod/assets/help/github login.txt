@@ -1,0 +1,24 @@
+CYCOD GITHUB LOGIN
+
+  This command helps you authenticate with GitHub to use Copilot with CYCOD.
+  It handles the device authorization flow with GitHub and saves the token
+  in your CYCOD configuration.
+
+USAGE: cycod github login
+
+DETAILS
+
+  The command will:
+  1. Open a browser window for you to authorize CYCOD with GitHub
+  2. Save the GitHub token to your user configuration
+  3. Allow CYCOD to use GitHub Copilot for AI interactions
+
+  After successful authentication, CYCOD will automatically use your 
+  GitHub credentials when appropriate.
+
+NOTE: This requires a valid GitHub Copilot subscription.
+
+SEE ALSO
+
+  cycod help config
+  cycod help options

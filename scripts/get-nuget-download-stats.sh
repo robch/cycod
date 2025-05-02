@@ -3,7 +3,7 @@
 # get-nuget-download-stats.sh
 #
 # Script to fetch and display download statistics for NuGet packages
-# Specifically targeting MDX and ChatX packages
+# Specifically targeting CYCODMD and CycoD packages
 #
 # Usage:
 #   ./get-nuget-download-stats.sh [options]
@@ -119,11 +119,11 @@ fetch_nuget_stats() {
 # Main script execution
 echo -e "${BOLD}${CYAN}===== NuGet Package Download Statistics =====${RESET}\n"
 
-# Get stats for MDX
-fetch_nuget_stats "MDX"
+# Get stats for CYCODMD
+fetch_nuget_stats "CYCODMD"
 
-# Get stats for ChatX
-fetch_nuget_stats "ChatX"
+# Get stats for CycoD
+fetch_nuget_stats "CycoD"
 
 echo -e "${BOLD}${CYAN}=========================================${RESET}"
 echo -e "${BOLD}${YELLOW}Note:${RESET} Statistics are retrieved directly from NuGet.org."

@@ -1,0 +1,28 @@
+Using CYCOD, you can:
+
+  - Chat with an AI model (interactively/programmatically)
+  - Provide one or more inputs to the AI model
+  - Use built-in function tools to:
+    - Read and write files
+    - Execute shell commands/scripts
+    - Use MCP (Model Context Protocol) tools
+
+USAGE: cycod <command> [...]
+
+COMMANDS
+
+  cycod [...]             (aka: cycod chat)
+  cycod chat [...]        (see: cycod help chat)
+
+  cycod config [...]      (see: cycod help config)
+  cycod github login      (see: cycod help github login)
+
+  cycod mcp [...]         (see: cycod help mcp)
+  cycod alias [...]       (see: cycod help alias)
+  cycod prompt [...]      (see: cycod help prompt)
+
+SEE ALSO
+
+  cycod help
+  cycod help examples
+  cycod help github login

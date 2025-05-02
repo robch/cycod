@@ -1,0 +1,24 @@
+CYCODMD RUN
+
+  Use the 'cycodmd run' command to execute scripts or commands and create markdown from the output.
+
+USAGE: cycodmd run [COMMAND1 [COMMAND2 [...]]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Run a simple command and process the output
+
+    cycodmd run "echo Hello, World!" --instructions "translate strings to german"
+
+  EXAMPLE 2: Run a script using PowerShell and process the output
+
+    cycodmd run --powershell "Get-Process" --instructions "list running processes"
+
+  EXAMPLE 3: Run a bash script and apply multi-step AI instructions
+
+    cycodmd run --bash "ls -la" --instructions @step1-instructions.txt @step2-instructions.txt
+
+SEE ALSO
+
+  cycodmd help run examples
+  cycodmd help run options

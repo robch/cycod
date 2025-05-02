@@ -1,0 +1,120 @@
+# - area: Config Add with Different Scopes
+#   tests:
+#   - name: Adding values to lists in different scopes
+#     steps:
+#     # Clean up any existing test lists
+#     - name: Clean up test lists in all scopes
+#       command: cycod config clear ScopedTestList --any
+#       skipOnFailure: true
+    
+#     # Test adding to local scope
+#     - name: Add value to list in local scope
+#       command: cycod config add ScopedTestList LocalItem1 --local
+#       expect-regex: |
+#         ScopedTestList:
+#         - LocalItem1
+    
+#     - name: Add another value to list in local scope
+#       command: cycod config add ScopedTestList LocalItem2 --local
+#       expect-regex: |
+#         ScopedTestList:
+#         - LocalItem1
+#         - LocalItem2
+    
+#     # Test adding to user scope
+#     - name: Add value to list in user scope
+#       command: cycod config add ScopedTestList UserItem1 --user
+#       expect-regex: |
+#         ScopedTestList:
+#         - UserItem1
+    
+#     - name: Add another value to list in user scope
+#       command: cycod config add ScopedTestList UserItem2 --user
+#       expect-regex: |
+#         ScopedTestList:
+#         - UserItem1
+#         - UserItem2
+    
+#     # Test adding to global scope
+#     - name: Add value to list in global scope
+#       command: cycod config add ScopedTestList GlobalItem1 --global
+#       expect-regex: |
+#         ScopedTestList:
+#         - GlobalItem1
+    
+#     - name: Add another value to list in global scope
+#       command: cycod config add ScopedTestList GlobalItem2 --global
+#       expect-regex: |
+#         ScopedTestList:
+#         - GlobalItem1
+#         - GlobalItem2
+    
+#     # Verify scope independence - check each scope individually
+#     - name: Get list from local scope
+#       command: cycod config get ScopedTestList --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScopedTestList:
+#           - LocalItem1
+#           - LocalItem2
+    
+#     - name: Get list from user scope
+#       command: cycod config get ScopedTestList --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         ScopedTestList:
+#           - UserItem1
+#           - UserItem2
+    
+#     - name: Get list from global scope
+#       command: cycod config get ScopedTestList --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         ScopedTestList:
+#           - GlobalItem1
+#           - GlobalItem2
+    
+#     # Test scope inheritance - using --any should return the local scope list
+#     - name: Get list from any scope (should return local list)
+#       command: cycod config get ScopedTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScopedTestList:
+#           - LocalItem1
+#           - LocalItem2
+    
+#     # Clear local list and test inheritance again
+#     - name: Clear local list
+#       command: cycod config clear ScopedTestList --local
+#       expect-regex: |
+#         ScopedTestList: \(cleared\)
+    
+#     # Now --any should return user scope list
+#     - name: Get list from any scope after clearing local (should return user list)
+#       command: cycod config get ScopedTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         ScopedTestList:
+#           - UserItem1
+#           - UserItem2
+    
+#     # Clear user list and test inheritance again
+#     - name: Clear user list
+#       command: cycod config clear ScopedTestList --user
+#       expect-regex: |
+#         ScopedTestList: \(cleared\)
+    
+#     # Now --any should return global scope list
+#     - name: Get list from any scope after clearing local and user (should return global list)
+#       command: cycod config get ScopedTestList --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         ScopedTestList:
+#           - GlobalItem1
+#           - GlobalItem2
+    
+#     # Clean up all test lists
+#     - name: Clean up global test list
+#       command: cycod config clear ScopedTestList --global
+#       expect-regex: |
+#         ScopedTestList: \(cleared\)

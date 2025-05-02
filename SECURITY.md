@@ -10,7 +10,7 @@ Use this section to tell people about which versions of your project are current
 
 ## Reporting a Vulnerability
 
-We take the security of ChatX seriously. If you believe you've found a security vulnerability, please follow these steps:
+We take the security of CycoD seriously. If you believe you've found a security vulnerability, please follow these steps:
 
 1. **Do not disclose the vulnerability publicly**
 2. **Email the details to security@example.com** (replace with actual contact)
@@ -28,7 +28,7 @@ We take the security of ChatX seriously. If you believe you've found a security 
 
 ## Best Practices for Users
 
-To ensure the security of your ChatX deployment:
+To ensure the security of your CycoD deployment:
 
 1. Always use the latest version of the software
 2. Be careful about the system commands that you allow the AI assistant to execute
@@ -36,4 +36,4 @@ To ensure the security of your ChatX deployment:
 4. Use appropriate authentication and authorization mechanisms when deploying in shared environments
 5. Be cautious about sharing API keys or sensitive environment variables
 
-Thank you for helping keep ChatX and its users secure!
+Thank you for helping keep CycoD and its users secure!

@@ -1,8 +1,18 @@
 .vs/
 src/bin/
 src/obj/
+src/common/obj/
+src/common/bin/
+src/cycod/obj/
+src/cycod/bin/
+src/cycodmd/bin/
+src/cycodmd/obj/
+src/cycodt/obj/
+src/cycodt/bin/
 
 tests/**/bin/
 tests/**/obj/
 
-.chatx/scratch/
+.cycod/scratch/
+
+.env

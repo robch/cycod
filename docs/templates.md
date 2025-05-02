@@ -1,10 +1,10 @@
 # Templates
 
-ChatX provides a powerful templating system that allows you to create dynamic content with variables, conditionals, and expressions. This document explains how to use templates effectively in your interactions with the AI.
+CycoD provides a powerful templating system that allows you to create dynamic content with variables, conditionals, and expressions. This document explains how to use templates effectively in your interactions with the AI.
 
 ## Overview
 
-Templates in ChatX allow you to:
+Templates in CycoD allow you to:
 
 1. Insert variables into text
 2. Use conditional statements to include or exclude sections
@@ -267,18 +267,18 @@ Body temperature:
 {f}°F = {c}°C
 ```
 
-## Using Templates with ChatX
+## Using Templates with CycoD
 
 ### In System Prompts
 
 ```bash
-chatx --system-prompt "You are helping a user on {os}. Today is {date}." --var name=Alice
+cycod --system-prompt "You are helping a user on {os}. Today is {date}." --var name=Alice
 ```
 
 You can set multiple variables at once using `--vars`:
 
 ```bash
-chatx --system-prompt "Hello {name}, your favorite color is {color} and your age is {age}." --vars name=Alice color=blue age=30
+cycod --system-prompt "Hello {name}, your favorite color is {color} and your age is {age}." --vars name=Alice color=blue age=30
 ```
 
 ### In Input Files
@@ -286,7 +286,7 @@ chatx --system-prompt "Hello {name}, your favorite color is {color} and your age
 You can use templates in input files:
 
 ```bash
-chatx --input @prompt-template.txt --var language=python --var feature=generators
+cycod --input @prompt-template.txt --var language=python --var feature=generators
 ```
 
 Where `prompt-template.txt` might contain:
@@ -311,7 +311,7 @@ Templates are particularly useful in aliases:
 Then use it with:
 
 ```bash
-chatx --my-coding-assistant --var language=python
+cycod --my-coding-assistant --var language=python
 ```
 
 ## Loop Variables with Foreach
@@ -319,7 +319,7 @@ chatx --my-coding-assistant --var language=python
 You can define loop variables that expand a command into multiple commands, each with a different value:
 
 ```bash
-chatx --foreach var x in 1 2 3 --input "The value of x is {x}"
+cycod --foreach var x in 1 2 3 --input "The value of x is {x}"
 ```
 
 This will execute three separate chat commands, each with a different value of `x`.
@@ -327,13 +327,13 @@ This will execute three separate chat commands, each with a different value of `
 You can also read values from a file (one per line):
 
 ```bash
-chatx --foreach var name in @names.txt --input "Hello, {name}!"
+cycod --foreach var name in @names.txt --input "Hello, {name}!"
 ```
 
 When multiple foreach variables are defined, they create a Cartesian product (all combinations):
 
 ```bash
-chatx --foreach var x in 1 2 3 --foreach var y in a b c --input "{x} + {y}"
+cycod --foreach var x in 1 2 3 --foreach var y in a b c --input "{x} + {y}"
 ```
 
 This will execute 9 separate commands with all combinations of x and y: (1,a), (1,b), (1,c), (2,a), etc.

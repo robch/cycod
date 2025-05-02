@@ -1,0 +1,25 @@
+CYCODMD WEB GET
+
+  Use the 'cycodmd web get' command to create markdown from one or more web pages.
+
+USAGE: cycodmd web get "URL" ["URL2" [...]] [...]
+
+EXAMPLES
+
+  EXAMPLE 1: Create markdown from a web page, keeping HTML tags
+
+    cycodmd web get "https://learnxinyminutes.com/docs/yaml/"
+
+  EXAMPLE 2: Create markdown from a web page, stripping HTML tags
+
+    cycodmd web get "https://learnxinyminutes.com/docs/yaml/" --strip
+
+SEE ALSO
+
+  cycodmd help web get options
+  cycodmd help web get examples
+
+  cycodmd help web search
+  cycodmd help web search examples
+  cycodmd help web search options
+  

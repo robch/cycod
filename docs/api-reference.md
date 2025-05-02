@@ -1,6 +1,6 @@
 # API Reference
 
-This document provides a reference for the various APIs and interfaces used in ChatX.
+This document provides a reference for the various APIs and interfaces used in CycoD.
 
 ## Chat Client API
 
@@ -22,9 +22,6 @@ static class ChatClientFactory {
     
     // Creates a GitHub Copilot chat client with token authentication
     public static ChatClient CreateCopilotChatClientWithToken();
-    
-    // Creates a GitHub Copilot chat client with HMAC authentication
-    public static ChatClient CreateCopilotChatClient();
 }
 ```
 
@@ -299,15 +296,6 @@ public class TrafficEventPolicy : PipelinePolicy {
     
     // Fire events
     public void FireEvents(PipelineMessage message);
-}
-```
-
-### HMAC Helper
-
-```csharp
-public static class HMACHelper {
-    // Encode an HMAC header value
-    public static string Encode(string key);
 }
 ```
 
