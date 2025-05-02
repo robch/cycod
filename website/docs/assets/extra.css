@@ -1,0 +1,69 @@
+/* Custom styles for CYCOD documentation */
+.md-typeset h1,
+.md-typeset h2 {
+  font-weight: 600;
+}
+
+.md-typeset .grid {
+  grid-gap: .4rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(16rem,1fr));
+  margin: 1em 0;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) {
+  display: contents;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li,
+.md-typeset .grid > .card {
+  border: .05rem solid var(--md-default-fg-color--lightest);
+  border-radius: .1rem;
+  display: block;
+  margin: 0;
+  padding: .8rem;
+  transition: border .25s,box-shadow .25s;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li:focus-within,
+.md-typeset .grid.cards > :is(ul, ol) > li:hover,
+.md-typeset .grid > .card:focus-within,
+.md-typeset .grid > .card:hover {
+  border-color: var(--md-accent-fg-color);
+  box-shadow: var(--md-shadow-z2);
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li > hr,
+.md-typeset .grid > .card > hr {
+  margin-bottom: .8rem;
+  margin-top: .8rem;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li > :first-child,
+.md-typeset .grid > .card > :first-child {
+  margin-top: 0;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li > :last-child,
+.md-typeset .grid > .card > :last-child {
+  margin-bottom: 0;
+}
+
+/* Icon sizes */
+.lg.middle {
+  font-size: 2.5rem;
+  vertical-align: middle;
+}
+
+.med.middle {
+  font-size: 1.5rem;
+  vertical-align: middle;
+}
+
+.md-typeset .admonition {
+  font-size: .75rem;
+}
+
+.md-typeset .admonition-title {
+  padding-right: 2.4rem;
+}

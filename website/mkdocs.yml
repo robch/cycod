@@ -1,0 +1,246 @@
+site_name: CYCOD Documentation
+repo_url: https://github.com/robch/cycod
+
+theme:
+  logo: assets/cycod.png
+  name: material
+  icon:
+    annotation: material/arrow-right-circle 
+  features:
+  - navigation.tabs
+  - navigation.sections
+  - navigation.footer
+  - navigation.indexes
+  - navigation.top
+  - search.suggest
+  - search.highlight
+  - content.tabs.link
+  - content.code.annotation
+  - content.code.copy
+  language: en
+  palette:
+  - scheme: default
+    toggle: 
+      icon: material/toggle-switch-off-outline
+      name: Switch to dark mode
+    primary: black
+    accent: indigo
+  - scheme: slate
+    toggle:
+      icon: material/toggle-switch
+      name: Switch to light mode
+    primary: black
+    accent: indigo
+
+extra_css:
+  - assets/extra.css
+  - assets/cli-toggle.css
+
+extra_javascript:
+  - js/cli-toggle.js
+
+extra:
+  generator: false
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/robch/cycod
+
+validation:
+  links:
+    absolute_links: relative_to_docs
+    anchors: warn
+    unrecognized_links: warn
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower      
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["docs", "docs/snippets", "snippets"]
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - footnotes
+  - pymdownx.details
+  - pymdownx.mark
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - md_in_html
+
+copyright: |
+  &copy; 2025 <a href="https://github.com/robch/" target="_blank" rel="noopener">Rob Chambers</a>
+
+nav:
+  - HOME: index.md
+  - PRE-REQS:
+    - INSTALL:
+      - CycoD CLI Installation: install-cycod-cli.md
+      - Verify Installation: verify-installation.md
+    - SETUP:
+      - Providers: providers/overview.md
+      - Setup GitHub Copilot: providers/github-copilot.md
+      - Setup Azure OpenAI: providers/azure-openai.md
+      - Setup OpenAI: providers/openai.md
+  - CHAT:
+      - The Basics: basics/chat.md
+      - Chat History: basics/chat-history.md
+      - System Prompts: basics/system-prompts.md
+      - Slash Commands: basics/slash-commands.md
+      - Custom Prompts: basics/custom-prompts.md
+      - Variables: basics/variables.md
+      - Parallel Processing: basics/parallel-processing.md
+      - Configuration: basics/configuration.md
+      - TL;DR/Overview: basics/overview.md
+  - MEMORY:
+    - Concepts:
+      - Memory Overview: memory/overview.md
+      - Memory Organization: memory/organization.md
+    - Implementation:
+      - Basic Setup: memory/setup.md
+      - Tiered Memories: memory/tiered-memories.md
+      - Targeted Access: memory/targeted-access.md
+    - Advanced Techniques:
+      - Self-Updating Memories: memory/self-updating.md
+      - Memory Patterns & Examples: memory/patterns.md
+  - TOOLS & EXTENSIONS:
+    - Slash Commands:
+      - Using Slash Commands: tools/slash-commands.md
+      - File Operations: tools/file-operations.md
+      - Search Commands: tools/search-commands.md
+      - Run Commands: tools/run-commands.md
+    - MCP Integration:
+      - MCP Overview: advanced/mcp.md
+      - Managing MCP Servers: tutorials/managing-mcp-servers.md
+      - Working with MCP Arguments: tutorials/working-with-mcp-arguments.md
+      - Environment Variables in MCP: tutorials/env-variables-mcp.md
+    - Templates & Variables:
+      - Templates and Variables: usage/templates-and-variables.md
+      - Variable Substitution: tools/variable-substitution.md
+  - WORKFLOWS:
+    - Use Cases:
+      - Expert Roles: tutorials/expert-roles.md
+      - Project Workflows: workflows/project-workflows.md
+      - Documentation Generation: workflows/documentation.md
+    - Advanced Patterns:
+      - Looping with --foreach: workflows/looping.md
+      - Parallel Processing: workflows/parallel-processing.md
+      - Alias Workflows: workflows/alias-workflows.md
+  - ADVANCED:
+    - Configuration:
+      - External Configuration Files: usage/external-config-files.md
+      - Scopes: usage/scopes.md
+      - Working with List Settings: usage/config-list-settings.md
+    - Aliases & Profiles:
+      - Aliases: advanced/aliases.md
+      - Custom Prompts: advanced/prompts.md
+      - Profiles: advanced/profiles.md
+      - Provider Profiles: advanced/provider-profiles.md
+    - Troubleshooting:
+      - Troubleshooting: usage/troubleshooting.md
+    - Input & Output:
+      - Input Options: usage/input-options.md
+      - Chat History: usage/chat-history.md
+      - Configuration: usage/configuration.md
+    - Built-in Capabilities:
+      - File Operations: basics/file-operations.md
+      - Shell Commands: basics/shell-commands.md
+  - REFERENCE:
+    - cycod:
+      - reference/cli/index.md
+      - help: reference/cli/help.md
+      - version: reference/cli/version.md
+      - Options:
+        - Overview: reference/cli/options/index.md
+        - --add-system-prompt: reference/cli/options/add-system-prompt.md
+        - --add-user-prompt: reference/cli/options/add-user-prompt.md
+        - --any: reference/cli/options/any.md
+        - --arg: reference/cli/options/arg.md
+        - --azure-openai-api-key: reference/cli/options/azure-openai-api-key.md
+        - --azure-openai-chat-deployment: reference/cli/options/azure-openai-chat-deployment.md
+        - --azure-openai-endpoint: reference/cli/options/azure-openai-endpoint.md
+        - --ALIAS: reference/cli/options/alias.md
+        - --chat-history: reference/cli/options/chat-history.md
+        - --config: reference/cli/options/config.md
+        - --command: reference/cli/options/command.md
+        - --continue: reference/cli/options/continue.md
+        - --copilot-api-endpoint: reference/cli/options/copilot-api-endpoint.md
+        - --copilot-model-name: reference/cli/options/copilot-model-name.md
+        - --debug: reference/cli/options/debug.md
+        - --env: reference/cli/options/env.md
+        - --expand: reference/cli/options/expand.md
+        - --foreach: reference/cli/options/foreach.md
+        - --github-token: reference/cli/options/github-token.md
+        - --global: reference/cli/options/global.md
+        - --input: reference/cli/options/input.md
+        - --input-chat-history: reference/cli/options/input-chat-history.md
+        - --inp: reference/cli/options/inp.md
+        - --inputs: reference/cli/options/inputs.md
+        - --instruction: reference/cli/options/instruction.md
+        - --inpu: reference/cli/options/inpu.md
+        - --interactive: reference/cli/options/interactive.md
+        - --instructions: reference/cli/options/instructions.md
+        - --local: reference/cli/options/local.md
+        - --no-templates: reference/cli/options/no-templates.md
+        - --openai-api-key: reference/cli/options/openai-api-key.md
+        - --openai-chat-model-name: reference/cli/options/openai-chat-model-name.md
+        - --output-chat-history: reference/cli/options/output-chat-history.md
+        - --output-trajectory: reference/cli/options/output-trajectory.md
+        - --profile: reference/cli/options/profile.md
+        - --python-expert: reference/cli/options/python-expert.md
+        - --question: reference/cli/options/question.md
+        - --questions: reference/cli/options/questions.md
+        - --quiet: reference/cli/options/quiet.md
+        - --save-alias: reference/cli/options/save-alias.md
+        - --save-global-alias: reference/cli/options/save-global-alias.md
+        - --save-local-alias: reference/cli/options/save-local-alias.md
+        - --save-user-alias: reference/cli/options/save-user-alias.md
+        - --system-prompt: reference/cli/options/system-prompt.md
+        - --threads: reference/cli/options/threads.md
+        - --trim-token-target: reference/cli/options/trim-token-target.md
+        - --url: reference/cli/options/url.md
+        - --use-azure: reference/cli/options/use-azure.md
+        - --use-azure-openai: reference/cli/options/use-azure-openai.md
+        - --use-copilot: reference/cli/options/use-copilot.md
+        - --use-openai: reference/cli/options/use-openai.md
+        - --use-templates: reference/cli/options/use-templates.md
+        - --user: reference/cli/options/user.md
+        - --var: reference/cli/options/var.md
+        - --vars: reference/cli/options/vars.md
+        - --verbose: reference/cli/options/verbose.md
+        - --working-dir: reference/cli/options/working-dir.md
+      - alias:
+        - reference/cli/alias/index.md
+        - List: reference/cli/alias/list.md
+        - Get: reference/cli/alias/get.md
+        - Delete: reference/cli/alias/delete.md
+      - config:
+        - reference/cli/config/index.md
+        - List: reference/cli/config/list.md
+        - Get: reference/cli/config/get.md
+        - Set: reference/cli/config/set.md
+        - Clear: reference/cli/config/clear.md
+        - Add: reference/cli/config/add.md
+        - Remove: reference/cli/config/remove.md
+      - prompt:
+        - reference/cli/prompt/index.md
+        - List: reference/cli/prompt/list.md
+        - Get: reference/cli/prompt/get.md
+        - Create: reference/cli/prompt/create.md
+        - Delete: reference/cli/prompt/delete.md
+      - mcp:
+        - reference/cli/mcp/index.md
+        - List: reference/cli/mcp/list.md
+        - Get: reference/cli/mcp/get.md
+        - Add: reference/cli/mcp/add.md
+        - Remove: reference/cli/mcp/remove.md
+      - github:
+        - reference/cli/github/index.md
+        - Login: reference/cli/github/login.md

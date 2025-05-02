@@ -1,0 +1,100 @@
+---
+hide:
+- toc
+---
+
+--8<-- "snippets/ai-generated.md"
+
+# CLI Usage Examples
+
+This page provides practical examples of using CycoD across different operating systems. Choose your platform from the tabs below to see platform-specific examples.
+
+## Basic Usage
+
+These examples cover the most common CycoD commands and options.
+
+=== "Windows"
+    
+    --8<-- "snippets/cli-examples/basic/windows-examples.md"
+
+=== "macOS"
+    
+    --8<-- "snippets/cli-examples/basic/macos-examples.md"
+
+=== "Linux"
+    
+    --8<-- "snippets/cli-examples/basic/linux-examples.md"
+
+## Advanced Usage
+
+These examples demonstrate more advanced features and configurations.
+
+=== "Windows"
+    
+    --8<-- "snippets/cli-examples/advanced/windows-examples.md"
+
+=== "macOS"
+    
+    --8<-- "snippets/cli-examples/advanced/macos-examples.md"
+
+=== "Linux"
+    
+    --8<-- "snippets/cli-examples/advanced/linux-examples.md"
+
+## Using Multiple Providers
+
+You can specify which AI provider to use for each command:
+
+```bash
+# Use OpenAI
+cycod --use-openai --question "What is GPT-4?"
+
+# Use Azure OpenAI
+cycod --use-azure-openai --question "What is Azure OpenAI?"
+
+# Use GitHub Copilot
+cycod --use-copilot --question "What is GitHub Copilot?"
+```
+
+## Working with Chat History
+
+CycoD allows you to save and reuse chat history:
+
+```bash
+# Save chat history to a file
+cycod --question "Tell me about AI" --output-chat-history chat.jsonl
+
+# Continue the conversation from a saved chat history
+cycod --input-chat-history chat.jsonl --question "Tell me more about machine learning"
+
+# Output conversation trajectory for analysis
+cycod --question "Explain quantum computing" --output-trajectory trajectory.md
+```
+
+## Environment-Specific Tips
+
+=== "Windows"
+
+    - On Windows, you can use PowerShell, Command Prompt, or Windows Terminal
+    - File paths use backslashes (e.g., `C:\Users\username\Documents\file.txt`)
+    - Environment variables are accessed using `%VARIABLE%` in CMD or `$env:VARIABLE` in PowerShell
+
+=== "macOS"
+
+    - On macOS, you can use Terminal.app or iTerm2
+    - File paths use forward slashes (e.g., `/Users/username/Documents/file.txt`)
+    - Use `~/` as a shortcut to your home directory
+    - Environment variables are accessed using `$VARIABLE`
+
+=== "Linux"
+
+    - On Linux, you can use your distribution's terminal emulator
+    - File paths use forward slashes (e.g., `/home/username/Documents/file.txt`)
+    - Use `~/` as a shortcut to your home directory
+    - Environment variables are accessed using `$VARIABLE`
+
+## See Also
+
+- [Chat Basics](/basics/chat.md) - Learn more about basic CycoD usage
+- [Configuration](/usage/configuration.md) - How to configure CycoD
+- [Templates and Variables](/usage/templates-and-variables.md) - Working with templates
