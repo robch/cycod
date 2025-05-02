@@ -1,0 +1,134 @@
+/* Base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body, html {
+    height: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    background-color: #0a0a0a;
+    color: #33ffff;
+    overflow: hidden;
+}
+
+.container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Matrix Background */
+.matrix-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Content styling */
+.content {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Logo styling */
+.logo-container {
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.logo {
+    font-size: clamp(16px, 5vmin, 28px);
+    line-height: 1.2;
+    margin: 0 auto;
+    color: #33ffff;
+    text-shadow: 0 0 10px rgba(51, 255, 255, 0.8);
+    animation: pulsate 3s ease-in-out infinite;
+    display: inline-block;
+    white-space: pre;
+}
+
+@keyframes pulsate {
+    0% { opacity: 1; text-shadow: 0 0 10px rgba(51, 255, 255, 0.8); }
+    50% { opacity: 0.8; text-shadow: 0 0 20px rgba(51, 255, 255, 0.8), 0 0 30px rgba(51, 255, 255, 0.6); }
+    100% { opacity: 1; text-shadow: 0 0 10px rgba(51, 255, 255, 0.8); }
+}
+
+/* Typing effect */
+.tagline {
+    font-size: clamp(18px, 4vmin, 32px);
+    margin-bottom: 30px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cursor {
+    display: inline-block;
+    width: 3px;
+    height: 24px;
+    background-color: #33ffff;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+    from, to { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* Domain names */
+.domain-names {
+    font-size: clamp(14px, 3vmin, 18px);
+    margin-top: 20px;
+    opacity: 0.7;
+}
+
+.domain {
+    color: #33ffff;
+    letter-spacing: 1px;
+}
+
+.dot {
+    margin: 0 10px;
+    opacity: 0.5;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .logo {
+        font-size: 18px;
+    }
+    
+    .tagline {
+        font-size: 20px;
+    }
+}
+
+/* Glitch Effect for the logo */
+@keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+}
+
+.logo:hover {
+    animation: 
+        pulsate 3s ease-in-out infinite,
+        glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+    animation-delay: 0s, 0s;
+}
