@@ -13,6 +13,9 @@ src/cycodt/bin/
 tests/**/bin/
 tests/**/obj/
 
+website/venv/
+website/site/
+
 .cycod/scratch/
 
 .env
