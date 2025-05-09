@@ -289,7 +289,7 @@ public partial class YamlTestCaseParser
         if (neitherOrBoth)
         {
             var message = $"Error parsing YAML: expected/unexpected key ('name', 'command', 'script', 'bash', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
-            Logger.LogError(message);
+            Logger.LogWarning(message);
             return null;
         }
 

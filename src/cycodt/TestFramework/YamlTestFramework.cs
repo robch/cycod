@@ -289,9 +289,9 @@ public class YamlTestFramework
     #region constants
     public const string YamlFileExtension = ".yaml";
     public const string FakeExecutor = "executor://cycodt/cli/TestFramework/v1";
-    public readonly static string YamlDefaultTagsFileName = $"{ProgramInfo.Name}-tests-default-tags.yaml";
+    public readonly static string YamlDefaultTagsFileName = $"cycodt-tags.yaml";
     public const string YamlTestsConfigDirectoryName = "tests";
-    public const string YamlTestsConfigFileName = "config.yaml";
+    public const string YamlTestsConfigFileName = "cycodt-config.yaml";
     public const string DefaultTimeout = "600000";
     #endregion
 }

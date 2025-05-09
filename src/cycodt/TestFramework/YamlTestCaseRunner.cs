@@ -153,79 +153,54 @@ public class YamlTestCaseRunner
         debugTrace = "";
         stackTrace = script ?? string.Empty;
 
-        List<string>? filesToDelete = null;
-
-        var sbOut = new StringBuilder();
-        var sbErr = new StringBuilder();
-        var sbMerged = new StringBuilder();
+        var merged = string.Empty;
+        stdOut = string.Empty;
+        stdErr = string.Empty;
 
         try
         {
+            var isCommand = !string.IsNullOrEmpty(command) || string.IsNullOrEmpty(script);
+            var isScript = !string.IsNullOrEmpty(script) && string.IsNullOrEmpty(command);
+            var ok = isCommand || isScript;
+            if (!ok) throw new Exception("Neither command nor script specified!");
+
             var kvs = KeyValuePairsFromJson(arguments, true);
             kvs.AddRange(KeyValuePairsFromJson(@foreach, false));
             stackTrace = UpdateStackTrace(stackTrace, command, kvs);
-            // kvs = ConvertValuesToAtArgs(kvs, ref filesToDelete);
 
-            // var useCmd = !scriptIsBash;
-            // script = WriteTextToTempFile(script, useCmd ? "cmd" : null);
+            var startArgs = GetKeyValueArgs(kvs);
+            var envVars = YamlEnvHelpers.GetEnvironmentFromMultiLineString(env);
 
-            GetStartInfoArgs(out var startProcess, out var startArgs, command, script, scriptIsBash, kvs);
-            stackTrace = $"{startProcess} {startArgs}\n{stackTrace ?? string.Empty}";
+            var result = isCommand
+                ? ProcessHelpers.RunProcess($"{command} {startArgs}", workingDirectory, envVars, input, timeout)
+                : ProcessHelpers.RunShellScript(scriptIsBash ? ShellType.Bash : ShellType.Cmd, script!, startArgs, workingDirectory, envVars, input, timeout);
 
-            Logger.Log($"Process.Start('{startProcess} {startArgs}')");
-            var startInfo = new ProcessStartInfo(startProcess, startArgs)
-            {
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                WorkingDirectory = workingDirectory
-            };
-            UpdateEnvironment(startInfo, env);
-            UpdatePathEnvironment(startInfo);
+            stdOut = result!.StandardOutput;
+            stdErr = result.StandardError;
+            merged = result.MergedOutput;
 
-            var process = Process.Start(startInfo);
-            if (process == null) throw new Exception("Process.Start() returned null!");
+            var exitCode = result.ExitCode;
+            var completed = result.CompletionState == ProcessCompletionState.Completed;
+            var completedSuccessfully = completed && exitCode == 0;
 
-            process.StandardInput.WriteLine(input ?? string.Empty);
-            process.StandardInput.Close();
-
-            var outDoneSignal = new ManualResetEvent(false);
-            var errDoneSignal = new ManualResetEvent(false);
-            process.OutputDataReceived += (sender, e) => AppendLineOrSignal(e.Data, sbOut, sbMerged, outDoneSignal);
-            process.ErrorDataReceived += (sender, e) => AppendLineOrSignal(e.Data, sbErr, sbMerged, errDoneSignal);
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
-
-            var exitedNotKilled = WaitForExit(process, timeout);
-            outcome = exitedNotKilled && process.ExitCode == 0
+            outcome = completedSuccessfully
                 ? TestOutcome.Passed
                 : skipOnFailure
                     ? TestOutcome.Skipped
                     : TestOutcome.Failed;
 
-            if (exitedNotKilled)
-            {
-                outDoneSignal.WaitOne();
-                errDoneSignal.WaitOne();
-            }
-
-            var exitCode = exitedNotKilled
-                ? process.ExitCode.ToString()
+            var exitCodeText = completed
+                ? exitCode.ToString()
                 : $"(did not exit; timedout; killed)";
-            var exitTime = exitedNotKilled
-                ? process.ExitTime.ToString()
-                : DateTime.UtcNow.ToString();
+            var exitTime = DateTime.Now.ToString();
 
-            errorMessage = $"EXIT CODE: {exitCode}";
+            errorMessage = $"EXIT CODE: {exitCodeText}";
             additional = additional
                 + $" STOP TIME: {exitTime}"
-                + $" EXIT CODE: {exitCode}";
-                
-            // Check regex expectations if they exist
-            if (outcome == TestOutcome.Passed && (!string.IsNullOrEmpty(expectRegex) || !string.IsNullOrEmpty(notExpectRegex))) {
-                outcome = CheckExpectRegExPatterns(sbMerged.ToString(), expectRegex, notExpectRegex);
-            }
+                + $" EXIT CODE: {exitCodeText}";
+
+            var checkRegExExpectations = outcome == TestOutcome.Passed && (!string.IsNullOrEmpty(expectRegex) || !string.IsNullOrEmpty(notExpectRegex));
+            if (checkRegExExpectations) outcome = CheckExpectRegExPatterns(merged, expectRegex, notExpectRegex);
         }
         catch (Exception ex)
         {
@@ -234,36 +209,10 @@ public class YamlTestCaseRunner
             debugTrace = ex.ToString();
             stackTrace = $"{stackTrace}\n{ex.StackTrace}";
         }
-        finally
-        {
-            filesToDelete?.ForEach(x => File.Delete(x));
-        }
-
-        stdOut = sbOut.ToString();
-        stdErr = sbErr.ToString();
-
+            
         return outcome == TestOutcome.Passed && !string.IsNullOrEmpty(expectGpt)
-            ? CheckExpectGptOutcome(sbMerged.ToString(), expectGpt, workingDirectory, ref stdOut, ref stdErr)
+            ? CheckExpectGptOutcome(merged, expectGpt, workingDirectory, ref stdOut, ref stdErr)
             : outcome;
-    }
-
-    private static List<KeyValuePair<string, string>> ConvertValuesToAtArgs(List<KeyValuePair<string, string>> kvs, ref List<string>? files)
-    {
-        var newList = new List<KeyValuePair<string, string>>();
-        foreach (var item in kvs)
-        {
-            if (item.Value.Count(x => x == '\t' || x == '\r' || x == '\n' || x == '\f' || x == '\"') > 0)
-            {
-                string file = WriteMultilineTsvToTempFile(item.Value, ref files);
-                newList.Add(new KeyValuePair<string, string>(item.Key, $"@{file}"));
-            }
-            else
-            {
-                newList.Add(item);
-            }
-        }
-
-        return newList;
     }
 
     private static List<KeyValuePair<string, string>> KeyValuePairsFromJson(string? json, bool allowSimpleString)
@@ -347,7 +296,7 @@ public class YamlTestCaseRunner
                     continue;
                 }
 
-                var newValue = WriteTextToTempFile(value.Replace('\f', '\n'))!;
+                var newValue = FileHelpers.WriteTextToTempFile(value.Replace('\f', '\n'))!;
                 files.Add(newValue);
 
                 newValues.Add($"@{newValue}");
@@ -357,29 +306,9 @@ public class YamlTestCaseRunner
         }
 
         var newText = string.Join("\n", newLines);
-        var file = WriteTextToTempFile(newText);
+        var file = FileHelpers.WriteTextToTempFile(newText);
         files.Add(file!);
         return file!;
-    }
-
-    private static string? WriteTextToTempFile(string? text, string? extension = null)
-    {
-        if (!string.IsNullOrEmpty(text))
-        {
-            var tempFile = Path.GetTempFileName();
-            if (!string.IsNullOrEmpty(extension))
-            {
-                tempFile = $"{tempFile}.{extension}";
-            }
-
-            File.WriteAllText(tempFile, text);
-
-            var content = File.ReadAllText(tempFile).Replace("\n", "\\n");
-            Logger.Log($"FILE: {tempFile}: '{content}'");
-
-            return tempFile;
-        }
-        return null;
     }
 
     private static string FindCacheCli(string cli)
@@ -531,163 +460,167 @@ public class YamlTestCaseRunner
         }
     }
 
-    static void UpdatePathEnvironment(ProcessStartInfo startInfo)
-    {
-        var cli = new FileInfo(startInfo.FileName);
-        if (cli.Exists)
-        {
-            var dll = FindCliDllOrNull(cli.FullName, cli.Name.Replace(".exe", "") + ".dll");
-            if (dll != null)
-            {
-                var cliPath = cli.Directory!.FullName;
-                var dllPath = new FileInfo(dll).Directory!.FullName;
+    // static Dictionary<string, string> GetUpdatedEnvironmentPathInfo(string fileName)
+    // {
+    //     var env = new Dictionary<string, string>();
 
-                var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-                var pathVar = isWindows ? "PATH" : "LD_LIBRARY_PATH";
-                var path = Environment.GetEnvironmentVariable(pathVar) ?? "";
+    //     var cli = new FileInfo(fileName);
+    //     if (cli.Exists)
+    //     {
+    //         var dll = FindCliDllOrNull(cli.FullName, cli.Name.Replace(".exe", "") + ".dll");
+    //         if (dll != null)
+    //         {
+    //             var cliPath = cli.Directory!.FullName;
+    //             var dllPath = new FileInfo(dll).Directory!.FullName;
 
-                var locations = GetPossibleRunTimeLocations();
-                path = AddToPath(path, cliPath, locations);
-                path = AddToPath(path, dllPath, locations);
+    //             var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+    //             var pathVar = isWindows ? "PATH" : "LD_LIBRARY_PATH";
+    //             var path = Environment.GetEnvironmentVariable(pathVar) ?? "";
 
-                startInfo.Environment.Add(pathVar, path);
-                Logger.LogInfo($"UpdatePathEnvironment: {pathVar}={path}");
-            }
-        }
-    }
+    //             var locations = GetPossibleRunTimeLocations();
+    //             path = AddToPath(path, cliPath, locations);
+    //             path = AddToPath(path, dllPath, locations);
 
-    private static string AddToPath(string path, string value, IEnumerable<string> locations)
-    {
-        foreach (var location in locations)
-        {
-            var check = Path.Combine(value, location);
-            if (Directory.Exists(check))
-            {
-                path = AddToPath(path, check);
-            }
-        }
-        return path;
-    }
+    //             Logger.LogInfo($"GetUpdatedEnvironmentPathInfo: {pathVar}={path}");
+    //             env[pathVar] = path;
+    //         }
+    //     }
 
-    private static string AddToPath(string path, string value)
-    {
-        var paths = path.Split(Path.PathSeparator);
-        return !paths.Contains(value)
-            ? $"{value}{Path.PathSeparator}{path}".Trim(Path.PathSeparator)
-            : path;
-    }
+    //     return env;
+    // }
 
-    private static bool WaitForExit(Process process, int timeout)
-    {
-        var completed = process.WaitForExit(timeout);
-        if (!completed)
-        {
-            var name = process.ProcessName;
-            var message = $"Timedout! Stopping process ({name})...";
-            Logger.LogWarning(message);
+    // private static string AddToPath(string path, string value, IEnumerable<string> locations)
+    // {
+    //     foreach (var location in locations)
+    //     {
+    //         var check = Path.Combine(value, location);
+    //         if (Directory.Exists(check))
+    //         {
+    //             path = AddToPath(path, check);
+    //         }
+    //     }
+    //     return path;
+    // }
 
-            var softKillFunc = new Func<bool>(() => {
-                var message = $"Timedout! Sending <ctrl-c> ...";
-                Logger.LogWarning(message);
+    // private static string AddToPath(string path, string value)
+    // {
+    //     var paths = path.Split(Path.PathSeparator);
+    //     return !paths.Contains(value)
+    //         ? $"{value}{Path.PathSeparator}{path}".Trim(Path.PathSeparator)
+    //         : path;
+    // }
 
-                process.StandardInput.WriteLine("\x3"); // try ctrl-c first
-                process.StandardInput.Close();
+    // private static bool WaitForExit(Process process, int timeout)
+    // {
+    //     var completed = process.WaitForExit(timeout);
+    //     if (!completed)
+    //     {
+    //         var name = process.ProcessName;
+    //         var message = $"Timedout! Stopping process ({name})...";
+    //         Logger.LogWarning(message);
 
-                Logger.LogWarning($"{message} Sent!");
+    //         var softKillFunc = new Func<bool>(() => {
+    //             var message = $"Timedout! Sending <ctrl-c> ...";
+    //             Logger.LogWarning(message);
 
-                return process.WaitForExit(200);
-            });
-            completed = TryCatchHelpers.TryCatchNoThrow<bool>(softKillFunc, false, out var _);
+    //             process.StandardInput.WriteLine("\x3"); // try ctrl-c first
+    //             process.StandardInput.Close();
 
-            message = "Timedout! Sent <ctrl-c>" + (completed ? "; stopped" : "; trying Kill()");
-            Logger.LogWarning(message);
+    //             Logger.LogWarning($"{message} Sent!");
 
-            if (!completed)
-            {
-                message = $"Timedout! Killing process ({name})...";
-                Logger.LogWarning(message);
+    //             return process.WaitForExit(200);
+    //         });
+    //         completed = TryCatchHelpers.TryCatchNoThrow<bool>(softKillFunc, false, out var _);
 
-                process.Kill();
+    //         message = "Timedout! Sent <ctrl-c>" + (completed ? "; stopped" : "; trying Kill()");
+    //         Logger.LogWarning(message);
 
-                message = process.HasExited ? $"{message} Done." : $"{message} Failed!";
-                Logger.LogWarning(message);
-            }
-        }
+    //         if (!completed)
+    //         {
+    //             message = $"Timedout! Killing process ({name})...";
+    //             Logger.LogWarning(message);
 
-        return completed;
-    }
+    //             process.Kill();
 
-    private static void GetStartInfoArgs(out string startProcess, out string startArgs, string? command, string? script, bool scriptIsBash, List<KeyValuePair<string, string>> kvs)
-    {
-        var isCommand = !string.IsNullOrEmpty(command) || string.IsNullOrEmpty(script);
-        if (isCommand)
-        {
-            command = $"{command} {GetKeyValueArgs(kvs)}";
+    //             message = process.HasExited ? $"{message} Done." : $"{message} Failed!";
+    //             Logger.LogWarning(message);
+    //         }
+    //     }
+
+    //     return completed;
+    // }
+
+    // private static void GetStartInfoArgs(out string startProcess, out string startArgs, string? command, string? script, bool scriptIsBash, List<KeyValuePair<string, string>> kvs)
+    // {
+    //     var isCommand = !string.IsNullOrEmpty(command) || string.IsNullOrEmpty(script);
+    //     if (isCommand)
+    //     {
+    //         command = $"{command} {GetKeyValueArgs(kvs)}";
             
-            if (scriptIsBash)
-            {
-                startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-                    ? EnsureFindCacheGetBashExe()
-                    : "/bin/bash";
-                startArgs = $"-lc \"{EscapeForBash(command)}\"";
-            }
-            else
-            {
-                startProcess = "cmd";
-                startArgs = $"/c \"{EscapeForCmd(command)}\"";
-            }
-        }
-        else if (scriptIsBash)
-        {
-            startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-                ? EnsureFindCacheGetBashExe()
-                : "/bin/bash";
-            startArgs = $"-lc \"{EscapeForBash(script!)} {EscapeForBash(GetKeyValueArgs(kvs))}\"";
-        }
-        else
-        {
-            startProcess = "cmd";
-            startArgs = $"/c \"{script} {EscapeForCmd(GetKeyValueArgs(kvs))}\"";
-        }
-    }
+    //         if (scriptIsBash)
+    //         {
+    //             startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+    //                 ? EnsureFindCacheGetBashExe()
+    //                 : "/bin/bash";
+    //             startArgs = $"-lc \"{EscapeForBash(command)}\"";
+    //         }
+    //         else
+    //         {
+    //             startProcess = "cmd";
+    //             startArgs = $"/c \"{EscapeForCmd(command)}\"";
+    //         }
+    //     }
+    //     else if (scriptIsBash)
+    //     {
+    //         startProcess = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
+    //             ? EnsureFindCacheGetBashExe()
+    //             : "/bin/bash";
+    //         startArgs = $"-lc \"{EscapeForBash(script!)} {EscapeForBash(GetKeyValueArgs(kvs))}\"";
+    //     }
+    //     else
+    //     {
+    //         startProcess = "cmd";
+    //         startArgs = $"/c \"{script} {EscapeForCmd(GetKeyValueArgs(kvs))}\"";
+    //     }
+    // }
     
-    private static string EnsureFindCacheGetBashExe()
-    {
-        var gitBash = FindCacheGitBashExe();
-        if (gitBash == null || gitBash == "bash.exe")
-        {
-            throw new Exception("Could not find Git for Windows bash.exe in PATH!");
-        }
-        return gitBash;
-    }
+    // private static string EnsureFindCacheGetBashExe()
+    // {
+    //     var gitBash = FindCacheGitBashExe();
+    //     if (gitBash == null || gitBash == "bash.exe")
+    //     {
+    //         throw new Exception("Could not find Git for Windows bash.exe in PATH!");
+    //     }
+    //     return gitBash;
+    // }
 
-    private static string FindCacheGitBashExe()
-    {
-        var bashExe = "bash.exe";
-        if (_cliCache.ContainsKey(bashExe))
-        {
-            return _cliCache[bashExe];
-        }
+    // private static string FindCacheGitBashExe()
+    // {
+    //     var bashExe = "bash.exe";
+    //     if (_cliCache.ContainsKey(bashExe))
+    //     {
+    //         return _cliCache[bashExe];
+    //     }
 
-        var found = FindGitBashExe();
-        _cliCache[bashExe] = found;
+    //     var found = FindGitBashExe();
+    //     _cliCache[bashExe] = found;
 
-        return found;
-    }
+    //     return found;
+    // }
 
-    private static string FindGitBashExe()
-    {
-        var found = FileHelpers.FindFilesInOsPath("bash.exe");
-        return found.Where(x => x.ToLower().Contains("git")).FirstOrDefault() ?? "bash.exe";
-    }
+    // private static string FindGitBashExe()
+    // {
+    //     var found = FileHelpers.FindFilesInOsPath("bash.exe");
+    //     return found.Where(x => x.ToLower().Contains("git")).FirstOrDefault() ?? "bash.exe";
+    // }
 
-    private static string GetAtArgs(string? expectRegex, string? notExpectRegex)
-    {
-        var atArgs = $"";
-        if (!string.IsNullOrEmpty(expectRegex)) atArgs += $" --expect @{expectRegex}";
-        if (!string.IsNullOrEmpty(notExpectRegex)) atArgs += $" --not-expect @{notExpectRegex}";
-        return atArgs.TrimStart(' ');
-    }
+    // private static string GetAtArgs(string? expectRegex, string? notExpectRegex)
+    // {
+    //     var atArgs = $"";
+    //     if (!string.IsNullOrEmpty(expectRegex)) atArgs += $" --expect @{expectRegex}";
+    //     if (!string.IsNullOrEmpty(notExpectRegex)) atArgs += $" --not-expect @{notExpectRegex}";
+    //     return atArgs.TrimStart(' ');
+    // }
 
     private static string GetKeyValueArgs(List<KeyValuePair<string, string>> kvs)
     {
@@ -747,32 +680,32 @@ public class YamlTestCaseRunner
         return result;
     }
 
-    private static string ExtraDebugInfo()
-    {
-        var sb = new StringBuilder();
+    // private static string ExtraDebugInfo()
+    // {
+    //     var sb = new StringBuilder();
 
-        var cwd = new DirectoryInfo(Directory.GetCurrentDirectory());
-        sb.AppendLine($"CURRENT DIRECTORY: {cwd.FullName}");
+    //     var cwd = new DirectoryInfo(Directory.GetCurrentDirectory());
+    //     sb.AppendLine($"CURRENT DIRECTORY: {cwd.FullName}");
 
-        var files = cwd.GetFiles("*", SearchOption.AllDirectories);
-        foreach (var file in files)
-        {
-            sb.AppendLine($"{file.Length,10}   {file.CreationTime.Date:MM/dd/yyyy}   {file.CreationTime:hh:mm:ss tt}   {file.FullName}");
-        }
+    //     var files = cwd.GetFiles("*", SearchOption.AllDirectories);
+    //     foreach (var file in files)
+    //     {
+    //         sb.AppendLine($"{file.Length,10}   {file.CreationTime.Date:MM/dd/yyyy}   {file.CreationTime:hh:mm:ss tt}   {file.FullName}");
+    //     }
 
-        var variables = Environment.GetEnvironmentVariables();
-        var keys = new List<string>(variables.Count);
-        foreach (var key in variables.Keys) keys.Add((key as string)!);
+    //     var variables = Environment.GetEnvironmentVariables();
+    //     var keys = new List<string>(variables.Count);
+    //     foreach (var key in variables.Keys) keys.Add((key as string)!);
 
-        keys.Sort();
-        foreach (var key in keys)
-        {
-            var value = variables[key] as string;
-            sb.AppendLine($"{key,-20}  {value}");
-        }
+    //     keys.Sort();
+    //     foreach (var key in keys)
+    //     {
+    //         var value = variables[key] as string;
+    //         sb.AppendLine($"{key,-20}  {value}");
+    //     }
 
-        return sb.ToString();
-    }
+    //     return sb.ToString();
+    // }
 
     private static TestOutcome CheckExpectGptOutcome(string output, string expectGpt, string workingDirectory, ref string stdOut, ref string stdErr)
     {
@@ -789,11 +722,10 @@ public class YamlTestCaseRunner
     {
         Logger.Log($"ExpectGptOutcome: Checking for {expectGpt} in '{output}'");
 
-        var outcome = TestOutcome.None;
-
-        var sbOut = new StringBuilder();
-        var sbErr = new StringBuilder();
-        var sbMerged = new StringBuilder();
+        TestOutcome outcome;
+        gptStdOut = string.Empty;
+        gptStdErr = string.Empty;
+        gptMerged = string.Empty;
 
         var question = new StringBuilder();
         question.AppendLine($"Here's the console output:\n\n{output}\n");
@@ -802,49 +734,35 @@ public class YamlTestCaseRunner
         question.AppendLine("You **must always** answer \"FAIL\" if the expectation is not met.");
         question.AppendLine("You **must only** answer \"PASS\" with no additional text if the expectation is met.");
         question.AppendLine("If you answer \"FAIL\", you **must** provide additional text to explain why the expectation was not met (without using the word \"PASS\" as we will interpret that as a \"PASS\").");
-        var questionTempFile = WriteTextToTempFile(question.ToString())!;
+        var questionTempFile = FileHelpers.WriteTextToTempFile(question.ToString())!;
 
         try
         {
             var startProcess = FindCacheCli("cycod");
-            var startArgs = $"--question @{questionTempFile}";
-            var startInfo = new ProcessStartInfo(startProcess, startArgs)
-            {
-                UseShellExecute = false,
-                RedirectStandardInput = true,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                WorkingDirectory = workingDirectory
-            };
+            var startArgs = $"--input @{questionTempFile} --interactive false --quiet";
+            var commandLine = $"{startProcess} {startArgs}";
 
-            Logger.Log($"ExpectGptOutcome: Process.Start('{startProcess} {startArgs}')");
-            var process = Process.Start(startInfo);
-            if (process == null) throw new Exception("Process.Start() returned null!");
-            process.StandardInput.Close();
+            Logger.Log($"ExpectGptOutcome: ShellCommandBuilder executing '{commandLine}'");
+            var result = new RunnableProcessBuilder()
+                .WithCommandLine(commandLine)
+                .WithWorkingDirectory(workingDirectory)
+                .WithTimeout(60000)
+                .Run();
 
-            var outDoneSignal = new ManualResetEvent(false);
-            var errDoneSignal = new ManualResetEvent(false);
-            process.OutputDataReceived += (sender, e) => AppendLineOrSignal(e.Data, sbOut, sbMerged, outDoneSignal);
-            process.ErrorDataReceived += (sender, e) => AppendLineOrSignal(e.Data, sbErr, sbMerged, errDoneSignal);
-            process.BeginOutputReadLine();
-            process.BeginErrorReadLine();
+            gptStdOut = result.StandardOutput;
+            gptStdErr = result.StandardError;
+            gptMerged = result.MergedOutput;
 
-            var exitedNotKilled = WaitForExit(process, 60000);
-            if (exitedNotKilled)
-            {
-                outDoneSignal.WaitOne();
-                errDoneSignal.WaitOne();
-            }
-
-            var passed = exitedNotKilled && process.ExitCode == 0;
-            outcome = passed ? TestOutcome.Passed : TestOutcome.Failed;
+            var exitedNotKilled = result.CompletionState == ProcessCompletionState.Completed;
+            var exitedNormally = exitedNotKilled && result.ExitCode == 0;
+            outcome = exitedNormally ? TestOutcome.Passed : TestOutcome.Failed;
 
             var timedoutOrKilled = !exitedNotKilled;
             if (timedoutOrKilled)
             {
                 var message = "ExpectGptOutcome: WARNING: Timedout or killed!";
-                sbErr.AppendLine(message);
-                sbMerged.AppendLine(message);
+                gptStdErr += $"\n{message}\n";
+                gptMerged += $"\n{message}\n";
                 Logger.LogWarning(message);
             }
         }
@@ -853,16 +771,12 @@ public class YamlTestCaseRunner
             outcome = TestOutcome.Failed;
 
             var exception = $"ExpectGptOutcome: EXCEPTION: {ex.Message}";
-            sbErr.AppendLine(exception);
-            sbMerged.AppendLine(exception);
+            gptStdErr += $"\n{exception}\n";
+            gptMerged += $"\n{exception}\n";
             Logger.Log(exception);
         }
 
         File.Delete(questionTempFile);
-        gptStdOut = sbOut.ToString();
-        gptStdErr = sbErr.ToString();
-        gptMerged = sbMerged.ToString();
-
         if (outcome == TestOutcome.Passed)
         {
             Logger.Log($"ExpectGptOutcome: Checking for 'PASS' in '{gptMerged}'");
@@ -876,47 +790,8 @@ public class YamlTestCaseRunner
         return outcome;
     }
 
-    private static void AppendLineOrSignal(string? text, StringBuilder sb1, StringBuilder sb2, ManualResetEvent signal)
-    {
-        if (text != null)
-        {
-            sb1.AppendLine(text);
-            sb2.AppendLine(text);
-        }
-        else
-        {
-            signal.Set();
-        }
-    }
-
     #endregion
 
-    // Helper method to escape strings for bash
-    private static string EscapeForBash(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        
-        // Replace single quotes with '\'' (close quote, escaped quote, open quote)
-        return text.Replace("'", "'\\''");
-    }
-    
-    // Helper method to escape strings for cmd
-    private static string EscapeForCmd(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return text;
-        
-        // Escape special characters in cmd
-        return text
-            .Replace("^", "^^")
-            .Replace("&", "^&")
-            .Replace("|", "^|")
-            .Replace("<", "^<")
-            .Replace(">", "^>")
-            .Replace("(", "^(")
-            .Replace(")", "^)");
-    }
-    
-    // New method to check regex patterns
     private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)
     {
         // Check for expected regex patterns

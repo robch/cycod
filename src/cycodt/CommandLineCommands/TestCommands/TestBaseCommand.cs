@@ -34,23 +34,24 @@ abstract class TestBaseCommand : Command
 
         var filtered = YamlTestCaseFilter.FilterTestCases(tests, filters).ToList();
 
-        if (tests.Count() == 0)
-        {
-            throw new Exception(!atLeastOneFileSpecified
-                ? "No tests found"
-                : files.Count() == 1
-                    ? $"No tests found in {files.Count()} file"
-                    : $"No tests found in {files.Count()} files");
-        }
-        
-        if (filtered.Count() == 0)
-        {
-            Console.WriteLine(atLeastOneFileSpecified
-                ? $"Found {tests.Count()} tests in {files.Count()} files\n"
-                : $"Found {tests.Count()} tests\n");
-
-            throw new Exception("No tests matching criteria.");
-        }
+        // if (tests.Count() == 0)
+        // {
+        //     var message = !atLeastOneFileSpecified
+        //         ? "No tests found"
+        //         : files.Count() == 1
+        //             ? $"No tests found in {files.Count()} file"
+        //             : $"No tests found in {files.Count()} files";
+        //     ConsoleHelpers.WriteWarning(message);
+        //     ConsoleHelpers.WriteLine(overrideQuiet: true);
+        // }
+        // else if (filtered.Count() == 0)
+        // {
+        //     var message = atLeastOneFileSpecified
+        //         ? $"Found {tests.Count()} tests in {files.Count()} files\n"
+        //         : $"Found {tests.Count()} tests\n";
+        //     ConsoleHelpers.WriteWarning($"No tests matching criteria.\n{message}");
+        //     ConsoleHelpers.WriteLine(overrideQuiet: true);
+        // }
 
         return filtered;
     }

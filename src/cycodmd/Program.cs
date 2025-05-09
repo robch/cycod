@@ -349,17 +349,20 @@ class Program
             var script = command.ScriptToRun;
             var shell = command.Type switch
             {
-                RunCommand.ScriptType.Cmd => "cmd",
-                RunCommand.ScriptType.Bash => "bash",
-                RunCommand.ScriptType.PowerShell => "powershell",
-                _ => null
+                RunCommand.ScriptType.Cmd => ShellType.Cmd,
+                RunCommand.ScriptType.Bash => ShellType.Bash,
+                RunCommand.ScriptType.PowerShell => ShellType.PowerShell,
+                _ => OS.IsWindows() ? ShellType.Cmd : ShellType.Bash,
             };
 
-            var (output, exitCode) = await ProcessHelpers.RunShellCommandAsync(script, shell);
-            var backticks = new string('`', MarkdownHelpers.GetCodeBlockBacktickCharCountRequired(output));
+            var result = await ProcessHelpers.RunShellScriptAsync(shell, script);
+            var output = result.MergedOutput;
+            var exitCode = result.ExitCode;
 
             var isMultiLine = script.Contains("\n");
             var header = isMultiLine ? "## Run\n\n" : $"## `{script}`\n\n";
+
+            var backticks = new string('`', MarkdownHelpers.GetCodeBlockBacktickCharCountRequired(output));
             var scriptPart = isMultiLine ? $"Run:\n{backticks}\n{script.TrimEnd()}\n{backticks}\n\n" : string.Empty;
             var outputPart = $"Output:\n{backticks}\n{output.TrimEnd()}\n{backticks}\n\n";
             var exitCodePart = exitCode != 0 ? $"Exit code: {exitCode}\n\n" : string.Empty;

@@ -1,16 +1,60 @@
-using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 using System.Text;
-using System.Threading;
 
 public static class ProcessHelpers
 {
-    public static async Task<(string, int)> RunShellCommandAsync(string script, string? shell, int timeout = int.MaxValue)
+    public static ShellCommandResult RunShellScript(ShellType shellType, string script, string? startArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
-        GetShellProcessNameAndArgs(script, shell, out var processName, out var arguments);
-        return await RunProcessAsync(processName, arguments, timeout);
+        return RunShellScriptAsync(shellType, script, startArgs, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
     }
+
+    public static async Task<ShellCommandResult> RunShellScriptAsync(ShellType shellType, string script, string? startArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
+    {
+        var filesToDelete = new List<string>();
+
+        try
+        {
+            var useCmd = shellType == ShellType.Cmd;
+            var scriptFileName = FileHelpers.WriteTextToTempFile(script, useCmd ? "cmd" : null);
+            filesToDelete.Add(scriptFileName!);
+
+            var commandToExecute = $"{script} {startArgs}";
+            ConsoleHelpers.WriteDebugLine($"ShellCommandBuilder executing: '{commandToExecute}'");
+
+            var shellCommandBuilder = new ShellCommandBuilder()
+                .WithShellType(shellType)
+                .WithCommand(commandToExecute)
+                .WithWorkingDirectory(workingDirectory)
+                .WithEnvironmentVariables(envVars)
+                .WithStandardInput(input)
+                .WithTimeout(timeout);
+
+            return await shellCommandBuilder.RunAsync();
+        }
+        finally
+        {
+            filesToDelete?.ForEach(x => File.Delete(x));
+        }
+    }
+
+    public static ProcessResult RunProcess(string command, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
+    {
+        return RunProcessAsync(command, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
+    }
+
+    public static async Task<ProcessResult> RunProcessAsync(string command, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
+    {
+        var processBuilder = new RunnableProcessBuilder()
+            .WithCommandLine(command!)
+            .WithWorkingDirectory(workingDirectory)
+            .WithEnvironmentVariables(envVars)
+            .WithStandardInput(input)
+            .WithTimeout(timeout);
+
+        var processResult = await processBuilder.RunAsync();
+        return processResult;
+    }
+
 
     public static async Task<(string, int)> RunProcessAsync(string processName, string arguments, int timeout = int.MaxValue)
     {

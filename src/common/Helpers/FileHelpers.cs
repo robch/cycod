@@ -296,6 +296,22 @@ public class FileHelpers
         File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
     }
 
+    public static string? WriteTextToTempFile(string? text, string? extension = null)
+    {
+        if (!string.IsNullOrEmpty(text))
+        {
+            var tempFile = Path.GetTempFileName();
+            if (!string.IsNullOrEmpty(extension))
+            {
+                tempFile = $"{tempFile}.{extension}";
+            }
+
+            File.WriteAllText(tempFile, text);
+            return tempFile;
+        }
+        return null;
+    }
+
     public static string GetFriendlyLastModified(FileInfo fileInfo)
     {
         var modified = fileInfo.LastWriteTime;
