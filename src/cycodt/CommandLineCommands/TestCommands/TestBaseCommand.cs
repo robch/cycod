@@ -1,19 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 abstract class TestBaseCommand : Command
 {
     public TestBaseCommand()
     {
-        Files = new List<string>();
+        Globs = new List<string>();
+        ExcludeGlobs = new List<string>();
+        ExcludeFileNamePatternList = new List<Regex>();
         Tests = new List<string>();
         Contains = new List<string>();
         Remove = new List<string>();
         IncludeOptionalCategories = new List<string>();
     }
 
-    public List<string> Files { get; set; }
+    public List<string> Globs;
+    public List<string> ExcludeGlobs;
+    public List<Regex> ExcludeFileNamePatternList;
+
     public List<string> Tests { get; set; }
     public List<string> Contains { get; set; }
     public List<string> Remove { get; set; }
@@ -25,6 +31,19 @@ abstract class TestBaseCommand : Command
         return false;
     }
 
+    override public Command Validate()
+    {
+        var ignoreFile = FileHelpers.FindFileSearchParents(".cycodtignore");
+        if (ignoreFile != null)
+        {
+            FileHelpers.ReadIgnoreFile(ignoreFile, out var excludeGlobs, out var excludeFileNamePatternList);
+            ExcludeGlobs.AddRange(excludeGlobs);
+            ExcludeFileNamePatternList.AddRange(excludeFileNamePatternList);
+        }
+
+        return this;
+    }
+
     protected IList<TestCase> FindAndFilterTests()
     {
         var files = FindTestFiles();
@@ -33,7 +52,7 @@ abstract class TestBaseCommand : Command
         var atLeastOneFileSpecified = files.Any();
         var tests = atLeastOneFileSpecified
             ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("cycodt", file))
-            : YamlTestFramework.GetTestsFromDirectory("cycodt", new DirectoryInfo("."));
+            : Array.Empty<TestCase>();
 
         var withOrWithoutOptional = FilterOptionalTests(tests, IncludeOptionalCategories).ToList();
         var filtered = YamlTestCaseFilter.FilterTestCases(withOrWithoutOptional, filters).ToList();
@@ -43,11 +62,18 @@ abstract class TestBaseCommand : Command
 
     protected List<FileInfo> FindTestFiles()
     {
-        var files = new List<FileInfo>();
-        foreach (var pattern in Files)
+        if (Globs.Count == 0)
         {
-            AddFindFiles(files, pattern);
+            var directory = YamlTestConfigHelpers.GetTestDirectory();
+            var globPattern = PathHelpers.Combine(directory.FullName, "**", "*.yaml")!;
+            Globs.Add(globPattern);
         }
+
+        var files = FileHelpers
+            .FindMatchingFiles(Globs, ExcludeGlobs, ExcludeFileNamePatternList)
+            .Select(x => new FileInfo(x))
+            .ToList();
+
         return files;
     }
 
@@ -63,6 +89,7 @@ abstract class TestBaseCommand : Command
 
     protected static IList<FileInfo> FindFiles(string pattern)
     {
+        ConsoleHelpers.WriteDebugLine($"Finding files with pattern: {pattern}");
         var files = FileHelpers.FindFiles(Directory.GetCurrentDirectory(), pattern);
         return files.Select(x => new FileInfo(x)).ToList();
     }

@@ -1,0 +1,4 @@
+docs/ideas/**/*.yaml
+tests/cycodt-yaml/inception-layer-1/**
+cycodt-config.yaml
+cycodt-tags.yaml

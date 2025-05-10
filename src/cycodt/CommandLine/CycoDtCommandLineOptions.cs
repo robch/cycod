@@ -34,15 +34,23 @@ public class CycoDtCommandLineOptions : CommandLineOptions
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var filePattern = ValidateString(arg, max1Arg.FirstOrDefault(), "file pattern");
-            command.Files.Add(filePattern!);
+            command.Globs.Add(filePattern!);
             i += max1Arg.Count();
         }
         else if (arg == "--files")
         {
             var filePatterns = GetInputOptionArgs(i + 1, args);
             var validPatterns = ValidateStrings(arg, filePatterns, "file patterns");
-            command.Files.AddRange(validPatterns);
+            command.Globs.AddRange(validPatterns);
             i += filePatterns.Count();
+        }
+        else if (arg == "--exclude-files" || arg == "--exclude")
+        {
+            var patterns = GetInputOptionArgs(i + 1, args);
+            ValidateExcludeRegExAndGlobPatterns(arg, patterns, out var asRegExs, out var asGlobs);
+            command.ExcludeFileNamePatternList.AddRange(asRegExs);
+            command.ExcludeGlobs.AddRange(asGlobs);
+            i += patterns.Count();
         }
         else if (arg == "--test")
         {

@@ -580,6 +580,22 @@ public class CommandLineOptions
         }
     }
 
+    protected void ValidateExcludeRegExAndGlobPatterns(string arg, IEnumerable<string> patterns, out IEnumerable<Regex> asRegExs, out List<string> asGlobs)
+    {
+        if (patterns.Count() == 0)
+        {
+            throw new CommandLineException($"Missing patterns for {arg}");
+        }
+
+        var containsSlash = (string x) => x.Contains('/') || x.Contains('\\');
+        asRegExs = patterns
+            .Where(x => !containsSlash(x))
+            .Select(x => ValidateFilePatternToRegExPattern(arg, x));
+        asGlobs = patterns
+            .Where(x => containsSlash(x))
+            .ToList();
+    }
+
     protected Regex ValidateFilePatternToRegExPattern(string arg, string pattern)
     {
         if (string.IsNullOrEmpty(pattern))

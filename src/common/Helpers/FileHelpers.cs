@@ -168,14 +168,18 @@ public class FileHelpers
         excludeGlobs = new List<string>();
         excludeFileNamePatternList = new List<Regex>();
 
+        var fi = new FileInfo(ignoreFile);
+        if (!fi.Exists) return;
+
         var lines = ReadAllLines(ignoreFile);
         foreach (var line in lines)
         {
             var assumeIsGlob = line.Contains('/') || line.Contains('\\');
             if (assumeIsGlob)
             {
-                ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile; ignore glob: {line}");
-                excludeGlobs.Add(line);
+                var excludeGlob = PathHelpers.Combine(fi.DirectoryName!, line) ?? line;
+                ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile; ignore glob: {excludeGlob}");
+                excludeGlobs.Add(excludeGlob!);
             }
             else
             {
@@ -223,11 +227,16 @@ public class FileHelpers
 
     public static IEnumerable<string> FindMatchingFiles(
         List<string> globs,
-        List<string> excludeGlobs,
-        List<Regex> excludeFileNamePatternList,
-        List<Regex> includeFileContainsPatternList,
-        List<Regex> excludeFileContainsPatternList)
+        List<string>? excludeGlobs = null,
+        List<Regex>? excludeFileNamePatternList = null,
+        List<Regex>? includeFileContainsPatternList = null,
+        List<Regex>? excludeFileContainsPatternList = null)
     {
+        excludeGlobs ??= new List<string>();
+        excludeFileNamePatternList ??= new List<Regex>();
+        includeFileContainsPatternList ??= new List<Regex>();
+        excludeFileContainsPatternList ??= new List<Regex>();
+        
         var excludeFiles = new HashSet<string>(FilesFromGlobs(excludeGlobs));
         var files = FilesFromGlobs(globs)
             .Where(file => !excludeFiles.Contains(file))

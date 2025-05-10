@@ -2,19 +2,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class YamlTestFramework
 {
-    public static IEnumerable<TestCase> GetTestsFromDirectory(string source, DirectoryInfo directory)
-    {
-        Logger.Log($"YamlTestFramework.GetTestsFromDirectory('{source}', '{directory.FullName}'): ENTER");
-
-        directory = YamlTestConfigHelpers.GetTestDirectory(directory);
-
-        var files = FindFiles(directory);
-        var tests = files.SelectMany(file => GetTestsFromYaml(source, file));
-
-        Logger.Log($"YamlTestFramework.GetTestsFromDirectory('{source}', '{directory.FullName}'): EXIT");
-        return tests.ToList();
-    }
-
     public static IEnumerable<TestCase> GetTestsFromYaml(string source, FileInfo file)
     {
         Logger.Log($"YamlTestFramework.GetTestsFromYaml('{source}', '{file.FullName}'): ENTER");
