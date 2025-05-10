@@ -167,7 +167,7 @@ public class CommandLineOptions
 
         if (command != null && !command.IsEmpty())
         {
-            this.Commands.Add(command);
+            this.Commands.Add(command.Validate());
         }
     }
 

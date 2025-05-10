@@ -161,6 +161,30 @@ public class FileHelpers
             .TrimEnd(' ', '/', '\\');
     }
 
+    public static void ReadIgnoreFile(string ignoreFile, out List<string> excludeGlobs, out List<Regex> excludeFileNamePatternList)
+    {
+        ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile: ignoreFile: {ignoreFile}");
+
+        excludeGlobs = new List<string>();
+        excludeFileNamePatternList = new List<Regex>();
+
+        var lines = ReadAllLines(ignoreFile);
+        foreach (var line in lines)
+        {
+            var assumeIsGlob = line.Contains('/') || line.Contains('\\');
+            if (assumeIsGlob)
+            {
+                ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile; ignore glob: {line}");
+                excludeGlobs.Add(line);
+            }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile; exclude pattern: {line}");
+                excludeFileNamePatternList.Add(new Regex(line));
+            }
+        }
+    }
+
     public static IEnumerable<string> FilesFromGlobs(List<string> globs)
     {
         foreach (var glob in globs)
@@ -264,6 +288,15 @@ public class FileHelpers
             : File.ReadAllText(fileName, Encoding.UTF8);
 
         return content;
+    }
+
+    public static string[] ReadAllLines(string fileName)
+    {
+        var lines = ConsoleHelpers.IsStandardInputReference(fileName)
+            ? ConsoleHelpers.GetAllLinesFromStdin().ToArray()
+            : File.ReadAllLines(fileName, Encoding.UTF8);
+
+        return lines;
     }
 
     public static string WriteAllText(string fileName, string content, string? saveToFolderOnAccessDenied = null)
