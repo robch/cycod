@@ -535,13 +535,17 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.OutputTrajectory = outputTrajectory;
             i += max1Arg.Count();
         }
-        else if (arg == "--use-openai")
+        else if (arg == "--use-anthropic")
         {
-            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
         }
         else if (arg == "--use-azure-openai" || arg == "--use-azure")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");
+        }
+        else if (arg == "--use-openai")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
         }
         else if (arg == "--use-copilot") 
         {
