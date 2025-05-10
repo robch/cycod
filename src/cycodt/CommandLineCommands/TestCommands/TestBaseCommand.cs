@@ -10,12 +10,15 @@ abstract class TestBaseCommand : Command
         Tests = new List<string>();
         Contains = new List<string>();
         Remove = new List<string>();
+        IncludeOptionalCategories = new List<string>();
     }
 
     public List<string> Files { get; set; }
     public List<string> Tests { get; set; }
     public List<string> Contains { get; set; }
     public List<string> Remove { get; set; }
+
+    public List<string> IncludeOptionalCategories { get; set; }
 
     public override bool IsEmpty()
     {
@@ -32,26 +35,8 @@ abstract class TestBaseCommand : Command
             ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("cycodt", file))
             : YamlTestFramework.GetTestsFromDirectory("cycodt", new DirectoryInfo("."));
 
-        var filtered = YamlTestCaseFilter.FilterTestCases(tests, filters).ToList();
-
-        // if (tests.Count() == 0)
-        // {
-        //     var message = !atLeastOneFileSpecified
-        //         ? "No tests found"
-        //         : files.Count() == 1
-        //             ? $"No tests found in {files.Count()} file"
-        //             : $"No tests found in {files.Count()} files";
-        //     ConsoleHelpers.WriteWarning(message);
-        //     ConsoleHelpers.WriteLine(overrideQuiet: true);
-        // }
-        // else if (filtered.Count() == 0)
-        // {
-        //     var message = atLeastOneFileSpecified
-        //         ? $"Found {tests.Count()} tests in {files.Count()} files\n"
-        //         : $"Found {tests.Count()} tests\n";
-        //     ConsoleHelpers.WriteWarning($"No tests matching criteria.\n{message}");
-        //     ConsoleHelpers.WriteLine(overrideQuiet: true);
-        // }
+        var withOrWithoutOptional = FilterOptionalTests(tests, IncludeOptionalCategories).ToList();
+        var filtered = YamlTestCaseFilter.FilterTestCases(withOrWithoutOptional, filters).ToList();
 
         return filtered;
     }
@@ -98,5 +83,27 @@ abstract class TestBaseCommand : Command
         }
 
         return filters;
+    }
+
+    private IEnumerable<TestCase> FilterOptionalTests(IEnumerable<TestCase> tests, List<string> includeOptionalCategories)
+    {
+        var excludeAllOptional = includeOptionalCategories.Count == 0;
+        if (excludeAllOptional) return tests.Where(test => !HasOptionalTrait(test));
+
+        var includeAllOptional = includeOptionalCategories.Count == 1 && string.IsNullOrEmpty(includeOptionalCategories[0]);
+        if (includeAllOptional) return tests;
+
+        return tests.Where(test => !HasOptionalTrait(test) || HasMatchingOptionalCategory(test, includeOptionalCategories));
+    }
+
+    private bool HasOptionalTrait(TestCase test)
+    {
+        return test.Traits.Any(t => t.Name == "optional");
+    }
+
+    private bool HasMatchingOptionalCategory(TestCase test, List<string> categories)
+    {
+        var optionalTraits = test.Traits.Where(t => t.Name == "optional").Select(t => t.Value);
+        return optionalTraits.Any(value => categories.Contains(value));
     }
 }

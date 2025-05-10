@@ -72,6 +72,15 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             command.Remove.AddRange(validRemove);
             i += removePatterns.Count();
         }
+        else if (arg == "--include-optional")
+        {
+            var optionalCategories = GetInputOptionArgs(i + 1, args);
+            var validCategories = optionalCategories.Any()
+                ? ValidateStrings(arg, optionalCategories, "optional categories")
+                : new List<string> { string.Empty };
+            command.IncludeOptionalCategories.AddRange(validCategories);
+            i += optionalCategories.Count();
+        }
         else if (command is TestRunCommand runCommand && arg == "--output-file")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
