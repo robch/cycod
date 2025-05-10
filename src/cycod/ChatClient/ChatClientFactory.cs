@@ -20,7 +20,7 @@ public static class ChatClientFactory
         {
             ModelId = model,
             ToolMode = ChatToolMode.Auto,
-            MaxOutputTokens = 80000
+            MaxOutputTokens = 4000
         };
         
         ConsoleHelpers.WriteDebugLine("Using Anthropic API key for authentication");
