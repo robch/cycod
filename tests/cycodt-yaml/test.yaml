@@ -3,9 +3,9 @@
   command: cycod version
 
 - name: cycod hi
-  command: cycod --input Hi
+  command: cycod --input Hi --use-anthropic
   expect: You should see a greeting from user, and then the assistant will respond with something (doesn't matter what it responds with, as long as it responds with something).
-  tags: [skipNeedsAI]
+  optional: needsAI
 
 - name: cmd
   script: echo hello
