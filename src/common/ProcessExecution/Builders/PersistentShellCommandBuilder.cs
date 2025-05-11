@@ -7,12 +7,6 @@ using System.Threading.Tasks;
 /// </summary>
 public class PersistentShellCommandBuilder
 {
-    private readonly RunnableShellProcess _shellProcess;
-    private string? _command;
-    private string? _workingDirectory;
-    private int? _timeoutMs;
-    private CancellationToken _cancellationToken = CancellationToken.None;
-    
     /// <summary>
     /// Creates a new PersistentShellCommandBuilder using the specified shell process.
     /// </summary>
@@ -147,4 +141,10 @@ public class PersistentShellCommandBuilder
                 return $"cd {directory}";
         }
     }
+
+    private readonly RunnableShellProcess _shellProcess;
+    private string? _command;
+    private string? _workingDirectory;
+    private int? _timeoutMs;
+    private CancellationToken _cancellationToken = CancellationToken.None;
 }

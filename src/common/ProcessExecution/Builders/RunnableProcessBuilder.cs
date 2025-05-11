@@ -9,25 +9,6 @@ using System.Threading.Tasks;
 /// </summary>
 public class RunnableProcessBuilder
 {
-    private string? _fileName;
-    private string? _arguments;
-    private string? _workingDirectory;
-    private readonly Dictionary<string, string> _environmentVariables = new Dictionary<string, string>();
-    private string? _standardInput;
-    private int _timeoutMs = 30000; // Default 30 seconds
-    private TimeoutStrategy _timeoutStrategy = TimeoutStrategy.Progressive;
-    private CancellationToken _cancellationToken = CancellationToken.None;
-    private bool _verboseLogging = false;
-
-    // Callbacks
-    private Action<string>? _stdoutCallback;
-    private Action<string>? _stderrCallback;
-    private Action<string>? _mergedCallback;
-    private Action<ProcessEvent, string>? _eventCallback;
-    private Action<int>? _startedCallback;
-    private Action? _timeoutCallback;
-    private Action<int>? _exitCallback;
-
     /// <summary>
     /// Creates a new RunnableProcessBuilder.
     /// </summary>
@@ -389,4 +370,22 @@ public class RunnableProcessBuilder
     {
         return Build().RunAsync();
     }
+
+    private string? _fileName;
+    private string? _arguments;
+    private string? _workingDirectory;
+    private readonly Dictionary<string, string> _environmentVariables = new Dictionary<string, string>();
+    private string? _standardInput;
+    private int _timeoutMs = 30000; // Default 30 seconds
+    private TimeoutStrategy _timeoutStrategy = TimeoutStrategy.Progressive;
+    private CancellationToken _cancellationToken = CancellationToken.None;
+    private bool _verboseLogging = false;
+
+    private Action<string>? _stdoutCallback;
+    private Action<string>? _stderrCallback;
+    private Action<string>? _mergedCallback;
+    private Action<ProcessEvent, string>? _eventCallback;
+    private Action<int>? _startedCallback;
+    private Action? _timeoutCallback;
+    private Action<int>? _exitCallback;
 }
