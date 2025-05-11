@@ -5,10 +5,6 @@ using System;
 /// </summary>
 public class RunnableShellProcessBuilder
 {
-    private readonly RunnableProcessBuilder _processBuilder = new RunnableProcessBuilder();
-    private ShellType _shellType = ProcessUtils.GetDefaultShellType();
-    private int _commandTimeoutMs = 30000; // Default 30 seconds for commands
-    
     /// <summary>
     /// Creates a new RunnableShellProcessBuilder.
     /// </summary>
@@ -237,4 +233,8 @@ public class RunnableShellProcessBuilder
         
         return shellProcess;
     }
+
+    private readonly RunnableProcessBuilder _processBuilder = new RunnableProcessBuilder();
+    private ShellType _shellType = ProcessUtils.GetDefaultShellType();
+    private int _commandTimeoutMs = 30000; // Default 30 seconds for commands
 }

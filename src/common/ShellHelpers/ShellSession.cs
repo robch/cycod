@@ -41,10 +41,8 @@ public abstract class ShellSession
     // Executes a command and waits for completion.
     public async Task<(string stdout, string stderr, string merged, int exitCode)> ExecuteCommandAsync(string command, int timeoutMs = 10000)
     {
-        if (command.Trim().ToLower() == "exit")
-        {
-            return ResetShell(allShells: true);
-        }
+        var isExit = command.Trim().ToLower() == "exit";
+        if (isExit) return ResetShell(allShells: true);
 
         EnsureProcess();
 

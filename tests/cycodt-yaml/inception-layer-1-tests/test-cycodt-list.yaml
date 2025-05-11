@@ -34,3 +34,17 @@ tests:
   expect-regex: |
     yaml.simple.simple.running simple process
     Found 1 test...
+
+- name: cycodt list all files, verbosely
+  command: cycodt list --files simple*.yaml --include-optional --verbose
+  expect-regex: |
+    ^.*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple.yaml\r?$\n
+    ^\r?$\n
+    ^  yaml.simple.simple.running simple process\r?$\n
+    ^  yaml.simple.simple.running simple script w/ regex expectation\r?$\n
+    ^  yaml.simple.simple.running bash script w/ regex expectation\r?$\n
+    ^\r?$\n
+    ^.*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple2.yaml\r?$\n
+    ^\r?$\n
+    ^  yaml.simple2.simple2.output into file\r?$\n
+    ^  yaml.simple2.simple2.checkout output into file\r?$\n

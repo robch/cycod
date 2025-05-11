@@ -11,21 +11,6 @@ using System.Threading.Tasks;
 /// </summary>
 public abstract class RunnableShellProcess
 {
-    // The underlying process for the shell
-    protected readonly RunnableProcess _shellProcess;
-    
-    // Marker for command completion
-    protected readonly string _marker;
-    
-    // Shell has been tested and verified
-    protected bool _shellVerified = false;
-    
-    // Lock for synchronization
-    protected readonly object _lock = new object();
-    
-    // Default timeout for shell commands
-    protected int _commandTimeoutMs = 30000; // Default 30 seconds for commands
-    
     /// <summary>
     /// Gets whether the shell process has exited.
     /// </summary>
@@ -35,15 +20,6 @@ public abstract class RunnableShellProcess
     /// Gets the shell type for this process.
     /// </summary>
     public abstract ShellType ShellType { get; }
-    
-    /// <summary>
-    /// Gets or sets the default timeout for shell commands in milliseconds.
-    /// </summary>
-    public int CommandTimeout
-    {
-        get => _commandTimeoutMs;
-        set => SetCommandTimeout(value);
-    }
     
     /// <summary>
     /// Sets the default timeout for shell commands.
@@ -534,4 +510,10 @@ public abstract class RunnableShellProcess
     {
         _shellProcess?.ForceShutdown();
     }
+
+    protected readonly RunnableProcess _shellProcess;
+    protected readonly string _marker;
+    protected bool _shellVerified = false;
+    protected readonly object _lock = new object();
+    protected int _commandTimeoutMs = 30000; // Default 30 seconds for commands
 }

@@ -12,48 +12,7 @@ using System.Threading.Tasks;
 /// </summary>
 public class RunnableProcess
 {
-    // Process and state management
-    private Process? _process;
-    private readonly object _lock = new object();
-    protected bool _hasStarted;
-    protected bool _hasExited;
-
-    // Output collection
-    protected readonly StringBuilder _stdoutBuffer = new StringBuilder();
-    protected readonly StringBuilder _stderrBuffer = new StringBuilder();
-    protected readonly StringBuilder _mergedBuffer = new StringBuilder();
-    protected readonly ManualResetEvent _stdoutDoneSignal = new ManualResetEvent(false);
-    protected readonly ManualResetEvent _stderrDoneSignal = new ManualResetEvent(false);
-
-    // Callbacks
-    protected Action<string>? _stdoutCallback;
-    protected Action<string>? _stderrCallback;
-    protected Action<string>? _mergedCallback;
-    protected Action<ProcessEvent, string>? _eventCallback;
-    protected Action<int>? _startedCallback;
-    protected Action? _timeoutCallback;
-    protected Action<int>? _exitCallback;
-
-    // Configuration
-    protected string _fileName = "";
-    protected string _arguments = "";
-    protected string? _workingDirectory;
-    protected readonly Dictionary<string, string> _environmentVariables = new Dictionary<string, string>();
-    protected string? _standardInput;
-    protected bool _standardInputClosed = false;
-    protected bool _verboseLogging = false;
-
-    // Timeout and cancellation
-    protected int _timeoutMs = 30000; // Default: 30 seconds
-    protected TimeoutStrategy _timeoutStrategy = TimeoutStrategy.Progressive;
-    protected CancellationToken _cancellationToken = CancellationToken.None;
-
     #region Properties
-
-    /// <summary>
-    /// Gets the underlying process object, if started.
-    /// </summary>
-    public Process? UnderlyingProcess => _process;
 
     /// <summary>
     /// Gets whether the process has been started.
@@ -64,25 +23,6 @@ public class RunnableProcess
     /// Gets whether the process has exited.
     /// </summary>
     public bool HasExited => _hasExited || (_process?.HasExited ?? false);
-
-    /// <summary>
-    /// Gets the process ID, if available.
-    /// </summary>
-    public int? ProcessId => _process?.Id;
-
-    /// <summary>
-    /// Gets the exit code of the process, if it has exited.
-    /// </summary>
-    public int? ExitCode => HasExited ? _process?.ExitCode : null;
-    
-    /// <summary>
-    /// Gets or sets the timeout in milliseconds.
-    /// </summary>
-    public int Timeout
-    {
-        get => _timeoutMs;
-        set => SetTimeout(value);
-    }
 
     #endregion
 
@@ -102,32 +42,6 @@ public class RunnableProcess
     /// <param name="arguments">The arguments to pass to the process.</param>
     public RunnableProcess(string fileName, string arguments)
     {
-        _fileName = fileName;
-        _arguments = arguments;
-    }
-
-    /// <summary>
-    /// Configures the process with the specified settings.
-    /// </summary>
-    /// <param name="fileName">The name of the file to run.</param>
-    /// <param name="arguments">The arguments to pass to the process.</param>
-    public void Configure(string fileName, string arguments)
-    {
-        ThrowIfStarted();
-        
-        _fileName = fileName;
-        _arguments = arguments;
-    }
-
-    /// <summary>
-    /// Configures the process with a command line that will be parsed.
-    /// </summary>
-    /// <param name="commandLine">The command line to parse.</param>
-    public void Configure(string commandLine)
-    {
-        ThrowIfStarted();
-        
-        ProcessUtils.SplitCommand(commandLine, out string fileName, out string arguments);
         _fileName = fileName;
         _arguments = arguments;
     }
@@ -855,6 +769,46 @@ public class RunnableProcess
             throw new InvalidOperationException("Cannot modify configuration after the process has been started.");
         }
     }
+
+    #endregion
+
+    #region private variables
+
+    // Process and state management
+    private Process? _process;
+    private readonly object _lock = new object();
+    protected bool _hasStarted;
+    protected bool _hasExited;
+
+    // Output collection
+    protected readonly StringBuilder _stdoutBuffer = new StringBuilder();
+    protected readonly StringBuilder _stderrBuffer = new StringBuilder();
+    protected readonly StringBuilder _mergedBuffer = new StringBuilder();
+    protected readonly ManualResetEvent _stdoutDoneSignal = new ManualResetEvent(false);
+    protected readonly ManualResetEvent _stderrDoneSignal = new ManualResetEvent(false);
+
+    // Callbacks
+    protected Action<string>? _stdoutCallback;
+    protected Action<string>? _stderrCallback;
+    protected Action<string>? _mergedCallback;
+    protected Action<ProcessEvent, string>? _eventCallback;
+    protected Action<int>? _startedCallback;
+    protected Action? _timeoutCallback;
+    protected Action<int>? _exitCallback;
+
+    // Configuration
+    protected string _fileName = "";
+    protected string _arguments = "";
+    protected string? _workingDirectory;
+    protected readonly Dictionary<string, string> _environmentVariables = new Dictionary<string, string>();
+    protected string? _standardInput;
+    protected bool _standardInputClosed = false;
+    protected bool _verboseLogging = false;
+
+    // Timeout and cancellation
+    protected int _timeoutMs = 30000; // Default: 30 seconds
+    protected TimeoutStrategy _timeoutStrategy = TimeoutStrategy.Progressive;
+    protected CancellationToken _cancellationToken = CancellationToken.None;
 
     #endregion
 }
