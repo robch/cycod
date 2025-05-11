@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class YamlTestCaseRunner
@@ -569,42 +568,13 @@ public class YamlTestCaseRunner
         return outcome;
     }
 
-    #endregion
-
     private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)
     {
-        // Check for expected regex patterns
-        if (!string.IsNullOrEmpty(expectRegex))
-        {
-            var expectedPatterns = expectRegex.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            
-            foreach (var pattern in expectedPatterns)
-            {
-                if (!Regex.IsMatch(output, pattern))
-                {
-                    Logger.LogWarning($"Expected pattern not found: '{pattern}'");
-                    return TestOutcome.Failed;
-                }
-            }
-        }
-        
-        // Check for not expected regex patterns
-        if (!string.IsNullOrEmpty(notExpectRegex))
-        {
-            var notExpectedPatterns = notExpectRegex.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-            
-            foreach (var pattern in notExpectedPatterns)
-            {
-                if (Regex.IsMatch(output, pattern))
-                {
-                    Logger.LogWarning($"Unexpected pattern found: '{pattern}'");
-                    return TestOutcome.Failed;
-                }
-            }
-        }
-        
-        return TestOutcome.Passed;
+        var expected = ExpectHelper.CheckOutput(output, expectRegex, notExpectRegex);
+        return expected ? TestOutcome.Passed : TestOutcome.Failed;
     }
+
+    #endregion
 
     private static Dictionary<string, string> _cliCache = new Dictionary<string, string>();
 }
