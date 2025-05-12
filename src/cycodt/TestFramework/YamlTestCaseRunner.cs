@@ -520,7 +520,7 @@ public class YamlTestCaseRunner
             var startArgs = $"--input @{questionTempFile} --interactive false --quiet";
             var commandLine = $"{startProcess} {startArgs}";
 
-            Logger.Log($"ExpectGptOutcome: ShellCommandBuilder executing '{commandLine}'");
+            Logger.Log($"ExpectGptOutcome: RunnableProcessBuilder executing '{commandLine}'");
             var result = new RunnableProcessBuilder()
                 .WithCommandLine(commandLine)
                 .WithWorkingDirectory(workingDirectory)

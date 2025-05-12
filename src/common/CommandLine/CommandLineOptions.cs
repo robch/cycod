@@ -118,7 +118,7 @@ public class CommandLineOptions
         if (!input.StartsWith("@@")) throw new ArgumentException("Not an @@ file input");
 
         var fileName = input.Substring(2);
-        var fileNameOk = fileName == "-" || File.Exists(fileName);
+        var fileNameOk = FileHelpers.FileExists(fileName);
         if (fileNameOk)
         {
             var lines = ConsoleHelpers.IsStandardInputReference(fileName)
@@ -468,7 +468,7 @@ public class CommandLineOptions
         return argStr;
     }
 
-    protected IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription)
+    protected IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription, bool allowEmptyStrings = false)
     {
         var strings = argStrs.ToList();
         if (!strings.Any())
@@ -476,7 +476,7 @@ public class CommandLineOptions
             throw new CommandLineException($"Missing {argDescription} for {arg}");
         }
 
-        return strings.Select(x => ValidateString(arg, x, argDescription)!);
+        return strings.Select(x => allowEmptyStrings ? x : ValidateString(arg, x, argDescription)!);
     }
 
     protected static string ValidateJoinedString(string arg, string seed, IEnumerable<string> values, string separator, string argDescription)

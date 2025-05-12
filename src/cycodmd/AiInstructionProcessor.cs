@@ -131,7 +131,6 @@ class AiInstructionProcessor
             {
                 ConsoleHelpers.WriteDebugLine("Checking cycod installation ...");
                 
-                // Use the ShellCommandBuilder to run a simple command
                 var commandResult = new RunnableProcessBuilder()
                     .WithFileName("cycod")
                     .WithArguments("version")

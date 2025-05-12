@@ -187,8 +187,10 @@ abstract public class ProgramRunner
 
     private static string[] ProcessDirectives(string[] args)
     {
+        ConsoleHelpers.WriteDebugLine($"ProcessDirectives: {string.Join(" ", args)}");
         args = CheckWaitForDebugger(args);
         args = CheckDebug(args);
+        ConsoleHelpers.WriteDebugLine($"ProcessDirectives: exiting w/ {string.Join(" ", args)}");
         return args;
     }
 

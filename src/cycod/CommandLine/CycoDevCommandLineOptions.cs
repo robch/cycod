@@ -487,7 +487,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                 inputArgs = ConsoleHelpers.GetAllLinesFromStdin();
             }
 
-            var inputs = ValidateStrings(arg, inputArgs, "input");
+            var inputs = ValidateStrings(arg, inputArgs, "input", allowEmptyStrings: true);
             command.InputInstructions.AddRange(inputs);
 
             i += inputArgs.Count();
