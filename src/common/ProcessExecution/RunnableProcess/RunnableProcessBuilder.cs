@@ -54,7 +54,7 @@ public class RunnableProcessBuilder
         var escapedArgs = new string[arguments.Length];
         for (int i = 0; i < arguments.Length; i++)
         {
-            escapedArgs[i] = ProcessUtils.EscapeProcessArgument(arguments[i]);
+            escapedArgs[i] = ProcessHelpers.EscapeProcessArgument(arguments[i]);
         }
 
         _arguments = string.Join(" ", escapedArgs);
@@ -78,8 +78,8 @@ public class RunnableProcessBuilder
         foreach (var kvp in arguments)
         {
             var key = kvp.Key.StartsWith("--") ? kvp.Key : $"--{kvp.Key}";
-            argsList.Add(ProcessUtils.EscapeProcessArgument(key));
-            argsList.Add(ProcessUtils.EscapeProcessArgument(kvp.Value));
+            argsList.Add(ProcessHelpers.EscapeProcessArgument(key));
+            argsList.Add(ProcessHelpers.EscapeProcessArgument(kvp.Value));
         }
 
         _arguments = string.Join(" ", argsList);
@@ -101,7 +101,7 @@ public class RunnableProcessBuilder
             return this;
         }
 
-        ProcessUtils.SplitCommand(commandLine, out string fileName, out string arguments);
+        ProcessHelpers.SplitCommand(commandLine, out string fileName, out string arguments);
         _fileName = fileName;
         _arguments = arguments;
         return this;
@@ -357,7 +357,7 @@ public class RunnableProcessBuilder
     /// Builds a configured RunnableProcess instance and runs it.
     /// </summary>
     /// <returns>The result of the process execution.</returns>
-    public ProcessResult Run()
+    public RunnableProcessResult Run()
     {
         return Build().Run();
     }
@@ -366,7 +366,7 @@ public class RunnableProcessBuilder
     /// Builds a configured RunnableProcess instance and runs it asynchronously.
     /// </summary>
     /// <returns>A task that completes with the process result.</returns>
-    public Task<ProcessResult> RunAsync()
+    public Task<RunnableProcessResult> RunAsync()
     {
         return Build().RunAsync();
     }

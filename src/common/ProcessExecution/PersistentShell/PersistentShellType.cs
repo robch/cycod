@@ -1,7 +1,7 @@
 /// <summary>
 /// Types of shells supported by the process executors.
 /// </summary>
-public enum ShellType
+public enum PersistentShellType
 {
     /// <summary>
     /// Bash shell (default on Linux/macOS).

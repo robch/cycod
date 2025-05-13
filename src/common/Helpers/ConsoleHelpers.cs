@@ -17,9 +17,9 @@ public class ConsoleHelpers
     {
         Console.OutputEncoding = Encoding.UTF8;
 
-        _debug = _debug || debug;
-        _verbose = _verbose || verbose;
-        _quiet = _quiet || quiet;
+        _debug = debug;
+        _verbose = verbose;
+        _quiet = quiet;
 
         WriteDebugLine($"Debug: {_debug}");
         WriteDebugLine($"Verbose: {_verbose}");

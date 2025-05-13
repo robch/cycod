@@ -11,7 +11,7 @@ public class PersistentShellCommandBuilder
     /// Creates a new PersistentShellCommandBuilder using the specified shell process.
     /// </summary>
     /// <param name="shellProcess">The shell process to use.</param>
-    public PersistentShellCommandBuilder(RunnableShellProcess shellProcess)
+    public PersistentShellCommandBuilder(PersistentShellProcess shellProcess)
     {
         _shellProcess = shellProcess ?? throw new ArgumentNullException(nameof(shellProcess));
     }
@@ -66,7 +66,7 @@ public class PersistentShellCommandBuilder
     /// Runs the command and returns the result.
     /// </summary>
     /// <returns>The result of the command execution.</returns>
-    public ShellCommandResult Run()
+    public PersistentShellCommandResult Run()
     {
         return RunAsync().GetAwaiter().GetResult();
     }
@@ -75,7 +75,7 @@ public class PersistentShellCommandBuilder
     /// Runs the command asynchronously and returns the result.
     /// </summary>
     /// <returns>A task that completes with the command result.</returns>
-    public async Task<ShellCommandResult> RunAsync()
+    public async Task<PersistentShellCommandResult> RunAsync()
     {
         if (string.IsNullOrEmpty(_command))
         {
@@ -88,12 +88,12 @@ public class PersistentShellCommandBuilder
         }
         
         // Change working directory if specified
-        ShellCommandResult? result = null;
+        PersistentShellCommandResult? result = null;
         
         if (!string.IsNullOrEmpty(_workingDirectory))
         {
             // Prepend a cd command to change directory
-            string cdCommand = GetChangeDirectoryCommand(_shellProcess.ShellType, _workingDirectory);
+            string cdCommand = GetChangeDirectoryCommand(_shellProcess.PersistentShellType, _workingDirectory);
             await _shellProcess.RunCommandAsync(cdCommand, _cancellationToken);
         }
         
@@ -124,25 +124,25 @@ public class PersistentShellCommandBuilder
     /// <param name="shellType">The shell type.</param>
     /// <param name="directory">The directory to change to.</param>
     /// <returns>A shell-specific command to change directory.</returns>
-    private string GetChangeDirectoryCommand(ShellType shellType, string directory)
+    private string GetChangeDirectoryCommand(PersistentShellType shellType, string directory)
     {
         switch (shellType)
         {
-            case ShellType.Bash:
-                return $"cd {ProcessUtils.EscapeBashArgument(directory)}";
+            case PersistentShellType.Bash:
+                return $"cd {ProcessHelpers.EscapeBashArgument(directory)}";
                 
-            case ShellType.Cmd:
-                return $"cd /d {ProcessUtils.EscapeCmdArgument(directory)}";
+            case PersistentShellType.Cmd:
+                return $"cd /d {ProcessHelpers.EscapeCmdArgument(directory)}";
                 
-            case ShellType.PowerShell:
-                return $"Set-Location {ProcessUtils.EscapePowerShellArgument(directory)}";
+            case PersistentShellType.PowerShell:
+                return $"Set-Location {ProcessHelpers.EscapePowerShellArgument(directory)}";
                 
             default:
                 return $"cd {directory}";
         }
     }
 
-    private readonly RunnableShellProcess _shellProcess;
+    private readonly PersistentShellProcess _shellProcess;
     private string? _command;
     private string? _workingDirectory;
     private int? _timeoutMs;

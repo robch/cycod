@@ -1,8 +1,8 @@
 public class PowershellShellSession : ShellSession
 {
-    protected override ShellType GetShellType()
+    protected override PersistentShellType GetShellType()
     {
-        return ShellType.PowerShell;
+        return PersistentShellType.PowerShell;
     }
 
     public static PowershellShellSession Instance => _instance ??= new PowershellShellSession();

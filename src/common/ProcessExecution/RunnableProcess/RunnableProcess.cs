@@ -230,7 +230,7 @@ public class RunnableProcess
             _stderrDoneSignal.Reset();
 
             // Configure the process
-            var startInfo = ProcessUtils.ConfigureProcessStartInfo(_fileName, _arguments);
+            var startInfo = ConfigureProcessStartInfo(_fileName, _arguments);
 
             // Set working directory if specified
             if (!string.IsNullOrEmpty(_workingDirectory))
@@ -287,7 +287,7 @@ public class RunnableProcess
     /// Runs the process asynchronously and waits for completion.
     /// </summary>
     /// <returns>A task that completes with the process result.</returns>
-    public async Task<ProcessResult> RunAsync()
+    public async Task<RunnableProcessResult> RunAsync()
     {
         var startTime = DateTime.Now;
         
@@ -327,7 +327,7 @@ public class RunnableProcess
     /// Runs the process synchronously and waits for completion.
     /// </summary>
     /// <returns>The process result.</returns>
-    public ProcessResult Run()
+    public RunnableProcessResult Run()
     {
         return RunAsync().GetAwaiter().GetResult();
     }
@@ -355,7 +355,7 @@ public class RunnableProcess
     /// Waits for the process to exit after it has been started.
     /// </summary>
     /// <returns>A task that completes with the process result.</returns>
-    public async Task<ProcessResult> WaitForExitAsync()
+    public async Task<RunnableProcessResult> WaitForExitAsync()
     {
         if (!_hasStarted)
             throw new InvalidOperationException("Process has not been started.");
@@ -445,7 +445,7 @@ public class RunnableProcess
     /// Waits for the process to exit after it has been started.
     /// </summary>
     /// <returns>The process result.</returns>
-    public ProcessResult WaitForExit()
+    public RunnableProcessResult WaitForExit()
     {
         return WaitForExitAsync().GetAwaiter().GetResult();
     }
@@ -725,10 +725,28 @@ public class RunnableProcess
         }
     }
 
+    protected static ProcessStartInfo ConfigureProcessStartInfo(
+        string fileName,
+        string arguments)
+    {
+        return new ProcessStartInfo
+        {
+            FileName = fileName,
+            Arguments = arguments,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
+        };
+    }
+
     /// <summary>
-    /// Creates a ProcessResult from the current state.
+    /// Creates a RunnableProcessResult from the current state.
     /// </summary>
-    protected virtual ProcessResult CreateProcessResult(
+    protected virtual RunnableProcessResult CreateProcessResult(
         int exitCode,
         ProcessCompletionState completionState,
         DateTime startTime,
@@ -744,7 +762,7 @@ public class RunnableProcess
             merged = _mergedBuffer.ToString();
         }
         
-        return new ProcessResult(
+        return new RunnableProcessResult(
             stdout,
             stderr,
             merged,

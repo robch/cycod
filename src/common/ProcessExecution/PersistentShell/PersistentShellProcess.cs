@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 /// <summary>
 /// Base class for process execution within a persistent shell session.
 /// </summary>
-public abstract class RunnableShellProcess
+public abstract class PersistentShellProcess
 {
     /// <summary>
     /// Gets whether the shell process has exited.
@@ -19,7 +19,7 @@ public abstract class RunnableShellProcess
     /// <summary>
     /// Gets the shell type for this process.
     /// </summary>
-    public abstract ShellType ShellType { get; }
+    public abstract PersistentShellType PersistentShellType { get; }
     
     /// <summary>
     /// Sets the default timeout for shell commands.
@@ -36,10 +36,10 @@ public abstract class RunnableShellProcess
     /// Creates a new runnable shell process with the specified underlying process.
     /// </summary>
     /// <param name="shellProcess">The shell process instance.</param>
-    public RunnableShellProcess(RunnableProcess shellProcess)
+    public PersistentShellProcess(RunnableProcess shellProcess)
     {
         _shellProcess = shellProcess ?? throw new ArgumentNullException(nameof(shellProcess));
-        _marker = ProcessUtils.GenerateMarker();
+        _marker = GenerateMarker();
     }
     
     /// <summary>
@@ -96,7 +96,7 @@ public abstract class RunnableShellProcess
     /// </summary>
     /// <param name="command">The command to run.</param>
     /// <returns>The result of the command execution.</returns>
-    public ShellCommandResult RunCommand(string command)
+    public PersistentShellCommandResult RunCommand(string command)
     {
         return RunCommandAsync(command).GetAwaiter().GetResult();
     }
@@ -107,7 +107,7 @@ public abstract class RunnableShellProcess
     /// <param name="command">The command to run.</param>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>The result of the command execution.</returns>
-    public ShellCommandResult RunCommand(string command, int timeoutMs)
+    public PersistentShellCommandResult RunCommand(string command, int timeoutMs)
     {
         return RunCommandAsync(command, timeoutMs).GetAwaiter().GetResult();
     }
@@ -118,7 +118,7 @@ public abstract class RunnableShellProcess
     /// <param name="command">The command to run.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A task representing the async operation with the command result.</returns>
-    public async Task<ShellCommandResult> RunCommandAsync(string command, CancellationToken cancellationToken = default)
+    public async Task<PersistentShellCommandResult> RunCommandAsync(string command, CancellationToken cancellationToken = default)
     {
         // Use the default command timeout
         return await RunCommandInternalAsync(command, cancellationToken, null);
@@ -130,7 +130,7 @@ public abstract class RunnableShellProcess
     /// <param name="command">The command to run.</param>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>A task representing the async operation with the command result.</returns>
-    public async Task<ShellCommandResult> RunCommandAsync(string command, int timeoutMs)
+    public async Task<PersistentShellCommandResult> RunCommandAsync(string command, int timeoutMs)
     {
         if (timeoutMs <= 0)
             throw new ArgumentException("Timeout must be greater than 0", nameof(timeoutMs));
@@ -146,8 +146,8 @@ public abstract class RunnableShellProcess
         {
             // Convert cancellation due to timeout to a timeout exception result
             var startTime = DateTime.Now.AddMilliseconds(-timeoutMs); // Approximate start time
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     "",
                     "",
                     "",
@@ -190,9 +190,19 @@ public abstract class RunnableShellProcess
     }
     
     /// <summary>
+    /// Generates a unique marker string for command completion detection.
+    /// </summary>
+    /// <returns>A unique marker string.</returns>
+    protected static string GenerateMarker()
+    {
+        // Create a marker that's unlikely to appear in normal output
+        return $"__COMMAND_COMPLETION_MARKER_{Guid.NewGuid():N}__";
+    }
+
+    /// <summary>
     /// Internal implementation to run a command with optional timeout.
     /// </summary>
-    private async Task<ShellCommandResult> RunCommandInternalAsync(string command, CancellationToken cancellationToken, int? timeoutMs)
+    private async Task<PersistentShellCommandResult> RunCommandInternalAsync(string command, CancellationToken cancellationToken, int? timeoutMs)
     {
         // Make sure shell is started, and outputs are cleared
         await EnsureStartedAsync();
@@ -222,8 +232,8 @@ public abstract class RunnableShellProcess
             string merged = StripMarkerFromOutput(commandOutput.MergedOutput);
             
             // Create the result
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     stdout,
                     commandOutput.StandardError,
                     merged,
@@ -244,8 +254,8 @@ public abstract class RunnableShellProcess
             // Report the actual timeout used
             int actualTimeout = timeoutMs ?? _commandTimeoutMs;
             var duration = DateTime.Now - startTime;
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     "",
                     "",
                     "",
@@ -260,8 +270,8 @@ public abstract class RunnableShellProcess
         }
         catch (OperationCanceledException)
         {
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     "",
                     "",
                     "",
@@ -279,8 +289,8 @@ public abstract class RunnableShellProcess
             // Check if the shell is still running
             if (_shellProcess.HasExited)
             {
-                return ShellCommandResult.FromProcessResult(
-                    new ProcessResult(
+                return PersistentShellCommandResult.FromProcessResult(
+                    new RunnableProcessResult(
                         "",
                         "",
                         "",
@@ -295,8 +305,8 @@ public abstract class RunnableShellProcess
                 );
             }
             
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     "",
                     "",
                     "",
@@ -318,7 +328,7 @@ public abstract class RunnableShellProcess
     /// <param name="command">The command to run.</param>
     /// <param name="input">The standard input to provide.</param>
     /// <returns>The result of the command execution.</returns>
-    public ShellCommandResult RunCommand(string command, string input)
+    public PersistentShellCommandResult RunCommand(string command, string input)
     {
         return RunCommandAsync(command, input).GetAwaiter().GetResult();
     }
@@ -330,7 +340,7 @@ public abstract class RunnableShellProcess
     /// <param name="input">The standard input to provide.</param>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>The result of the command execution.</returns>
-    public ShellCommandResult RunCommand(string command, string input, int timeoutMs)
+    public PersistentShellCommandResult RunCommand(string command, string input, int timeoutMs)
     {
         return RunCommandAsync(command, input, timeoutMs).GetAwaiter().GetResult();
     }
@@ -341,7 +351,7 @@ public abstract class RunnableShellProcess
     /// <param name="command">The command to run.</param>
     /// <param name="input">The standard input to provide.</param>
     /// <returns>A task representing the async operation with the command result.</returns>
-    public async Task<ShellCommandResult> RunCommandAsync(string command, string input)
+    public async Task<PersistentShellCommandResult> RunCommandAsync(string command, string input)
     {
         // This implementation will need to be refined for each specific shell type
         // For now, a simple echo-based input might work for basic cases
@@ -356,7 +366,7 @@ public abstract class RunnableShellProcess
     /// <param name="input">The standard input to provide.</param>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>A task representing the async operation with the command result.</returns>
-    public async Task<ShellCommandResult> RunCommandAsync(string command, string input, int timeoutMs)
+    public async Task<PersistentShellCommandResult> RunCommandAsync(string command, string input, int timeoutMs)
     {
         if (timeoutMs <= 0)
             throw new ArgumentException("Timeout must be greater than 0", nameof(timeoutMs));
@@ -375,8 +385,8 @@ public abstract class RunnableShellProcess
         {
             // Convert cancellation due to timeout to a timeout exception result
             var startTime = DateTime.Now.AddMilliseconds(-timeoutMs); // Approximate start time
-            return ShellCommandResult.FromProcessResult(
-                new ProcessResult(
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
                     "",
                     "",
                     "",
@@ -402,7 +412,7 @@ public abstract class RunnableShellProcess
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <param name="timeoutMs">Optional timeout in milliseconds. If not provided, uses the default command timeout.</param>
     /// <returns>A task that completes when the marker is found with the process output.</returns>
-    protected virtual async Task<ProcessResult> WaitForMarkerAsync(CancellationToken cancellationToken, int? timeoutMs = null)
+    protected virtual async Task<RunnableProcessResult> WaitForMarkerAsync(CancellationToken cancellationToken, int? timeoutMs = null)
     {
         // Pattern to match marker with exit code
         var pattern = $@"{Regex.Escape(_marker)}(-?\d+)";
@@ -422,7 +432,7 @@ public abstract class RunnableShellProcess
             if (regex.IsMatch(currentOutput))
             {
                 // Marker found, return the current output
-                return new ProcessResult(
+                return new RunnableProcessResult(
                     currentOutput,
                     _shellProcess.GetCurrentError(),
                     _shellProcess.GetCurrentMergedOutput(),

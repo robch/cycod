@@ -89,7 +89,6 @@ class AiInstructionProcessor
                 .WithTimeout(300000) // 5 minute timeout
                 .Run();
             
-            // Extract results from the ProcessResult
             stdOut = processResult.StandardOutput;
             stdErr = processResult.StandardError;
             returnCode = processResult.ExitCode;

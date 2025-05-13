@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// Represents the result of a process execution.
 /// </summary>
-public class ProcessResult
+public class RunnableProcessResult
 {
     /// <summary>
     /// Gets the standard output from the process.
@@ -72,7 +72,7 @@ public class ProcessResult
     public bool HasError => ErrorType != null || CompletionState != ProcessCompletionState.Completed;
     
     /// <summary>
-    /// Creates a new ProcessResult.
+    /// Creates a new RunnableProcessResult.
     /// </summary>
     /// <param name="stdout">The standard output.</param>
     /// <param name="stderr">The standard error output.</param>
@@ -83,7 +83,7 @@ public class ProcessResult
     /// <param name="errorType">The type of error that occurred, if any.</param>
     /// <param name="friendlyErrorMessage">A user-friendly error message.</param>
     /// <param name="exception">The exception that occurred, if any.</param>
-    public ProcessResult(
+    public RunnableProcessResult(
         string stdout, 
         string stderr, 
         string merged, 

@@ -4,18 +4,18 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// Process execution within a persistent CMD shell session.
 /// </summary>
-public class CmdRunnableShellProcess : RunnableShellProcess
+public class CmdPersistentShellProcess : PersistentShellProcess
 {
     /// <summary>
     /// Gets the shell type for this process.
     /// </summary>
-    public override ShellType ShellType => ShellType.Cmd;
+    public override PersistentShellType PersistentShellType => PersistentShellType.Cmd;
     
     /// <summary>
     /// Creates a new CMD shell process with the specified underlying process.
     /// </summary>
     /// <param name="shellProcess">The shell process instance.</param>
-    public CmdRunnableShellProcess(RunnableProcess shellProcess) : base(shellProcess)
+    public CmdPersistentShellProcess(RunnableProcess shellProcess) : base(shellProcess)
     {
     }
     

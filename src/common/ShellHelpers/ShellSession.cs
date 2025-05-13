@@ -13,7 +13,7 @@ public abstract class ShellSession
     }
 
     // Each derived class supplies its own shell type.
-    protected abstract ShellType GetShellType();
+    protected abstract PersistentShellType GetShellType();
 
     // Makes sure the shell process is running.
     protected void EnsureProcess()
@@ -22,7 +22,7 @@ public abstract class ShellSession
             return;
 
         ConsoleHelpers.WriteDebugLine($"Starting {GetShellType()} shell...");
-        var shellBuilder = new RunnableShellProcessBuilder()
+        var shellBuilder = new PersistentShellProcessBuilder()
             .WithShellType(GetShellType())
             .WithVerboseLogging(ConsoleHelpers.IsVerbose());
 
@@ -100,6 +100,6 @@ public abstract class ShellSession
         return (shutdownThisShellMessage, "", shutdownThisShellMessage, 0);
     }
 
-    protected RunnableShellProcess? _shellProcess;
+    protected PersistentShellProcess? _shellProcess;
     private static readonly List<ShellSession> _sessions = new List<ShellSession>();
 }

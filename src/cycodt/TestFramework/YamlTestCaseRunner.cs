@@ -168,7 +168,7 @@ public class YamlTestCaseRunner
 
             var result = isCommand
                 ? ProcessHelpers.RunProcess($"{command} {startArgs}", workingDirectory, envVars, input, timeout)
-                : ProcessHelpers.RunShellScript(scriptIsBash ? ShellType.Bash : ShellType.Cmd, script!, startArgs, workingDirectory, envVars, input, timeout);
+                : ProcessHelpers.RunShellScript(scriptIsBash ? "bash" : "cmd", script!, startArgs, workingDirectory, envVars, input, timeout);
 
             stdOut = result!.StandardOutput;
             stdErr = result.StandardError;

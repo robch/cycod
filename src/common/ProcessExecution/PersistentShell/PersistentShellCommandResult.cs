@@ -3,7 +3,7 @@ using System;
 /// <summary>
 /// Represents the result of a shell command execution.
 /// </summary>
-public class ShellCommandResult : ProcessResult
+public class PersistentShellCommandResult : RunnableProcessResult
 {
     /// <summary>
     /// Gets the original command as provided before wrapping.
@@ -26,7 +26,7 @@ public class ShellCommandResult : ProcessResult
     public bool IsSyntaxError { get; }
     
     /// <summary>
-    /// Creates a new ShellCommandResult extending the base ProcessResult.
+    /// Creates a new PersistentShellCommandResult extending the base RunnableProcessResult.
     /// </summary>
     /// <param name="stdout">The standard output.</param>
     /// <param name="stderr">The standard error output.</param>
@@ -41,7 +41,7 @@ public class ShellCommandResult : ProcessResult
     /// <param name="commandDuration">The duration of just the command execution.</param>
     /// <param name="shellSpecificError">Any shell-specific error information.</param>
     /// <param name="isSyntaxError">Whether the error was a syntax error.</param>
-    public ShellCommandResult(
+    public PersistentShellCommandResult(
         string stdout,
         string stderr,
         string merged,
@@ -74,16 +74,16 @@ public class ShellCommandResult : ProcessResult
     }
     
     /// <summary>
-    /// Creates a ShellCommandResult from an existing ProcessResult.
+    /// Creates a PersistentShellCommandResult from an existing RunnableProcessResult.
     /// </summary>
-    /// <param name="processResult">The base ProcessResult.</param>
+    /// <param name="processResult">The base RunnableProcessResult.</param>
     /// <param name="originalCommand">The original command as provided.</param>
     /// <param name="commandDuration">The duration of just the command execution.</param>
     /// <param name="shellSpecificError">Any shell-specific error information.</param>
     /// <param name="isSyntaxError">Whether the error was a syntax error.</param>
-    /// <returns>A new ShellCommandResult.</returns>
-    public static ShellCommandResult FromProcessResult(
-        ProcessResult processResult,
+    /// <returns>A new PersistentShellCommandResult.</returns>
+    public static PersistentShellCommandResult FromProcessResult(
+        RunnableProcessResult processResult,
         string originalCommand = "",
         TimeSpan commandDuration = default,
         string? shellSpecificError = null,
@@ -92,7 +92,7 @@ public class ShellCommandResult : ProcessResult
         if (processResult == null)
             throw new ArgumentNullException(nameof(processResult));
             
-        var result = new ShellCommandResult(
+        var result = new PersistentShellCommandResult(
             processResult.StandardOutput,
             processResult.StandardError,
             processResult.MergedOutput,

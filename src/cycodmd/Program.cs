@@ -33,7 +33,11 @@ class Program
             }
         }
 
-        ConsoleHelpers.Configure(commandLineOptions!.Debug, commandLineOptions.Verbose, commandLineOptions.Quiet);
+        var debug = ConsoleHelpers.IsDebug() || commandLineOptions!.Debug;
+        var verbose = ConsoleHelpers.IsVerbose() || commandLineOptions!.Verbose;
+        var quiet = ConsoleHelpers.IsQuiet() || commandLineOptions!.Quiet;
+        ConsoleHelpers.Configure(debug, verbose, quiet);
+
         BingApiWebSearchHelpers.ConfigureEndpoint(
             EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_ENDPOINT", searchDotEnvFile: true),
             EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_KEY", searchDotEnvFile: true));
@@ -47,7 +51,7 @@ class Program
             EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_CHAT_DEPLOYMENT", searchDotEnvFile: true),
             EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_SYSTEM_PROMPT", searchDotEnvFile: true));
 
-        var helpCommand = commandLineOptions.Commands.OfType<HelpCommand>().FirstOrDefault();
+        var helpCommand = commandLineOptions!.Commands.OfType<HelpCommand>().FirstOrDefault();
         if (helpCommand != null)
         {
             DisplayBanner();
@@ -349,10 +353,10 @@ class Program
             var script = command.ScriptToRun;
             var shell = command.Type switch
             {
-                RunCommand.ScriptType.Cmd => ShellType.Cmd,
-                RunCommand.ScriptType.Bash => ShellType.Bash,
-                RunCommand.ScriptType.PowerShell => ShellType.PowerShell,
-                _ => OS.IsWindows() ? ShellType.Cmd : ShellType.Bash,
+                RunCommand.ScriptType.Cmd => "cmd",
+                RunCommand.ScriptType.Bash => "bash",
+                RunCommand.ScriptType.PowerShell => "pwsh",
+                _ => OS.IsWindows() ? "cmd" : "bash",
             };
 
             var result = await ProcessHelpers.RunShellScriptAsync(shell, script);

@@ -1,8 +1,8 @@
 public class CmdShellSession : ShellSession
 {
-    protected override ShellType GetShellType()
+    protected override PersistentShellType GetShellType()
     {
-        return ShellType.Cmd;
+        return PersistentShellType.Cmd;
     }
 
     public static CmdShellSession Instance => _instance ??= new CmdShellSession();

@@ -4,18 +4,18 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// Process execution within a persistent Bash shell session.
 /// </summary>
-public class BashRunnableShellProcess : RunnableShellProcess
+public class BashPersistentShellProcess : PersistentShellProcess
 {
     /// <summary>
     /// Gets the shell type for this process.
     /// </summary>
-    public override ShellType ShellType => ShellType.Bash;
+    public override PersistentShellType PersistentShellType => PersistentShellType.Bash;
     
     /// <summary>
     /// Creates a new Bash shell process with the specified underlying process.
     /// </summary>
     /// <param name="shellProcess">The shell process instance.</param>
-    public BashRunnableShellProcess(RunnableProcess shellProcess) : base(shellProcess)
+    public BashPersistentShellProcess(RunnableProcess shellProcess) : base(shellProcess)
     {
     }
     

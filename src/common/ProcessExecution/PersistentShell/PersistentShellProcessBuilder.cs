@@ -1,14 +1,14 @@
 using System;
 
 /// <summary>
-/// Builder for configuring and creating RunnableShellProcess instances.
+/// Builder for configuring and creating PersistentShellProcess instances.
 /// </summary>
-public class RunnableShellProcessBuilder
+public class PersistentShellProcessBuilder
 {
     /// <summary>
-    /// Creates a new RunnableShellProcessBuilder.
+    /// Creates a new PersistentShellProcessBuilder.
     /// </summary>
-    public RunnableShellProcessBuilder()
+    public PersistentShellProcessBuilder()
     {
     }
     
@@ -17,7 +17,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="shellType">The type of shell.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithShellType(ShellType shellType)
+    public PersistentShellProcessBuilder WithShellType(PersistentShellType shellType)
     {
         _shellType = shellType;
         return this;
@@ -28,7 +28,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="workingDirectory">The working directory.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithWorkingDirectory(string? workingDirectory)
+    public PersistentShellProcessBuilder WithWorkingDirectory(string? workingDirectory)
     {
         var ok = !string.IsNullOrEmpty(workingDirectory);
         if (ok) _processBuilder.WithWorkingDirectory(workingDirectory);
@@ -41,7 +41,7 @@ public class RunnableShellProcessBuilder
     /// <param name="name">The name of the environment variable.</param>
     /// <param name="value">The value of the environment variable.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithEnvironmentVariable(string name, string value)
+    public PersistentShellProcessBuilder WithEnvironmentVariable(string name, string value)
     {
         _processBuilder.WithEnvironmentVariable(name, value);
         return this;
@@ -52,7 +52,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="variables">Dictionary of environment variables.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithEnvironmentVariables(Dictionary<string, string>? variables)
+    public PersistentShellProcessBuilder WithEnvironmentVariables(Dictionary<string, string>? variables)
     {
         _processBuilder.WithEnvironmentVariables(variables);
         return this;
@@ -63,7 +63,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithTimeout(int? timeoutMs)
+    public PersistentShellProcessBuilder WithTimeout(int? timeoutMs)
     {
         var ok = timeoutMs.HasValue;
         if (ok) _processBuilder.WithTimeout(timeoutMs);
@@ -75,7 +75,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithCancellationToken(System.Threading.CancellationToken cancellationToken)
+    public PersistentShellProcessBuilder WithCancellationToken(System.Threading.CancellationToken cancellationToken)
     {
         _processBuilder.WithCancellationToken(cancellationToken);
         return this;
@@ -86,7 +86,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="strategy">The timeout strategy.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithTimeoutStrategy(TimeoutStrategy strategy)
+    public PersistentShellProcessBuilder WithTimeoutStrategy(TimeoutStrategy strategy)
     {
         _processBuilder.WithTimeoutStrategy(strategy);
         return this;
@@ -97,7 +97,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="verbose">Whether to enable verbose logging.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithVerboseLogging(bool verbose = true)
+    public PersistentShellProcessBuilder WithVerboseLogging(bool verbose = true)
     {
         _processBuilder.WithVerboseLogging(verbose);
         return this;
@@ -108,7 +108,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder WithCommandTimeout(int timeoutMs)
+    public PersistentShellProcessBuilder WithCommandTimeout(int timeoutMs)
     {
         _commandTimeoutMs = timeoutMs > 0 ? timeoutMs : throw new ArgumentException("Timeout must be greater than 0", nameof(timeoutMs));
         return this;
@@ -119,7 +119,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke for each line of output.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnOutput(Action<string> callback)
+    public PersistentShellProcessBuilder OnOutput(Action<string> callback)
     {
         _processBuilder.OnOutput(callback);
         return this;
@@ -130,7 +130,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke for each line of error output.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnError(Action<string> callback)
+    public PersistentShellProcessBuilder OnError(Action<string> callback)
     {
         _processBuilder.OnError(callback);
         return this;
@@ -141,7 +141,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke for each line of output.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnMergedOutput(Action<string> callback)
+    public PersistentShellProcessBuilder OnMergedOutput(Action<string> callback)
     {
         _processBuilder.OnMergedOutput(callback);
         return this;
@@ -152,7 +152,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke for process events.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnEvent(Action<ProcessEvent, string> callback)
+    public PersistentShellProcessBuilder OnEvent(Action<ProcessEvent, string> callback)
     {
         _processBuilder.OnEvent(callback);
         return this;
@@ -163,7 +163,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke when the shell starts.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnStarted(Action<int> callback)
+    public PersistentShellProcessBuilder OnStarted(Action<int> callback)
     {
         _processBuilder.OnStarted(callback);
         return this;
@@ -174,7 +174,7 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke when the shell times out.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnTimeout(Action callback)
+    public PersistentShellProcessBuilder OnTimeout(Action callback)
     {
         _processBuilder.OnTimeout(callback);
         return this;
@@ -185,21 +185,21 @@ public class RunnableShellProcessBuilder
     /// </summary>
     /// <param name="callback">The callback to invoke when the shell exits.</param>
     /// <returns>This builder instance for method chaining.</returns>
-    public RunnableShellProcessBuilder OnExit(Action<int> callback)
+    public PersistentShellProcessBuilder OnExit(Action<int> callback)
     {
         _processBuilder.OnExit(callback);
         return this;
     }
     
     /// <summary>
-    /// Builds a configured RunnableShellProcess instance.
+    /// Builds a configured PersistentShellProcess instance.
     /// </summary>
-    /// <returns>A configured RunnableShellProcess.</returns>
-    public RunnableShellProcess Build()
+    /// <returns>A configured PersistentShellProcess.</returns>
+    public PersistentShellProcess Build()
     {
         // Get the shell executable and arguments
-        string shellExecutable = ProcessUtils.GetShellExecutable(_shellType);
-        string shellArguments = ProcessUtils.GetShellStartupArguments(_shellType);
+        string shellExecutable = PersistentShellHelpers.GetShellFileNameFromPersistentShellType(_shellType);
+        string shellArguments = PersistentShellHelpers.GetPersistentShellStartupArgs(_shellType);
         
         // Configure the process builder with the shell executable and arguments
         _processBuilder.WithFileName(shellExecutable);
@@ -209,19 +209,19 @@ public class RunnableShellProcessBuilder
         RunnableProcess baseProcess = _processBuilder.Build();
         
         // Create the appropriate shell process based on shell type
-        RunnableShellProcess shellProcess;
+        PersistentShellProcess shellProcess;
         switch (_shellType)
         {
-            case ShellType.Bash:
-                shellProcess = new BashRunnableShellProcess(baseProcess);
+            case PersistentShellType.Bash:
+                shellProcess = new BashPersistentShellProcess(baseProcess);
                 break;
                 
-            case ShellType.Cmd:
-                shellProcess = new CmdRunnableShellProcess(baseProcess);
+            case PersistentShellType.Cmd:
+                shellProcess = new CmdPersistentShellProcess(baseProcess);
                 break;
                 
-            case ShellType.PowerShell:
-                shellProcess = new PowerShellRunnableShellProcess(baseProcess);
+            case PersistentShellType.PowerShell:
+                shellProcess = new PowerShellPersistentShellProcess(baseProcess);
                 break;
                 
             default:
@@ -235,6 +235,6 @@ public class RunnableShellProcessBuilder
     }
 
     private readonly RunnableProcessBuilder _processBuilder = new RunnableProcessBuilder();
-    private ShellType _shellType = ProcessUtils.GetDefaultShellType();
+    private PersistentShellType _shellType = PersistentShellHelpers.GetDefaultShellType();
     private int _commandTimeoutMs = 30000; // Default 30 seconds for commands
 }

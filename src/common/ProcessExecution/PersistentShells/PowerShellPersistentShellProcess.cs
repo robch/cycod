@@ -4,18 +4,18 @@ using System.Text.RegularExpressions;
 /// <summary>
 /// Process execution within a persistent PowerShell session.
 /// </summary>
-public class PowerShellRunnableShellProcess : RunnableShellProcess
+public class PowerShellPersistentShellProcess : PersistentShellProcess
 {
     /// <summary>
     /// Gets the shell type for this process.
     /// </summary>
-    public override ShellType ShellType => ShellType.PowerShell;
+    public override PersistentShellType PersistentShellType => PersistentShellType.PowerShell;
     
     /// <summary>
     /// Creates a new PowerShell process with the specified underlying process.
     /// </summary>
     /// <param name="shellProcess">The shell process instance.</param>
-    public PowerShellRunnableShellProcess(RunnableProcess shellProcess) : base(shellProcess)
+    public PowerShellPersistentShellProcess(RunnableProcess shellProcess) : base(shellProcess)
     {
     }
     

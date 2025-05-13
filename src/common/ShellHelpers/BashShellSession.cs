@@ -1,8 +1,8 @@
 public class BashShellSession : ShellSession
 {
-    protected override ShellType GetShellType()
+    protected override PersistentShellType GetShellType()
     {
-        return ShellType.Bash;
+        return PersistentShellType.Bash;
     }
 
     public static BashShellSession Instance => _instance ??= new BashShellSession();

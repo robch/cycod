@@ -2,7 +2,6 @@
 tests:
 
 - name: running cmd script w/ input
-  optional: needsBugFix
   script: |
     set name=
     set /p name=Enter your name:
@@ -14,7 +13,6 @@ tests:
   timeout: 2000
 
 - name: running bash script w/ input
-  optional: needsBugFix
   bash: |
     export name=
     read -p "Enter your name: " name

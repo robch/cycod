@@ -89,7 +89,7 @@ public class CycoDmdCliWrapper
     /// <returns>The escaped argument</returns>
     public string EscapeArgument(string arg)
     {
-        return ProcessUtils.EscapeProcessArgument(arg);
+        return ProcessHelpers.EscapeProcessArgument(arg);
     }
 
     #region Search Codebase Methods
