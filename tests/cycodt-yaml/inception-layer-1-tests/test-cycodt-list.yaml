@@ -29,8 +29,8 @@ tests:
     yaml.simple.simple.running bash script w/ regex expectation
     Found 3 tests...
 
-- name: cycodt list all files, excluding simple2
-  command: cycodt list --files simple*yaml --exclude-files simple2.yaml
+- name: cycodt list all files, excluding simple2 and simple3
+  command: cycodt list --files simple*yaml --exclude-files simple2.yaml simple3.yaml
   expect-regex: |
     yaml.simple.simple.running simple process
     Found 1 test...
@@ -48,3 +48,8 @@ tests:
     ^\r?$\n
     ^  yaml.simple2.simple2.output into file\r?$\n
     ^  yaml.simple2.simple2.checkout output into file\r?$\n
+    ^\r?$\n
+    ^.*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple3.yaml\r?$\n
+    ^\r?$\n
+    ^  yaml.simple3.simple3.echo animals w/ expectation\r?$\n
+    ^  yaml.simple3.simple3.echo animals wo/ expectation\r?$\n
