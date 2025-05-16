@@ -20,20 +20,6 @@ USAGE: cycodt run [...]
     --output-file FILE
     --output-format trx|junit
 
-EXAMPLES
-
-  EXAMPLE 1: Runs all available tests
-
-    cycodt run
-
-  EXAMPLE 2: Run tests that contain 'setup' or 'nightly', and 'java', but not 'skip'
-
-    cycodt run --tests setup nightly --contains java --remove skip
-
-  EXAMPLE 3: Run tests from files under 'tests' directory, that contain 'test3', but not 'skip'
-
-    cycodt run --files ../tests/**/*.yaml --contains test3 --remove skip
-
 SEE ALSO
 
   cycodt help list

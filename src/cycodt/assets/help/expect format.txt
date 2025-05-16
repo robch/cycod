@@ -3,37 +3,22 @@ CYCODT EXPECT FORMAT
   The cycodt expect format command transforms input text into properly formatted 
   regex patterns for use in the expect-regex field of YAML test files.
 
-USAGE: cycodt expect format [options]
+USAGE: cycodt expect format [...]
 
-  INPUT
-    Input is read from standard input (stdin) by default
-    --input FILE        Read input from FILE
-    --input -           Read input from stdin (default)
+  INPUT/OUTPUT
 
-  OUTPUT
-    --output FILE       Write output to FILE instead of stdout
-    --append            Append to output file instead of overwriting
+    --input FILE            Read input from FILE
+    --input -               Read input from stdin (default)
+
+    --output FILE           Write output to FILE instead of stdout
+    --append                Append to output file instead of overwriting
 
   FORMAT OPTIONS
-    --strict true/false Whether to apply strict regex formatting (default: true)
-                        When true: adds ^ prefix, \r?$ suffix, and escapes special chars
-                        When false: performs no regex-specific formatting
 
-EXAMPLES
-
-  EXAMPLE 1: Transform command output into expect-regex format
-
-    my-command | cycodt expect format
-
-  EXAMPLE 2: Format content of a file with non-strict formatting
-
-    cycodt expect format --input output.txt --output patterns.txt --strict false
-
-  EXAMPLE 3: Create patterns from special character output
-
-    echo "Special chars: ( ) [ ] { }" | cycodt expect format
+    --strict [TRUE/FALSE]   Whether to apply strict regex formatting (default: true)
 
 SEE ALSO
 
+  cycodt help expect examples
   cycodt help expect check
-  cycodt help run
+  cycodt help usage

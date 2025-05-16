@@ -13,14 +13,12 @@ class ExpectCheckCommand : ExpectBaseCommand
         RegexPatterns = new List<string>();
         NotRegexPatterns = new List<string>();
         Format = "TEXT";
-        Verbose = false;
     }
 
     public List<string> RegexPatterns { get; set; }
     public List<string> NotRegexPatterns { get; set; }
     public string? Instructions { get; set; }
     public string Format { get; set; }
-    public bool Verbose { get; set; }
 
     public override string GetCommandName()
     {
@@ -152,28 +150,6 @@ class ExpectCheckCommand : ExpectBaseCommand
             
             result.AppendLine($"{indentation}{status}: Pattern '{pattern}' {matchStatus} input");
             
-            if (Verbose && isMatch)
-            {
-                var matches = Regex.Matches(input, pattern, RegexOptions.Multiline);
-                result.AppendLine($"{indentation}  Found {matches.Count} matches:");
-                
-                int matchIndex = 0;
-                foreach (Match match in matches)
-                {
-                    if (matchIndex < 5) // Limit the number of matches shown
-                    {
-                        string matchText = match.Value.Length > 100 ? match.Value.Substring(0, 100) + "..." : match.Value;
-                        result.AppendLine($"{indentation}    Match: '{matchText.Replace("\r", "\\r").Replace("\n", "\\n")}'");
-                    }
-                    matchIndex++;
-                }
-                
-                if (matchIndex > 5)
-                {
-                    result.AppendLine($"{indentation}    ... and {matchIndex - 5} more matches");
-                }
-            }
-            
             return passed;
         }
         catch (ArgumentException ex)
@@ -203,7 +179,7 @@ class ExpectCheckCommand : ExpectBaseCommand
             
             result.AppendLine($"  {status}: LLM evaluation result");
             
-            if (Verbose || !passed)
+            if (!passed)
             {
                 result.AppendLine("  Details:");
                 result.AppendLine($"    {gptMerged.Replace("\n", "\n    ")}");

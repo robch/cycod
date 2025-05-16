@@ -45,7 +45,7 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             command.Input = input!;
             i += max1Arg.Count();
         }
-        else if (arg == "--output")
+        else if (arg == "--save-output" || arg == "--output")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var output = ValidateString(arg, max1Arg.FirstOrDefault(), "output");
@@ -73,21 +73,6 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             checkCommand.RegexPatterns.Add(pattern!);
             i += max1Arg.Count();
         }
-        else if (command is ExpectCheckCommand checkCommand2 && arg == "--regex-file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var file = ValidateString(arg, max1Arg.FirstOrDefault(), "regex file");
-            if (File.Exists(file))
-            {
-                var patterns = File.ReadAllText(file!);
-                checkCommand2.RegexPatterns.Add(patterns);
-            }
-            else
-            {
-                throw new CommandLineException($"File not found: {file}");
-            }
-            i += max1Arg.Count();
-        }
         else if (command is ExpectCheckCommand checkCommand3 && arg == "--not-regex")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -95,40 +80,11 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             checkCommand3.NotRegexPatterns.Add(pattern!);
             i += max1Arg.Count();
         }
-        else if (command is ExpectCheckCommand checkCommand4 && arg == "--not-regex-file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var file = ValidateString(arg, max1Arg.FirstOrDefault(), "not-regex file");
-            if (File.Exists(file))
-            {
-                var patterns = File.ReadAllText(file!);
-                checkCommand4.NotRegexPatterns.Add(patterns);
-            }
-            else
-            {
-                throw new CommandLineException($"File not found: {file}");
-            }
-            i += max1Arg.Count();
-        }
         else if (command is ExpectCheckCommand checkCommand5 && arg == "--instructions")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var instructions = ValidateString(arg, max1Arg.FirstOrDefault(), "instructions");
             checkCommand5.Instructions = instructions;
-            i += max1Arg.Count();
-        }
-        else if (command is ExpectCheckCommand checkCommand6 && arg == "--instructions-file")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var file = ValidateString(arg, max1Arg.FirstOrDefault(), "instructions file");
-            if (File.Exists(file))
-            {
-                checkCommand6.Instructions = File.ReadAllText(file!);
-            }
-            else
-            {
-                throw new CommandLineException($"File not found: {file}");
-            }
             i += max1Arg.Count();
         }
         else if (command is ExpectCheckCommand checkCommand7 && arg == "--format")
@@ -142,10 +98,6 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             }
             checkCommand7.Format = format!;
             i += max1Arg.Count();
-        }
-        else if (command is ExpectCheckCommand checkCommand8 && arg == "--verbose")
-        {
-            checkCommand8.Verbose = true;
         }
         else
         {
