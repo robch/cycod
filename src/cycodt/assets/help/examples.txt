@@ -27,7 +27,20 @@ EXAMPLES
 
     cycodt run --files ../tests/**/*.yaml --contains test3 --remove skip
 
+  EXAMPLE 7: Format command output as regex patterns for test files
+
+    echo "Command output line 1\nCommand output line 2" | cycodt expect format > patterns.txt
+  
+  EXAMPLE 8: Check if command output matches expected patterns
+
+    my-command | cycodt expect check --regex "^Success" --not-regex "Error"
+    
+  EXAMPLE 9: Use LLM instructions to validate command output
+
+    my-command | cycodt expect check --instructions "Output should contain a list of files"
+
 SEE ALSO
 
   cycodt help list
   cycodt help run
+  cycodt help expect

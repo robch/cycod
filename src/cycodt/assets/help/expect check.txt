@@ -1,0 +1,51 @@
+CYCODT EXPECT CHECK
+
+  The cycodt expect check command validates input against specified expectations,
+  similar to running a test case but directly from the command line.
+
+USAGE: cycodt expect check [options]
+
+  INPUT
+    Input is read from standard input (stdin) by default
+    --input FILE        Read input from FILE
+    --input -           Read input from stdin (default)
+
+  EXPECTATIONS
+    --regex PATTERN     Regex pattern(s) that should match (can specify multiple)
+    --regex-file FILE   File containing regex patterns to match
+    --regex @FILE       Read regex patterns from FILE (one per line)
+    
+    --not-regex PATTERN Regex pattern(s) that should NOT match (can specify multiple)
+    --not-regex-file FILE File containing regex patterns that should not match
+    --not-regex @FILE   Read not-regex patterns from FILE (one per line)
+    
+    --instructions TEXT LLM instructions for checking output
+    --instructions-file FILE File containing LLM instructions
+
+  OUTPUT OPTIONS
+    --output FILE       Write check results to FILE
+    --format TEXT|JSON  Format for output results (default: TEXT)
+    --verbose           Include detailed match information
+
+EXAMPLES
+
+  EXAMPLE 1: Check if command output matches regex patterns
+
+    my-command | cycodt expect check --regex "^Success" --regex "^Items: \d+"
+
+  EXAMPLE 2: Check output against patterns from a file
+
+    my-command | cycodt expect check --regex @patterns.txt --not-regex "Error"
+
+  EXAMPLE 3: Use LLM instructions to check output
+
+    my-command | cycodt expect check --instructions "Output should show a successful login"
+
+  EXAMPLE 4: Process file content against expectations
+
+    cycodt expect check --input results.log --regex-file valid-patterns.txt
+
+SEE ALSO
+
+  cycodt help expect format
+  cycodt help run

@@ -13,6 +13,7 @@ src/cycodt/bin/
 tests/**/bin/
 tests/**/obj/
 
+.cycod/config.yaml
 .cycod/scratch/
 .env
 

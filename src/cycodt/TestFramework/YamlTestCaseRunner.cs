@@ -498,74 +498,7 @@ public class YamlTestCaseRunner
 
     private static TestOutcome ExpectGptOutcome(string output, string expectGpt, string workingDirectory, out string gptStdOut, out string gptStdErr, out string gptMerged)
     {
-        Logger.Log($"ExpectGptOutcome: Checking for {expectGpt} in '{output}'");
-
-        TestOutcome outcome;
-        gptStdOut = string.Empty;
-        gptStdErr = string.Empty;
-        gptMerged = string.Empty;
-
-        var question = new StringBuilder();
-        question.AppendLine($"Here's the console output:\n\n{output}\n");
-        question.AppendLine($"Here's the expectation:\n\n{expectGpt}\n");
-        question.AppendLine("You **must always** answer \"PASS\" if the expectation is met.");
-        question.AppendLine("You **must always** answer \"FAIL\" if the expectation is not met.");
-        question.AppendLine("You **must only** answer \"PASS\" with no additional text if the expectation is met.");
-        question.AppendLine("If you answer \"FAIL\", you **must** provide additional text to explain why the expectation was not met (without using the word \"PASS\" as we will interpret that as a \"PASS\").");
-        var questionTempFile = FileHelpers.WriteTextToTempFile(question.ToString())!;
-
-        try
-        {
-            var startProcess = FindCacheCli("cycod");
-            var startArgs = $"--input @{questionTempFile} --interactive false --quiet";
-            var commandLine = $"{startProcess} {startArgs}";
-
-            Logger.Log($"ExpectGptOutcome: RunnableProcessBuilder executing '{commandLine}'");
-            var result = new RunnableProcessBuilder()
-                .WithCommandLine(commandLine)
-                .WithWorkingDirectory(workingDirectory)
-                .WithTimeout(60000)
-                .Run();
-
-            gptStdOut = result.StandardOutput;
-            gptStdErr = result.StandardError;
-            gptMerged = result.MergedOutput;
-
-            var exitedNotKilled = result.CompletionState == ProcessCompletionState.Completed;
-            var exitedNormally = exitedNotKilled && result.ExitCode == 0;
-            outcome = exitedNormally ? TestOutcome.Passed : TestOutcome.Failed;
-
-            var timedoutOrKilled = !exitedNotKilled;
-            if (timedoutOrKilled)
-            {
-                var message = "ExpectGptOutcome: WARNING: Timedout or killed!";
-                gptStdErr += $"\n{message}\n";
-                gptMerged += $"\n{message}\n";
-                Logger.LogWarning(message);
-            }
-        }
-        catch (Exception ex)
-        {
-            outcome = TestOutcome.Failed;
-
-            var exception = $"ExpectGptOutcome: EXCEPTION: {ex.Message}";
-            gptStdErr += $"\n{exception}\n";
-            gptMerged += $"\n{exception}\n";
-            Logger.Log(exception);
-        }
-
-        File.Delete(questionTempFile);
-        if (outcome == TestOutcome.Passed)
-        {
-            Logger.Log($"ExpectGptOutcome: Checking for 'PASS' in '{gptMerged}'");
-
-            var passed = gptMerged.Contains("PASS") || gptMerged.Contains("TRUE") || gptMerged.Contains("YES");
-            outcome = passed ? TestOutcome.Passed : TestOutcome.Failed;
-
-            Logger.Log($"ExpectGptOutcome: {outcome}");
-        }
-
-        return outcome;
+        return CheckExpectInstructionsHelper.CheckExpectGptOutcome(output, expectGpt, workingDirectory, out gptStdOut, out gptStdErr, out gptMerged);
     }
 
     private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)

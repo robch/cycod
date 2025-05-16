@@ -1,0 +1,29 @@
+CYCODT EXPECT
+
+  The cycodt expect commands provide tools for working with test expectations.
+  Use 'expect format' to prepare regex patterns, and 'expect check' to 
+  validate output against expectations directly from the command line.
+
+USAGE: cycodt expect format [options]
+   OR: cycodt expect check [options]
+
+EXAMPLES
+
+  EXAMPLE 1: Format command output as regex patterns
+
+    my-command | cycodt expect format > patterns.txt
+
+  EXAMPLE 2: Check if command output meets expectations
+
+    my-command | cycodt expect check --regex "^Expected output\r?$"
+
+  EXAMPLE 3: Check output using LLM instructions
+
+    my-command | cycodt expect check --instructions "Output should include three bullet points"
+
+SEE ALSO
+
+  cycodt help expect format
+  cycodt help expect check
+  cycodt help run
+  cycodt help list
