@@ -24,7 +24,7 @@ class ExpectFormatCommand : ExpectBaseCommand
     {
         try
         {
-            var input = FileHelpers.ReadAllText(Input);
+            var input = FileHelpers.ReadAllText(Input!);
             var formattedText = FormatInput(input);
             WriteOutput(formattedText);
             return 0;

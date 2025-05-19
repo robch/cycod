@@ -35,7 +35,7 @@ class ExpectCheckCommand : ExpectBaseCommand
             var message = "\rChecking expectations...";
             ConsoleHelpers.Write($"{message}");
 
-            var lines = FileHelpers.ReadAllLines(Input);
+            var lines = FileHelpers.ReadAllLines(Input!);
             var text = string.Join("\n", lines);
 
             var linesOk = ExpectHelper.CheckLines(lines, RegexPatterns, NotRegexPatterns, out var expectFailedReason);

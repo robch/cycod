@@ -2,36 +2,41 @@ abstract class ExpectBaseCommand : Command
 {
     public ExpectBaseCommand()
     {
-        Input = "-"; // Default to stdin
-        Output = null; // Default to stdout
-        Append = false;
+        Input = null;
+        Output = null;
     }
     
-    public string Input { get; set; }
+    public string? Input { get; set; }
     public string? Output { get; set; }
-    public bool Append { get; set; }
-    
+
     public override bool IsEmpty()
     {
-        return false;
+        var noInput = string.IsNullOrEmpty(Input);
+        var isRedirected = Console.IsInputRedirected;
+        return noInput && !isRedirected;
     }
     
+    public override Command Validate()
+    {
+        var noInput = string.IsNullOrEmpty(Input);
+        var implictlyUseStdIn = noInput && Console.IsInputRedirected;
+        if (implictlyUseStdIn)
+        {
+            Input = "-";
+        }
+
+        return this;
+    }
+
     protected void WriteOutput(string text)
     {
         if (string.IsNullOrEmpty(Output))
         {
-            Console.Write(text);
+            Console.WriteLine(text);
         }
         else
         {
-            if (Append)
-            {
-                File.AppendAllText(Output, text);
-            }
-            else
-            {
-                File.WriteAllText(Output, text);
-            }
+            FileHelpers.WriteAllText(Output, text);
         }
     }
 }
