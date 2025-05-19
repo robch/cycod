@@ -40,24 +40,41 @@ class ExpectFormatCommand : ExpectBaseCommand
 
     private string FormatInput(string input)
     {
-        var lines = input.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+        var c = input.Count(c => c == '\n');
+        ConsoleHelpers.WriteDebugHexDump(input, $"ExpectFormatCommand.FormatInput: Input contains {c} lines.");
+
+        var lines = input.Split('\n', StringSplitOptions.None);
         var formattedLines = new List<string>();
 
         foreach (var line in lines)
         {
-            var formattedLine = Strict ? FormatLineStrict(line) : line;
-            formattedLines.Add(formattedLine);
+            var formatted = FormatLine(line, Strict);
+            formattedLines.Add(formatted);
         }
 
         return string.Join("\n", formattedLines);
     }
 
-    private string FormatLineStrict(string line)
+    private static string EscapeSpecialRegExChars(string line)
     {
-        // Special regex characters that need to be escaped: ()[]{}.*+?|^$\
-        string escapedLine = Regex.Replace(line, @"([\\()\[\]{}.*+?|^$])", @"\$1");
-        
-        // Add ^ prefix to start and \r?$ suffix to end
-        return $"^{escapedLine}\\r?$";
+        return Regex.Replace(line, @"([\\()\[\]{}.*+?|^$])", @"\$1");
+    }
+
+    private string FormatLine(string line, bool strict)
+    {
+        ConsoleHelpers.WriteDebugHexDump(line, "ExpectFormatCommand.FormatLine:");
+
+        var escaped = EscapeSpecialRegExChars(line);
+        ConsoleHelpers.WriteDebugHexDump(escaped, "ExpectFormatCommand.FormatLine; post-escape:");
+
+        var escapedCR = strict
+            ? escaped.Trim('\r').Replace("\r", "\\r")
+            : escaped.Replace("\r", "\\r");
+        ConsoleHelpers.WriteDebugHexDump(escapedCR, "ExpectFormatCommand.FormatLine; post-cr-escape:");
+
+        var result = strict ? $"^{escapedCR}\\r?$\\n" : escapedCR;
+        ConsoleHelpers.WriteDebugHexDump(result, "ExpectFormatCommand.FormatLine; result:");
+
+        return result;
     }
 }

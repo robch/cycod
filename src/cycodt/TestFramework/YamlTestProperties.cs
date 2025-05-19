@@ -40,6 +40,7 @@ public class YamlTestProperties
         { "expect", RegisterTestCaseProperty("ExpectGpt") },
         { "expect-regex", RegisterTestCaseProperty("Expect") },
         { "not-expect-regex", RegisterTestCaseProperty("NotExpect") },
+        { "expect-exit-code", RegisterTestCaseProperty("ExpectExitCode") },
         { "skipOnFailure", RegisterTestCaseProperty("SkipOnFailure") },
         { "timeout", RegisterTestCaseProperty("Timeout") },
         { "env", RegisterTestCaseProperty("Env") },

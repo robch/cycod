@@ -1,0 +1,47 @@
+class: expect-exit-code-tests
+tag: inception
+tests:
+- name: cycodt run --file simple4.yaml
+  command: cycodt run --file simple4.yaml --include-optional check-expect-exit-code
+  expect-regex: |
+    ^Found 4 tests\.\.\.\r?$\n
+    ^\r?$\n
+    ^Starting test: yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
+    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(5\)\r?$\n
+    ^echo hello\r?$\n
+    ^exit 1\r?$\n
+    ^EXIT CODE: 1\r?$\n
+    ^\r?$\n
+    ^Starting test: yaml\.simple4\.simple4\.successfully expects exit code 1\r?$\n
+    ^Passed \(\d+ ms\): yaml\.simple4\.simple4\.successfully expects exit code 1\r?$\n
+    ^Starting test: yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
+    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(18\)\r?$\n
+    ^echo hello\r?$\n
+    ^exit 1\r?$\n
+    ^EXIT CODE: 1\r?$\n
+    ^\r?$\n
+    ^Starting test: yaml\.simple4\.simple4\.successfully expects exit code 2\r?$\n
+    ^Passed \(\d+ ms\): yaml\.simple4\.simple4\.successfully expects exit code 2\r?$\n
+    ^\r?$\n
+    ^FAILURE SUMMARY:\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
+    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(5\)\r?$\n
+    ^echo hello\r?$\n
+    ^exit 1\r?$\n
+    ^EXIT CODE: 1\r?$\n
+    ^\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
+    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(18\)\r?$\n
+    ^echo hello\r?$\n
+    ^exit 1\r?$\n
+    ^EXIT CODE: 1\r?$\n
+    ^\r?$\n
+    ^TEST RESULT SUMMARY:\r?$\n
+    ^\r?$\n
+    ^Passed: 2 \(50\.0%\)\r?$\n
+    ^Failed: 2 \(50\.0%\)\r?$\n
+    ^\r?$\n
+    ^Tests: 4 \(\d+ ms\)\r?$\n
+    ^Results: D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\test-results\.trx\r?$\n

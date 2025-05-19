@@ -10,12 +10,11 @@ USAGE: cycodt expect format [...]
     --input FILE            Read input from FILE
     --input -               Read input from stdin (default)
 
-    --output FILE           Write output to FILE instead of stdout
-    --append                Append to output file instead of overwriting
+    --save-output FILE      Write output to FILE instead of stdout
 
   FORMAT OPTIONS
 
-    --strict [TRUE/FALSE]   Whether to apply strict regex formatting (default: true)
+    --strict [TRUE/FALSE]   Whether to use strict regex formatting (default: true)
 
 SEE ALSO
 

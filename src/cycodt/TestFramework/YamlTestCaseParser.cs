@@ -327,6 +327,7 @@ public partial class YamlTestCaseParser
         SetTestCaseProperty(test, "expect", mapping, "expect");
         SetTestCaseProperty(test, "expect-regex", mapping, "expect-regex");
         SetTestCaseProperty(test, "not-expect-regex", mapping, "not-expect-regex");
+        SetTestCaseProperty(test, "expect-exit-code", mapping, "expect-exit-code");
 
         SetTestCaseTagsAsTraits(test, YamlTagHelpers.UpdateCopyTags(context.Tags, mapping));
 
@@ -404,7 +405,7 @@ public partial class YamlTestCaseParser
 
     private static bool IsValidTestCaseNode(string? value)
     {
-        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;command;script;bash;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;optional;".IndexOf($";{value};") >= 0;
+        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;command;script;bash;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;expect-exit-code;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;optional;".IndexOf($";{value};") >= 0;
     }
 
     private static void SetTestCaseProperty(TestCase test, string propertyName, YamlMappingNode mapping, string mappingName)

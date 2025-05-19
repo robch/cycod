@@ -32,6 +32,7 @@ public class RunnableTestCaseItem
         _expectGpt = GetInterpolatedProperty("expect");
         _expectRegex = GetInterpolatedProperty("expect-regex");
         _notExpectRegex = GetInterpolatedProperty("not-expect-regex");
+        _expectExitCode = int.Parse(GetInterpolatedProperty("expect-exit-code", "0")!);
 
         _env = GetInterpolatedProperty("env");
         _workingDirectory = GetInterpolatedProperty("working-directory");
@@ -63,7 +64,7 @@ public class RunnableTestCaseItem
 
         // run the test case, getting all the results, prior to recording any of those results
         // (not doing this in this order seems to, for some reason, cause "foreach" test cases to run 5 times!?)
-        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _command, _script, _scriptIsBash, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _skipOnFailure, _foreach);
+        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _command, _script, _scriptIsBash, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _expectExitCode, _skipOnFailure, _foreach);
         _results = results.ToList();
 
         _runnableTest.RecordResults(host, this, _results);
@@ -99,6 +100,7 @@ public class RunnableTestCaseItem
     private string? _expectGpt;
     private string? _expectRegex;
     private string? _notExpectRegex;
+    private int _expectExitCode;
     private string? _env;
     private string? _workingDirectory;
     private int _timeout;

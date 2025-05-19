@@ -182,6 +182,19 @@ not-expect-regex: |
   curseword2
 ```
 
+## `expect-exit-code`
+
+Optional.
+
+When present, specifies the expected exit code of the command or script.
+
+By default, it is set to `0`.
+Example:
+
+```yaml
+expect-exit-code: 1
+```
+
 ## `parallelize`
 
 Optional.

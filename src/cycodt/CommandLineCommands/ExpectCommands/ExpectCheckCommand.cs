@@ -32,7 +32,7 @@ class ExpectCheckCommand : ExpectBaseCommand
     {
         try
         {
-            var message = "\rChecking expectations...";
+            var message = "Checking expectations...";
             ConsoleHelpers.Write($"{message}");
 
             var lines = FileHelpers.ReadAllLines(Input!);
@@ -41,18 +41,18 @@ class ExpectCheckCommand : ExpectBaseCommand
             var linesOk = ExpectHelper.CheckLines(lines, RegexPatterns, NotRegexPatterns, out var expectFailedReason);
             if (!linesOk)
             {
-                ConsoleHelpers.WriteLine($"{message} FAILED!\n\n{expectFailedReason}");
+                ConsoleHelpers.WriteLine($"\r{message} FAILED!\n\n{expectFailedReason}");
                 return 1;
             }
 
             var instructionsOk = CheckExpectInstructionsHelper.CheckExpectations(text, Instructions, null, out _, out _, out var instructionsFailedReason);
             if (!instructionsOk)
             {
-                ConsoleHelpers.WriteLine($"{message} FAILED!\n\n{instructionsFailedReason}");
+                ConsoleHelpers.WriteLine($"\r{message} FAILED!\n\n{instructionsFailedReason}");
                 return 1;
             }
 
-            ConsoleHelpers.WriteLine($"{message} PASS!");
+            ConsoleHelpers.WriteLine($"\r{message} PASS!");
             return 0;
         }
         catch (Exception ex)

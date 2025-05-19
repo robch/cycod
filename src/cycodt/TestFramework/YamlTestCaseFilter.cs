@@ -112,6 +112,7 @@ public class YamlTestCaseFilter
             case "expect": return YamlTestProperties.Get(test, "expect");
             case "expect-regex": return YamlTestProperties.Get(test, "expect-regex");
             case "not-expect-regex": return YamlTestProperties.Get(test, "not-expect-regex");
+            case "expect-exit-code": return YamlTestProperties.Get(test, "expect-exit-code");
 
             case "parallelize": return YamlTestProperties.Get(test, "parallelize");
             case "skipOnFailure": return YamlTestProperties.Get(test, "skipOnFailure");
@@ -135,5 +136,5 @@ public class YamlTestCaseFilter
     }
 
 
-    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "Category", "cli", "command", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "parallelize", "skipOnFailure" };
+    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "Category", "cli", "command", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "expect-exit-code", "parallelize", "skipOnFailure" };
 }

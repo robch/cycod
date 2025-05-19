@@ -126,11 +126,29 @@ public class ConsoleHelpers
         Write(message, ConsoleColor.Cyan);
     }
 
-    public static void WriteDebugLine(string message)
+    public static void WriteDebugLine(string message = "")
     {
         if (!_debug) return;
         WriteLine(message, ConsoleColor.Cyan);
     }
+
+    public static void WriteDebugHexDump(string message, string? title = null)
+    {
+        var i = 0;
+        foreach (var ch in message)
+        {
+            if (i % 16 == 0)
+            {
+                WriteDebug(i == 0 ? $"{title}\n" : "\n");
+                WriteDebug(string.Format("  {0:x4}: ", i));
+            }
+
+            WriteDebug(string.Format("{0:X2} ", (int)ch));
+            i++;
+        }
+        WriteDebugLine();
+    }
+
 
     public static bool IsStandardInputReference(string fileName)
     {

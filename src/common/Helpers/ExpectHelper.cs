@@ -59,7 +59,8 @@ public class ExpectHelper
         var allExpectedFound = _expected == null || _expected.Count == 0;
         if (!allExpectedFound)
         {
-            var message = $"UNEXPECTED: Couldn't find '{_expected!.Peek()}' in:\n```\n{_unmatchedInput}```";
+            var codeBlock = MarkdownHelpers.GetCodeBlock(_unmatchedInput.ToString());
+            var message = $"UNEXPECTED: Couldn't find '{_expected!.Peek()}' in:\n{codeBlock}";
             _details.AppendLine(message);
 
             if (!_quiet)
