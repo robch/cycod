@@ -59,6 +59,7 @@ tests:
 
 - name: cycodt run simple3.yaml
   command: cycodt run --file simple3.yaml --output-file test-results-simple3.trx
+  expect-exit-code: 1
   expect-regex: |
     ^Found 2 tests...\r?$\n
     ^\r?$\n

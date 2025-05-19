@@ -3,6 +3,7 @@ tag: inception
 tests:
 - name: cycodt run --file simple4.yaml
   command: cycodt run --file simple4.yaml --include-optional check-expect-exit-code
+  expect-exit-code: 1
   expect-regex: |
     ^Found 4 tests\.\.\.\r?$\n
     ^\r?$\n
