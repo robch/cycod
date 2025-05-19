@@ -11,31 +11,34 @@ public class CheckExpectInstructionsHelper
 {
     private static Dictionary<string, string> _cliCache = new Dictionary<string, string>();
 
-    public static TestOutcome CheckExpectGptOutcome(string output, string expectGpt, string workingDirectory, out string gptStdOut, out string gptStdErr, out string gptMerged)
+    public static bool CheckExpectations(string output, string? instructions, string? workingDirectory, out string gptStdOut, out string gptStdErr, out string gptMerged)
     {
-        ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectGptOutcome: Checking for {expectGpt} in '{output}'");
-
-        TestOutcome outcome;
         gptStdOut = string.Empty;
         gptStdErr = string.Empty;
         gptMerged = string.Empty;
 
-        var question = new StringBuilder();
-        question.AppendLine($"Here's the console output:\n\n{output}\n");
-        question.AppendLine($"Here's the expectation:\n\n{expectGpt}\n");
-        question.AppendLine("You **must always** answer \"PASS\" if the expectation is met.");
-        question.AppendLine("You **must always** answer \"FAIL\" if the expectation is not met.");
-        question.AppendLine("You **must only** answer \"PASS\" with no additional text if the expectation is met.");
-        question.AppendLine("If you answer \"FAIL\", you **must** provide additional text to explain why the expectation was not met (without using the word \"PASS\" as we will interpret that as a \"PASS\").");
-        var questionTempFile = FileHelpers.WriteTextToTempFile(question.ToString())!;
+        var noInstructions = string.IsNullOrEmpty(instructions);
+        if (noInstructions) return true;
 
+        ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectations: Checking for {instructions} in '{output}'");
+
+        var prompt = new StringBuilder();
+        prompt.AppendLine($"Here's the console output:\n\n{output}\n");
+        prompt.AppendLine($"Here's the expectation:\n\n{instructions}\n");
+        prompt.AppendLine("You **must always** answer \"PASS\" if the expectation is met.");
+        prompt.AppendLine("You **must always** answer \"FAIL\" if the expectation is not met.");
+        prompt.AppendLine("You **must only** answer \"PASS\" with no additional text if the expectation is met.");
+        prompt.AppendLine("If you answer \"FAIL\", you **must** provide additional text to explain why the expectation was not met (without using the word \"PASS\" as we will interpret that as a \"PASS\").");
+        var promptTempFile = FileHelpers.WriteTextToTempFile(prompt.ToString())!;
+
+        var passed = false;;
         try
         {
             var startProcess = FindCacheCli("cycod");
-            var startArgs = $"--input @{questionTempFile} --interactive false --quiet";
+            var startArgs = $"--input @{promptTempFile} --interactive false --quiet";
             var commandLine = $"{startProcess} {startArgs}";
 
-            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectGptOutcome: RunnableProcessBuilder executing '{commandLine}'");
+            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectations: RunnableProcessBuilder executing '{commandLine}'");
             var result = new RunnableProcessBuilder()
                 .WithCommandLine(commandLine)
                 .WithWorkingDirectory(workingDirectory)
@@ -48,12 +51,12 @@ public class CheckExpectInstructionsHelper
 
             var exitedNotKilled = result.CompletionState == ProcessCompletionState.Completed;
             var exitedNormally = exitedNotKilled && result.ExitCode == 0;
-            outcome = exitedNormally ? TestOutcome.Passed : TestOutcome.Failed;
+            passed = exitedNormally;
 
             var timedoutOrKilled = !exitedNotKilled;
             if (timedoutOrKilled)
             {
-                var message = "CheckExpectInstructionsHelper.CheckExpectGptOutcome: WARNING: Timedout or killed!";
+                var message = "CheckExpectInstructionsHelper.CheckExpectations: WARNING: Timedout or killed!";
                 gptStdErr += $"\n{message}\n";
                 gptMerged += $"\n{message}\n";
                 ConsoleHelpers.WriteDebugLine(message);
@@ -61,26 +64,21 @@ public class CheckExpectInstructionsHelper
         }
         catch (Exception ex)
         {
-            outcome = TestOutcome.Failed;
-
-            var exception = $"CheckExpectInstructionsHelper.CheckExpectGptOutcome: EXCEPTION: {ex.Message}";
+            var exception = $"CheckExpectInstructionsHelper.CheckExpectations: EXCEPTION: {ex.Message}";
             gptStdErr += $"\n{exception}\n";
             gptMerged += $"\n{exception}\n";
             ConsoleHelpers.WriteDebugLine(exception);
         }
 
-        File.Delete(questionTempFile);
-        if (outcome == TestOutcome.Passed)
+        File.Delete(promptTempFile);
+        if (passed)
         {
-            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectGptOutcome: Checking for 'PASS' in '{gptMerged}'");
-
-            var passed = gptMerged.Contains("PASS") || gptMerged.Contains("TRUE") || gptMerged.Contains("YES");
-            outcome = passed ? TestOutcome.Passed : TestOutcome.Failed;
-
-            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectGptOutcome: {outcome}");
+            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectations: Checking for 'PASS' in '{gptMerged}'");
+            passed = gptMerged.Contains("PASS") || gptMerged.Contains("TRUE") || gptMerged.Contains("YES");
+            ConsoleHelpers.WriteDebugLine($"CheckExpectInstructionsHelper.CheckExpectations: {passed}");
         }
 
-        return outcome;
+        return passed;
     }
 
     private static string FindCacheCli(string cli)

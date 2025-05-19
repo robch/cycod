@@ -206,7 +206,7 @@ public class YamlTestCaseRunner
         }
             
         return outcome == TestOutcome.Passed && !string.IsNullOrEmpty(expectGpt)
-            ? CheckExpectGptOutcome(merged, expectGpt, workingDirectory, ref stdOut, ref stdErr)
+            ? CheckExpectations(merged, expectGpt, workingDirectory, ref stdOut, ref stdErr)
             : outcome;
     }
 
@@ -485,7 +485,7 @@ public class YamlTestCaseRunner
         return result;
     }
 
-    private static TestOutcome CheckExpectGptOutcome(string output, string expectGpt, string workingDirectory, ref string stdOut, ref string stdErr)
+    private static TestOutcome CheckExpectations(string output, string expectGpt, string workingDirectory, ref string stdOut, ref string stdErr)
     {
         var outcome = ExpectGptOutcome(output, expectGpt, workingDirectory, out var gptStdOut, out var gptStdErr, out var gptMerged);
         if (outcome == TestOutcome.Failed)
@@ -498,7 +498,9 @@ public class YamlTestCaseRunner
 
     private static TestOutcome ExpectGptOutcome(string output, string expectGpt, string workingDirectory, out string gptStdOut, out string gptStdErr, out string gptMerged)
     {
-        return CheckExpectInstructionsHelper.CheckExpectGptOutcome(output, expectGpt, workingDirectory, out gptStdOut, out gptStdErr, out gptMerged);
+        return CheckExpectInstructionsHelper.CheckExpectations(output, expectGpt, workingDirectory, out gptStdOut, out gptStdErr, out gptMerged)
+            ? TestOutcome.Passed
+            : TestOutcome.Failed;
     }
 
     private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)

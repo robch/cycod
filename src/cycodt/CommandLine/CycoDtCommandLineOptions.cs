@@ -52,10 +52,6 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             command.Output = output;
             i += max1Arg.Count();
         }
-        else if (arg == "--append")
-        {
-            command.Append = true;
-        }
         else if (command is ExpectFormatCommand formatCommand && arg == "--strict")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -85,18 +81,6 @@ public class CycoDtCommandLineOptions : CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var instructions = ValidateString(arg, max1Arg.FirstOrDefault(), "instructions");
             checkCommand5.Instructions = instructions;
-            i += max1Arg.Count();
-        }
-        else if (command is ExpectCheckCommand checkCommand7 && arg == "--format")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var format = ValidateString(arg, max1Arg.FirstOrDefault(), "format");
-            var allowedFormats = new[] { "TEXT", "JSON" };
-            if (!allowedFormats.Contains(format!.ToUpperInvariant()))
-            {
-                throw new CommandLineException($"Invalid format for --format: {format}. Allowed values: TEXT, JSON");
-            }
-            checkCommand7.Format = format!;
             i += max1Arg.Count();
         }
         else

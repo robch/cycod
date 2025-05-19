@@ -25,6 +25,21 @@ public class ExpectHelper
         return helper.Expect();
     }
 
+    public static bool CheckLines(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected, out string? details)
+    {
+        details = null;
+
+        var helper = new ExpectHelper(lines, expected, unexpected, quiet: true);
+        var result = helper.Expect();
+
+        if (!result)
+        {
+            details = helper._details.ToString().TrimEnd('\r', '\n');
+        }
+
+        return result;
+    }
+
     private ExpectHelper(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected, bool quiet)
     {
         _allLines = lines;
@@ -42,9 +57,15 @@ public class ExpectHelper
         }
 
         var allExpectedFound = _expected == null || _expected.Count == 0;
-        if (!allExpectedFound && !_quiet)
+        if (!allExpectedFound)
         {
-            ConsoleHelpers.WriteWarningLine($"UNEXPECTED: Couldn't find '{_expected!.Peek()}' in:\n```\n{_unmatchedInput}```");
+            var message = $"UNEXPECTED: Couldn't find '{_expected!.Peek()}' in:\n```\n{_unmatchedInput}```";
+            _details.AppendLine(message);
+
+            if (!_quiet)
+            {
+                ConsoleHelpers.WriteWarningLine(message);
+            }
         }
 
         return !_foundUnexpected && allExpectedFound;
@@ -75,13 +96,18 @@ public class ExpectHelper
 
             _foundUnexpected = true;
 
+            var message = $"UNEXPECTED: Found '{pattern}' in '{line}'";
+            _details.AppendLine(message);
+
             if (!_quiet)
             {
-                ConsoleHelpers.WriteWarningLine($"UNEXPECTED: Found '{pattern}' in '{line}'");
+                ConsoleHelpers.WriteWarningLine(message);
+                break;
             }
         }
     }
 
+    StringBuilder _details = new StringBuilder();
     private StringBuilder _unmatchedInput = new StringBuilder();
     private IEnumerable<string> _allLines;
 

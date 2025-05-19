@@ -16,18 +16,6 @@ abstract class ExpectBaseCommand : Command
         return false;
     }
     
-    protected string GetInput()
-    {
-        if (Input == "-" || string.IsNullOrEmpty(Input))
-        {
-            return Console.In.ReadToEnd();
-        }
-        else
-        {
-            return File.ReadAllText(Input);
-        }
-    }
-    
     protected void WriteOutput(string text)
     {
         if (string.IsNullOrEmpty(Output))

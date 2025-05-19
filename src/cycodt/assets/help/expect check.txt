@@ -5,14 +5,6 @@ CYCODT EXPECT CHECK
 
 USAGE: cycodt expect check [...]
 
-  INPUT/OUTPUT
-
-    --input FILE          Read input from FILE
-    --input -             Read input from stdin (default)
-
-    --output FILE         Write check results to FILE
-    --format TEXT|JSON    Format for output results (default: TEXT)
-
   EXPECTATIONS
 
     --regex @FILE         Read regex patterns from FILE (one per line)
@@ -23,6 +15,13 @@ USAGE: cycodt expect check [...]
     
     --instructions TEXT   LLM instructions for checking output
     --instructions @FILE  File containing LLM instructions
+
+  INPUT/OUTPUT
+
+    --input FILE          Read input from FILE
+    --input -             Read input from stdin (default)
+
+    --save-output FILE    Write check results to FILE
 
 SEE ALSO
 

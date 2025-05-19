@@ -5,19 +5,16 @@ EXAMPLES
 
   EXAMPLE 1: Use AI to check the output of a command
 
-    git status | cycodt expect check --instructions "branch should be 'main' or 'master'"
+    git status | cycodt expect check --instructions "branch should be 'main'"
 
   EXAMPLE 2: Use regular expressions to check the output of a command
 
-    git status | cycodt expect check --regex "On branch (main|master)"
+    git status | cycodt expect check --regex "On branch main"
     git status | cycodt expect check --not-regex "Untracked files:"
 
-  EXAMPLE 3: Save strict regex from a command output to a file
+  EXAMPLE 3: Save strict regex from a command; use it to checkout output
 
     git status | cycodt expect format --save-output git-status-clean.txt
-
-  EXAMPLE 4: Use regex patterns from a file to check the output of a command
-
     git status | cycodt expect check --regex-file git-status-clean.txt
 
 SEE ALSO

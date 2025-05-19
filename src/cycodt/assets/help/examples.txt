@@ -14,7 +14,7 @@ EXAMPLES
 
   EXAMPLE 3: Use AI to check the output of a command
 
-    git status | cycodt expect check --instructions "branch should be 'main' or 'master'"
+    git status | cycodt expect check --instructions "branch should be 'main'"
 
 SEE ALSO
 
