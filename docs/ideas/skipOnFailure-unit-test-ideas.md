@@ -134,22 +134,6 @@
       # Should be marked as failed
 ```
 
-## Timeout Tests
-
-```yaml
-- name: Timeout with skipOnFailure
-  command: sleep 10
-  timeout: 1000
-  skipOnFailure: true
-  # Should be marked as skipped due to timeout
-
-- name: Timeout without skipOnFailure
-  command: sleep 10
-  timeout: 1000
-  skipOnFailure: false
-  # Should be marked as failed due to timeout
-```
-
 ## Complex Error Scenarios
 
 ```yaml

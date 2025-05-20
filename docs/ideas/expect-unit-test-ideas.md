@@ -163,14 +163,3 @@
     4. Shows only customers who spent over $1000
     5. Orders results by total spent in descending order
 ```
-
-## Timeout and Performance Tests
-
-```yaml
-- name: Expect with timeout check
-  command: |
-    sleep 2
-    echo "Operation completed successfully in 2 seconds."
-  timeout: 3000
-  expect: The output should indicate that the operation completed successfully.
-```

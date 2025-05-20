@@ -2,7 +2,7 @@ class: expect-exit-code-tests
 tag: inception
 tests:
 - name: cycodt run --file simple4.yaml
-  run: cycodt run --file simple4.yaml --include-optional check-expect-exit-code
+  run: cycodt run --file simple4.yaml --include-optional check-expect-exit-code --output-file test-results-simple4.trx
   expect-exit-code: 1
   expect-regex: |
     ^Found 4 tests\.\.\.\r?$\n
@@ -45,4 +45,4 @@ tests:
     ^Failed: 2 \(50\.0%\)\r?$\n
     ^\r?$\n
     ^Tests: 4 \(\d+ ms\)\r?$\n
-    ^Results: D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\test-results\.trx\r?$\n
+    ^Results: D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\test-results-simple4\.trx\r?$\n

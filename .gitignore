@@ -21,5 +21,4 @@ test-results.trx
 tests/cycodt-yaml/testresults/
 tests/cycodt-yaml/inception-layer-1/test-results-simple-optional.trx
 tests/cycodt-yaml/inception-layer-1/test-results-simple.trx
-tests/cycodt-yaml/inception-layer-1/test-results-simple2.trx
-tests/cycodt-yaml/inception-layer-1/test-results-simple3.trx
+tests/cycodt-yaml/inception-layer-1/test-results-simple?.trx

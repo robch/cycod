@@ -163,11 +163,6 @@
 ## Combinations with Other Attributes
 
 ```yaml
-- name: Regex with timeout
-  command: sleep 2 && echo "Delayed output"
-  timeout: 3000
-  expect-regex: Delayed output
-
 - name: Regex with exitcode check
   command: bash -c 'echo "Normal exit"; exit 0'
   expect-regex: Normal exit

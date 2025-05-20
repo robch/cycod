@@ -269,21 +269,3 @@
       parallelize: true
       expect-regex: Still running
 ```
-
-## Timeout Tests
-
-```yaml
-- name: Timeout in parallel tests
-  tests:
-    - name: Quick test
-      command: echo "Quick"
-      parallelize: true
-      timeout: 1000
-      expect-regex: Quick
-    
-    - name: Slow test with timeout
-      command: sleep 3 && echo "Slow"
-      parallelize: true
-      timeout: 1000
-      # Should fail due to timeout
-```

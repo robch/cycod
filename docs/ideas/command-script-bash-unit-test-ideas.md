@@ -83,11 +83,6 @@
 ## Combinations with Other Attributes
 
 ```yaml
-- name: Command with timeout
-  command: sleep 10
-  timeout: 500
-  # Should fail due to timeout
-
 - name: Command with environment variables
   command: echo $TEST_VAR
   env:
