@@ -345,7 +345,7 @@ public class FileHelpers
             var tempFile = Path.GetTempFileName();
             if (!string.IsNullOrEmpty(extension))
             {
-                tempFile = $"{tempFile}.{extension}";
+                tempFile = $"{tempFile}.{extension.Trim('.')}";
             }
 
             File.WriteAllText(tempFile, text);
