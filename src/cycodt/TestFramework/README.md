@@ -1,15 +1,15 @@
-# `ai test`
+# `cycodt`
 
-`ai test` is a YAML-based test framework/runner that can be used to run tests on any command-line tool or script. It is designed to be simple to use and understand, and to be able to run tests in parallel.
+`cycodt` is a YAML-based test framework/runner that can be used to run tests on any command-line tool or script. It is designed to be simple to use and understand, and to be able to run tests in parallel.
 
 Example:
 
 ```yaml
-- name: Build search index
-  run: ai search index update --files "data/*.md" --index-name myindex
+- name: Ensure nothing to commit in worktree
+  run: git status
   expect-regex: |
-    Updating search index 'myindex' ...
-    Updating search index 'myindex' ... Done!
+    On branch master
+    nothing to commit, working tree clean
 ```
 
 The test case YAML file contains a list of test cases. Each test case is a dictionary with the following keys:
@@ -94,7 +94,7 @@ If the specified command or script returns an error level of non-zero, the test 
 Example run command:
 
 ```yaml
-run: ai chat --interactive
+run: git status
 ```
 
 Example for a script with a specific shell:
@@ -180,6 +180,7 @@ When present, will be passed to the command or script as stdin.
 Example:
 
 ```yaml
+run: cycod chat
 input: |
   Tell me a joke
   Tell me another
@@ -238,6 +239,7 @@ Optional.
 When present, specifies the expected exit code of the command or script.
 
 By default, it is set to `0`.
+
 Example:
 
 ```yaml
@@ -348,7 +350,7 @@ In this example, the test case will run three times with `VALUE` set to 1, 2, an
 matrix:
   animals: [ cats, bears, goats ]
   temperature: [ 0.8, 1.0 ]
-run: 'ai chat --question "Tell me a joke about ${{ matrix.animals }}"'
+run: cycod chat --input "Tell me a joke about ${{ matrix.animals }}"
 expect: 'The joke should be about ${{ matrix.animals }}'
 ```
 
@@ -356,17 +358,17 @@ In this example the test case will run six times (2x3) with `temperature` set to
 
 ```yaml
 matrix:
-  assistant-id: asst_TqfFCksyWK83VKe76kiBYWGt
+  temperature: asst_TqfFCksyWK83VKe76kiBYWGt
   foreach:
   - question: How do you create an MP3 file with speech synthesis from the text "Hello, World!"?
   - question: How do you recognize speech from an MP3 file?
   - question: How do you recognize speech from a microphone?
 steps:
-- name: Inference call to `ai chat`
-  run: ai chat
+- name: Inference call to `cycod chat`
+  run: cycod chat
   arguments:
-    question: ${{ matrix.question }}
-    assistant-id: ${{ matrix.assistant-id }}
+    input: ${{ matrix.question }}
+    temperature: ${{ matrix.temperature }}
     output-chat-history: chat-history-${{ matrix.__matrix_id__ }}.jsonl
 ```
 
@@ -378,6 +380,7 @@ matrix-file: questions.yaml
 
 `questions.yaml`:
 ```yaml
+temperature: asst_TqfFCksyWK83VKe76kiBYWGt
 foreach:
 - question: How do you create an MP3 file with speech synthesis from the text "Hello, World!"?
 - question: How do you recognize speech from an MP3 file?
@@ -385,5 +388,3 @@ foreach:
 ```
 
 In this example, the matrix is loaded from a file.
-
-
