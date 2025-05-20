@@ -46,3 +46,26 @@ tests:
   expect-regex: |
     Using explicit shell: PowerShell
     \w+, \w+ \d+, 20\d+ \d+:\d+:\d+ [AP]M
+
+- name: Use custom shell (python)
+  optional: python
+  shell: python {0} {1}
+  script: |
+    import sys
+    print("Hello from Python")
+    print("Arguments:", sys.argv)
+  arguments: 1 2 3
+  expect-regex: |
+    Hello from Python
+    Arguments: .*, '1', '2', '3'
+
+- name: Use custom shell (node)
+  optional: node
+  shell: node {0} {1}
+  script: |
+    console.log('Hello from JavaScript!');
+    console.log('Arguments:', process.argv.slice(2));
+  arguments: arg1 arg2 arg3
+  expect-regex: |
+    Hello from JavaScript!
+    Arguments: \[ 'arg1', 'arg2', 'arg3' \]

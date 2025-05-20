@@ -141,6 +141,22 @@ powershell: |
   }
 ```
 
+You can also use custom shells, like python, etc. Just specify the shell template and the script.
+The template will be used to run the script.  
+- The `{0}` placeholder will be replaced with a temporary filename where the script is saved  
+- The `{1}` placeholder will be replaced with the arguments passed to the script.  
+
+```yaml
+shell: python {0} {1}
+script: |
+  import sys
+  print("Hello from Python")
+  print("Arguments:", sys.argv)
+arguments: 1 2 3
+expect-regex: |
+  Hello from Python
+  Arguments: .*, '1', '2', '3'
+```
 
 ## `env`
 
