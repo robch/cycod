@@ -237,13 +237,6 @@ public class YamlTestFramework
         return itemFromItemIdMap[nextItemId];
     }
 
-    private static IEnumerable<FileInfo> FindFiles(DirectoryInfo directory)
-    {
-        return directory.GetFiles($"*{YamlFileExtension}", SearchOption.AllDirectories)
-            .Where(file => file.Name != YamlDefaultTagsFileName)
-            .Where(file => file.Name != YamlTestsConfigFileName);
-    }
-
     private static bool IsTrait(Trait trait, string check)
     {
         return trait.Name == check || trait.Value == check;

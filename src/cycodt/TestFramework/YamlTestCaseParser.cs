@@ -277,18 +277,45 @@ public partial class YamlTestCaseParser
         string workingDirectory = UpdateWorkingDirectory(mapping!, context.WorkingDirectory);
 
         var command = GetScalarString(mapping, "command");
-        var script = GetScalarString(mapping, "script");
-        var bash = GetScalarString(mapping, "bash");
 
-        var fullyQualifiedName = command == null && script == null && bash == null
+        var script = GetScalarString(mapping, "script");
+        var shell = GetScalarString(mapping, "shell");
+
+        var bash = GetScalarString(mapping, "bash");
+        var cmd = GetScalarString(mapping, "cmd");
+        var powershell = GetScalarString(mapping, "powershell");
+        var pwsh = GetScalarString(mapping, "pwsh");
+
+        if (!string.IsNullOrEmpty(bash))
+        {
+            script = bash;
+            shell = "bash";
+        }
+        else if (!string.IsNullOrEmpty(cmd))
+        {
+            script = cmd;
+            shell = "cmd";
+        }
+        else if (!string.IsNullOrEmpty(pwsh))
+        {
+            script = pwsh;
+            shell = "pwsh";
+        }
+        else if (!string.IsNullOrEmpty(powershell))
+        {
+            script = powershell;
+            shell = "powershell";
+        }
+
+        var fullyQualifiedName = command == null && script == null
             ? GetFullyQualifiedNameAndCommandFromShortForm(mapping, context.Area, context.Class, ref command, stepNumber)
             : GetFullyQualifiedName(mapping, context.Area, context.Class, stepNumber);
         fullyQualifiedName ??= GetFullyQualifiedName(context.Area, context.Class, $"Expected YAML node ('name') at {context.File.FullName}({mapping.Start.Line})", 0);
 
-        var neitherOrBoth = (command == null) == (script == null && bash == null);
+        var neitherOrBoth = (command == null) == (script == null);
         if (neitherOrBoth)
         {
-            var message = $"Error parsing YAML: expected/unexpected key ('name', 'command', 'script', 'bash', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
+            var message = $"Error parsing YAML: expected/unexpected key ('name', 'command', 'script', 'shell', 'bash', 'pwsh', 'powershell', 'cmd', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
             Logger.LogWarning(message);
             return null;
         }
@@ -302,8 +329,14 @@ public partial class YamlTestCaseParser
 
         SetTestCaseProperty(test, "cli", cli);
         SetTestCaseProperty(test, "command", command);
+
         SetTestCaseProperty(test, "script", script);
+        SetTestCaseProperty(test, "shell", shell);
         SetTestCaseProperty(test, "bash", bash);
+        SetTestCaseProperty(test, "cmd", cmd);
+        SetTestCaseProperty(test, "powershell", powershell);
+        SetTestCaseProperty(test, "pwsh", pwsh);
+
         SetTestCaseProperty(test, "parallelize", parallelize);
         SetTestCaseProperty(test, "skipOnFailure", skipOnFailure);
 
@@ -405,7 +438,7 @@ public partial class YamlTestCaseParser
 
     private static bool IsValidTestCaseNode(string? value)
     {
-        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;command;script;bash;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;expect-exit-code;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;optional;".IndexOf($";{value};") >= 0;
+        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;command;script;shell;bash;pwsh;powershell;cmd;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;expect-exit-code;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;optional;".IndexOf($";{value};") >= 0;
     }
 
     private static void SetTestCaseProperty(TestCase test, string propertyName, YamlMappingNode mapping, string mappingName)

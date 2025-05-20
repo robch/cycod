@@ -83,7 +83,7 @@ steps:
   bash: echo "Goodbye, world!"
 ```
 
-## `command`, `script`, `bash`
+## `command`, `script`, `shell`, `bash`, `cmd`, `pwsh`, `powershell`
 
 Required.
 
@@ -97,6 +97,17 @@ Example command:
 command: ai chat --interactive
 ```
 
+Example for a script with a specific shell:
+
+```yaml
+script: |
+  echo "Hello, world!"
+  echo "Goodbye, world!"
+shell: bash
+```
+
+For convenience, you can use shell-specific shortcuts like `bash`, `cmd`, `pwsh`, or `powershell`:
+
 Example for a bash script:
 
 ```yaml
@@ -106,6 +117,28 @@ bash: |
   else 
     py script.py
   fi
+```
+
+Example for a PowerShell script:
+
+```yaml
+pwsh: |
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    Write-Host "Running on PowerShell Core"
+  } else {
+    Write-Host "Running on Windows PowerShell"
+  }
+```
+
+Example for a Windows PowerShell script:
+
+```yaml
+powershell: |
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    Write-Host "Running on PowerShell Core"
+  } else {
+    Write-Host "Running on Windows PowerShell"
+  }
 ```
 
 

@@ -3,12 +3,12 @@ using System.Text;
 
 public static class ProcessHelpers
 {
-    public static RunnableProcessResult RunShellScript(string shell, string script, string? startArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
+    public static RunnableProcessResult RunShellScript(string shell, string script, string? scriptArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
-        return RunShellScriptAsync(shell, script, startArgs, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
+        return RunShellScriptAsync(shell, script, scriptArgs, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
     }
 
-    public static async Task<RunnableProcessResult> RunShellScriptAsync(string shell, string script, string? startArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
+    public static async Task<RunnableProcessResult> RunShellScriptAsync(string shell, string script, string? scriptArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
         var filesToDelete = new List<string>();
 
@@ -20,7 +20,9 @@ public static class ProcessHelpers
             filesToDelete.Add(scriptFileName);
 
             GetShellProcessNameAndArgsFormat(shell, out var processName, out var processArgsFormat);
-            var shellArgsFormatted = string.Format(processArgsFormat.Trim(), scriptFileName);
+            ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {processArgsFormat}");
+            var shellArgsFormatted = string.Format(processArgsFormat.Trim(), scriptFileName, scriptArgs).TrimEnd();
+            ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {shellArgsFormatted}");
 
             var hasScriptFileName = shellArgsFormatted.Contains(scriptFileName);
             if (!hasScriptFileName) throw new InvalidOperationException($"Script file name not found in shell arguments: {shellArgsFormatted}");
@@ -37,7 +39,11 @@ public static class ProcessHelpers
         }
         finally
         {
-            filesToDelete?.ForEach(x => File.Delete(x));
+            var skipDelete = ConsoleHelpers.IsDebug();
+            if (!skipDelete)
+            {
+                filesToDelete?.ForEach(x => File.Delete(x));
+            }
         }
     }
 
@@ -333,6 +339,9 @@ public static class ProcessHelpers
 
         var missingCurlyBracketZero = !shellArgsFormat.Contains("{0}");
         shellArgsFormat = missingCurlyBracketZero ? shellArgsFormat + " {0}" : shellArgsFormat;
+
+        var missingCurlyBracketOne = !shellArgsFormat.Contains("{1}");
+        shellArgsFormat = missingCurlyBracketOne ? shellArgsFormat + " {1}" : shellArgsFormat;
     }
 
     private static string GetShellProcessArgsFormat(string shellType)
@@ -433,12 +442,12 @@ public static class ProcessHelpers
 
     private static readonly Dictionary<string, string> _argsFormat = new(StringComparer.OrdinalIgnoreCase)
     {
-        ["cmd"] = "/D /E:ON /V:OFF /S /C \"CALL \"{0}\"\"",
-        ["pwsh"] = "-command \". '{0}'\"",
-        ["powershell"] = "-command \". '{0}'\"",
-        ["bash"] = "--noprofile --norc -e -o pipefail {0}",
-        ["sh"] = "-e {0}",
-        ["python"] = "{0}"
+        ["cmd"] = "/D /E:ON /V:OFF /S /C \"CALL \"{0}\" {1}\"",
+        ["pwsh"] = "-command \"{0}\" {1}",
+        ["powershell"] = "-Command \"{0}\" {1}",
+        ["bash"] = "--noprofile --norc -e -o pipefail {0} {1}",
+        ["sh"] = "-e {0} {1}",
+        ["python"] = "{0} {1}"
     };
 
     private static readonly Dictionary<string, string> _scriptExtension = new(StringComparer.OrdinalIgnoreCase)

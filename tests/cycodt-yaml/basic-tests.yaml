@@ -1,4 +1,5 @@
-﻿class: run/command/script/bash
+﻿class: basic-tests
+tag: cycodt
 tests:
 
 - name: running simple process

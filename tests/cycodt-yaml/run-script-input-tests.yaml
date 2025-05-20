@@ -1,4 +1,5 @@
 ﻿class: script-input
+tag: cycodt
 tests:
 
 - name: running cmd script w/ input

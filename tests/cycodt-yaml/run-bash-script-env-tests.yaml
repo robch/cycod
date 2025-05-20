@@ -2,6 +2,8 @@ env:
   ENV1: VAL1
   ENV2: VAL2
 
+class: bash-script-env
+tag: cycodt
 tests:
 - name: Simple environment variable
   bash: 'echo "TESTVAR=$TESTVAR"'

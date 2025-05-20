@@ -729,6 +729,7 @@ public class RunnableProcess
         string fileName,
         string arguments)
     {
+        ConsoleHelpers.WriteDebugLine($"ProcessStartInfo: {fileName} {arguments}");
         return new ProcessStartInfo
         {
             FileName = fileName,
