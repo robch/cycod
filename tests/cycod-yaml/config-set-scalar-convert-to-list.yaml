@@ -4,26 +4,26 @@
 #     steps:
 #     # Clean up any existing test keys
 #     - name: Clean up test key
-#       command: cycod config clear ScalarToListTest --any
+#       run: cycod config clear ScalarToListTest --any
 #       skipOnFailure: true
     
 #     # Set initial scalar value
 #     - name: Set scalar value
-#       command: cycod config set ScalarToListTest ScalarValue --local
+#       run: cycod config set ScalarToListTest ScalarValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         ScalarToListTest: ScalarValue
     
 #     # Verify the scalar value was set correctly
 #     - name: Verify scalar value
-#       command: cycod config get ScalarToListTest --local
+#       run: cycod config get ScalarToListTest --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         ScalarToListTest: ScalarValue
     
 #     # Add a value to convert to list
 #     - name: Add value to convert scalar to list
-#       command: cycod config add ScalarToListTest ListItem --local
+#       run: cycod config add ScalarToListTest ListItem --local
 #       expect-regex: |
 #         ScalarToListTest:
 #         - ScalarValue
@@ -31,7 +31,7 @@
     
 #     # Verify conversion to list with both values
 #     - name: Verify conversion to list
-#       command: cycod config get ScalarToListTest --local
+#       run: cycod config get ScalarToListTest --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         ScalarToListTest:
@@ -40,7 +40,7 @@
     
 #     # Add another item to the list
 #     - name: Add another item to the list
-#       command: cycod config add ScalarToListTest AnotherItem --local
+#       run: cycod config add ScalarToListTest AnotherItem --local
 #       expect-regex: |
 #         ScalarToListTest:
 #         - ScalarValue
@@ -49,7 +49,7 @@
     
 #     # Clean up
 #     - name: Clean up test key
-#       command: cycod config clear ScalarToListTest --local
+#       run: cycod config clear ScalarToListTest --local
 #       expect-regex: |
 #         ScalarToListTest: \(cleared\)
 

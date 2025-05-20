@@ -4,133 +4,133 @@
 #     steps:
 #     # Clean up any existing test keys
 #     - name: Clear test nested keys
-#       command: cycod config clear App.Setting.Nested --any
+#       run: cycod config clear App.Setting.Nested --any
 #       skipOnFailure: true
-#     - command: cycod config clear Deep.Nested.Config.Key --any
+#     - run: cycod config clear Deep.Nested.Config.Key --any
 #       skipOnFailure: true
       
 #     # Test setting single-level nested key
 #     - name: Set single-level nested key
-#       command: cycod config set App.Setting SimpleValue --local
+#       run: cycod config set App.Setting SimpleValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting: SimpleValue
     
 #     # Test getting single-level nested key
 #     - name: Get single-level nested key
-#       command: cycod config get App.Setting --local
+#       run: cycod config get App.Setting --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting: SimpleValue
     
 #     # Test setting multi-level nested key
 #     - name: Set multi-level nested key
-#       command: cycod config set App.Setting.Nested NestedValue --local
+#       run: cycod config set App.Setting.Nested NestedValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting.Nested: NestedValue
     
 #     # Test getting multi-level nested key
 #     - name: Get multi-level nested key
-#       command: cycod config get App.Setting.Nested --local
+#       run: cycod config get App.Setting.Nested --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting.Nested: NestedValue
     
 #     # Test setting deeply nested key
 #     - name: Set deeply nested key
-#       command: cycod config set Deep.Nested.Config.Key DeeplyNestedValue --local
+#       run: cycod config set Deep.Nested.Config.Key DeeplyNestedValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Deep.Nested.Config.Key: DeeplyNestedValue
     
 #     # Test getting deeply nested key
 #     - name: Get deeply nested key
-#       command: cycod config get Deep.Nested.Config.Key --local
+#       run: cycod config get Deep.Nested.Config.Key --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Deep.Nested.Config.Key: DeeplyNestedValue
     
 #     # Test overriding nested key
 #     - name: Override nested key
-#       command: cycod config set App.Setting.Nested OverriddenNestedValue --local
+#       run: cycod config set App.Setting.Nested OverriddenNestedValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting.Nested: OverriddenNestedValue
     
 #     # Test getting overridden nested key
 #     - name: Get overridden nested key
-#       command: cycod config get App.Setting.Nested --local
+#       run: cycod config get App.Setting.Nested --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         App.Setting.Nested: OverriddenNestedValue
     
 #     # Test clearing nested key
 #     - name: Clear nested key
-#       command: cycod config clear App.Setting.Nested --local
+#       run: cycod config clear App.Setting.Nested --local
 #       expect-regex: |
 #         App.Setting.Nested: \(cleared\)
     
 #     # Clean up
 #     - name: Clean up test keys
-#       command: cycod config clear App.Setting --local
+#       run: cycod config clear App.Setting --local
 #       skipOnFailure: true
-#     - command: cycod config clear Deep.Nested.Config.Key --local
+#     - run: cycod config clear Deep.Nested.Config.Key --local
 #       skipOnFailure: true
 
 #   - name: Nested keys in different scopes
 #     steps:
 #     # Clean up any existing test keys
 #     - name: Clear test nested keys in all scopes
-#       command: cycod config clear Scopes.Nested.Test --any
+#       run: cycod config clear Scopes.Nested.Test --any
 #       skipOnFailure: true
     
 #     # Set nested keys in different scopes
 #     - name: Set nested key in local scope
-#       command: cycod config set Scopes.Nested.Test LocalNestedValue --local
+#       run: cycod config set Scopes.Nested.Test LocalNestedValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Scopes.Nested.Test: LocalNestedValue
     
 #     - name: Set nested key in user scope
-#       command: cycod config set Scopes.Nested.Test UserNestedValue --user
+#       run: cycod config set Scopes.Nested.Test UserNestedValue --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         Scopes.Nested.Test: UserNestedValue
     
 #     - name: Set nested key in global scope
-#       command: cycod config set Scopes.Nested.Test GlobalNestedValue --global
+#       run: cycod config set Scopes.Nested.Test GlobalNestedValue --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         Scopes.Nested.Test: GlobalNestedValue
     
 #     # Test getting nested keys from specific scopes
 #     - name: Get nested key from local scope
-#       command: cycod config get Scopes.Nested.Test --local
+#       run: cycod config get Scopes.Nested.Test --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Scopes.Nested.Test: LocalNestedValue
     
 #     - name: Get nested key from user scope
-#       command: cycod config get Scopes.Nested.Test --user
+#       run: cycod config get Scopes.Nested.Test --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         Scopes.Nested.Test: UserNestedValue
     
 #     - name: Get nested key from global scope
-#       command: cycod config get Scopes.Nested.Test --global
+#       run: cycod config get Scopes.Nested.Test --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         Scopes.Nested.Test: GlobalNestedValue
     
 #     # Test inheritance with --any flag
 #     - name: Get nested key with any scope (should return local value)
-#       command: cycod config get Scopes.Nested.Test --any
+#       run: cycod config get Scopes.Nested.Test --any
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Scopes.Nested.Test: LocalNestedValue
     
 #     # Clean up
 #     - name: Clean up test nested keys in all scopes
-#       command: cycod config clear Scopes.Nested.Test --any
+#       run: cycod config clear Scopes.Nested.Test --any
 #       skipOnFailure: true

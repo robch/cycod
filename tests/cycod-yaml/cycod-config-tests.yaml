@@ -1,59 +1,59 @@
 - area: Config Commands
   tests:
   - name: Config List (all scopes)
-    command: cycod config list
+    run: cycod config list
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(global\)
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(user\)
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
   
   - name: Config List (local scope only)
-    command: cycod config list --local
+    run: cycod config list --local
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
 
   - name: Config List (user scope only)
-    command: cycod config list --user
+    run: cycod config list --user
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(user\)
 
   - name: Config List (global scope only)
-    command: cycod config list --global
+    run: cycod config list --global
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(global\)
 
   - name: Config Set (local scope)
-    command: cycod config set TestKey TestValue --local
+    run: cycod config set TestKey TestValue --local
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
       TestKey: TestValue
 
   - name: Config Get (local scope)
-    command: cycod config get TestKey --local
+    run: cycod config get TestKey --local
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
       TestKey: TestValue
 
   - name: Config Clear (local scope)
-    command: cycod config clear TestKey --local
+    run: cycod config clear TestKey --local
     expect-regex: |
       TestKey: \(cleared\)
 
   - name: Config Add to List (local scope)
-    command: cycod config add TestList TestItem1 --local
+    run: cycod config add TestList TestItem1 --local
     expect-regex: |
       TestList:
       - TestItem1
 
   - name: Config Add Another Value to List (local scope)
-    command: cycod config add TestList TestItem2 --local
+    run: cycod config add TestList TestItem2 --local
     expect-regex: |
       TestList:
       - TestItem1
       - TestItem2
 
   - name: Config Get List Value (local scope)
-    command: cycod config get TestList --local
+    run: cycod config get TestList --local
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
       TestList:
@@ -61,18 +61,18 @@
         - TestItem2
 
   - name: Config Remove Value from List (local scope)
-    command: cycod config remove TestList TestItem1 --local
+    run: cycod config remove TestList TestItem1 --local
     expect-regex: |
       TestList:
       - TestItem2
 
   - name: Config Clear List (local scope)
-    command: cycod config clear TestList --local
+    run: cycod config clear TestList --local
     expect-regex: |
       TestList: \(cleared\)
 
   - name: Config Get Nonexistent (local scope)
-    command: cycod config get NonexistentKey --local
+    run: cycod config get NonexistentKey --local
     expect-regex: |
       NonexistentKey: \(not found or empty\)
 

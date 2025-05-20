@@ -1,5 +1,5 @@
 - name: Run Environment Variable Unit Tests
-  command: cycodt run --file env-simple-tests.yaml
+  run: cycodt run --file env-simple-tests.yaml
   expect-regex: |
     Found \d+ tests...
     

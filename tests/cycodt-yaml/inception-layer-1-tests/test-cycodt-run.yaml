@@ -2,7 +2,7 @@ class: run-tests
 tag: inception
 tests:
 - name: cycodt run simple.yaml
-  command: cycodt run --file simple.yaml --output-file test-results-simple.trx
+  run: cycodt run --file simple.yaml --output-file test-results-simple.trx
   expect-regex: |
     Found 1 test...
 
@@ -17,7 +17,7 @@ tests:
     Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple.trx
 
 - name: cycodt run simple.yaml w/ all optional
-  command: cycodt run --file simple.yaml --include-optional --output-file test-results-simple-optional.trx
+  run: cycodt run --file simple.yaml --include-optional --output-file test-results-simple-optional.trx
   expect-regex: |
     Found 3 tests...
 
@@ -36,7 +36,7 @@ tests:
     Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple-optional.trx
 
 - name: cycodt run simple2.yaml
-  command: cycodt run --file simple2.yaml --output-file test-results-simple2.trx
+  run: cycodt run --file simple2.yaml --output-file test-results-simple2.trx
   expect-regex: |
     Found 2 tests...
 
@@ -54,11 +54,11 @@ tests:
 
 - name: check simple2.yaml file output
   workingDirectory: ../testresults
-  command: cat hello.txt
+  run: cat hello.txt
   expect-regex: hello
 
 - name: cycodt run simple3.yaml
-  command: cycodt run --file simple3.yaml --output-file test-results-simple3.trx
+  run: cycodt run --file simple3.yaml --output-file test-results-simple3.trx
   expect-exit-code: 1
   expect-regex: |
     ^Found 2 tests...\r?$\n

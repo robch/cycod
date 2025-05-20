@@ -55,7 +55,7 @@ Right now all tests without a `--remove TAG` are run by default, and users must 
 
 ```yaml
 - name: Slow integration test
-  command: ./run-heavy.sh
+  bash: ./run-heavy.sh
   optional: slow
 ```
 
@@ -73,7 +73,7 @@ Right now all tests without a `--remove TAG` are run by default, and users must 
   optional: [network,flaky]
   tests:
     - name: Unstable endpoint
-      command: curl http://unstable.svc/
+      run: curl http://unstable.svc/
 ```
 
 * Descendant tests inherit both categories

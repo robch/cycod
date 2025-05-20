@@ -4,23 +4,23 @@
 #     steps:
 #     # Clean up any existing test lists to ensure a clean testing environment
 #     - name: Clean up test lists in all scopes
-#       command: cycod config clear NewLocalList --any
+#       run: cycod config clear NewLocalList --any
 #       skipOnFailure: true
-#     - command: cycod config clear NewUserList --any
+#     - run: cycod config clear NewUserList --any
 #       skipOnFailure: true
-#     - command: cycod config clear NewGlobalList --any
+#     - run: cycod config clear NewGlobalList --any
 #       skipOnFailure: true
     
 #     # Test creating new list in local scope
 #     - name: Add value to non-existent list in local scope
-#       command: cycod config add NewLocalList FirstLocalItem --local
+#       run: cycod config add NewLocalList FirstLocalItem --local
 #       expect-regex: |
 #         NewLocalList:
 #         - FirstLocalItem
     
 #     # Verify the list was created and has the value
 #     - name: Verify newly created local list
-#       command: cycod config get NewLocalList --local
+#       run: cycod config get NewLocalList --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         NewLocalList:
@@ -28,14 +28,14 @@
     
 #     # Test creating new list in user scope
 #     - name: Add value to non-existent list in user scope
-#       command: cycod config add NewUserList FirstUserItem --user
+#       run: cycod config add NewUserList FirstUserItem --user
 #       expect-regex: |
 #         NewUserList:
 #         - FirstUserItem
     
 #     # Verify the list was created and has the value
 #     - name: Verify newly created user list
-#       command: cycod config get NewUserList --user
+#       run: cycod config get NewUserList --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         NewUserList:
@@ -43,14 +43,14 @@
     
 #     # Test creating new list in global scope
 #     - name: Add value to non-existent list in global scope
-#       command: cycod config add NewGlobalList FirstGlobalItem --global
+#       run: cycod config add NewGlobalList FirstGlobalItem --global
 #       expect-regex: |
 #         NewGlobalList:
 #         - FirstGlobalItem
     
 #     # Verify the list was created and has the value
 #     - name: Verify newly created global list
-#       command: cycod config get NewGlobalList --global
+#       run: cycod config get NewGlobalList --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         NewGlobalList:
@@ -58,7 +58,7 @@
     
 #     # Test adding more values to the newly created list
 #     - name: Add a second value to the newly created local list
-#       command: cycod config add NewLocalList SecondLocalItem --local
+#       run: cycod config add NewLocalList SecondLocalItem --local
 #       expect-regex: |
 #         NewLocalList:
 #         - FirstLocalItem
@@ -66,7 +66,7 @@
     
 #     # Verify the list now has both values
 #     - name: Verify local list has multiple items
-#       command: cycod config get NewLocalList --local
+#       run: cycod config get NewLocalList --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         NewLocalList:
@@ -75,13 +75,13 @@
     
 #     # Clean up
 #     - name: Clean up test lists
-#       command: cycod config clear NewLocalList --local
+#       run: cycod config clear NewLocalList --local
 #       expect-regex: |
 #         NewLocalList: \(cleared\)
-#     - command: cycod config clear NewUserList --user
+#     - run: cycod config clear NewUserList --user
 #       expect-regex: |
 #         NewUserList: \(cleared\)
-#     - command: cycod config clear NewGlobalList --global
+#     - run: cycod config clear NewGlobalList --global
 #       expect-regex: |
 #         NewGlobalList: \(cleared\)
 

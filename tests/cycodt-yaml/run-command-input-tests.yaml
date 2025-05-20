@@ -2,7 +2,7 @@ class: process-input
 tag: cycod
 tests:
 - name: /file README.md
-  command: cycod chat --inputs @@-
+  run: cycod chat --inputs @@-
   workingDirectory: testfiles
   input: |
     /file README.md

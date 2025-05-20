@@ -4,91 +4,91 @@
 #     steps:
 #     # Clean up test keys
 #     - name: Clear test keys in all scopes
-#       command: cycod config clear BoolInheritTest --any
+#       run: cycod config clear BoolInheritTest --any
 #       skipOnFailure: true
     
 #     # Set up boolean values in different scopes with opposite values
 #     - name: Set boolean to true in global scope
-#       command: cycod config set BoolInheritTest true --global
+#       run: cycod config set BoolInheritTest true --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         BoolInheritTest: true
     
 #     - name: Set boolean to false in user scope
-#       command: cycod config set BoolInheritTest false --user
+#       run: cycod config set BoolInheritTest false --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         BoolInheritTest: false
     
 #     # Test inheritance using --any flag (should get user scope's false)
 #     - name: Get boolean with any scope (should return user value)
-#       command: cycod config get BoolInheritTest --any
+#       run: cycod config get BoolInheritTest --any
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         BoolInheritTest: false
     
 #     # Clear user scope value to test inheritance 
 #     - name: Clear boolean in user scope
-#       command: cycod config clear BoolInheritTest --user
+#       run: cycod config clear BoolInheritTest --user
 #       expect-regex: |
 #         BoolInheritTest: \(cleared\)
     
 #     # Test inheritance again (should now get global scope's true)
 #     - name: Get boolean with any scope after clearing user (should return global value)
-#       command: cycod config get BoolInheritTest --any
+#       run: cycod config get BoolInheritTest --any
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         BoolInheritTest: true
     
 #     # Clean up
 #     - name: Clean up test keys
-#       command: cycod config clear BoolInheritTest --any
+#       run: cycod config clear BoolInheritTest --any
 #       skipOnFailure: true
   
 #   - name: Alternative boolean-like values
 #     steps:
 #     # Clean up test keys
 #     - name: Clear test keys
-#       command: cycod config clear BoolLikeTest --any
+#       run: cycod config clear BoolLikeTest --any
 #       skipOnFailure: true
     
 #     # Test setting and retrieving truthy values
 #     - name: Set value to "yes"
-#       command: cycod config set BoolLikeTest "yes" --local
+#       run: cycod config set BoolLikeTest "yes" --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         BoolLikeTest: yes
     
 #     - name: Get the "yes" value
-#       command: cycod config get BoolLikeTest --local
+#       run: cycod config get BoolLikeTest --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         BoolLikeTest: yes
     
 #     # Test with "1" value
 #     - name: Set value to "1"
-#       command: cycod config set BoolLikeTest "1" --local
+#       run: cycod config set BoolLikeTest "1" --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         BoolLikeTest: 1
     
 #     # Test with "no" value
 #     - name: Set value to "no"
-#       command: cycod config set BoolLikeTest "no" --local
+#       run: cycod config set BoolLikeTest "no" --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         BoolLikeTest: no
     
 #     # Test with "0" value
 #     - name: Set value to "0"
-#       command: cycod config set BoolLikeTest "0" --local
+#       run: cycod config set BoolLikeTest "0" --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         BoolLikeTest: 0
     
 #     # Clean up
 #     - name: Clean up test keys
-#       command: cycod config clear BoolLikeTest --local
+#       run: cycod config clear BoolLikeTest --local
 #       expect-regex: |
 #         BoolLikeTest: \(cleared\)
   
@@ -96,111 +96,111 @@
 #     steps:
 #     # Clean up test keys
 #     - name: Clear feature flag test keys
-#       command: cycod config clear Features.TestFeature --any
+#       run: cycod config clear Features.TestFeature --any
 #       skipOnFailure: true
     
 #     # Set feature flag to true
 #     - name: Enable feature flag
-#       command: cycod config set Features.TestFeature true --local
+#       run: cycod config set Features.TestFeature true --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Features.TestFeature: true
     
 #     # Verify feature flag state
 #     - name: Check enabled feature flag
-#       command: cycod config get Features.TestFeature --local
+#       run: cycod config get Features.TestFeature --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Features.TestFeature: true
     
 #     # Toggle feature flag to false
 #     - name: Disable feature flag
-#       command: cycod config set Features.TestFeature false --local
+#       run: cycod config set Features.TestFeature false --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Features.TestFeature: false
     
 #     # Verify feature flag toggled off
 #     - name: Check disabled feature flag
-#       command: cycod config get Features.TestFeature --local
+#       run: cycod config get Features.TestFeature --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         Features.TestFeature: false
     
 #     # Clean up
 #     - name: Clean up feature flag test
-#       command: cycod config clear Features.TestFeature --local
+#       run: cycod config clear Features.TestFeature --local
 #       expect-regex: |
 #         Features.TestFeature: \(cleared\)
 #   - name: Get values from different scopes
 #     steps:
 #     # Set up test environment with values in different scopes
 #     - name: Clear test keys in all scopes
-#       command: cycod config clear ScopeGetKey --any
+#       run: cycod config clear ScopeGetKey --any
 #       skipOnFailure: true
     
 #     - name: Set value in local scope
-#       command: cycod config set ScopeGetKey LocalValue --local
+#       run: cycod config set ScopeGetKey LocalValue --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         ScopeGetKey: LocalValue
     
 #     - name: Set value in user scope
-#       command: cycod config set ScopeGetKey UserValue --user
+#       run: cycod config set ScopeGetKey UserValue --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         ScopeGetKey: UserValue
     
 #     - name: Set value in global scope
-#       command: cycod config set ScopeGetKey GlobalValue --global
+#       run: cycod config set ScopeGetKey GlobalValue --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         ScopeGetKey: GlobalValue
     
 #     # Test getting values from specific scopes
 #     - name: Get value from local scope
-#       command: cycod config get ScopeGetKey --local
+#       run: cycod config get ScopeGetKey --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         ScopeGetKey: LocalValue
     
 #     - name: Get value from user scope
-#       command: cycod config get ScopeGetKey --user
+#       run: cycod config get ScopeGetKey --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         ScopeGetKey: UserValue
     
 #     - name: Get value from global scope
-#       command: cycod config get ScopeGetKey --global
+#       run: cycod config get ScopeGetKey --global
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
 #         ScopeGetKey: GlobalValue
     
 #     # Clean up test keys
 #     - name: Clean up all test keys
-#       command: cycod config clear ScopeGetKey --any
+#       run: cycod config clear ScopeGetKey --any
 #       skipOnFailure: true
   
 #   - name: Get non-existent keys from different scopes
 #     steps:
 #     # Test getting non-existent keys from different scopes
 #     - name: Get non-existent key from local scope
-#       command: cycod config get NonExistentLocal --local
+#       run: cycod config get NonExistentLocal --local
 #       expect-regex: |
 #         NonExistentLocal: \(not found or empty\)
     
 #     - name: Get non-existent key from user scope
-#       command: cycod config get NonExistentUser --user
+#       run: cycod config get NonExistentUser --user
 #       expect-regex: |
 #         NonExistentUser: \(not found or empty\)
     
 #     - name: Get non-existent key from global scope
-#       command: cycod config get NonExistentGlobal --global
+#       run: cycod config get NonExistentGlobal --global
 #       expect-regex: |
 #         NonExistentGlobal: \(not found or empty\)
     
 #     - name: Get non-existent key with any scope
-#       command: cycod config get NonExistentAny --any
+#       run: cycod config get NonExistentAny --any
 #       expect-regex: |
 #         NonExistentAny: \(not found or empty\)
   
@@ -208,50 +208,50 @@
 #     steps:
 #     # Set up multiple keys in different scopes
 #     - name: Clean up test keys
-#       command: cycod config clear KeyOne --any
+#       run: cycod config clear KeyOne --any
 #       skipOnFailure: true
-#     - command: cycod config clear KeyTwo --any
+#     - run: cycod config clear KeyTwo --any
 #       skipOnFailure: true
     
 #     - name: Set KeyOne in local scope only
-#       command: cycod config set KeyOne LocalValueOne --local
+#       run: cycod config set KeyOne LocalValueOne --local
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         KeyOne: LocalValueOne
     
 #     - name: Set KeyTwo in user scope only
-#       command: cycod config set KeyTwo UserValueTwo --user
+#       run: cycod config set KeyTwo UserValueTwo --user
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         KeyTwo: UserValueTwo
     
 #     # Test getting values with mixed existence
 #     - name: Get KeyOne with any scope (should find in local)
-#       command: cycod config get KeyOne --any
+#       run: cycod config get KeyOne --any
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
 #         KeyOne: LocalValueOne
     
 #     - name: Get KeyTwo with any scope (should find in user)
-#       command: cycod config get KeyTwo --any
+#       run: cycod config get KeyTwo --any
 #       expect-regex: |
 #         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
 #         KeyTwo: UserValueTwo
     
 #     - name: Get KeyOne from user scope (should not exist)
-#       command: cycod config get KeyOne --user
+#       run: cycod config get KeyOne --user
 #       expect-regex: |
 #         KeyOne: \(not found or empty\)
     
 #     - name: Get KeyTwo from local scope (should not exist)
-#       command: cycod config get KeyTwo --local
+#       run: cycod config get KeyTwo --local
 #       expect-regex: |
 #         KeyTwo: \(not found or empty\)
     
 #     # Clean up
 #     - name: Clean up test keys
-#       command: cycod config clear KeyOne --any
+#       run: cycod config clear KeyOne --any
 #       skipOnFailure: true
-#     - command: cycod config clear KeyTwo --any
+#     - run: cycod config clear KeyTwo --any
 #       skipOnFailure: true
 

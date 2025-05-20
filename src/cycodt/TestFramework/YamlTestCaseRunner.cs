@@ -6,13 +6,13 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class YamlTestCaseRunner
 {
-    public static IEnumerable<TestResult> TestCaseGetResults(TestCase test, string cli, string? command, string? script, string? shell, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string? workingDirectory, int timeout, int expectExitCode, bool skipOnFailure, string? @foreach)
+    public static IEnumerable<TestResult> TestCaseGetResults(TestCase test, string cli, string? runProcess, string? script, string? shell, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string? workingDirectory, int timeout, int expectExitCode, bool skipOnFailure, string? @foreach)
     {
         Logger.Log($"YamlTestCaseRunner.TestCaseGetResults: ENTER");
 
         foreach (var foreachItem in ExpandForEachGroups(@foreach))
         {
-            var result = TestCaseGetResult(test, cli, command, script, shell, foreachItem, arguments, input, expectGpt, expectRegex, notExpectRegex, env, workingDirectory!, timeout, expectExitCode, skipOnFailure);
+            var result = TestCaseGetResult(test, cli, runProcess, script, shell, foreachItem, arguments, input, expectGpt, expectRegex, notExpectRegex, env, workingDirectory!, timeout, expectExitCode, skipOnFailure);
             if (!string.IsNullOrEmpty(foreachItem) && foreachItem != "{}")
             {
                 result.DisplayName = GetTestResultDisplayName(test.DisplayName, foreachItem);
@@ -25,11 +25,11 @@ public class YamlTestCaseRunner
 
     #region private methods
 
-    private static TestResult TestCaseGetResult(TestCase test, string cli, string? command, string? script, string? shell, string? foreachItem, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string workingDirectory, int timeout, int expectExitCode, bool skipOnFailure)
+    private static TestResult TestCaseGetResult(TestCase test, string cli, string? runProcess, string? script, string? shell, string? foreachItem, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string workingDirectory, int timeout, int expectExitCode, bool skipOnFailure)
     {
         var start = DateTime.Now;
 
-        var outcome = RunTestCase(skipOnFailure, cli, command, script, shell, foreachItem, arguments, input, expectGpt, expectRegex, notExpectRegex, env, workingDirectory, timeout, expectExitCode, out string stdOut, out string stdErr, out string errorMessage, out string stackTrace, out string additional, out string debugTrace);
+        var outcome = RunTestCase(skipOnFailure, cli, runProcess, script, shell, foreachItem, arguments, input, expectGpt, expectRegex, notExpectRegex, env, workingDirectory, timeout, expectExitCode, out string stdOut, out string stdErr, out string errorMessage, out string stackTrace, out string additional, out string debugTrace);
 
         var stop = DateTime.Now;
         return CreateTestResult(test, start, stop, stdOut, stdErr, errorMessage, stackTrace, additional, debugTrace, outcome);
@@ -140,7 +140,7 @@ public class YamlTestCaseRunner
         return dup;
     }
 
-    private static TestOutcome RunTestCase(bool skipOnFailure, string cli, string? command, string? script, string? shell, string? @foreach, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string workingDirectory, int timeout, int expectExitCode, out string stdOut, out string stdErr, out string errorMessage, out string stackTrace, out string additional, out string debugTrace)
+    private static TestOutcome RunTestCase(bool skipOnFailure, string cli, string? runProcess, string? script, string? shell, string? @foreach, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string workingDirectory, int timeout, int expectExitCode, out string stdOut, out string stdErr, out string errorMessage, out string stackTrace, out string additional, out string debugTrace)
     {
         var outcome = TestOutcome.None;
 
@@ -154,20 +154,20 @@ public class YamlTestCaseRunner
 
         try
         {
-            var isCommand = !string.IsNullOrEmpty(command) || string.IsNullOrEmpty(script);
-            var isScript = !string.IsNullOrEmpty(script) && string.IsNullOrEmpty(command);
-            var ok = isCommand || isScript;
-            if (!ok) throw new Exception("Neither command nor script specified!");
+            var isRun = !string.IsNullOrEmpty(runProcess) || string.IsNullOrEmpty(script);
+            var isScript = !string.IsNullOrEmpty(script) && string.IsNullOrEmpty(runProcess);
+            var ok = isRun || isScript;
+            if (!ok) throw new Exception("Neither run nor script specified!");
 
             var kvs = KeyValuePairsFromJson(arguments, true);
             kvs.AddRange(KeyValuePairsFromJson(@foreach, false));
-            stackTrace = UpdateStackTrace(stackTrace, command, kvs);
+            stackTrace = UpdateStackTrace(stackTrace, runProcess, kvs);
 
             var startArgs = GetKeyValueArgs(kvs);
             var envVars = YamlEnvHelpers.GetEnvironmentFromMultiLineString(env);
 
-            var result = isCommand
-                ? ProcessHelpers.RunProcess($"{command} {startArgs}", workingDirectory, envVars, input, timeout)
+            var result = isRun
+                ? ProcessHelpers.RunProcess($"{runProcess} {startArgs}", workingDirectory, envVars, input, timeout)
                 : ProcessHelpers.RunShellScript(shell ?? "cmd", script!, startArgs, workingDirectory, envVars, input, timeout);
 
             stdOut = result!.StandardOutput;
@@ -240,9 +240,9 @@ public class YamlTestCaseRunner
         return kvs;
     }
 
-    private static string UpdateStackTrace(string stackTrace, string? command, List<KeyValuePair<string, string>> kvs)
+    private static string UpdateStackTrace(string stackTrace, string? runProcess, List<KeyValuePair<string, string>> kvs)
     {
-        if (command?.EndsWith("dev shell") ?? false)
+        if (runProcess?.EndsWith("dev shell") ?? false)
         {
             var devShellRunBashScriptArguments = string.Join("\n", kvs
                 .Where(kv => kv.Key switch { "run" => true, "bash" => true, "script" => true, _ => false })
@@ -254,14 +254,14 @@ public class YamlTestCaseRunner
                 stackTrace = $"{stackTrace}\n{devShellRunBashScriptArguments}".Trim('\r', '\n', ' ');
             }
         }
-        else if (command != null)
+        else if (runProcess != null)
         {
             var commandArguments = string.Join("\n", kvs
                 .Where(kv => !string.IsNullOrEmpty(kv.Key))
                 .Select(kv => $"{kv.Key}:\n{kv.Value.Replace("\n", "\n  ")}"));
             stackTrace = !string.IsNullOrEmpty(commandArguments)
-                ? $"{stackTrace}\nCOMMAND: {command}\n{commandArguments}".Trim('\r', '\n', ' ')
-                : $"{stackTrace}\nCOMMAND: {command}".Trim('\r', '\n', ' ');
+                ? $"{stackTrace}\nRUN: {runProcess}\n{commandArguments}".Trim('\r', '\n', ' ')
+                : $"{stackTrace}\nRUN: {runProcess}".Trim('\r', '\n', ' ');
         }
 
         return stackTrace;

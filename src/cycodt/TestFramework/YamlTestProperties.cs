@@ -27,7 +27,7 @@ public class YamlTestProperties
 
     private static readonly Dictionary<string, TestProperty> properties = new Dictionary<string, TestProperty>() {
         { "cli", RegisterTestCaseProperty("CLI") },
-        { "command", RegisterTestCaseProperty("Command") },
+        { "run", RegisterTestCaseProperty("Run") },
         { "script", RegisterTestCaseProperty("Script") },
         { "shell", RegisterTestCaseProperty("Shell") },
         { "bash", RegisterTestCaseProperty("Bash") },

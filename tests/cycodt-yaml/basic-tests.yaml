@@ -3,10 +3,10 @@ tag: cycodt
 tests:
 
 - name: running simple process
-  command: cycod version
+  run: cycod version
 
 - name: running simple process w/ AI expectation
-  command: cycod --input Hi --use-anthropic
+  run: cycod --input Hi --use-anthropic
   expect: You should see a greeting from user, and then the assistant will respond with something (doesn't matter what it responds with, as long as it responds with something).
   optional: needsAI
 

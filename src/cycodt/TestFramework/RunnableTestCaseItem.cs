@@ -15,7 +15,7 @@ public class RunnableTestCaseItem
         _properties = properties;
 
         _cli = GetInterpolatedProperty("cli") ?? "";
-        _command = GetInterpolatedProperty("command");
+        _runProcess = GetInterpolatedProperty("run");
 
         _script = GetInterpolatedProperty("script");
         _shell = GetInterpolatedProperty("shell");
@@ -91,7 +91,7 @@ public class RunnableTestCaseItem
 
         // run the test case, getting all the results, prior to recording any of those results
         // (not doing this in this order seems to, for some reason, cause "foreach" test cases to run 5 times!?)
-        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _command, _script, _shell, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _expectExitCode, _skipOnFailure, _foreach);
+        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _runProcess, _script, _shell, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _expectExitCode, _skipOnFailure, _foreach);
         _results = results.ToList();
 
         _runnableTest.RecordResults(host, this, _results);
@@ -119,7 +119,7 @@ public class RunnableTestCaseItem
     private Dictionary<string, string>? _properties;
 
     private string _cli;
-    private string? _command;
+    private string? _runProcess;
     private string? _script;
     private string? _shell;
     private string? _arguments;

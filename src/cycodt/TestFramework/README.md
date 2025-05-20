@@ -6,7 +6,7 @@ Example:
 
 ```yaml
 - name: Build search index
-  command: ai search index update --files "data/*.md" --index-name myindex
+  run: ai search index update --files "data/*.md" --index-name myindex
   expect-regex: |
     Updating search index 'myindex' ...
     Updating search index 'myindex' ... Done!
@@ -36,10 +36,10 @@ Test cases can be organized into areas, sub-areas, and so on.
   tests:
 
   - name: Test 1
-    command: echo "Hello, world!"
+    bash: echo "Hello, world!"
 
   - name: Test 2
-    command: echo "Goodbye, world!"
+    bash: echo "Goodbye, world!"
 ```
 
 Test cases can also be grouped into classes. 
@@ -49,10 +49,10 @@ Test cases can also be grouped into classes.
   tests:
 
   - name: Test 1
-    command: echo "Hello, world!"
+    bash: echo "Hello, world!"
 
   - name: Test 2
-    command: echo "Goodbye, world!"
+    bash: echo "Goodbye, world!"
 ```
 
 If no class is specified, the default class is "TestCases".
@@ -70,9 +70,9 @@ Examples:
 ```yaml
 tests:
 - name: Test 1
-  command: echo "Hello, world!"
+  bash: echo "Hello, world!"
 - name: Test 2
-  command: echo "Goodbye, world!"
+  bash: echo "Goodbye, world!"
 ```
 
 ```yaml
@@ -83,7 +83,7 @@ steps:
   bash: echo "Goodbye, world!"
 ```
 
-## `command`, `script`, `shell`, `bash`, `cmd`, `pwsh`, `powershell`
+## `run`, `script`, `shell`, `bash`, `cmd`, `pwsh`, `powershell`
 
 Required.
 
@@ -91,10 +91,10 @@ Represents how the test case will be run.
 
 If the specified command or script returns an error level of non-zero, the test will fail. If it returns zero, it will pass (given that all 'expect' conditions are also met).
 
-Example command:
+Example run command:
 
 ```yaml
-command: ai chat --interactive
+run: ai chat --interactive
 ```
 
 Example for a script with a specific shell:
@@ -299,11 +299,11 @@ tags: [echo]
 tests:
 
 - name: Test 1
-  command: echo "Hello, world!"
+  bash: echo "Hello, world!"
   tags: [hello]
 
 - name: Test 2
-  command: echo "Goodbye, world!"
+  bash: echo "Goodbye, world!"
   tags: [bye]
 ```
 
@@ -348,7 +348,7 @@ In this example, the test case will run three times with `VALUE` set to 1, 2, an
 matrix:
   animals: [ cats, bears, goats ]
   temperature: [ 0.8, 1.0 ]
-command: 'ai chat --question "Tell me a joke about ${{ matrix.animals }}"'
+run: 'ai chat --question "Tell me a joke about ${{ matrix.animals }}"'
 expect: 'The joke should be about ${{ matrix.animals }}'
 ```
 
@@ -363,7 +363,7 @@ matrix:
   - question: How do you recognize speech from a microphone?
 steps:
 - name: Inference call to `ai chat`
-  command: ai chat
+  run: ai chat
   arguments:
     question: ${{ matrix.question }}
     assistant-id: ${{ matrix.assistant-id }}

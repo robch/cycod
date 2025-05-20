@@ -100,7 +100,7 @@ public class YamlTestCaseFilter
             case "fullyqualifiedname": return test.FullyQualifiedName;
 
             case "cli": return YamlTestProperties.Get(test, "cli");
-            case "command": return YamlTestProperties.Get(test, "command");
+            case "run": return YamlTestProperties.Get(test, "run");
             case "script": return YamlTestProperties.Get(test, "script");
             case "bash": return YamlTestProperties.Get(test, "bash");
 
@@ -136,5 +136,5 @@ public class YamlTestCaseFilter
     }
 
 
-    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "Category", "cli", "command", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "expect-exit-code", "parallelize", "skipOnFailure" };
+    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "Category", "cli", "run", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "expect-exit-code", "parallelize", "skipOnFailure" };
 }

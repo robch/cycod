@@ -1,7 +1,7 @@
 ﻿class: simple
 tests:
 - name: running simple process
-  command: cycod version
+  run: cycod version
 
 - name: running simple script w/ regex expectation
   script: echo hello
