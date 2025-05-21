@@ -2,7 +2,7 @@ class: process-input
 tag: cycod
 tests:
 - name: /file README.md
-  run: cycod chat --inputs @@-
+  run: cycod chat --inputs @@- --openai-api-key fake --use-openai
   workingDirectory: testfiles
   input: |
     /file README.md

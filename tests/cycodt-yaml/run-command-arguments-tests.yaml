@@ -2,7 +2,7 @@ class: process-args
 tag: cycod
 tests:
 - name: /file README.md
-  run: cycod
+  run: cycod --openai-api-key fake --use-openai
   workingDirectory: testfiles
   arguments:
     input: /file README.md
@@ -28,7 +28,7 @@ tests:
     ^User: exit\r?$\n
 
 - name: /file README.md 2
-  run: cycod
+  run: cycod --openai-api-key fake --use-openai
   workingDirectory: testfiles
   arguments:
     - input: "/file README.md"
