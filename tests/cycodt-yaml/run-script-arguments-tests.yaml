@@ -12,6 +12,7 @@ tests:
     ^args are --arg1 value1 --arg2 value 2 --arg3\r?$\n
 
 - name: running cmd script w/ args
+  optional: windows
   cmd: |
     echo args are %*
   arguments:
@@ -22,7 +23,7 @@ tests:
     ^args are --arg1 value1 --arg2 "value 2" --arg3\r?$\n
     
 - name: running powershell script w/ args
-  powershell: |
+  pwsh: |
     Write-Host "args are $args"
   arguments:
     arg1: value1

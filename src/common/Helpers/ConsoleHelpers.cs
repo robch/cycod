@@ -134,11 +134,19 @@ public class ConsoleHelpers
 
     public static void WriteDebugHexDump(string message, string? title = null)
     {
+        var noMessage = string.IsNullOrEmpty(message);
+        if (noMessage)
+        {
+            WriteDebugLine($"{title}\n  0000: (empty)");
+            return;
+        }
+
         var i = 0;
         foreach (var ch in message)
         {
             if (i % 16 == 0)
             {
+                title = title!.Replace("\r", "\\r").Replace("\n", "\\n");
                 WriteDebug(i == 0 ? $"{title}\n" : "\n");
                 WriteDebug(string.Format("  {0:x4}: ", i));
             }

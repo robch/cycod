@@ -2,6 +2,14 @@ class: script-shell
 tag: cycodt
 tests:
 
+- name: Use Bash Script
+  bash: |
+    echo "Hello from Bash"
+    ls -la | head -n 3
+  expect-regex: |
+    Hello from Bash
+    total +[\d,]+
+
 - name: Use CMD Script
   optional: windows
   cmd: |
@@ -19,33 +27,23 @@ tests:
   expect-regex: |
     Hello from PowerShell Core
     Directory: .*cycodt-yaml
-    Mode +LastWriteTime +Length +Name
-    -+ +-+ +-+ +-+
 
 - name: Use PowerShell Script (powershell shortcut)
   powershell: |
     Write-Host "Hello from Windows PowerShell"
-    Get-Process | Select-Object -First 3
+    Get-ChildItem | Select-Object -First 3
   expect-regex: |
     Hello from Windows PowerShell
-    Handles +NPM\(K\) +PM\(K\) +WS\(K\) +CPU\(s\) +Id +SI +ProcessName
-
-- name: Use Bash Script
-  bash: |
-    echo "Hello from Bash"
-    ls -la | head -n 3
-  expect-regex: |
-    Hello from Bash
-    total +[\d,]+
+    Directory: .*cycodt-yaml
 
 - name: Use Script with Explicit Shell
   script: |
-    Write-Host "Using explicit shell: PowerShell"
-    Get-Date
-  shell: powershell
+    Write-Host "Using explicit shell: pwsh"
+    Get-ChildItem | Select-Object -First 3
+  shell: pwsh
   expect-regex: |
-    Using explicit shell: PowerShell
-    \w+, \w+ \d+, 20\d+ \d+:\d+:\d+ [AP]M
+    Using explicit shell: pwsh
+    Directory: .*cycodt-yaml
 
 - name: Use custom shell (python)
   optional: python

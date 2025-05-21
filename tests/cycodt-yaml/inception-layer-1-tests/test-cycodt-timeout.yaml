@@ -5,19 +5,18 @@ tests:
   run: cycodt run --file simple5.yaml --include-optional check-timeouts --output-file test-results-simple5.trx
   expect-exit-code: 1
   expect-regex: |
-    ^Found 1 test\.\.\.\r?$\n
-    ^\r?$\n
-    ^Starting test: yaml\.simple5\.simple5\.timeouts\r?$\n
+    ^Found 1 test\.\.\.
+    Starting test: yaml\.simple5\.simple5\.timeouts\r?$\n
     ^Passed \(.*\): yaml\.simple5\.simple5\.timeouts\r?$\n
     ^Failed \(.*\): yaml\.simple5\.simple5\.timeouts\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple5\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple5\.yaml\(5\)\r?$\n
     ^echo sleeping for 2 seconds - timeout after 1500 seconds\r?$\n
     ^sleep 2\r?$\n
     ^echo done sleeping\r?$\n
     ^EXIT CODE: \(did not exit; timedout; killed\)\r?$\n
     ^\r?$\n
     ^Failed \(.*\): yaml\.simple5\.simple5\.timeouts\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple5\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple5\.yaml\(5\)\r?$\n
     ^echo sleeping for 3 seconds - timeout after 1500 seconds\r?$\n
     ^sleep 3\r?$\n
     ^echo done sleeping\r?$\n
@@ -26,14 +25,14 @@ tests:
     ^\r?$\n
     ^FAILURE SUMMARY:\r?$\n
     ^Failed \(.*\): yaml\.simple5\.simple5\.timeouts\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple5\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple5\.yaml\(5\)\r?$\n
     ^echo sleeping for 2 seconds - timeout after 1500 seconds\r?$\n
     ^sleep 2\r?$\n
     ^echo done sleeping\r?$\n
     ^EXIT CODE: \(did not exit; timedout; killed\)\r?$\n
     ^\r?$\n
     ^Failed \(.*\): yaml\.simple5\.simple5\.timeouts\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple5\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple5\.yaml\(5\)\r?$\n
     ^echo sleeping for 3 seconds - timeout after 1500 seconds\r?$\n
     ^sleep 3\r?$\n
     ^echo done sleeping\r?$\n
@@ -45,4 +44,4 @@ tests:
     ^Failed: 2 \(66\.7%\)\r?$\n
     ^\r?$\n
     ^Tests: 3 \(.*\)\r?$\n
-    ^Results: D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\test-results-simple5\.trx\r?$\n
+    ^Results: .*cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple5\.trx\r?$\n

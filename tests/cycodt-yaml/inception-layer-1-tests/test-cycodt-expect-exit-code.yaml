@@ -9,7 +9,7 @@ tests:
     ^\r?$\n
     ^Starting test: yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
     ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(5\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
@@ -18,7 +18,7 @@ tests:
     ^Passed \(\d+ ms\): yaml\.simple4\.simple4\.successfully expects exit code 1\r?$\n
     ^Starting test: yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
     ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(18\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(18\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
@@ -28,13 +28,13 @@ tests:
     ^\r?$\n
     ^FAILURE SUMMARY:\r?$\n
     ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(5\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(5\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
     ^\r?$\n
     ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
-    ^at D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\simple4\.yaml\(18\)\r?$\n
+    ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(18\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
@@ -45,4 +45,4 @@ tests:
     ^Failed: 2 \(50\.0%\)\r?$\n
     ^\r?$\n
     ^Tests: 4 \(\d+ ms\)\r?$\n
-    ^Results: D:\\src\\chatx\\tests\\cycodt-yaml\\inception-layer-1\\test-results-simple4\.trx\r?$\n
+    ^Results: .*cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple4\.trx\r?$\n

@@ -320,8 +320,14 @@ public static class ProcessHelpers
 
     private static string FindNoCachePwshExe()
     {
-        var found = FileHelpers.FindFilesInOsPath("pwsh.exe");
-        return found.FirstOrDefault() ?? "powershell.exe";
+        var found = FileHelpers.FindFilesInOsPath(OS.IsWindows() ? "pwsh.exe" : "pwsh");
+        var tryPowerShellExe = found.Count() == 0 && OS.IsWindows();
+        if (tryPowerShellExe)
+        {
+            found = FileHelpers.FindFilesInOsPath("powershell.exe");
+        }
+
+        return found.FirstOrDefault() ?? (OS.IsWindows() ? "powershell.exe" : "pwsh");
     }
 
     private static void GetShellProcessNameAndArgsFormat(string shell, out string shellProcessName, out string shellArgsFormat)

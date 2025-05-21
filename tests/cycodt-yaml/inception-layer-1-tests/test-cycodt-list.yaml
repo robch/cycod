@@ -11,7 +11,7 @@ tests:
   run: cycodt list --files simple.yaml --include-optional windows
   expect-regex: |
     yaml.simple.simple.running simple process
-    yaml.simple.simple.running simple script w/ regex expectation
+    yaml.simple.simple.running script w/ regex expectation
     Found 2 tests...
 
 - name: cycodt list w/optional linux
@@ -25,7 +25,7 @@ tests:
   run: cycodt list --files simple.yaml --include-optional
   expect-regex: |
     yaml.simple.simple.running simple process
-    yaml.simple.simple.running simple script w/ regex expectation
+    yaml.simple.simple.running script w/ regex expectation
     yaml.simple.simple.running bash script w/ regex expectation
     Found 3 tests...
 
@@ -41,7 +41,7 @@ tests:
     ^.*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple.yaml\r?$\n
     ^\r?$\n
     ^  yaml.simple.simple.running simple process\r?$\n
-    ^  yaml.simple.simple.running simple script w/ regex expectation\r?$\n
+    ^  yaml.simple.simple.running script w/ regex expectation\r?$\n
     ^  yaml.simple.simple.running bash script w/ regex expectation\r?$\n
     ^\r?$\n
     ^.*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple2.yaml\r?$\n

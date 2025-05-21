@@ -195,7 +195,7 @@ public class YamlTestCaseRunner
                 + $" EXIT CODE: {exitCodeText}";
 
             var checkRegExExpectations = outcome == TestOutcome.Passed && (!string.IsNullOrEmpty(expectRegex) || !string.IsNullOrEmpty(notExpectRegex));
-            if (checkRegExExpectations) outcome = CheckExpectRegExPatterns(merged, expectRegex, notExpectRegex);
+            if (checkRegExExpectations) outcome = CheckExpectRegExPatterns(merged, expectRegex, notExpectRegex, ref stdOut, ref stdErr);
         }
         catch (Exception ex)
         {
@@ -206,7 +206,7 @@ public class YamlTestCaseRunner
         }
             
         return outcome == TestOutcome.Passed && !string.IsNullOrEmpty(expectGpt)
-            ? CheckExpectations(merged, expectGpt, workingDirectory, ref stdOut, ref stdErr)
+            ? CheckGptExpectations(merged, expectGpt, workingDirectory, ref stdOut, ref stdErr)
             : outcome;
     }
 
@@ -486,28 +486,44 @@ public class YamlTestCaseRunner
         return result;
     }
 
-    private static TestOutcome CheckExpectations(string output, string expectGpt, string workingDirectory, ref string stdOut, ref string stdErr)
+    private static TestOutcome CheckGptExpectations(string output, string expectGpt, string workingDirectory, ref string stdOut, ref string stdErr)
     {
-        var outcome = ExpectGptOutcome(output, expectGpt, workingDirectory, out var gptStdOut, out var gptStdErr, out var gptMerged);
-        if (outcome == TestOutcome.Failed)
+        var passed = CheckExpectInstructionsHelper.CheckExpectations(output, expectGpt, workingDirectory, out var gptStdOut, out var gptStdErr, out var gptMerged);
+
+        var needAppendGptExpectationsOutput = !passed;
+        if (needAppendGptExpectationsOutput)
         {
-            if (!string.IsNullOrEmpty(gptStdOut)) stdOut = $"{stdOut}\n--expect--\n{gptStdOut}\n".Trim('\n');
-            if (!string.IsNullOrEmpty(gptStdErr)) stdErr = $"{stdErr}\n--expect--\n{gptStdErr}\n".Trim('\n');
+            ConsoleHelpers.WriteWarningLine($"UNEXPECTED: Failed expectations:\n{gptMerged}\n".Trim('\n'));
+
+            var haveGptStdOut = !string.IsNullOrEmpty(gptStdOut);
+            if (haveGptStdOut)
+            {
+                stdOut = $"{stdOut}\nUNEXPECTED: Failed expectations:\n{gptStdOut}\n".Trim('\n');
+            }
+
+            var haveGptStdErr = !string.IsNullOrEmpty(gptStdErr);
+            if (haveGptStdErr)
+            {
+                stdErr = $"{stdErr}\nUNEXPECTED: Failed expectations:\n{gptStdErr}\n".Trim('\n');
+            }
         }
-        return outcome;
+
+        return passed ? TestOutcome.Passed : TestOutcome.Failed;
     }
 
-    private static TestOutcome ExpectGptOutcome(string output, string expectGpt, string workingDirectory, out string gptStdOut, out string gptStdErr, out string gptMerged)
+    private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex, ref string stdOut, ref string stdErr)
     {
-        return CheckExpectInstructionsHelper.CheckExpectations(output, expectGpt, workingDirectory, out gptStdOut, out gptStdErr, out gptMerged)
-            ? TestOutcome.Passed
-            : TestOutcome.Failed;
-    }
+        var passed = ExpectHelper.CheckOutput(output, expectRegex, notExpectRegex, out var failedReason);
 
-    private static TestOutcome CheckExpectRegExPatterns(string output, string? expectRegex, string? notExpectRegex)
-    {
-        var expected = ExpectHelper.CheckOutput(output, expectRegex, notExpectRegex);
-        return expected ? TestOutcome.Passed : TestOutcome.Failed;
+        var needAppendFailedReason = !passed && !string.IsNullOrEmpty(failedReason);
+        if (needAppendFailedReason)
+        {
+            ConsoleHelpers.WriteWarningLine(failedReason!);
+            stdOut = $"{stdOut}\n{failedReason}\n".Trim('\n');
+            stdErr = $"{stdErr}\n{failedReason}\n".Trim('\n');
+        }
+
+        return passed ? TestOutcome.Passed : TestOutcome.Failed;
     }
 
     #endregion

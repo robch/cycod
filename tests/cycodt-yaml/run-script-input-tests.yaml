@@ -3,7 +3,8 @@ tag: cycodt
 tests:
 
 - name: running cmd script w/ input
-  script: |
+  optional: windows
+  cmd: |
     set name=
     set /p name=Enter your name:
     echo Hello, %name%!

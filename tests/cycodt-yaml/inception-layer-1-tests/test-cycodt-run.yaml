@@ -23,8 +23,8 @@ tests:
 
     Starting test: yaml.simple.simple.running simple process
     Passed \(.*\): yaml.simple.simple.running simple process
-    Starting test: yaml.simple.simple.running simple script w/ regex expectation
-    Passed \(.*\): yaml.simple.simple.running simple script w/ regex expectation
+    Starting test: yaml.simple.simple.running script w/ regex expectation
+    Passed \(.*\): yaml.simple.simple.running script w/ regex expectation
     Starting test: yaml.simple.simple.running bash script w/ regex expectation
     Passed \(.*\): yaml.simple.simple.running bash script w/ regex expectation
 
@@ -61,34 +61,35 @@ tests:
   run: cycodt run --file simple3.yaml --output-file test-results-simple3.trx
   expect-exit-code: 1
   expect-regex: |
-    ^Found 2 tests...\r?$\n
-    ^\r?$\n
-    ^Starting test: yaml.simple3.simple3.echo animals w/ expectation\r?$\n
-    ^Passed \(.*\): yaml.simple3.simple3.echo animals w/ expectation\r?$\n
-    ^Starting test: yaml.simple3.simple3.echo animals wo/ expectation\r?$\n
+    ^Found 2 tests\.\.\.
+    Starting test: yaml\.simple3\.simple3\.echo animals w/ expectation\r?$\n
+    ^Passed \(\d+ ms\): yaml\.simple3\.simple3\.echo animals w/ expectation\r?$\n
+    ^Starting test: yaml\.simple3\.simple3\.echo animals wo/ expectation\r?$\n
     ^UNEXPECTED: Found 'dog' in 'dog'\r?$\n
-    ^Failed \(.*\): yaml.simple3.simple3.echo animals wo/ expectation\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple3\.simple3\.echo animals wo/ expectation\r?$\n
     ^at .*tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple3.yaml\(\d+\)\r?$\n
     ^echo cat\r?$\n
     ^echo dog\r?$\n
     ^echo elephant\r?$\n
     ^echo fox\r?$\n
+    ^UNEXPECTED: Found 'dog' in 'dog'\r?$\n
     ^EXIT CODE: 0\r?$\n
     ^\r?$\n
     ^\r?$\n
     ^FAILURE SUMMARY:\r?$\n
-    ^Failed \(.*\): yaml.simple3.simple3.echo animals wo/ expectation\r?$\n
+    ^Failed \(\d+ ms\): yaml\.simple3\.simple3\.echo animals wo/ expectation\r?$\n
     ^at .*tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple3.yaml\(\d+\)\r?$\n
     ^echo cat\r?$\n
     ^echo dog\r?$\n
     ^echo elephant\r?$\n
     ^echo fox\r?$\n
+    ^UNEXPECTED: Found 'dog' in 'dog'\r?$\n
     ^EXIT CODE: 0\r?$\n
     ^\r?$\n
     ^TEST RESULT SUMMARY:\r?$\n
     ^\r?$\n
-    ^Passed: 1 \(50.0%\)\r?$\n
-    ^Failed: 1 \(50.0%\)\r?$\n
+    ^Passed: 1 \(50\.0%\)\r?$\n
+    ^Failed: 1 \(50\.0%\)\r?$\n
     ^\r?$\n
-    ^Tests: 2 \(.*\)\r?$\n
+    ^Tests: 2 \(\d+ ms\)\r?$\n
     ^Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple3.trx\r?$\n

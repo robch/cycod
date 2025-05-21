@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 
 public class ExpectHelper
 {
-    public static bool CheckOutput(string output, string? expected, string? unexpected, bool quiet = false)
+    public static bool CheckOutput(string output, string? expected, string? unexpected, out string? failedReason)
     {
         var outputLines = output
-            .Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(new char[] { '\n' }, StringSplitOptions.None)
             .Select(line => line.TrimEnd('\r'))
             .ToList() ?? new List<string>();
         var expectedLines = expected?.Split(new char[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
@@ -16,20 +16,14 @@ public class ExpectHelper
             .Select(line => line.TrimEnd('\r'))
             .ToList() ?? new List<string>();
 
-        return CheckLines(outputLines, expectedLines, unexpectedLines, quiet);
-    }
-
-    public static bool CheckLines(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected, bool quiet = false)
-    {
-        var helper = new ExpectHelper(lines, expected, unexpected, quiet);
-        return helper.Expect();
+        return CheckLines(outputLines, expectedLines, unexpectedLines, out failedReason);
     }
 
     public static bool CheckLines(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected, out string? details)
     {
         details = null;
 
-        var helper = new ExpectHelper(lines, expected, unexpected, quiet: true);
+        var helper = new ExpectHelper(lines, expected, unexpected);
         var result = helper.Expect();
 
         if (!result)
@@ -40,12 +34,11 @@ public class ExpectHelper
         return result;
     }
 
-    private ExpectHelper(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected, bool quiet)
+    private ExpectHelper(IEnumerable<string> lines, IEnumerable<string> expected, IEnumerable<string> unexpected)
     {
         _allLines = lines;
         _expected = expected != null ? new Queue<string>(expected) : null;
         _unexpected = unexpected != null ? new List<string>(unexpected) : null;
-        _quiet = quiet;
     }
 
     private bool Expect()
@@ -62,11 +55,6 @@ public class ExpectHelper
             var codeBlock = MarkdownHelpers.GetCodeBlock(_unmatchedInput.ToString());
             var message = $"UNEXPECTED: Couldn't find '{_expected!.Peek()}' in:\n{codeBlock}";
             _details.AppendLine(message);
-
-            if (!_quiet)
-            {
-                ConsoleHelpers.WriteWarningLine(message);
-            }
         }
 
         return !_foundUnexpected && allExpectedFound;
@@ -74,16 +62,25 @@ public class ExpectHelper
 
     private void CheckExpected(string line)
     {
+        ConsoleHelpers.WriteDebugHexDump(line, $"CheckExpected: Adding '{line}'");
         _unmatchedInput.AppendLine(line);
+        ConsoleHelpers.WriteDebugHexDump(_unmatchedInput.ToString(), "CheckExpected: Unmatched is now:");
         while (_expected!.Count > 0)
         {
             var pattern = _expected.Peek();
             var check = _unmatchedInput.ToString();
 
             var match = Regex.Match(check, pattern);
-            if (!match.Success) break; // continue reading input...
+            if (!match.Success)
+            {
+                ConsoleHelpers.WriteDebugLine($"CheckExpected: No match for '{pattern}' in unmatched!\nCheckExpected: ---"); 
+                break; // continue reading input...
+            }
 
+            ConsoleHelpers.WriteDebugHexDump(check, $"CheckExpected: Matched '{pattern}' at {match.Index:x4} ({match.Length:x4} char(s)) in:");
             _unmatchedInput.Remove(0, match.Index + match.Length);
+            ConsoleHelpers.WriteDebugHexDump(_unmatchedInput.ToString(), "CheckExpected: After removing, unmatched is now:");
+
             _expected.Dequeue();
         }
     }
@@ -99,12 +96,6 @@ public class ExpectHelper
 
             var message = $"UNEXPECTED: Found '{pattern}' in '{line}'";
             _details.AppendLine(message);
-
-            if (!_quiet)
-            {
-                ConsoleHelpers.WriteWarningLine(message);
-                break;
-            }
         }
     }
 
@@ -112,7 +103,6 @@ public class ExpectHelper
     private StringBuilder _unmatchedInput = new StringBuilder();
     private IEnumerable<string> _allLines;
 
-    private bool _quiet = false;
     private Queue<string>? _expected;
     private List<string>? _unexpected;
     bool _foundUnexpected = false;
