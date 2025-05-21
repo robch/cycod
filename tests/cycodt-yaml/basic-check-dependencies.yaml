@@ -1,0 +1,17 @@
+﻿class: check-dependencies
+tests:
+
+- name: cycod available
+  run: cycod version
+  expect-regex: |
+    Version: 1\.0
+
+- name: cycodmd available
+  run: cycodmd version
+  expect-regex: |
+    Version: 1\.0
+
+- name: cycodt available
+  run: cycodt version
+  expect-regex: |
+    Version: 1\.0
