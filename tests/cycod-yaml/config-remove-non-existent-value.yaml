@@ -1,0 +1,104 @@
+# - area: Config Remove Non-existent Value
+#   tests:
+#   - name: Remove non-existent values from lists
+#     steps:
+#     # Set up test lists with known values
+#     - name: Clear test lists in all scopes
+#       run: cycod config clear TestList --any
+#       skipOnFailure: true
+    
+#     - name: Create a list in local scope with known values
+#       run: cycod config add TestList Item1 --local
+#       expect-regex: |
+#         TestList:
+#         - Item1
+#     - run: cycod config add TestList Item2 --local
+#       expect-regex: |
+#         TestList:
+#         - Item1
+#         - Item2
+    
+#     - name: Create a list in user scope with known values
+#       run: cycod config add TestList UserItem1 --user
+#       expect-regex: |
+#         TestList:
+#         - UserItem1
+#     - run: cycod config add TestList UserItem2 --user
+#       expect-regex: |
+#         TestList:
+#         - UserItem1
+#         - UserItem2
+    
+#     - name: Create a list in global scope with known values
+#       run: cycod config add TestList GlobalItem1 --global
+#       expect-regex: |
+#         TestList:
+#         - GlobalItem1
+#     - run: cycod config add TestList GlobalItem2 --global
+#       expect-regex: |
+#         TestList:
+#         - GlobalItem1
+#         - GlobalItem2
+    
+#     # Test removing non-existent value from local list
+#     - name: Try to remove non-existent value from local list
+#       run: cycod config remove TestList NonExistentItem --local
+#       expect-regex: |
+#         (?:Error: Value .* not found in list|Failed to find item .* in list)
+    
+#     # Verify local list remains unchanged
+#     - name: Verify local list contents remain unchanged
+#       run: cycod config get TestList --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         TestList:
+#           - Item1
+#           - Item2
+    
+#     # Test removing non-existent value from user list
+#     - name: Try to remove non-existent value from user list
+#       run: cycod config remove TestList NonExistentItem --user
+#       expect-regex: |
+#         (?:Error: Value .* not found in list|Failed to find item .* in list)
+    
+#     # Verify user list remains unchanged
+#     - name: Verify user list contents remain unchanged
+#       run: cycod config get TestList --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         TestList:
+#           - UserItem1
+#           - UserItem2
+    
+#     # Test removing non-existent value from global list
+#     - name: Try to remove non-existent value from global list
+#       run: cycod config remove TestList NonExistentItem --global
+#       expect-regex: |
+#         (?:Error: Value .* not found in list|Failed to find item .* in list)
+    
+#     # Verify global list remains unchanged
+#     - name: Verify global list contents remain unchanged
+#       run: cycod config get TestList --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         TestList:
+#           - GlobalItem1
+#           - GlobalItem2
+    
+#     # Test with case sensitivity
+#     - name: Try to remove item with different case
+#       run: cycod config remove TestList item1 --local
+#       expect-regex: |
+#         (?:Error: Value .* not found in list|Failed to find item .* in list)
+    
+#     # Clean up
+#     - name: Clean up test lists
+#       run: cycod config clear TestList --local
+#       expect-regex: |
+#         TestList: \(cleared\)
+#     - run: cycod config clear TestList --user
+#       expect-regex: |
+#         TestList: \(cleared\)
+#     - run: cycod config clear TestList --global
+#       expect-regex: |
+#         TestList: \(cleared\)

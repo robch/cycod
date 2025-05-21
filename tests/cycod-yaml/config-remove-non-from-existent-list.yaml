@@ -1,0 +1,86 @@
+# - area: Config Remove from Non-existent List
+#   tests:
+#   - name: Remove from non-existent lists
+#     steps:
+#     # First ensure the lists don't exist
+#     - name: Clear test lists in all scopes
+#       run: cycod config clear NonExistList --any
+#       skipOnFailure: true
+    
+#     # Test removing from non-existent list in local scope
+#     - name: Try to remove from non-existent list in local scope
+#       run: cycod config remove NonExistList TestItem --local
+#       expect-regex: |
+#         NonExistList: \(empty list\)
+    
+#     # Test removing from non-existent list in user scope
+#     - name: Try to remove from non-existent list in user scope
+#       run: cycod config remove NonExistList TestItem --user
+#       expect-regex: |
+#         NonExistList: \(empty list\)
+    
+#     # Test removing from non-existent list in global scope
+#     - name: Try to remove from non-existent list in global scope
+#       run: cycod config remove NonExistList TestItem --global
+#       expect-regex: |
+#         NonExistList: \(empty list\)
+    
+#     # Test removing from non-existent list with any scope
+#     - name: Try to remove from non-existent list with any scope
+#       run: cycod config remove NonExistList TestItem --any
+#       expect-regex: |
+#         NonExistList: \(empty list\)
+    
+#     # Test with creation and then removal from a different scope
+#     - name: Create a list in local scope
+#       run: cycod config add ScopeTestList TestItem1 --local
+#       expect-regex: |
+#         ScopeTestList:
+#         - TestItem1
+    
+#     # Try to remove a different item from a non-existent list in user scope
+#     - name: Try to remove different item from non-existent list in user scope
+#       run: cycod config remove ScopeTestList TestItem2 --user
+#       expect-regex: |
+#         ScopeTestList: \(empty list\)
+    
+#     # Clean up
+#     - name: Clean up test list
+#       run: cycod config clear ScopeTestList --local
+#       expect-regex: |
+#         ScopeTestList: \(cleared\)
+  
+#   - name: Remove from scalar value instead of list
+#     steps:
+#     # Set up a scalar value
+#     - name: Clear test key in all scopes
+#       run: cycod config clear ScalarKey --any
+#       skipOnFailure: true
+    
+#     - name: Set a scalar value
+#       run: cycod config set ScalarKey ScalarValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScalarKey: ScalarValue
+    
+#     # Try to remove an item from the scalar value
+#     - name: Try to remove item from scalar value
+#       run: cycod config remove ScalarKey TestItem --local
+#       expect-regex: |
+#         ScalarKey:
+#           - ScalarValue
+    
+#     # Verify the scalar value is unchanged
+#     - name: Verify scalar was converted to a list
+#       run: cycod config get ScalarKey --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScalarKey:
+#           - ScalarValue
+    
+#     # Clean up
+#     - name: Clean up test key
+#       run: cycod config clear ScalarKey --local
+#       expect-regex: |
+#         ScalarKey: \(cleared\)
+

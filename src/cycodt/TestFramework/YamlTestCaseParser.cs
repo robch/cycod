@@ -276,20 +276,47 @@ public partial class YamlTestCaseParser
         var skipOnFailure = GetScalarString(mapping, context.Tags, "skipOnFailure");
         string workingDirectory = UpdateWorkingDirectory(mapping!, context.WorkingDirectory);
 
-        var command = GetScalarString(mapping, "command");
-        var script = GetScalarString(mapping, "script");
-        var bash = GetScalarString(mapping, "bash");
+        var runProcess = GetScalarString(mapping, "run");
 
-        var fullyQualifiedName = command == null && script == null && bash == null
-            ? GetFullyQualifiedNameAndCommandFromShortForm(mapping, context.Area, context.Class, ref command, stepNumber)
+        var script = GetScalarString(mapping, "script");
+        var shell = GetScalarString(mapping, "shell");
+
+        var bash = GetScalarString(mapping, "bash");
+        var cmd = GetScalarString(mapping, "cmd");
+        var powershell = GetScalarString(mapping, "powershell");
+        var pwsh = GetScalarString(mapping, "pwsh");
+
+        if (!string.IsNullOrEmpty(bash))
+        {
+            script = bash;
+            shell = "bash";
+        }
+        else if (!string.IsNullOrEmpty(cmd))
+        {
+            script = cmd;
+            shell = "cmd";
+        }
+        else if (!string.IsNullOrEmpty(pwsh))
+        {
+            script = pwsh;
+            shell = "pwsh";
+        }
+        else if (!string.IsNullOrEmpty(powershell))
+        {
+            script = powershell;
+            shell = "powershell";
+        }
+
+        var fullyQualifiedName = runProcess == null && script == null
+            ? GetFullyQualifiedNameAndCommandFromShortForm(mapping, context.Area, context.Class, ref runProcess, stepNumber)
             : GetFullyQualifiedName(mapping, context.Area, context.Class, stepNumber);
         fullyQualifiedName ??= GetFullyQualifiedName(context.Area, context.Class, $"Expected YAML node ('name') at {context.File.FullName}({mapping.Start.Line})", 0);
 
-        var neitherOrBoth = (command == null) == (script == null && bash == null);
+        var neitherOrBoth = (runProcess == null) == (script == null);
         if (neitherOrBoth)
         {
-            var message = $"Error parsing YAML: expected/unexpected key ('name', 'command', 'script', 'bash', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
-            Logger.LogError(message);
+            var message = $"Error parsing YAML: expected/unexpected key ('name', 'run', 'script', 'shell', 'bash', 'pwsh', 'powershell', 'cmd', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
+            Logger.LogWarning(message);
             return null;
         }
 
@@ -301,9 +328,15 @@ public partial class YamlTestCaseParser
         };
 
         SetTestCaseProperty(test, "cli", cli);
-        SetTestCaseProperty(test, "command", command);
+        SetTestCaseProperty(test, "run", runProcess);
+
         SetTestCaseProperty(test, "script", script);
+        SetTestCaseProperty(test, "shell", shell);
         SetTestCaseProperty(test, "bash", bash);
+        SetTestCaseProperty(test, "cmd", cmd);
+        SetTestCaseProperty(test, "powershell", powershell);
+        SetTestCaseProperty(test, "pwsh", pwsh);
+
         SetTestCaseProperty(test, "parallelize", parallelize);
         SetTestCaseProperty(test, "skipOnFailure", skipOnFailure);
 
@@ -327,6 +360,7 @@ public partial class YamlTestCaseParser
         SetTestCaseProperty(test, "expect", mapping, "expect");
         SetTestCaseProperty(test, "expect-regex", mapping, "expect-regex");
         SetTestCaseProperty(test, "not-expect-regex", mapping, "not-expect-regex");
+        SetTestCaseProperty(test, "expect-exit-code", mapping, "expect-exit-code");
 
         SetTestCaseTagsAsTraits(test, YamlTagHelpers.UpdateCopyTags(context.Tags, mapping));
 
@@ -404,7 +438,7 @@ public partial class YamlTestCaseParser
 
     private static bool IsValidTestCaseNode(string? value)
     {
-        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;command;script;bash;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;".IndexOf($";{value};") >= 0;
+        return !string.IsNullOrEmpty(value) && ";area;class;name;cli;run;script;shell;bash;pwsh;powershell;cmd;timeout;foreach;arguments;input;expect;expect-regex;not-expect-regex;expect-exit-code;parallelize;skipOnFailure;tag;tags;matrix;matrix-file;workingDirectory;env;sanitize;optional;".IndexOf($";{value};") >= 0;
     }
 
     private static void SetTestCaseProperty(TestCase test, string propertyName, YamlMappingNode mapping, string mappingName)
@@ -616,16 +650,16 @@ public partial class YamlTestCaseParser
         return GetFullyQualifiedName(area, @class, name, stepNumber);
     }
 
-    private static string? GetFullyQualifiedNameAndCommandFromShortForm(YamlMappingNode mapping, string area, string @class, ref string? command, int stepNumber)
+    private static string? GetFullyQualifiedNameAndCommandFromShortForm(YamlMappingNode mapping, string area, string @class, ref string? runProcess, int stepNumber)
     {
-        // if there's only one invalid mapping node, we'll treat it's key as "name" and value as "command"
+        // if there's only one invalid mapping node, we'll treat it's key as "name" and value as "run"
         var invalid = mapping.Children.Keys.Where(key => !IsValidTestCaseNode((key as YamlScalarNode)?.Value));
-        if (invalid.Count() == 1 && command == null)
+        if (invalid.Count() == 1 && runProcess == null)
         {
             var name = (invalid.FirstOrDefault() as YamlScalarNode)?.Value;
             if (name == null) return null;
 
-            command = GetScalarString(mapping, name);
+            runProcess = GetScalarString(mapping, name);
             area = UpdateArea(mapping, area);
             @class = GetScalarString(mapping, "class", @class)!;
 

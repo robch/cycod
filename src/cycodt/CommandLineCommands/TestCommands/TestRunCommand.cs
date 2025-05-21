@@ -38,9 +38,9 @@ class TestRunCommand : TestBaseCommand
             var resultsByTestCaseId = YamlTestFramework.RunTests(tests, consoleHost);
 
             GetOutputFileAndFormat(out var file, out var format);
-            consoleHost.Finish(resultsByTestCaseId, format, file);
+            var passed = consoleHost.Finish(resultsByTestCaseId, format, file);
 
-            return 0;
+            return passed ? 0 : 1;
         }
         catch (Exception ex)
         {

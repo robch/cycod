@@ -15,15 +15,42 @@ public class RunnableTestCaseItem
         _properties = properties;
 
         _cli = GetInterpolatedProperty("cli") ?? "";
-        _command = GetInterpolatedProperty("command");
+        _runProcess = GetInterpolatedProperty("run");
+
         _script = GetInterpolatedProperty("script");
+        _shell = GetInterpolatedProperty("shell");
 
         var bash = GetInterpolatedProperty("bash");
-        _scriptIsBash = !string.IsNullOrEmpty(bash);
-        if (_scriptIsBash) _script = bash;
-
-        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
-        if (!isWindows) _scriptIsBash = true;
+        var cmd = GetInterpolatedProperty("cmd");
+        var powershell = GetInterpolatedProperty("powershell");
+        var pwsh = GetInterpolatedProperty("pwsh");
+        
+        if (!string.IsNullOrEmpty(bash))
+        {
+            _script = bash;
+            _shell = "bash";
+        }
+        else if (!string.IsNullOrEmpty(cmd))
+        {
+            _script = cmd;
+            _shell = "cmd";
+        }
+        else if (!string.IsNullOrEmpty(powershell))
+        {
+            _script = powershell;
+            _shell = "powershell";
+        }
+        else if (!string.IsNullOrEmpty(pwsh))
+        {
+            _script = pwsh;
+            _shell = "pwsh";
+        }
+        
+        if (string.IsNullOrEmpty(_shell))
+        {
+            var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            _shell = isWindows ? "cmd" : "bash";
+        }
 
         _arguments = GetInterpolatedProperty("arguments", escapeJson: true);
         _input = GetInterpolatedProperty("input");
@@ -32,6 +59,7 @@ public class RunnableTestCaseItem
         _expectGpt = GetInterpolatedProperty("expect");
         _expectRegex = GetInterpolatedProperty("expect-regex");
         _notExpectRegex = GetInterpolatedProperty("not-expect-regex");
+        _expectExitCode = int.Parse(GetInterpolatedProperty("expect-exit-code", "0")!);
 
         _env = GetInterpolatedProperty("env");
         _workingDirectory = GetInterpolatedProperty("working-directory");
@@ -63,7 +91,7 @@ public class RunnableTestCaseItem
 
         // run the test case, getting all the results, prior to recording any of those results
         // (not doing this in this order seems to, for some reason, cause "foreach" test cases to run 5 times!?)
-        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _command, _script, _scriptIsBash, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _skipOnFailure, _foreach);
+        var results = YamlTestCaseRunner.TestCaseGetResults(_runnableTest.Test, _cli, _runProcess, _script, _shell, _arguments, _input, _expectGpt, _expectRegex, _notExpectRegex, _env, _workingDirectory, _timeout, _expectExitCode, _skipOnFailure, _foreach);
         _results = results.ToList();
 
         _runnableTest.RecordResults(host, this, _results);
@@ -91,14 +119,15 @@ public class RunnableTestCaseItem
     private Dictionary<string, string>? _properties;
 
     private string _cli;
-    private string? _command;
+    private string? _runProcess;
     private string? _script;
-    private bool _scriptIsBash;
+    private string? _shell;
     private string? _arguments;
     private string? _input;
     private string? _expectGpt;
     private string? _expectRegex;
     private string? _notExpectRegex;
+    private int _expectExitCode;
     private string? _env;
     private string? _workingDirectory;
     private int _timeout;

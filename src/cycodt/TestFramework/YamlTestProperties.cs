@@ -27,9 +27,13 @@ public class YamlTestProperties
 
     private static readonly Dictionary<string, TestProperty> properties = new Dictionary<string, TestProperty>() {
         { "cli", RegisterTestCaseProperty("CLI") },
-        { "command", RegisterTestCaseProperty("Command") },
+        { "run", RegisterTestCaseProperty("Run") },
         { "script", RegisterTestCaseProperty("Script") },
+        { "shell", RegisterTestCaseProperty("Shell") },
         { "bash", RegisterTestCaseProperty("Bash") },
+        { "cmd", RegisterTestCaseProperty("Cmd") },
+        { "powershell", RegisterTestCaseProperty("Powershell") },
+        { "pwsh", RegisterTestCaseProperty("Pwsh") },
         { "parallelize", RegisterTestCaseProperty("Parallelize") },
         { "nextTestCaseId", RegisterTestCaseProperty("nextTestCaseId") },
         { "afterTestCaseId", RegisterTestCaseProperty("afterTestCaseId") },
@@ -40,6 +44,7 @@ public class YamlTestProperties
         { "expect", RegisterTestCaseProperty("ExpectGpt") },
         { "expect-regex", RegisterTestCaseProperty("Expect") },
         { "not-expect-regex", RegisterTestCaseProperty("NotExpect") },
+        { "expect-exit-code", RegisterTestCaseProperty("ExpectExitCode") },
         { "skipOnFailure", RegisterTestCaseProperty("SkipOnFailure") },
         { "timeout", RegisterTestCaseProperty("Timeout") },
         { "env", RegisterTestCaseProperty("Env") },

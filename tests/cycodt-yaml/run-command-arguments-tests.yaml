@@ -1,0 +1,36 @@
+class: process-args
+tag: cycod
+tests:
+- name: /file README.md
+  run: cycod --openai-api-key fake --use-openai
+  workingDirectory: testfiles
+  arguments:
+    input: /file README.md
+    threads: 1
+  expect-regex: &readme-expected-output |
+    ^\r?$\n
+    ^User: /file README\.md\r?$\n
+    ^\r?$\n
+    ^user-function: /file => \.\.\.\r?$\n
+    ^user-function: /file => ## README\.md\r?$\n
+    ^\r?$\n
+    ^Modified: .*\r?$\n
+    ^Size: .*\r?$\n
+    ^\r?$\n
+    ^```markdown\r?$\n
+    ^# README\.md\r?$\n
+    ^\r?$\n
+    ^This is an example README\.md\r?$\n
+    ^\r?$\n
+    ^```\r?$\n
+    ^\r?$\n
+    ^User: \r?$\n
+    ^User: exit\r?$\n
+
+- name: /file README.md 2
+  run: cycod --openai-api-key fake --use-openai
+  workingDirectory: testfiles
+  arguments:
+    - input: "/file README.md"
+    - threads: 1
+  expect-regex: *readme-expected-output

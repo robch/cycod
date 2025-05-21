@@ -1,0 +1,33 @@
+class: script-args
+tag: cycodt
+tests:
+- name: running bash script w/ args
+  bash: |
+    echo "args are $@"
+  arguments:
+    arg1: value1
+    arg2: value 2
+    arg3:
+  expect-regex: |
+    ^args are --arg1 value1 --arg2 value 2 --arg3\r?$\n
+
+- name: running cmd script w/ args
+  optional: windows
+  cmd: |
+    echo args are %*
+  arguments:
+    arg1: value1
+    arg2: value 2
+    arg3:
+  expect-regex: |
+    ^args are --arg1 value1 --arg2 "value 2" --arg3\r?$\n
+    
+- name: running powershell script w/ args
+  pwsh: |
+    Write-Host "args are $args"
+  arguments:
+    arg1: value1
+    arg2: value 2
+    arg3:
+  expect-regex: |
+    ^args are --arg1 value1 --arg2 value 2 --arg3\r?$\n
