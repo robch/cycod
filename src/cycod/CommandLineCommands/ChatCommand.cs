@@ -112,6 +112,7 @@ public class ChatCommand : CommandWithVariables
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
+                    (name, args) => HandleFunctionCallApproval(name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
             }
@@ -368,6 +369,7 @@ public class ChatCommand : CommandWithVariables
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
@@ -379,6 +381,7 @@ public class ChatCommand : CommandWithVariables
             var response = await chat.CompleteChatStreamingAsync(userPrompt,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
+                (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
                 (name, args, result) => functionCallCallback?.Invoke(name, args, result));
 
             return response;
@@ -460,6 +463,65 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
+    }
+
+    private bool HandleFunctionCallApproval(string name, string args)
+    {
+        var autoApprove = ShouldAutoApprove(name);
+        if (autoApprove) return true;
+
+        if (Console.IsInputRedirected) return true;
+
+        while (true)
+        {
+            var approvePrompt = "Approve? (Y/n or ?) ";
+            var erasePrompt = new string(' ', approvePrompt.Length);
+            EnsureLineFeeds();
+            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
+
+            ConsoleKeyInfo? key = ShouldDenyFunctionCall(name) ? null : Console.ReadKey(true);
+            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
+            DisplayGenericAssistantFunctionCall(name, args, null);
+
+            if (key?.KeyChar == 'Y' || key?.Key == ConsoleKey.Enter)
+            {
+                ConsoleHelpers.WriteLine($"\b\b\bApproved (session)", ConsoleColor.Yellow);
+                _approvedFunctionCallNames.Add(name);
+                return true;
+            }
+            else if (key == null || key?.KeyChar == 'N')
+            {
+                _deniedFunctionCallNames.Add(name);
+                ConsoleHelpers.WriteLine($"\b\b\bDeclined (session)", ConsoleColor.Red);
+                return false;
+            }
+            else if (key?.KeyChar == 'y')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\bApproved (once)", ConsoleColor.Yellow);
+                return true;
+            }
+            else if (key?.KeyChar == 'n')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\bDeclined (once)", ConsoleColor.Red);
+                return false;
+            }
+            else if (key?.KeyChar == '?')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\bHelp", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine("  Y: Approve this function call for this session");
+                ConsoleHelpers.WriteLine("  y: Approve this function call for this one time");
+                ConsoleHelpers.WriteLine("  N: Decline this function call for this session");
+                ConsoleHelpers.WriteLine("  n: Decline this function call for this one time");
+                ConsoleHelpers.WriteLine("  ?: Show this help message");
+                ConsoleHelpers.WriteLine("  Enter: Approve this function call for this session\n");
+            }
+            else
+            {
+                ConsoleHelpers.WriteLine($"\b\b\bInvalid input", ConsoleColor.Red);
+            }
+        }
     }
 
     private void HandleFunctionCallCompleted(string name, string args, string? result)
@@ -665,4 +727,23 @@ public class ChatCommand : CommandWithVariables
             Console.WriteLine($"Error loading MCP functions: {ex.Message}");
         }
     }
+
+    private bool ShouldAutoApprove(string name)
+    {
+        var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
+        if (needToAddAutoApproveToolDefaults)
+        {
+            _approvedFunctionCallNames.Add("Think");
+        }
+
+        return _approvedFunctionCallNames.Contains(name);
+    }
+
+    private bool ShouldDenyFunctionCall(string name)
+    {
+        return _deniedFunctionCallNames.Contains(name);
+    }
+
+    private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
+    private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
 }
