@@ -185,14 +185,30 @@ public class CommandLineOptions
                 return true;
             }
             
-            // Otherwise, the value should be the next argument
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var settingValue = max1Arg.FirstOrDefault() ?? throw new CommandLineException($"Missing value for {arg}");
+            // Otherwise, get all arguments until the next option
+            var arguments = GetInputOptionArgs(i + 1, args).ToList();
             
-            // Add to configuration store
-            ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
-            ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");
-            i += max1Arg.Count();
+            if (arguments.Count == 0)
+            {
+                throw new CommandLineException($"Missing value for {arg}");
+            }
+            else if (arguments.Count == 1)
+            {
+                // If there's only one argument, use it directly as a string
+                var settingValue = arguments[0];
+                
+                // Add to configuration store
+                ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
+                ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");
+            }
+            else
+            {
+                // If there are multiple arguments, use them as a list
+                ConfigStore.Instance.SetFromCommandLine(settingName!, arguments);
+                ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = [{string.Join(", ", arguments)}]");
+            }
+            
+            i += arguments.Count;
             return true;
         }
         

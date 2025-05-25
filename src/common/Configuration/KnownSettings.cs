@@ -38,6 +38,8 @@ public static class KnownSettings
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
+    public const string AppAutoApprove = "App.AutoApprove";
+    public const string AppAutoDeny = "App.AutoDeny";
     
     #endregion
     
@@ -97,7 +99,9 @@ public static class KnownSettings
         { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
-        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" }
+        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
+        { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
+        { AppAutoDeny, "CYCOD_AUTO_DENY" }
     };
     
     /// <summary>
@@ -131,7 +135,9 @@ public static class KnownSettings
         { AppMaxTokens, "--max-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
-        { AppChatCompletionTimeout, "--chat-completion-timeout" }
+        { AppChatCompletionTimeout, "--chat-completion-timeout" },
+        { AppAutoApprove, "--auto-approve" },
+        { AppAutoDeny, "--auto-deny" }
     };
     
     /// <summary>
@@ -204,7 +210,9 @@ public static class KnownSettings
         AppPreferredProvider,
         AppAutoSaveChatHistory,
         AppAutoSaveTrajectory,
-        AppChatCompletionTimeout
+        AppChatCompletionTimeout,
+        AppAutoApprove,
+        AppAutoDeny
     };
     
     #endregion

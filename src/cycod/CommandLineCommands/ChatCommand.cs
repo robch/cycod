@@ -731,17 +731,90 @@ public class ChatCommand : CommandWithVariables
     private bool ShouldAutoApprove(string name)
     {
         var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
-        if (needToAddAutoApproveToolDefaults)
-        {
-            _approvedFunctionCallNames.Add("Think");
-        }
+        if (needToAddAutoApproveToolDefaults) AddAutoApproveToolDefaults();
 
-        return _approvedFunctionCallNames.Contains(name);
+        var approvedByName = _approvedFunctionCallNames.Contains(name);
+        if (approvedByName) return true;
+
+        var approveAll = _approvedFunctionCallNames.Contains("*");
+        if (approveAll) return true;
+
+        var approveAllRunFunctions = _approvedFunctionCallNames.Contains("run");
+        var approveAllWriteFunctions = approveAllRunFunctions || _approvedFunctionCallNames.Contains("write");
+        var approveAllReadFunctions = approveAllWriteFunctions || _approvedFunctionCallNames.Contains("read");
+
+        var approveAsReadFunction = approveAllReadFunctions && IsReadFunction(name);
+        if (approveAsReadFunction) return true;
+
+        var approveAsWriteFunction = approveAllWriteFunctions && IsWriteFunction(name);
+        if (approveAsWriteFunction) return true;
+
+        var approveAsRunFunction = approveAllRunFunctions && IsRunFunction(name);
+        if (approveAsRunFunction) return true;
+
+        return false;
+    }
+
+    private void AddAutoApproveToolDefaults()
+    {
+        _approvedFunctionCallNames.Add("Think");
+
+        var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApprove).AsList();
+        foreach (var item in items)
+        {
+            _approvedFunctionCallNames.Add(item);
+        }
     }
 
     private bool ShouldDenyFunctionCall(string name)
     {
-        return _deniedFunctionCallNames.Contains(name);
+        var needToAddAutoDenyToolDefaults = _deniedFunctionCallNames.Count == 0;
+        if (needToAddAutoDenyToolDefaults) AddAutoDenyToolDefaults();
+
+        var deniedByName = _deniedFunctionCallNames.Contains(name);
+        if (deniedByName) return true;
+
+        var denyAll = _deniedFunctionCallNames.Contains("*");
+        if (denyAll) return true;
+
+        var denyAllRunFunctions = _deniedFunctionCallNames.Contains("run");
+        var denyAllWriteFunctions = _deniedFunctionCallNames.Contains("write");
+        var denyAllReadFunctions = _deniedFunctionCallNames.Contains("read");
+
+        var denyAsReadFunction = denyAllReadFunctions && IsReadFunction(name);
+        if (denyAsReadFunction) return true;
+
+        var denyAsWriteFunction = denyAllWriteFunctions && IsWriteFunction(name);
+        if (denyAsWriteFunction) return true;
+
+        var denyAsRunFunction = denyAllRunFunctions && IsRunFunction(name);
+        if (denyAsRunFunction) return true;
+
+        return false;
+    }
+
+    private void AddAutoDenyToolDefaults()
+    {
+        var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoDeny).AsList();
+        foreach (var item in items)
+        {
+            _deniedFunctionCallNames.Add(item);
+        }
+    }
+
+    private bool IsReadFunction(string name)
+    {
+        return false;
+    }
+
+    private bool IsWriteFunction(string name)
+    {
+        return false;
+    }
+
+    private bool IsRunFunction(string name)
+    {
+        return !IsReadFunction(name) && !IsWriteFunction(name);
     }
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
