@@ -113,6 +113,15 @@ public class FunctionFactory
         return _functions.Select(x => x.Value.Function);
     }
 
+    public bool? IsReadOnlyFunction(string functionName)
+    {
+        if (_readOnlyFunctions.TryGetValue(functionName, out var readOnly))
+        {
+            return readOnly;
+        }
+        return null;
+    }
+
     public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
     {
         result = null;

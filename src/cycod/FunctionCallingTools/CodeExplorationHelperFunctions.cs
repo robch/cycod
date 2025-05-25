@@ -12,6 +12,7 @@ public class CodeExplorationHelperFunctions
 {
     #region Code Exploration Functions
     
+    [ReadOnly(true)]
     [Description("Search across files in a codebase to find content matching specific patterns. Returns formatted markdown with file matches, similar to using Ctrl+Shift+F in an IDE but with more processing options. Great for exploring unfamiliar codebases.")]
     public async Task<string> SearchCodebaseForPattern(
         [Description("File glob patterns to search")] string[] filePatterns,
@@ -28,6 +29,7 @@ public class CodeExplorationHelperFunctions
             contextLines);
     }
     
+    [ReadOnly(true)]
     [Description("Find complete files that contain specific patterns and return their content. Useful for identifying relevant files in a large codebase when you need full file context, not just matching lines.")]
     public async Task<string> FindFilesContainingPattern(
         [Description("File glob patterns to search")] string[] filePatterns,
@@ -41,6 +43,7 @@ public class CodeExplorationHelperFunctions
     
     #region Documentation Generation Functions
     
+    [ReadOnly(true)]
     [Description("Convert various file types to well-formatted markdown. Supports documentation files, source code, images, PDFs, and more. Useful for generating documentation or reports from existing files.")]
     public async Task<string> ConvertFilesToMarkdown(
         [Description("Specific file paths or glob patterns to convert (e.g. [\"README.md\", \"*.pdf\", \"docs/*.docx\")")] string[] filePaths,

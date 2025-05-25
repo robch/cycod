@@ -24,6 +24,12 @@ USAGE: cycod [...]
     --output-chat-history [FILE]          Save chat history to the specified file
     --output-trajectory [FILE]            Save chat history in human readable trajectory format
 
+  FUNCTION CALLING
+    --auto-approve NAME1 [...]            Automatically approve function calls by name
+    --auto-approve read/write/run/*       Automatically approve all function calls of the specified type
+    --auto-deny NAME1 [...]               Automatically deny function calls by name
+    --auto-deny read/write/run/*          Automatically deny all function calls of the specified type
+
   MODEL OPTIONS
     --max-tokens TOKENS                   AI model should output no more than TOKENS
     --trim-token-target TOKENS            Specify chat history maximum tokens target (default: 18000

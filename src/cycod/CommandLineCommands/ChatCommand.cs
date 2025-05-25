@@ -112,7 +112,7 @@ public class ChatCommand : CommandWithVariables
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
-                    (name, args) => HandleFunctionCallApproval(name, args!),
+                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
             }
@@ -465,9 +465,9 @@ public class ChatCommand : CommandWithVariables
         DisplayAssistantResponse(text);
     }
 
-    private bool HandleFunctionCallApproval(string name, string args)
+    private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
     {
-        var autoApprove = ShouldAutoApprove(name);
+        var autoApprove = ShouldAutoApprove(factory, name);
         if (autoApprove) return true;
 
         if (Console.IsInputRedirected) return true;
@@ -480,7 +480,7 @@ public class ChatCommand : CommandWithVariables
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
 
-            ConsoleKeyInfo? key = ShouldDenyFunctionCall(name) ? null : Console.ReadKey(true);
+            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : Console.ReadKey(true);
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
             DisplayGenericAssistantFunctionCall(name, args, null);
@@ -728,7 +728,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private bool ShouldAutoApprove(string name)
+    private bool ShouldAutoApprove(McpFunctionFactory factory, string name)
     {
         var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
         if (needToAddAutoApproveToolDefaults) AddAutoApproveToolDefaults();
@@ -743,16 +743,15 @@ public class ChatCommand : CommandWithVariables
         var approveAllWriteFunctions = approveAllRunFunctions || _approvedFunctionCallNames.Contains("write");
         var approveAllReadFunctions = approveAllWriteFunctions || _approvedFunctionCallNames.Contains("read");
 
-        var approveAsReadFunction = approveAllReadFunctions && IsReadFunction(name);
-        if (approveAsReadFunction) return true;
+        var isReadonly = factory.IsReadOnlyFunction(name);
+        var approved = isReadonly switch
+        {
+            true => approveAllReadFunctions,
+            false => approveAllWriteFunctions,
+            null => approveAllRunFunctions
+        };
 
-        var approveAsWriteFunction = approveAllWriteFunctions && IsWriteFunction(name);
-        if (approveAsWriteFunction) return true;
-
-        var approveAsRunFunction = approveAllRunFunctions && IsRunFunction(name);
-        if (approveAsRunFunction) return true;
-
-        return false;
+        return approved;
     }
 
     private void AddAutoApproveToolDefaults()
@@ -766,7 +765,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private bool ShouldDenyFunctionCall(string name)
+    private bool ShouldDenyFunctionCall(McpFunctionFactory factory, string name)
     {
         var needToAddAutoDenyToolDefaults = _deniedFunctionCallNames.Count == 0;
         if (needToAddAutoDenyToolDefaults) AddAutoDenyToolDefaults();
@@ -781,16 +780,15 @@ public class ChatCommand : CommandWithVariables
         var denyAllWriteFunctions = _deniedFunctionCallNames.Contains("write");
         var denyAllReadFunctions = _deniedFunctionCallNames.Contains("read");
 
-        var denyAsReadFunction = denyAllReadFunctions && IsReadFunction(name);
-        if (denyAsReadFunction) return true;
+        var isReadonly = factory.IsReadOnlyFunction(name);
+        var denied = isReadonly switch
+        {
+            true => denyAllReadFunctions,
+            false => denyAllWriteFunctions,
+            null => denyAllRunFunctions
+        };
 
-        var denyAsWriteFunction = denyAllWriteFunctions && IsWriteFunction(name);
-        if (denyAsWriteFunction) return true;
-
-        var denyAsRunFunction = denyAllRunFunctions && IsRunFunction(name);
-        if (denyAsRunFunction) return true;
-
-        return false;
+        return denied;
     }
 
     private void AddAutoDenyToolDefaults()
@@ -800,21 +798,6 @@ public class ChatCommand : CommandWithVariables
         {
             _deniedFunctionCallNames.Add(item);
         }
-    }
-
-    private bool IsReadFunction(string name)
-    {
-        return false;
-    }
-
-    private bool IsWriteFunction(string name)
-    {
-        return false;
-    }
-
-    private bool IsRunFunction(string name)
-    {
-        return !IsReadFunction(name) && !IsWriteFunction(name);
     }
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
