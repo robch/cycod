@@ -112,6 +112,7 @@ public class ChatCommand : CommandWithVariables
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
+                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
             }
@@ -368,6 +369,7 @@ public class ChatCommand : CommandWithVariables
         string userPrompt,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
@@ -379,6 +381,7 @@ public class ChatCommand : CommandWithVariables
             var response = await chat.CompleteChatStreamingAsync(userPrompt,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
+                (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
                 (name, args, result) => functionCallCallback?.Invoke(name, args, result));
 
             return response;
@@ -460,6 +463,66 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
+    }
+
+    private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
+    {
+        var autoApprove = ShouldAutoApprove(factory, name);
+        if (autoApprove) return true;
+
+        while (true)
+        {
+            var approvePrompt = " Approve? (Y/n or ?) ";
+            var erasePrompt = new string(' ', approvePrompt.Length);
+            EnsureLineFeeds();
+            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
+
+            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : ConsoleHelpers.ReadKey(true);
+            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
+            DisplayGenericAssistantFunctionCall(name, args, null);
+
+            if (key?.KeyChar == 'Y' || key?.Key == ConsoleKey.Enter)
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Approved (session)", ConsoleColor.Yellow);
+                _approvedFunctionCallNames.Add(name);
+                return true;
+            }
+            else if (key == null || key?.KeyChar == 'N')
+            {
+                _deniedFunctionCallNames.Add(name);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Declined (session)", ConsoleColor.Red);
+                return false;
+            }
+            else if (key?.KeyChar == 'y')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Approved (once)", ConsoleColor.Yellow);
+                return true;
+            }
+            else if (key?.KeyChar == 'n')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Declined (once)", ConsoleColor.Red);
+                return false;
+            }
+            else if (key?.KeyChar == '?')
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Help\n", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine("  Enter: Approve this function call for this session");
+                ConsoleHelpers.WriteLine("  Y: Approve this function call for this session");
+                ConsoleHelpers.WriteLine("  y: Approve this function call for this one time");
+                ConsoleHelpers.WriteLine("  N: Decline this function call for this session");
+                ConsoleHelpers.WriteLine("  n: Decline this function call for this one time");
+                ConsoleHelpers.WriteLine("  ?: Show this help message\n");
+                ConsoleHelpers.Write("  See ");
+                ConsoleHelpers.Write("cycod help function calls", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine(" for more information.\n");
+            }
+            else
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Invalid input", ConsoleColor.Red);
+            }
+        }
     }
 
     private void HandleFunctionCallCompleted(string name, string args, string? result)
@@ -665,4 +728,79 @@ public class ChatCommand : CommandWithVariables
             Console.WriteLine($"Error loading MCP functions: {ex.Message}");
         }
     }
+
+    private bool ShouldAutoApprove(McpFunctionFactory factory, string name)
+    {
+        var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
+        if (needToAddAutoApproveToolDefaults) AddAutoApproveToolDefaults();
+
+        var approvedByName = _approvedFunctionCallNames.Contains(name);
+        if (approvedByName) return true;
+
+        var approveAll = _approvedFunctionCallNames.Contains("*");
+        if (approveAll) return true;
+
+        var approveAllRunFunctions = _approvedFunctionCallNames.Contains("run");
+        var approveAllWriteFunctions = approveAllRunFunctions || _approvedFunctionCallNames.Contains("write");
+        var approveAllReadFunctions = approveAllWriteFunctions || _approvedFunctionCallNames.Contains("read");
+
+        var isReadonly = factory.IsReadOnlyFunction(name);
+        var approved = isReadonly switch
+        {
+            true => approveAllReadFunctions,
+            false => approveAllWriteFunctions,
+            null => approveAllRunFunctions
+        };
+
+        return approved;
+    }
+
+    private void AddAutoApproveToolDefaults()
+    {
+        _approvedFunctionCallNames.Add("Think");
+
+        var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApprove).AsList();
+        foreach (var item in items)
+        {
+            _approvedFunctionCallNames.Add(item);
+        }
+    }
+
+    private bool ShouldDenyFunctionCall(McpFunctionFactory factory, string name)
+    {
+        var needToAddAutoDenyToolDefaults = _deniedFunctionCallNames.Count == 0;
+        if (needToAddAutoDenyToolDefaults) AddAutoDenyToolDefaults();
+
+        var deniedByName = _deniedFunctionCallNames.Contains(name);
+        if (deniedByName) return true;
+
+        var denyAll = _deniedFunctionCallNames.Contains("*");
+        if (denyAll) return true;
+
+        var denyAllRunFunctions = _deniedFunctionCallNames.Contains("run");
+        var denyAllWriteFunctions = _deniedFunctionCallNames.Contains("write");
+        var denyAllReadFunctions = _deniedFunctionCallNames.Contains("read");
+
+        var isReadonly = factory.IsReadOnlyFunction(name);
+        var denied = isReadonly switch
+        {
+            true => denyAllReadFunctions,
+            false => denyAllWriteFunctions,
+            null => denyAllRunFunctions
+        };
+
+        return denied;
+    }
+
+    private void AddAutoDenyToolDefaults()
+    {
+        var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoDeny).AsList();
+        foreach (var item in items)
+        {
+            _deniedFunctionCallNames.Add(item);
+        }
+    }
+
+    private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
+    private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
 }

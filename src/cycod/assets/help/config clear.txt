@@ -18,11 +18,15 @@ OPTIONS
 
 EXAMPLES
 
-  EXAMPLE 1: Clear the OpenAI model name in local configuration
+  EXAMPLE 1: Clear the auto approval of function calls
+
+    cycod config clear App.AutoApprove
+
+  EXAMPLE 2: Clear the OpenAI model name in local configuration
 
     cycod config clear OPENAI_CHAT_MODEL_NAME
 
-  EXAMPLE 2: Clear the OpenAI API key in user configuration
+  EXAMPLE 3: Clear the OpenAI API key in user configuration
 
     cycod config clear OPENAI_API_KEY --user
 

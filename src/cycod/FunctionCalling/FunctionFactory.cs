@@ -82,8 +82,11 @@ public class FunctionFactory
             var funcDescriptionAttrib = attributes[0] as DescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
+            var readonlyAttrib = method.GetCustomAttribute<ReadOnlyAttribute>();
+            var readOnly = readonlyAttrib?.IsReadOnly;
+
             var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);
-            AddFunction(aiFunction, method, instance);
+            AddFunction(aiFunction, method, instance, readOnly);
         }
     }
 
@@ -93,7 +96,7 @@ public class FunctionFactory
         AddFunction(aiFunction, methodInfo!, aiFunction);
     }
 
-    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null)
+    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null, bool? readOnly = null)
     {
         const int shortDescriptionMacCch = 50;
         var shortDescription = aiFunction.Description.Length > shortDescriptionMacCch
@@ -102,11 +105,21 @@ public class FunctionFactory
 
         ConsoleHelpers.WriteDebugLine($"Adding function '{aiFunction.Name}' - {shortDescription}");
         _functions.TryAdd(method, (aiFunction, instance));
+        _readOnlyFunctions.TryAdd(aiFunction.Name, readOnly);
     }
 
     public IEnumerable<AITool> GetAITools()
     {
         return _functions.Select(x => x.Value.Function);
+    }
+
+    public bool? IsReadOnlyFunction(string functionName)
+    {
+        if (_readOnlyFunctions.TryGetValue(functionName, out var readOnly))
+        {
+            return readOnly;
+        }
+        return null;
     }
 
     public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
@@ -380,5 +393,6 @@ public class FunctionFactory
     }
 
     private readonly Dictionary<MethodInfo, (AIFunction Function, object? Instance)> _functions = new();
+    private readonly Dictionary<string, bool?> _readOnlyFunctions = new();
 }
 

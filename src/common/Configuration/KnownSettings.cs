@@ -38,6 +38,8 @@ public static class KnownSettings
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
+    public const string AppAutoApprove = "App.AutoApprove";
+    public const string AppAutoDeny = "App.AutoDeny";
     
     #endregion
     
@@ -97,7 +99,9 @@ public static class KnownSettings
         { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
-        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" }
+        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
+        { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
+        { AppAutoDeny, "CYCOD_AUTO_DENY" }
     };
     
     /// <summary>
@@ -131,7 +135,9 @@ public static class KnownSettings
         { AppMaxTokens, "--max-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
-        { AppChatCompletionTimeout, "--chat-completion-timeout" }
+        { AppChatCompletionTimeout, "--chat-completion-timeout" },
+        { AppAutoApprove, "--auto-approve" },
+        { AppAutoDeny, "--auto-deny" }
     };
     
     /// <summary>
@@ -143,9 +149,17 @@ public static class KnownSettings
     /// Mapping from CLI option format to dot notation.
     /// </summary>
     private static readonly Dictionary<string, string> _cliOptionToDotMap;
-    
+
+    /// <summary>
+    /// Collection of settings that can have multiple values.
+    /// </summary>
+    private static readonly List<string> _multiValueSettings = new()
+    {
+        AppAutoApprove, AppAutoDeny
+    };
+
     #endregion
-    
+
     #region Category Groupings
 
     /// <summary>
@@ -204,7 +218,9 @@ public static class KnownSettings
         AppPreferredProvider,
         AppAutoSaveChatHistory,
         AppAutoSaveTrajectory,
-        AppChatCompletionTimeout
+        AppChatCompletionTimeout,
+        AppAutoApprove,
+        AppAutoDeny
     };
     
     #endregion
@@ -248,6 +264,17 @@ public static class KnownSettings
     {
         return _dotToEnvVarMap.Keys;
     }
+
+    /// <summary>
+    /// Checks if the given key can have multiple values.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>True if the key can have multiple values, false otherwise.</returns>
+    public static bool IsMultiValue(string key)
+    {
+        var dotNotationKey = ToDotNotation(key);
+        return _multiValueSettings.Contains(dotNotationKey, StringComparer.OrdinalIgnoreCase);
+    }
     
     /// <summary>
     /// Converts a setting name to environment variable format.
@@ -257,7 +284,7 @@ public static class KnownSettings
     public static string ToEnvironmentVariable(string key)
     {
         if (IsEnvironmentVariableFormat(key)) return key;
-        
+
         // Try to map to an environment variable
         var dotNotationKey = ToDotNotation(key);
         if (_dotToEnvVarMap.TryGetValue(dotNotationKey, out string? envVarKey))

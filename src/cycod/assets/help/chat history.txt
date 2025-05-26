@@ -81,3 +81,4 @@ SEE ALSO
   cycod help
   cycod help config
   cycod help options
+  cycod help settings

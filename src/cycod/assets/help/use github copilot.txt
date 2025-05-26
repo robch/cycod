@@ -1,0 +1,74 @@
+USE GITHUB COPILOT
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set GitHub Copilot token via device-code login
+
+      cycod github login
+      cycod github login --local
+      cycod github login --user
+      cycod github login --global
+
+    EXAMPLE 2: Set GitHub Copilot token via config
+
+      cycod config set GitHub.Token TOKEN
+      cycod config set GitHub.Token TOKEN --local
+      cycod config set GitHub.Token TOKEN --user
+      cycod config set GitHub.Token TOKEN --global
+
+    EXAMPLE 3: Set GitHub Copilot token via environment variable
+
+      Set GITHUB_TOKEN environment variable
+
+    EXAMPLE 4: Supply GitHub Copilot token via command line
+
+      cycod chat --github-token ghp_1234567890abcdef1234567890abcdef12345678
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Copilot model name via config
+
+      cycod config set Copilot.ModelName MODEL_NAME
+      cycod config set Copilot.ModelName MODEL_NAME --local
+      cycod config set Copilot.ModelName MODEL_NAME --user
+      cycod config set Copilot.ModelName MODEL_NAME --global
+
+    EXAMPLE 2: Set Copilot model name via environment variable
+
+      Set COPILOT_MODEL_NAME environment variable
+
+    EXAMPLE 3: Supply Copilot model name via command line
+
+      cycod chat --copilot-model-name MODEL_NAME
+
+  ADDITIONAL SETTINGS
+
+    EXAMPLE 1: Set Copilot API endpoint via config
+
+      cycod config set Copilot.ApiEndpoint ENDPOINT
+      cycod config set Copilot.ApiEndpoint ENDPOINT --local
+      cycod config set Copilot.ApiEndpoint ENDPOINT --user
+      cycod config set Copilot.ApiEndpoint ENDPOINT --global
+
+    EXAMPLE 2: Set Copilot API endpoint via environment variable
+
+      Set COPILOT_API_ENDPOINT environment variable
+
+    EXAMPLE 3: Supply Copilot API endpoint via command line
+
+      cycod chat --copilot-api-endpoint ENDPOINT
+
+    EXAMPLE 4: Set Copilot editor version via config
+
+      cycod config set Copilot.EditorVersion VERSION
+      cycod config set Copilot.EditorVersion VERSION --local
+      cycod config set Copilot.EditorVersion VERSION --user
+      cycod config set Copilot.EditorVersion VERSION --global
+
+    EXAMPLE 5: Set Copilot editor version via environment variable
+
+      Set COPILOT_EDITOR_VERSION environment variable
+
+    EXAMPLE 6: Supply Copilot editor version via command line
+
+      cycod chat --copilot-editor-version VERSION

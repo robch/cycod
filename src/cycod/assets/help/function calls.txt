@@ -1,0 +1,121 @@
+CYCOD FUNCTION CALLS
+
+  When the AI assistant wants to perform actions like reading or writing files or
+  executing commands, it uses function calls. CycoD lets you control which
+  functions you want to automatically approve or deny.
+
+FUNCTION CALL TYPES
+
+  CycoD function calls generally fall into three categories:
+
+  * read - Functions that read content (ViewFile, ListFiles, etc.)
+  * write - Functions that modify content (CreateFile, StrReplace, etc.)
+  * run - Functions that execute commands (RunBashCommandAsync, RunCmdCommandAsync, etc.)
+
+CONTROLLING FUNCTION PERMISSIONS
+
+  AUTO-APPROVE SETTINGS
+
+    Use the --auto-approve option to automatically allow specific function calls
+    without prompting for permission each time.
+
+    USAGE: cycod --auto-approve PATTERN1 [PATTERN2 [...]]
+
+    PATTERNS:
+      * function name - Approve a specific function by name (e.g., "ViewFile")
+      * read - Approve all read-only functions
+      * write - Approve all write functions
+      * run - Approve all command execution functions
+      * * - Approve all functions
+
+    EXAMPLES:
+
+      EXAMPLE 1: Automatically approve read-only functions
+
+        cycod --auto-approve read
+
+      EXAMPLE 2: Automatically approve specific functions
+
+        cycod --auto-approve ViewFile ListFiles
+
+      EXAMPLE 3: Automatically approve all file operations but not command execution
+
+        cycod --auto-approve read write
+
+      EXAMPLE 4: Automatically approve all functions (use with caution)
+
+        cycod --auto-approve *
+
+  AUTO-DENY SETTINGS
+
+    Use the --auto-deny option to automatically block specific function calls
+    without prompting.
+
+    USAGE: cycod --auto-deny PATTERN1 [PATTERN2 [...]]
+
+    PATTERNS:
+      * function name - Deny a specific function by name (e.g., "RunBashCommandAsync")
+      * read - Deny all read-only functions
+      * write - Deny all write functions
+      * run - Deny all command execution functions
+
+    EXAMPLES:
+
+      EXAMPLE 1: Automatically deny all command execution
+
+        cycod --auto-deny run
+
+      EXAMPLE 2: Automatically deny specific functions
+
+        cycod --auto-deny CreateFile DeleteFile
+
+      EXAMPLE 3: Automatically deny all write operations
+
+        cycod --auto-deny write
+
+PERSISTENT CONFIGURATION
+
+  You can make your function call preferences persistent using the config commands:
+
+  EXAMPLE 1: Always auto-approve read-only functions
+
+    cycod config set App.AutoApprove read
+
+  EXAMPLE 2: Always auto-deny command execution functions
+
+    cycod config set App.AutoDeny run
+
+  EXAMPLE 3: Setting multiple auto-approvals
+
+    cycod config add App.AutoApprove read
+    cycod config add App.AutoApprove write
+
+  EXAMPLE 4: Clear all auto-approvals
+
+    cycod config clear App.AutoApprove
+
+ENVIRONMENT VARIABLES
+
+  You can also set these options using environment variables:
+
+  CYCOD_AUTO_APPROVE - Space-separated list of auto-approved patterns
+  CYCOD_AUTO_DENY - Space-separated list of auto-denied patterns
+
+PRIORITY RULES
+
+  When both auto-approve and auto-deny settings apply to the same function:
+  1. Auto-deny takes precedence over auto-approve
+  2. If neither applies, CycoD will prompt you for permission
+
+SECURITY CONSIDERATIONS
+
+  * Use --auto-approve sparingly, especially for write and run functions
+  * Use --auto-deny for any functions you want to always restrict
+  * Consider using the --local scope for project-specific settings
+  * Use --user or --global scopes for your general preferences
+
+SEE ALSO
+
+  cycod help use app
+  cycod help options
+  cycod help config

@@ -170,6 +170,30 @@ public class ConsoleHelpers
             : _allLinesFromStdin;
     }
 
+    public static ConsoleKeyInfo? ReadKey(bool intercept = false)
+    {
+        if (Console.IsInputRedirected)
+        {
+            var line = Console.ReadLine()?.TrimEnd();
+            if (line == null) return null;
+
+            var treatAsEnter = line.Length == 0 || line == "\n" || line == "\r" || line == "\r\n";
+            if (treatAsEnter) return new ConsoleKeyInfo('\n', ConsoleKey.Enter, false, false, false);
+
+            var isAlphaNumeric = char.IsLetterOrDigit(line.ElementAt(0)) || char.IsPunctuation(line.ElementAt(0)) || char.IsSymbol(line.ElementAt(0));
+            if (isAlphaNumeric) return new ConsoleKeyInfo(line.ElementAt(0), (ConsoleKey)line.ElementAt(0), false, false, false);
+
+            return line.ElementAt(0) switch
+            {
+                '\t' => new ConsoleKeyInfo('\t', ConsoleKey.Tab, false, false, false),
+                ' ' => new ConsoleKeyInfo(' ', ConsoleKey.Spacebar, false, false, false),
+                _ => null
+            };
+        }
+
+        return Console.ReadKey(intercept);
+    }
+
     private static List<string> ReadAllLinesFromStdin()
     {
         _allLinesFromStdin = new();

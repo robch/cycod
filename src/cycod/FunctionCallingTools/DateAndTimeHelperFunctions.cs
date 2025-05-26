@@ -7,6 +7,7 @@ using System.ComponentModel;
 
 public class DateAndTimeHelperFunctions
 {
+    [ReadOnly(true)]
     [Description("Gets the current date.")]
     public string GetCurrentDate()
     {
@@ -14,6 +15,7 @@ public class DateAndTimeHelperFunctions
         return $"{date.Year}-{date.Month}-{date.Day}";
     }
 
+    [ReadOnly(true)]
     [Description("Gets the current time.")]
     public string GetCurrentTime()
     {
