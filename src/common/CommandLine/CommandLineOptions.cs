@@ -184,9 +184,12 @@ public class CommandLineOptions
                 ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {value}");
                 return true;
             }
-            
-            // Otherwise, get all arguments until the next option
-            var arguments = GetInputOptionArgs(i + 1, args).ToList();
+
+            // Otherwise, get one or more args
+            var allowMultipleArgs = KnownSettings.IsMultiValue(settingName!);
+            var arguments = allowMultipleArgs
+                ? GetInputOptionArgs(i + 1, args).ToList()
+                : GetInputOptionArgs(i + 1, args, max: 1).ToList();
             
             if (arguments.Count == 0)
             {
@@ -196,7 +199,7 @@ public class CommandLineOptions
             {
                 // If there's only one argument, use it directly as a string
                 var settingValue = arguments[0];
-                
+
                 // Add to configuration store
                 ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
                 ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");

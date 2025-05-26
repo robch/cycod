@@ -149,9 +149,17 @@ public static class KnownSettings
     /// Mapping from CLI option format to dot notation.
     /// </summary>
     private static readonly Dictionary<string, string> _cliOptionToDotMap;
-    
+
+    /// <summary>
+    /// Collection of settings that can have multiple values.
+    /// </summary>
+    private static readonly List<string> _multiValueSettings = new()
+    {
+        AppAutoApprove, AppAutoDeny
+    };
+
     #endregion
-    
+
     #region Category Groupings
 
     /// <summary>
@@ -256,6 +264,17 @@ public static class KnownSettings
     {
         return _dotToEnvVarMap.Keys;
     }
+
+    /// <summary>
+    /// Checks if the given key can have multiple values.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>True if the key can have multiple values, false otherwise.</returns>
+    public static bool IsMultiValue(string key)
+    {
+        var dotNotationKey = ToDotNotation(key);
+        return _multiValueSettings.Contains(dotNotationKey, StringComparer.OrdinalIgnoreCase);
+    }
     
     /// <summary>
     /// Converts a setting name to environment variable format.
@@ -265,7 +284,7 @@ public static class KnownSettings
     public static string ToEnvironmentVariable(string key)
     {
         if (IsEnvironmentVariableFormat(key)) return key;
-        
+
         // Try to map to an environment variable
         var dotNotationKey = ToDotNotation(key);
         if (_dotToEnvVarMap.TryGetValue(dotNotationKey, out string? envVarKey))
