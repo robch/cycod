@@ -54,4 +54,9 @@ CYCOD_PREFERRED_PROVIDER=azure-openai
 
 ## See Also
 
-For more detailed information, refer to the ways-to-use-different-chat-client-providers.md document.
+  cycod help options
+  cycod help settings
+  cycod help use openai
+  cycod help use azure openai
+  cycod help use github copilot
+  cycod help use anthropic

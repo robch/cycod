@@ -1,0 +1,35 @@
+USE ANTHROPIC
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set Anthropic API key via config
+
+      cycod config set Anthropic.ApiKey KEY
+      cycod config set Anthropic.ApiKey KEY --local
+      cycod config set Anthropic.ApiKey KEY --user
+      cycod config set Anthropic.ApiKey KEY --global
+
+    EXAMPLE 2: Set Anthropic API key via environment variable
+
+      Set ANTHROPIC_API_KEY environment variable
+
+    EXAMPLE 3: Supply Anthropic API key via command line
+
+      cycod chat --anthropic-api-key KEY
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Anthropic model name via config
+
+      cycod config set Anthropic.ModelName MODEL_NAME
+      cycod config set Anthropic.ModelName MODEL_NAME --local
+      cycod config set Anthropic.ModelName MODEL_NAME --user
+      cycod config set Anthropic.ModelName MODEL_NAME --global
+
+    EXAMPLE 2: Set Anthropic model name via environment variable
+
+      Set ANTHROPIC_MODEL_NAME environment variable
+
+    EXAMPLE 3: Supply Anthropic model name via command line
+
+      cycod chat --anthropic-model-name MODEL_NAME

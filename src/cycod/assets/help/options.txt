@@ -24,7 +24,7 @@ USAGE: cycod [...]
     --output-chat-history [FILE]          Save chat history to the specified file
     --output-trajectory [FILE]            Save chat history in human readable trajectory format
 
-  FUNCTION CALLING
+  FUNCTION CALLING                        (see: cycod help function calls)
     --auto-approve NAME1 [...]            Automatically approve function calls by name
     --auto-approve read/write/run/*       Automatically approve all function calls of the specified type
     --auto-deny NAME1 [...]               Automatically deny function calls by name
@@ -40,17 +40,21 @@ USAGE: cycod [...]
     --use-azure-openai                    Prefer use of Azure OpenAI API as the chat provider
     --use-azure                           Alias for --use-azure-open
 
-  AZURE OPENAI OPTIONS
+  ANTHROPIC OPTIONS                       (see: cycod help use anthropic)
+    --anthropic-api-key KEY               Use a specific API key for Anthropic
+    --anthropic-model-name NAME           Use a specific chat model (default: claude-3.7-sonnet)
+
+  AZURE OPENAI OPTIONS                    (see: cycod help use azure openai) 
     --azure-openai-api-key KEY            Use a specific authentication key
     --azure-openai-endpoint URL           Use a specific API endpoint
     --azure-openai-chat-deployment NAME   Use a specific chat model deployment
 
-  COPILOT OPTIONS
+  COPILOT OPTIONS                         (see: cycod help use github copilot)
     --copilot-model-name NAME             Use a specific model by name (default: claude-3.7-sonnet)
     --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
     --github-token TOKEN                  Use a specific GitHub authentication tok
 
-  OPENAI OPTIONS
+  OPENAI OPTIONS                          (see: cycod help use openai)
     --openai-api-key KEY                  Use a specific API key
     --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
 
@@ -80,12 +84,19 @@ USAGE: cycod [...]
     --debug                               Turn on diagnostics/debug outputs
     --quiet                               Turn off all but the most critical console outputs
     --verbose                             Turn on additional diagnostics/debug outputs
-    --chat-completion-timeout SECONDS     Set a timeout in seconds for chat completion API calls
+    --chat-completion-timeout SECONDS     Set a timeout in seconds for chat completion API calls (see: cycod help timeouts)
 
 SEE ALSO
 
   cycod help
   cycod help examples
   cycod help provider
+  cycod help settings
+  cycod help use openai
+  cycod help use azure openai
+  cycod help use github copilot
+  cycod help use anthropic
+  cycod help function calls
+  cycod help timeouts
   cycod help config
   cycod help alias

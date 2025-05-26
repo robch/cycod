@@ -22,3 +22,4 @@ SEE ALSO
 
   cycod help config
   cycod help options
+  cycod help use github copilot

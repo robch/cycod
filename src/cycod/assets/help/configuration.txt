@@ -117,3 +117,10 @@ SEE ALSO
   cycod help prompt
   cycod help config
   cycod help options
+  cycod help settings
+  cycod help use openai
+  cycod help use azure openai
+  cycod help use github copilot
+  cycod help use anthropic
+  cycod help function calls
+  cycod help timeouts
