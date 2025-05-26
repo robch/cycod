@@ -474,7 +474,7 @@ public class ChatCommand : CommandWithVariables
 
         while (true)
         {
-            var approvePrompt = "Approve? (Y/n or ?) ";
+            var approvePrompt = " Approve? (Y/n or ?) ";
             var erasePrompt = new string(' ', approvePrompt.Length);
             EnsureLineFeeds();
             DisplayGenericAssistantFunctionCall(name, args, null);
@@ -487,39 +487,42 @@ public class ChatCommand : CommandWithVariables
 
             if (key?.KeyChar == 'Y' || key?.Key == ConsoleKey.Enter)
             {
-                ConsoleHelpers.WriteLine($"\b\b\bApproved (session)", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Approved (session)", ConsoleColor.Yellow);
                 _approvedFunctionCallNames.Add(name);
                 return true;
             }
             else if (key == null || key?.KeyChar == 'N')
             {
                 _deniedFunctionCallNames.Add(name);
-                ConsoleHelpers.WriteLine($"\b\b\bDeclined (session)", ConsoleColor.Red);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Declined (session)", ConsoleColor.Red);
                 return false;
             }
             else if (key?.KeyChar == 'y')
             {
-                ConsoleHelpers.WriteLine($"\b\b\bApproved (once)", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Approved (once)", ConsoleColor.Yellow);
                 return true;
             }
             else if (key?.KeyChar == 'n')
             {
-                ConsoleHelpers.WriteLine($"\b\b\bDeclined (once)", ConsoleColor.Red);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Declined (once)", ConsoleColor.Red);
                 return false;
             }
             else if (key?.KeyChar == '?')
             {
-                ConsoleHelpers.WriteLine($"\b\b\bHelp", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Help\n", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine("  Enter: Approve this function call for this session");
                 ConsoleHelpers.WriteLine("  Y: Approve this function call for this session");
                 ConsoleHelpers.WriteLine("  y: Approve this function call for this one time");
                 ConsoleHelpers.WriteLine("  N: Decline this function call for this session");
                 ConsoleHelpers.WriteLine("  n: Decline this function call for this one time");
-                ConsoleHelpers.WriteLine("  ?: Show this help message");
-                ConsoleHelpers.WriteLine("  Enter: Approve this function call for this session\n");
+                ConsoleHelpers.WriteLine("  ?: Show this help message\n");
+                ConsoleHelpers.Write("  See ");
+                ConsoleHelpers.Write("cycod help function calls", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine(" for more information.\n");
             }
             else
             {
-                ConsoleHelpers.WriteLine($"\b\b\bInvalid input", ConsoleColor.Red);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Invalid input", ConsoleColor.Red);
             }
         }
     }
