@@ -470,8 +470,6 @@ public class ChatCommand : CommandWithVariables
         var autoApprove = ShouldAutoApprove(factory, name);
         if (autoApprove) return true;
 
-        if (Console.IsInputRedirected) return true;
-
         while (true)
         {
             var approvePrompt = " Approve? (Y/n or ?) ";
@@ -480,7 +478,7 @@ public class ChatCommand : CommandWithVariables
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
 
-            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : Console.ReadKey(true);
+            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : ConsoleHelpers.ReadKey(true);
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
             DisplayGenericAssistantFunctionCall(name, args, null);

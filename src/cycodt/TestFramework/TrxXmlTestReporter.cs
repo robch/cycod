@@ -70,7 +70,9 @@ public static class TrxXmlTestReporter
             {
                 writer.WriteStartElement("StdOut");
                 writer.WriteRaw(System.Security.SecurityElement
-                    .Escape(stdout.Replace("\u001b", string.Empty))
+                    .Escape(stdout
+                        .Replace("\u001b", string.Empty)
+                        .Replace("\u0008", string.Empty))
                     .Replace("\r\n", "&#xD;\n"));
                 writer.WriteEndElement();
             }
@@ -79,7 +81,9 @@ public static class TrxXmlTestReporter
             {
                 writer.WriteStartElement("StdErr");
                 writer.WriteRaw(System.Security.SecurityElement
-                    .Escape(stderr.Replace("\u001b", string.Empty))
+                    .Escape(stderr
+                        .Replace("\u001b", string.Empty)
+                        .Replace("\u0008", string.Empty))
                     .Replace("\r\n", "&#xD;\n"));
                 writer.WriteEndElement();
             }
