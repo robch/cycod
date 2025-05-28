@@ -6,12 +6,13 @@ USAGE: cycod mcp add SERVER_NAME --command COMMAND [--arg ARG...] [--env ENV...]
 
 OPTIONS
 
-  SERVER_NAME       The name for the new MCP server
+  SERVER_NAME         The name for the new MCP server
 
-  --command         The command to execute for the MCP server (for STDIO transport)
-  --arg             An argument to pass to the command (can be used multiple times)
-  --env, -e         An environment variable in KEY=VALUE format (can be used multiple times)
-  --url             The URL for the SSE endpoint (for SSE transport)
+  --command           The command to execute for the MCP server (for STDIO transport)
+  --arg ARG           An argument to pass to the command (can be used multiple times)
+  --args ARG1 ARG2    Multiple arguments to pass to the command (space-separated)
+  --env, -e           An environment variable in KEY=VALUE format (can be used multiple times)
+  --url               The URL for the SSE endpoint (for SSE transport)
 
   SCOPE OPTIONS
 

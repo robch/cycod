@@ -345,12 +345,19 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             urlAddCommand.Transport = "sse";
             i += max1Arg.Count();
         }
-        else if (command is McpAddCommand argsAddCommand && arg == "--arg")
+        else if (command is McpAddCommand argAddCommand && arg == "--arg")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var argValue = ValidateString(arg, max1Arg.FirstOrDefault(), "argument");
-            argsAddCommand.Args.Add(argValue!);
+            argAddCommand.Args.Add(argValue!);
             i += max1Arg.Count();
+        }
+        else if (command is McpAddCommand argsAddCommand && arg == "--args")
+        {
+            var argArgs = GetInputOptionArgs(i + 1, args);
+            var argValues = ValidateStrings(arg, argArgs, "argument");
+            argsAddCommand.Args.AddRange(argValues);
+            i += argArgs.Count();
         }
         else if (command is McpAddCommand envAddCommand && (arg == "--env" || arg == "-e"))
         {
