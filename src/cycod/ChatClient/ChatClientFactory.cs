@@ -1,4 +1,5 @@
 using Anthropic.SDK;
+using Anthropic.SDK.Messaging;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
@@ -15,14 +16,15 @@ public static class ChatClientFactory
         var model = EnvironmentHelpers.FindEnvVar("ANTHROPIC_MODEL_NAME") ?? "claude-3-7-sonnet-latest";
         var apiKey = EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY") ?? throw new EnvVarSettingException("ANTHROPIC_API_KEY is not set.");
 
-        var chatClient = new AnthropicClient(apiKey).Messages;
+        var client = new HttpClient(new LogTrafficHttpMessageHandler());
+        var chatClient = new AnthropicClient(apiKey, client).Messages;
         options = new ChatOptions
         {
             ModelId = model,
             ToolMode = ChatToolMode.Auto,
             MaxOutputTokens = 4000
         };
-        
+
         ConsoleHelpers.WriteDebugLine("Using Anthropic API key for authentication");
         return chatClient;
     }
@@ -46,7 +48,7 @@ public static class ChatClientFactory
         var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new EnvVarSettingException("OPENAI_API_KEY is not set.");
 
         var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions());
-        
+
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
         return chatClient.AsIChatClient();
     }
@@ -62,7 +64,7 @@ public static class ChatClientFactory
         // Get the Copilot token using the GitHub token
         var helper = new GitHubCopilotHelper();
         var tokenDetails = helper.GetCopilotTokenDetailsSync(githubToken);
-        
+
         if (string.IsNullOrEmpty(tokenDetails.token))
         {
             throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'cycod github login' to authenticate.");
@@ -70,14 +72,14 @@ public static class ChatClientFactory
 
         // Create options with the initial auth header
         var options = InitOpenAIClientOptions(endpoint, $"Bearer {tokenDetails.token}");
-        
+
         // Create the refresh policy with automatic token refresh capability
         var refreshPolicy = CopilotTokenRefreshPolicy.CreateWithAutoRefresh(
-            tokenDetails.token!, 
-            tokenDetails.expires_at!.Value, 
+            tokenDetails.token!,
+            tokenDetails.expires_at!.Value,
             githubToken,
             helper);
-        
+
         // Add the refresh policy to the pipeline
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);
 
@@ -88,7 +90,7 @@ public static class ChatClientFactory
         if (impersonateVsCodeEditor) options.AddPolicy(new CustomHeaderPolicy("Editor-Version", editorVersion), PipelinePosition.BeforeTransport);
 
         var chatClient = new ChatClient(model, new ApiKeyCredential(" "), options);
-        
+
         ConsoleHelpers.WriteDebugLine("Using GitHub Copilot token for authentication (with auto-refresh)");
         return chatClient.AsIChatClient();
     }
@@ -96,12 +98,12 @@ public static class ChatClientFactory
     private static IChatClient? TryCreateChatClientFromPreferredProvider(out ChatOptions? options)
     {
         var preferredProvider = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreferredProvider).AsString()?.ToLowerInvariant();
-        
+
         options = null;
         if (!string.IsNullOrEmpty(preferredProvider))
         {
             ConsoleHelpers.WriteDebugLine($"Using preferred provider: {preferredProvider}");
-            
+
             // Try to create client based on preference
             if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
             {
@@ -119,12 +121,12 @@ public static class ChatClientFactory
             {
                 return CreateOpenAIChatClientWithApiKey();
             }
-            
+
             // If preferred provider credentials aren't available, warn the user
             ConsoleHelpers.WriteWarning($"Preferred provider '{preferredProvider}' credentials not found. Falling back to default selection.");
             ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
-        
+
         return null;
     }
 
@@ -142,7 +144,7 @@ public static class ChatClientFactory
         {
             return CreateAnthropicChatClientWithApiKey(out options);
         }
-        
+
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
         {
             return CreateAzureOpenAIChatClientWithApiKey();
@@ -152,7 +154,7 @@ public static class ChatClientFactory
         {
             return CreateOpenAIChatClientWithApiKey();
         }
-        
+
         return null;
     }
 
@@ -160,10 +162,10 @@ public static class ChatClientFactory
     {
         // First try to create client from preferred provider
         var client = TryCreateChatClientFromPreferredProvider(out options);
-        
+
         // If that fails, try to create from environment variables
         client ??= TryCreateChatClientFromEnv(out options);
-        
+
         // If no client could be created, throw an exception with helpful message
         if (client == null)
         {
@@ -195,7 +197,7 @@ public static class ChatClientFactory
 
             throw new EnvVarSettingException(message);
         }
-        
+
         return client;
     }
 
@@ -226,7 +228,7 @@ public static class ChatClientFactory
         options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
-        
+
         // Apply timeout if configured
         var timeoutSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppChatCompletionTimeout);
         if (timeoutSetting.AsInt() > 0)
@@ -235,7 +237,7 @@ public static class ChatClientFactory
             ConsoleHelpers.WriteDebugLine($"Setting chat completion timeout to {timeoutSeconds} seconds");
             options.NetworkTimeout = TimeSpan.FromSeconds(timeoutSeconds);
         }
-        
+
         return options;
     }
 }

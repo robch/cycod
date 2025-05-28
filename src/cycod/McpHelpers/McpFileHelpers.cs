@@ -56,7 +56,7 @@ public static class McpFileHelpers
         }
         else // stdio is default
         {
-            var environmentDict = new Dictionary<string, string>();
+            var environmentDict = new Dictionary<string, string?>();
             if (envVars != null)
             {
                 foreach (var env in envVars)

@@ -22,7 +22,7 @@ public class StdioServerConfig : IMcpServerConfigItem
     /// <summary>
     /// Environment variables for the server
     /// </summary>
-    public Dictionary<string, string> Env { get; set; } = new Dictionary<string, string>();
+    public Dictionary<string, string?> Env { get; set; } = new Dictionary<string, string?>();
     
     /// <summary>
     /// The config file containing this server configuration

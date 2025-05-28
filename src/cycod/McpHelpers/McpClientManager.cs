@@ -1,5 +1,4 @@
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol.Transport;
 
 /// <summary>
 /// Factory for creating MCP clients from configuration.
