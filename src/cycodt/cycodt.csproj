@@ -16,7 +16,7 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>CycoDevTest</PackageId>
+    <PackageId>CycoDt</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>AI-powered CLI Test Framework</Description>
     <PackageTags>cli;ai;chat;openai;azure;github-copilot</PackageTags>

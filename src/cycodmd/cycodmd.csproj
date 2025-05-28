@@ -17,7 +17,7 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>cycodmd</PackageId>
+    <PackageId>CycoDmd</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>The AI-Powered Markdown Generator</Description>
     <PackageTags>cli;ai;markdown;document;conversion</PackageTags>
