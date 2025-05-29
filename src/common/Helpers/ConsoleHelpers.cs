@@ -224,10 +224,10 @@ public class ConsoleHelpers
     private static void WriteWithColor(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
     {
         var prevForegroundColor = Console.ForegroundColor;
-        if (foregroundColor != null) Console.ForegroundColor = (ConsoleColor)foregroundColor;
+        if (foregroundColor != null) Console.ForegroundColor = ColorHelpers.MapColor((ConsoleColor)foregroundColor);
 
         var prevBackgroundColor = Console.BackgroundColor;
-        if (backgroundColor != null) Console.BackgroundColor = (ConsoleColor)backgroundColor;
+        if (backgroundColor != null) Console.BackgroundColor = ColorHelpers.MapColor((ConsoleColor)backgroundColor);
 
         Console.Write(message);
         if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;

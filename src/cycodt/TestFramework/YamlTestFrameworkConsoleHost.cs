@@ -12,7 +12,7 @@ public class YamlTestFrameworkConsoleHost : IYamlTestFrameworkHost
 
         lock (this)
         {
-            ConsoleHelpers.WriteLine("Starting test: " + testCase.FullyQualifiedName, ColorHelpers.MapColor(ConsoleColor.DarkGray));
+            ConsoleHelpers.WriteLine("Starting test: " + testCase.FullyQualifiedName, ConsoleColor.DarkGray);
         }
     }
 

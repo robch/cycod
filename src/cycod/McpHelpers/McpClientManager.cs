@@ -84,21 +84,30 @@ public static class McpClientManager
         }
 
         var start = DateTime.Now;
-        var message = $"Loading {servers.Count} MCP server(s) ...";
-        ConsoleHelpers.Write(message);
+        ConsoleHelpers.Write($"Loading {servers.Count} MCP server(s) ...", ConsoleColor.DarkGray);
 
         // Create clients for each server
+        var loaded = 0;
         foreach (var serverName in servers.Keys)
         {
-            var client = await CreateClientAsync(serverName, scope);
-            if (client != null)
+            try
             {
-                result[serverName] = client;
+                var client = await CreateClientAsync(serverName, scope);
+                if (client != null)
+                {
+                    result[serverName] = client;
+                    loaded++;
+                }
+            }
+            catch (Exception ex)
+            {
+                var message = "  " + ex.Message.Replace("\n", "\n  ").TrimEnd();
+                ConsoleHelpers.WriteErrorLine($"\rSkipping MCP server '{serverName}'; failed to load\n\n{message}\n");
             }
         }
 
         var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
-        ConsoleHelpers.WriteLine($" Done! ({duration})");
+        ConsoleHelpers.WriteLine($"\rLoaded {result.Count} MCP server(s) ({duration})", ConsoleColor.DarkGray);
 
         return result;
     }
