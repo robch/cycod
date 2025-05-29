@@ -29,7 +29,7 @@ public class GitHubCopilotHelper
 
     public GitHubCopilotHelper()
     {
-        _httpClient = new HttpClient();
+        _httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
         foreach (var header in DEFAULT_HEADERS)
         {
             _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
