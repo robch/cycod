@@ -1,6 +1,6 @@
 # Provider Selection
 
-CycoD supports multiple AI providers including OpenAI, Azure OpenAI, and GitHub Copilot. This document explains how to select and configure different providers.
+CycoD supports multiple AI providers including OpenAI, Azure OpenAI, GitHub Copilot, and Anthropic. This document explains how to select and configure different providers.
 
 ## Supported Providers
 
@@ -8,17 +8,19 @@ CycoD currently supports the following AI providers:
 
 | Provider | Required Credentials | Features |
 |----------|---------------------|----------|
+| GitHub Copilot | `GITHUB_TOKEN` | GitHub Copilot models |
+| Anthropic | `ANTHROPIC_API_KEY` | Anthropic Claude models |
 | OpenAI | `OPENAI_API_KEY` | Standard OpenAI API |
 | Azure OpenAI | `AZURE_OPENAI_API_KEY` | OpenAI models hosted on Azure |
-| GitHub Copilot | `GITHUB_TOKEN` | GitHub Copilot models |
 
 ## Default Provider Selection
 
 By default, CycoD selects a provider by checking for the necessary environment variables in the following order:
 
 1. GitHub Copilot (if `GITHUB_TOKEN` is set)
-2. Azure OpenAI (if `AZURE_OPENAI_API_KEY` is set)
+2. Anthropic (if `ANTHROPIC_API_KEY` is set)
 3. OpenAI (if `OPENAI_API_KEY` is set)
+4. Azure OpenAI (if `AZURE_OPENAI_API_KEY` is set)
 
 This means that if you have multiple sets of credentials in your environment, CycoD will use the first one it finds according to this priority order.
 
@@ -34,6 +36,7 @@ Use these command-line flags to explicitly select a provider:
 cycod --use-openai        # Use OpenAI API
 cycod --use-azure-openai  # Use Azure OpenAI API
 cycod --use-copilot       # Use GitHub Copilot
+cycod --use-anthropic     # Use Anthropic API
 ```
 
 These flags override the default provider selection order. All necessary credentials must still be available in your environment or configuration files.
@@ -44,7 +47,7 @@ Set your preferred provider in any configuration file (global, user, or local):
 
 ```yaml
 app:
-  preferredProvider: "openai"  # Can be "openai", "azure-openai", "copilot"
+  preferredProvider: "openai"  # Can be "openai", "azure-openai", "copilot", "anthropic"
 ```
 
 Or using the config command:
@@ -63,11 +66,11 @@ set CYCOD_PREFERRED_PROVIDER=openai
 cycod
 
 # Windows PowerShell
-$env:CYCOD_PREFERRED_PROVIDER="azure-openai"
+$env:CYCOD_PREFERRED_PROVIDER="anthropic"
 cycod
 
 # Linux/macOS
-CYCOD_PREFERRED_PROVIDER=copilot cycod
+CYCOD_PREFERRED_PROVIDER=copilot
 ```
 
 ## Using Named Configurations (Profiles)
@@ -160,17 +163,20 @@ cycod --profile project-b
 You can create command aliases for different providers:
 
 ```bash
-cycod --use-openai --save-alias openai-chat
-cycod --use-azure-openai --save-alias azure-chat
-cycod --use-copilot --save-alias copilot-chat
+cycod --use-copilot --save-alias cp
+cycod --use-anthropic --save-alias anth
+cycod --use-openai --save-alias oai
+cycod --use-azure-openai --save-alias aoai
 ```
 
 Then use:
 
 ```bash
-cycod --openai-chat
+cycod --cp
 # or 
-cycod --azure-chat
+cycod --anth
 # or
-cycod --copilot-chat
+cycod --oai
+# or
+cycod --aoai
 ```

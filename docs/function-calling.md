@@ -102,6 +102,170 @@ Since these functions can execute commands and modify files on your system, cons
 5. Use the `--debug` flag to see detailed information about all function calls
 6. Remember that persistent shell sessions remain active between commands
 
+## Controlling Function Permissions
+
+CycoD provides powerful control mechanisms for managing which functions the AI assistant can call without prompting you for permission. You can automatically approve or deny specific types of functions to streamline your workflow.
+
+### Function Types
+
+Functions in CycoD are categorized into three main types:
+
+- **read**: Functions that read content (ViewFile, ListFiles, etc.)
+- **write**: Functions that modify content (CreateFile, StrReplace, Insert, etc.)
+- **run**: Functions that execute commands (RunBashCommandAsync, RunCmdCommandAsync, RunPowershellCommandAsync)
+
+### Auto-Approve Options
+
+The `--auto-approve` option allows you to automatically allow specific function calls without requiring permission each time:
+
+```bash
+cycod --auto-approve PATTERN1 [PATTERN2 [...]]
+```
+
+#### Pattern Types
+
+You can use several types of patterns to control which functions are auto-approved:
+
+- **Function name**: Approve a specific function (e.g., `ViewFile`)
+- **Function type**: Approve all functions of a specific type (`read`, `write`, or `run`)
+- **Wildcard**: Approve all functions using the asterisk (`*`)
+
+#### Examples
+
+```bash
+# Auto-approve all read-only functions
+cycod --auto-approve read
+
+# Auto-approve specific functions
+cycod --auto-approve ViewFile ListFiles
+
+# Auto-approve file operations but not command execution
+cycod --auto-approve read write
+
+# Auto-approve all functions (use with caution)
+cycod --auto-approve *
+```
+
+### Auto-Deny Options
+
+The `--auto-deny` option allows you to automatically block specific function calls without prompting:
+
+```bash
+cycod --auto-deny PATTERN1 [PATTERN2 [...]]
+```
+
+#### Examples
+
+```bash
+# Auto-deny all command execution functions
+cycod --auto-deny run
+
+# Auto-deny specific functions
+cycod --auto-deny CreateFile DeleteFile
+
+# Auto-deny all write operations
+cycod --auto-deny write
+```
+
+### Persisting Function Permissions
+
+For a more permanent solution, you can configure function permissions using the config command:
+
+#### Setting Auto-Approve Configuration
+
+```bash
+# Set auto-approve for read operations at user level
+cycod config set App.AutoApprove read --user
+
+# Set auto-approve for multiple function types at local level
+cycod config set App.AutoApprove "read write" --local
+
+# Auto-approve all functions system-wide (use with caution)
+cycod config set App.AutoApprove "*" --global
+
+# Auto-approve specific functions
+cycod config set App.AutoApprove "ViewFile ListFiles" --user
+```
+
+#### Setting Auto-Deny Configuration
+
+```bash
+# Set auto-deny for command execution at user level
+cycod config set App.AutoDeny run --user
+
+# Set auto-deny for write operations
+cycod config set App.AutoDeny write --local
+
+# Auto-deny specific functions
+cycod config set App.AutoDeny "CreateFile StrReplace" --global
+```
+
+#### Adding to Existing Lists
+
+If you want to add values to existing auto-approve or auto-deny lists:
+
+```bash
+# Add an additional function type to auto-approve
+cycod config add App.AutoApprove read
+cycod config add App.AutoApprove write
+
+# Add specific functions to auto-deny
+cycod config add App.AutoDeny DeleteFile
+cycod config add App.AutoDeny RunBashCommandAsync
+```
+
+#### Removing Values
+
+```bash
+# Remove a function or type from auto-approve list
+cycod config remove App.AutoApprove write
+
+# Remove a function from auto-deny list
+cycod config remove App.AutoDeny DeleteFile
+```
+
+#### Clearing All Settings
+
+```bash
+# Clear all auto-approvals
+cycod config clear App.AutoApprove
+
+# Clear all auto-denials
+cycod config clear App.AutoDeny
+```
+
+### Using Environment Variables
+
+You can also set function permissions using environment variables:
+
+```bash
+# Windows
+set CYCOD_AUTO_APPROVE=read write
+set CYCOD_AUTO_DENY=run
+
+# Linux/macOS
+export CYCOD_AUTO_APPROVE="read write"
+export CYCOD_AUTO_DENY="run"
+```
+
+### Permission Priority Rules
+
+When multiple permission rules apply to the same function, the following priority rules are used:
+
+1. Auto-deny takes precedence over auto-approve
+2. Command-line options take precedence over configuration settings
+3. If neither auto-approve nor auto-deny applies, CycoD will prompt you for permission
+
+### Scope Considerations
+
+When using `cycod config` to set permissions, consider which scope is appropriate:
+
+- **Local** (`--local`): Apply only to the current directory
+- **User** (`--user`): Apply to the current user across all directories
+- **Global** (`--global`): Apply to all users system-wide
+
+Choose the scope that matches your security requirements and workflow needs.
+
 ## Function Parameters
 
 Each function has specific parameters it accepts:

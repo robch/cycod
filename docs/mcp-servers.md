@@ -38,7 +38,7 @@ cycod mcp remove postgres-db
 
 ## How CycoD Uses MCP Servers
 
-When you start a chat session, CycoD automatically:
+When you start a chat session with `--use-mcps`, CycoD automatically:
 
 1. Finds all configured MCP servers
 2. Connects to each server
@@ -53,7 +53,7 @@ After configuring an MCP server, you can use it in a chat session:
 
 ```bash
 # Start a chat session
-cycod
+cycod --use-mcps
 
 # Ask a question that might use an MCP tool
 User: What is the current weather in New York?
