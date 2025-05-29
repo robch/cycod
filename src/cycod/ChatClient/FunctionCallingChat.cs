@@ -14,12 +14,15 @@ public class FunctionCallingChat : IAsyncDisposable
             ? chatClient.AsBuilder().UseFunctionInvocation().Build()
             : chatClient;
 
+        var tools = _functionFactory.GetAITools().ToList();
+        ConsoleHelpers.WriteDebugLine($"FunctionCallingChat: Found {tools.Count} tools in FunctionFactory");
+
         _messages = new List<ChatMessage>();
         _options = new ChatOptions()
         {
             ModelId = options?.ModelId,
             ToolMode = options?.ToolMode,
-            Tools = _functionFactory.GetAITools().ToList(),
+            Tools = tools,
             MaxOutputTokens = maxOutputTokens.HasValue
                 ? maxOutputTokens.Value
                 : options?.MaxOutputTokens,

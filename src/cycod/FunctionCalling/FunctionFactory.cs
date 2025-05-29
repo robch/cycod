@@ -104,8 +104,8 @@ public class FunctionFactory
             : aiFunction.Description;
 
         ConsoleHelpers.WriteDebugLine($"Adding function '{aiFunction.Name}' - {shortDescription}");
-        _functions.TryAdd(method, (aiFunction, instance));
-        _readOnlyFunctions.TryAdd(aiFunction.Name, readOnly);
+        _functions.TryAdd(aiFunction.Name, (aiFunction, method, instance, readOnly));
+        ConsoleHelpers.WriteDebugLine($"Count of functions in factory: {_functions.Count}");
     }
 
     public IEnumerable<AITool> GetAITools()
@@ -115,9 +115,9 @@ public class FunctionFactory
 
     public bool? IsReadOnlyFunction(string functionName)
     {
-        if (_readOnlyFunctions.TryGetValue(functionName, out var readOnly))
+        if (_functions.TryGetValue(functionName, out var function))
         {
-            return readOnly;
+            return function.ReadOnly;
         }
         return null;
     }
@@ -130,7 +130,7 @@ public class FunctionFactory
             var function = _functions.FirstOrDefault(x => x.Value.Function.Name == functionName);
             if (function.Key != null)
             {
-                result = TryCallFunction(function.Key, function.Value.Function, functionArguments, function.Value.Instance);
+                result = TryCallFunction(function.Value.Method, function.Value.Function, functionArguments, function.Value.Instance);
                 return true;
             }
         }
@@ -392,7 +392,6 @@ public class FunctionFactory
         return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 
-    private readonly Dictionary<MethodInfo, (AIFunction Function, object? Instance)> _functions = new();
-    private readonly Dictionary<string, bool?> _readOnlyFunctions = new();
+    private readonly Dictionary<string, (AIFunction Function, MethodInfo Method, object? Instance, bool? ReadOnly)> _functions = new();
 }
 
