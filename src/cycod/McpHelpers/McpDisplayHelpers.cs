@@ -48,7 +48,7 @@ public static class McpDisplayHelpers
 
         if (servers.Count == 0)
         {
-            Console.WriteLine($"  No MCP servers found in this scope.");
+            ConsoleHelpers.WriteLine($"  No MCP servers found in this scope.", overrideQuiet: true);
             return;
         }
 
@@ -57,23 +57,23 @@ public static class McpDisplayHelpers
         {
             if (server.Value is StdioServerConfig stdioConfig)
             {
-                Console.WriteLine($"  {server.Key} (stdio)");
-                Console.WriteLine($"    Command: {stdioConfig.Command}");
+                ConsoleHelpers.WriteLine($"  {server.Key} (stdio)", overrideQuiet: true);
+                ConsoleHelpers.WriteLine($"    Command: {stdioConfig.Command}", overrideQuiet: true);
                 if (stdioConfig.Args.Count > 0)
                 {
-                    Console.WriteLine($"    Arguments: {string.Join(" ", stdioConfig.Args.Select(a => $"\"{a}\""))}");
+                    ConsoleHelpers.WriteLine($"    Arguments: {string.Join(" ", stdioConfig.Args.Select(a => $"\"{a}\""))}", overrideQuiet: true);
                 }
                 if (stdioConfig.Env.Count > 0)
                 {
-                    Console.WriteLine($"    Environment variables: {stdioConfig.Env.Count}");
+                    ConsoleHelpers.WriteLine($"    Environment variables: {stdioConfig.Env.Count}", overrideQuiet: true);
                 }
             }
             else if (server.Value is SseServerConfig sseConfig)
             {
-                Console.WriteLine($"  {server.Key} (sse)");
-                Console.WriteLine($"    URL: {sseConfig.Url}");
+                ConsoleHelpers.WriteLine($"  {server.Key} (sse)", overrideQuiet: true);
+                ConsoleHelpers.WriteLine($"    URL: {sseConfig.Url}", overrideQuiet: true);
             }
-            Console.WriteLine();
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
     }
 
@@ -89,27 +89,27 @@ public static class McpDisplayHelpers
         var location = CommonDisplayHelpers.FormatLocationHeader(configPath, scope);
         CommonDisplayHelpers.WriteLocationHeader(location);
 
-        Console.WriteLine($"  {serverName} ({serverConfig.Type})");
-        Console.WriteLine();
+        ConsoleHelpers.WriteLine($"  {serverName} ({serverConfig.Type})", overrideQuiet: true);
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
 
         if (serverConfig is StdioServerConfig stdioConfig)
         {
-            Console.WriteLine($"    Command: {stdioConfig.Command}");
+            ConsoleHelpers.WriteLine($"    Command: {stdioConfig.Command}", overrideQuiet: true);
             
             if (stdioConfig.Args.Count > 0)
             {
-                Console.WriteLine();
-                Console.WriteLine("    Arguments:");
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                ConsoleHelpers.WriteLine("    Arguments:", overrideQuiet: true);
                 foreach (var arg in stdioConfig.Args)
                 {
-                    Console.WriteLine($"      {arg}");
+                    ConsoleHelpers.WriteLine($"      {arg}", overrideQuiet: true);
                 }
             }
             
             if (stdioConfig.Env.Count > 0)
             {
-                Console.WriteLine();
-                Console.WriteLine("    Environment Variables:");
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                ConsoleHelpers.WriteLine("    Environment Variables:", overrideQuiet: true);
                 foreach (var env in stdioConfig.Env)
                 {
                     // Mask sensitive values like API keys
@@ -119,13 +119,13 @@ public static class McpDisplayHelpers
                         ? "****" 
                         : env.Value;
                     
-                    Console.WriteLine($"      {env.Key}={value}");
+                    ConsoleHelpers.WriteLine($"      {env.Key}={value}", overrideQuiet: true);
                 }
             }
         }
         else if (serverConfig is SseServerConfig sseConfig)
         {
-            Console.WriteLine($"    URL: {sseConfig.Url}");
+            ConsoleHelpers.WriteLine($"    URL: {sseConfig.Url}", overrideQuiet: true);
         }
     }
 }

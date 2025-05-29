@@ -82,7 +82,7 @@ abstract class TestBaseCommand : Command
         var found = FindFiles(pattern);
         if (found.Count() == 0)
         {
-            Console.WriteLine($"WARNING: No files found: {pattern}");
+            ConsoleHelpers.WriteWarningLine($"WARNING: No files found: {pattern}");
         }
         filesAsList.AddRange(found);
     }

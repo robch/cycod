@@ -20,7 +20,7 @@ public static class McpClientManager
 
         if (serverConfig == null)
         {
-            Console.WriteLine($"MCP server '{serverName}' not found");
+            ConsoleHelpers.WriteErrorLine($"MCP server '{serverName}' not found");
             return null;
         }
 
@@ -42,7 +42,7 @@ public static class McpClientManager
         }
         else
         {
-            Console.WriteLine($"Unsupported transport type '{serverConfig.Type}' for MCP server '{serverName}'");
+            ConsoleHelpers.WriteErrorLine($"Unsupported transport type '{serverConfig.Type}' for MCP server '{serverName}'");
         }
 
         return null;
@@ -83,6 +83,10 @@ public static class McpClientManager
             }
         }
 
+        var start = DateTime.Now;
+        var message = $"Loading {servers.Count} MCP server(s) ...";
+        ConsoleHelpers.Write(message);
+
         // Create clients for each server
         foreach (var serverName in servers.Keys)
         {
@@ -92,6 +96,9 @@ public static class McpClientManager
                 result[serverName] = client;
             }
         }
+
+        var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
+        ConsoleHelpers.WriteLine($" Done! ({duration})");
 
         return result;
     }

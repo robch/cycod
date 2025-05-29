@@ -57,9 +57,7 @@ class ExpectCheckCommand : ExpectBaseCommand
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
-            Console.ResetColor();
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             return 1;
         }
     }

@@ -55,7 +55,7 @@ public class DirectoryHelpers
         {
             if (!Directory.Exists(folder))
             {
-                Console.WriteLine($"Error creating directory: {ex.Message}");
+                ConsoleHelpers.WriteErrorLine($"Error creating directory: {ex.Message}");
                 throw;
             }
         }

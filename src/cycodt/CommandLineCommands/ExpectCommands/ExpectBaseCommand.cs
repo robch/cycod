@@ -32,7 +32,7 @@ abstract class ExpectBaseCommand : Command
     {
         if (string.IsNullOrEmpty(Output))
         {
-            Console.WriteLine(text);
+            ConsoleHelpers.WriteLine(text, overrideQuiet: true);
         }
         else
         {

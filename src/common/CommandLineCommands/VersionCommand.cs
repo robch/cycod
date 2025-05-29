@@ -19,7 +19,7 @@ public class VersionCommand : Command
     {
         return await Task.Run(() => 
         {
-            Console.WriteLine($"Version: {VersionInfo.GetVersion()}");
+            ConsoleHelpers.WriteLine($"Version: {VersionInfo.GetVersion()}", overrideQuiet: true);
             return 0;
         });
     }

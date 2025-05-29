@@ -43,7 +43,7 @@ class TestListCommand : TestBaseCommand
                 }
             }
 
-            Console.WriteLine(tests.Count() == 1
+            ConsoleHelpers.WriteLine(tests.Count() == 1
                 ? $"\nFound {tests.Count()} test..."
                 : $"\nFound {tests.Count()} tests...");
 
@@ -51,9 +51,7 @@ class TestListCommand : TestBaseCommand
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
-            Console.ResetColor();
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             return 1;
         }
     }

@@ -420,6 +420,17 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             command.UseTemplates = false;
         }
+        else if (arg == "--use-mcps" || arg == "--mcp")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var useMcp = max1Arg.FirstOrDefault() ?? "true";
+            command.UseMcps = useMcp.ToLower() == "true" || useMcp == "1";
+            i += max1Arg.Count();
+        }
+        else if (arg == "--no-mcps")
+        {
+            command.UseMcps = false;
+        }
         else if (arg == "--system-prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
@@ -554,11 +565,11 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
         }
-        else if (arg == "--use-copilot") 
+        else if (arg == "--use-copilot")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot");
         }
-        else if (arg == "--use-copilot-token") 
+        else if (arg == "--use-copilot-token")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
         }

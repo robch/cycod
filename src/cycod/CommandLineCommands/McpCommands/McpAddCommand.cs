@@ -114,7 +114,7 @@ class McpAddCommand : McpBaseCommand
                 ? McpFileHelpers.SaveMcpServer(name, command, args, envVars, "stdio", scope: scope)
                 : McpFileHelpers.SaveMcpServer(name, null, null, null, transport!, url: url, scope: scope);
             
-            Console.WriteLine($"Created MCP server '{name}' at {savedFilePath}.");
+            ConsoleHelpers.WriteLine($"Created MCP server '{name}' at {savedFilePath}.", overrideQuiet: true);
             return 0;
         }
         catch (Exception ex)

@@ -67,10 +67,10 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
+        factory.AddFunctions(new CodeExplorationHelperFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
-        factory.AddFunctions(new CodeExplorationHelperFunctions());
 
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient(out var options);
@@ -667,35 +667,14 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    public string? SystemPrompt { get; set; }
-    public List<string> SystemPromptAdds { get; set; } = new List<string>();
-    public List<string> UserPromptAdds { get; set; } = new List<string>();
-
-    public int? TrimTokenTarget { get; set; }
-    public int? MaxOutputTokens { get; set; }
-
-    public bool LoadMostRecentChatHistory = false;
-    public string? InputChatHistory;
-    public string? OutputChatHistory;
-    public string? OutputTrajectory;
-
-    public List<string> InputInstructions = new();
-    public bool UseTemplates = true;
-
-    private int _assistantResponseCharsSinceLabel = 0;
-    private bool _asssistantResponseNeedsLF = false;
-
-    private INamedValues? _namedValues;
-    private TrajectoryFile? _trajectoryFile;
-    private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
-    private SlashPromptCommandHandler _promptCommandHandler = new();
-
-    private long _totalTokensIn = 0;
-    private long _totalTokensOut = 0;
-    private const int DefaultTrimTokenTarget = 160000;
-
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
+        if (!UseMcps)
+        {
+            ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            return;
+        }
+
         try
         {
             // Create clients for all configured MCP servers
@@ -705,8 +684,6 @@ public class ChatCommand : CommandWithVariables
                 return; // No configured MCP servers
             }
 
-            Console.WriteLine($"Found {clients.Count} MCP server(s)");
-            
             // Add tools from each client
             foreach (var clientEntry in clients)
             {
@@ -719,13 +696,13 @@ public class ChatCommand : CommandWithVariables
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
+                    ConsoleHelpers.WriteErrorLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading MCP functions: {ex.Message}");
+            ConsoleHelpers.WriteErrorLine($"Error loading MCP functions: {ex.Message}");
         }
     }
 
@@ -800,6 +777,34 @@ public class ChatCommand : CommandWithVariables
             _deniedFunctionCallNames.Add(item);
         }
     }
+
+    public string? SystemPrompt { get; set; }
+    public List<string> SystemPromptAdds { get; set; } = new List<string>();
+    public List<string> UserPromptAdds { get; set; } = new List<string>();
+
+    public int? TrimTokenTarget { get; set; }
+    public int? MaxOutputTokens { get; set; }
+
+    public bool LoadMostRecentChatHistory = false;
+    public string? InputChatHistory;
+    public string? OutputChatHistory;
+    public string? OutputTrajectory;
+
+    public List<string> InputInstructions = new();
+    public bool UseTemplates = true;
+    public bool UseMcps = false;
+
+    private int _assistantResponseCharsSinceLabel = 0;
+    private bool _asssistantResponseNeedsLF = false;
+
+    private INamedValues? _namedValues;
+    private TrajectoryFile? _trajectoryFile;
+    private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
+    private SlashPromptCommandHandler _promptCommandHandler = new();
+
+    private long _totalTokensIn = 0;
+    private long _totalTokensOut = 0;
+    private const int DefaultTrimTokenTarget = 160000;
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();

@@ -38,19 +38,19 @@ class ConfigListCommand : ConfigBaseCommand
         if (isAnyScope || scope == ConfigFileScope.Global)
         {
             DisplayConfigSettings(ConfigFileScope.Global);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.User)
         {
             DisplayConfigSettings(ConfigFileScope.User);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
         
         if (isAnyScope || scope == ConfigFileScope.Local)
         {
             DisplayConfigSettings(ConfigFileScope.Local);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.FileName)
@@ -60,7 +60,7 @@ class ConfigListCommand : ConfigBaseCommand
             {
                 var location = $"{kvp.Key} (specified)";
                 ConfigDisplayHelpers.DisplayConfigSettings(location, kvp.Value);
-                Console.WriteLine();
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
             }
         }
 
@@ -71,7 +71,7 @@ class ConfigListCommand : ConfigBaseCommand
             {
                 var location = "Command line (specified)";
                 ConfigDisplayHelpers.DisplayConfigSettings(location, commandLineValues);
-                Console.WriteLine();
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
             }
         }
         

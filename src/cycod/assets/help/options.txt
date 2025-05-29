@@ -15,7 +15,10 @@ USAGE: cycod [...]
     --instructions ...                    Alias for --inputs
 
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
-    --no-templates                        Alias for --use-templates fal
+    --no-templates                        Alias for --use-templates false
+
+    --use-mcps TRUE/FALSE                 Use Model Context Protocol servers (default: false)
+    --no-mcps                             Alias for --use-mcps false
 
   CHAT HISTORY                            (see: cycod help chat history)
     --continue                            Continue the most recent chat history
@@ -32,7 +35,7 @@ USAGE: cycod [...]
 
   MODEL OPTIONS
     --max-tokens TOKENS                   AI model should output no more than TOKENS
-    --trim-token-target TOKENS            Specify chat history maximum tokens target (default: 18000
+    --trim-token-target TOKENS            Specify chat history maximum tokens target
 
   MODEL PROVIDERS
     --use-copilot                         Prefer use of GitHub Copilot

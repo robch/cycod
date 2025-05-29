@@ -30,7 +30,7 @@ class TestRunCommand : TestBaseCommand
             Logger.Log(new CycoDtTestFrameworkLogger());
 
             var tests = FindAndFilterTests();
-            Console.WriteLine(tests.Count() == 1
+            ConsoleHelpers.WriteLine(tests.Count() == 1
                 ? $"Found {tests.Count()} test...\n"
                 : $"Found {tests.Count()} tests...\n");
 
@@ -44,9 +44,7 @@ class TestRunCommand : TestBaseCommand
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
-            Console.ResetColor();
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             return 1;
         }
     }

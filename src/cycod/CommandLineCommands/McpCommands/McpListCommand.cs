@@ -48,13 +48,13 @@ class McpListCommand : McpBaseCommand
         if (isAnyScope || scope == ConfigFileScope.Global)
         {
             DisplayMcpServers(ConfigFileScope.Global);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.User)
         {
             DisplayMcpServers(ConfigFileScope.User);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.Local)

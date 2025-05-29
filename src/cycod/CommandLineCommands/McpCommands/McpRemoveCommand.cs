@@ -95,7 +95,7 @@ class McpRemoveCommand : McpBaseCommand
             return 1;
         }
 
-        Console.WriteLine($"Removed MCP server '{name}' from {deleteFromScope} scope.");
+        ConsoleHelpers.WriteLine($"Removed MCP server '{name}' from {deleteFromScope} scope.", overrideQuiet: true);
         return 0;
     }
 }
