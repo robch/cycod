@@ -11,7 +11,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycodt", "src\cycodt\cycodt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "common", "src\common\common.csproj", "{5D816D53-01B3-48A2-B8B1-DB23E86586CF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycodmd", "src\cycodmd\cycodmd.csproj", "{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycodmd", "src\cycodmd\cycodmd.csproj", "{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod-mcp-weather", "src\mcp\weather\cycod-mcp-weather.csproj", "{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "mcps", "mcps", "{691974F9-483A-4232-9746-F777D75C8958}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,9 +43,16 @@ Global
 		{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2FE9EB38-18A0-A1A1-5640-EBD70C91C289}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9} = {691974F9-483A-4232-9746-F777D75C8958}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4317ED2-53B7-4A13-8AC7-3FD18B517E96}
