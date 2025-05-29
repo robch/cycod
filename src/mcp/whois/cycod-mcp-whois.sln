@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycod-mcp-whois", "cycod-mcp-whois.csproj", "{067B6DE9-70BF-8645-1F20-F672690B2079}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{067B6DE9-70BF-8645-1F20-F672690B2079}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{067B6DE9-70BF-8645-1F20-F672690B2079}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{067B6DE9-70BF-8645-1F20-F672690B2079}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{067B6DE9-70BF-8645-1F20-F672690B2079}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9277D545-FEF8-4F20-BE42-66253C78C50E}
+	EndGlobalSection
+EndGlobal
