@@ -61,7 +61,8 @@ public static class McpDisplayHelpers
                 ConsoleHelpers.WriteLine($"    Command: {stdioConfig.Command}", overrideQuiet: true);
                 if (stdioConfig.Args.Count > 0)
                 {
-                    ConsoleHelpers.WriteLine($"    Arguments: {string.Join(" ", stdioConfig.Args.Select(a => $"\"{a}\""))}", overrideQuiet: true);
+                    var args = string.Join(' ', stdioConfig.Args.Select(a => ProcessHelpers.EscapeProcessArgument(a)));
+                    ConsoleHelpers.WriteLine($"    Arguments: {args}", overrideQuiet: true);
                 }
                 if (stdioConfig.Env.Count > 0)
                 {

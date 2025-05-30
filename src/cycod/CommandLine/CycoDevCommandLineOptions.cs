@@ -356,7 +356,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             var argArgs = GetInputOptionArgs(i + 1, args);
             var argValues = ValidateStrings(arg, argArgs, "argument");
-            argsAddCommand.Args.AddRange(argValues);
+            var needSplit = argValues.Count() == 1 && argValues.First().Contains(' ');
+            argsAddCommand.Args.AddRange(needSplit
+                ? ProcessHelpers.SplitArguments(argValues.First())
+                : argValues);
             i += argArgs.Count();
         }
         else if (command is McpAddCommand envAddCommand && (arg == "--env" || arg == "-e"))

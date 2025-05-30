@@ -264,6 +264,60 @@ public static class ProcessHelpers
         }
     }
 
+    public static IEnumerable<string> SplitArguments(string? arguments)
+    {
+        if (string.IsNullOrEmpty(arguments))
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        var args = new List<string>();
+        var currentArg = new StringBuilder();
+        bool inQuotes = false;
+        char quoteChar = '\0';
+
+        foreach (var c in arguments)
+        {
+            if (c == '"' || c == '\'')
+            {
+                if (inQuotes && c == quoteChar)
+                {
+                    // Closing quote
+                    inQuotes = false;
+                    args.Add(currentArg.ToString());
+                    currentArg.Clear();
+                }
+                else if (!inQuotes)
+                {
+                    // Opening quote
+                    inQuotes = true;
+                    quoteChar = c;
+                }
+            }
+            else if (char.IsWhiteSpace(c) && !inQuotes)
+            {
+                if (currentArg.Length > 0)
+                {
+                    args.Add(currentArg.ToString());
+                    currentArg.Clear();
+                }
+            }
+            else
+            {
+                currentArg.Append(c);
+            }
+        }
+
+        // Add the last argument if any
+        if (currentArg.Length > 0)
+        {
+            args.Add(currentArg.ToString());
+        }
+
+        return args;
+
+    }
+
     public static string FindBashExe()
     {
         var gitBash = FindAndCacheGitBashExe();

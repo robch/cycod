@@ -59,7 +59,7 @@ echo.
 if "%1" == "config" goto end
 
 :DoMcp
-cycodmd run "cycod mcp add test-mcp --command echo --arg test-mcp"
+cycodmd run "cycod mcp add test-mcp --command \"echo test-mcp\""
 echo.
 cycodmd run "cycod mcp list"
 echo.

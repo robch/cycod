@@ -21,7 +21,7 @@ You can configure MCP servers using the `cycod mcp` commands:
 cycod mcp list
 
 # Add a new stdio-based MCP server
-cycod mcp add postgres-db --command /path/to/postgres-mcp-server --arg --connection-string --arg "postgres://user:pass@localhost:5432/mydb"
+cycod mcp add postgres-db --command "/path/to/postgres-mcp-server --connection-string \"postgres://user:pass@localhost:5432/mydb\""
 
 # Add a new SSE-based MCP server
 cycod mcp add rest-api --url https://example.com/mcp-sse-endpoint

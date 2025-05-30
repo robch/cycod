@@ -151,6 +151,8 @@ public class CommandLineOptions
             var parsed = TryParseInputOptions(ref command, args, ref i, args[i]);
             if (!parsed)
             {
+                for (var j = 0; j < i; j++) ConsoleHelpers.WriteDebugLine($"arg[{j}] = {args[j]}");
+                ConsoleHelpers.WriteDebugLine($"(INVALID) arg[{i}] = {args[i]}");
                 throw InvalidArgException(command, args[i]);
             }
         }

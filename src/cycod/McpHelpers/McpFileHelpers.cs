@@ -69,11 +69,15 @@ public static class McpFileHelpers
                 }
             }
 
+            ProcessHelpers.SplitCommand(command!, out command, out var commandArgs);
+            var argList = ProcessHelpers.SplitArguments(commandArgs).ToList();
+            argList.AddRange(args ?? Enumerable.Empty<string>());
+
             configFile.Servers[serverName] = new StdioServerConfig
             {
                 Type = "stdio",
                 Command = command ?? "",
-                Args = args?.ToList() ?? new List<string>(),
+                Args = argList,
                 Env = environmentDict,
                 ConfigFile = configFile
             };
