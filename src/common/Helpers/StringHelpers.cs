@@ -45,7 +45,7 @@ public class StringHelpers
             .Concat(new[] { escapedLines.Last() });
 
         var joined = string.Join('\n', linesWithTrailingWsPattern);
-        var pattern = new Regex(joined, RegexOptions.Multiline);
+        var pattern = new Regex(joined, RegexOptions.Multiline | RegexOptions.CultureInvariant);
 
         var matches = pattern.Matches(fileContent);
         countFound = matches.Count;

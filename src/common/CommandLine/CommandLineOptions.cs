@@ -593,7 +593,7 @@ public class CommandLineOptions
     {
         try
         {
-            return new Regex(pattern);
+            return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
         catch (Exception)
         {
@@ -601,7 +601,7 @@ public class CommandLineOptions
         }
     }
 
-    protected void ValidateExcludeRegExAndGlobPatterns(string arg, IEnumerable<string> patterns, out IEnumerable<Regex> asRegExs, out List<string> asGlobs)
+    protected void ValidateExcludeRegExAndGlobPatterns(string arg, IEnumerable<string> patterns, out List<Regex> asRegExs, out List<string> asGlobs)
     {
         if (patterns.Count() == 0)
         {
@@ -611,7 +611,8 @@ public class CommandLineOptions
         var containsSlash = (string x) => x.Contains('/') || x.Contains('\\');
         asRegExs = patterns
             .Where(x => !containsSlash(x))
-            .Select(x => ValidateFilePatternToRegExPattern(arg, x));
+            .Select(x => ValidateFilePatternToRegExPattern(arg, x))
+            .ToList();
         asGlobs = patterns
             .Where(x => containsSlash(x))
             .ToList();
@@ -633,7 +634,7 @@ public class CommandLineOptions
 
         try
         {
-            return new Regex(regexPattern);
+            return new Regex(regexPattern, RegexOptions.CultureInvariant);
         }
         catch (Exception)
         {

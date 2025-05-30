@@ -119,7 +119,6 @@ public class CycoDmdCliWrapper
         if (noFilesFound && wasntRecursive)
         {
             output = $"{output}\n\n<You may want to try using '**' in your file pattern to search recursively.>";
-            output = $"{output}\n<You may want to try using '(?i)' in your content pattern to search case-insensitively.>";
         }
 
         return output;
@@ -202,7 +201,6 @@ public class CycoDmdCliWrapper
         if (noFilesFound && wasntRecursive)
         {
             output = $"{output}\n\n<You may want to try using '**' in your content pattern to search recursively.>";
-            output = $"{output}\n<You may want to try using '(?i)' in your content pattern to search case-insensitively.>";
         }
 
         return output;

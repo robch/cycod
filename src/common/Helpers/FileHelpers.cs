@@ -171,6 +171,7 @@ public class FileHelpers
         var fi = new FileInfo(ignoreFile);
         if (!fi.Exists) return;
 
+        var isWindows = OS.IsWindows();
         var lines = ReadAllLines(ignoreFile);
         foreach (var line in lines)
         {
@@ -184,7 +185,9 @@ public class FileHelpers
             else
             {
                 ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile; exclude pattern: {line}");
-                excludeFileNamePatternList.Add(new Regex(line));
+                excludeFileNamePatternList.Add(isWindows
+                    ? new Regex(line, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)
+                    : new Regex(line, RegexOptions.CultureInvariant));
             }
         }
     }
