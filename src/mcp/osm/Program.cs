@@ -17,11 +17,9 @@ builder.Logging.AddConsole(options =>
 
 builder.Services.AddSingleton(_ =>
 {
-    var client = new HttpClient() { BaseAddress = new Uri("https://nominatim.openstreetmap.org") };
-    // Set a user agent as required by Nominatim's usage policy
-    // Set a user agent with contact information as required by Nominatim's usage policy
+    var handler = new HttpClientHandler { AllowAutoRedirect = true, UseCookies = false };
+    var client = new HttpClient(handler) { BaseAddress = new Uri("https://nominatim.openstreetmap.org") };
     client.DefaultRequestHeaders.UserAgent.ParseAdd("cycod-mcp-osm/1.0 (your-email@example.com)");
-    // Add rate limiting via HttpClient configuration
     client.Timeout = TimeSpan.FromSeconds(10);
     return client;
 });

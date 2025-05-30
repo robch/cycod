@@ -40,19 +40,19 @@ public sealed class WeatherTools
         [Description("Latitude of the location.")] double latitude,
         [Description("Longitude of the location.")] double longitude)
     {
-        var pointUrl = string.Create(CultureInfo.InvariantCulture, $"/points/{latitude},{longitude}");
-        using var jsonDocument = await client.ReadJsonDocumentAsync(pointUrl);
-        var forecastUrl = jsonDocument.RootElement.GetProperty("properties").GetProperty("forecast").GetString()
-            ?? throw new Exception($"No forecast URL provided by {client.BaseAddress}points/{latitude},{longitude}");
+        try
+        {
+            var pointUrl = string.Create(CultureInfo.InvariantCulture, $"/points/{latitude},{longitude}");
+            using var jsonDocument = await client.ReadJsonDocumentAsync(pointUrl);
+            var forecastUrl = jsonDocument.RootElement.GetProperty("properties").GetProperty("forecast").GetString()
+                        ?? throw new Exception($"No forecast URL provided by {client.BaseAddress}points/{latitude},{longitude}");
 
-        using var forecastDocument = await client.ReadJsonDocumentAsync(forecastUrl);
-        var periods = forecastDocument.RootElement.GetProperty("properties").GetProperty("periods").EnumerateArray();
-
-        return string.Join("\n---\n", periods.Select(period => $"""
-                {period.GetProperty("name").GetString()}
-                Temperature: {period.GetProperty("temperature").GetInt32()}°F
-                Wind: {period.GetProperty("windSpeed").GetString()} {period.GetProperty("windDirection").GetString()}
-                Forecast: {period.GetProperty("detailedForecast").GetString()}
-                """));
+            using var forecastDocument = await client.ReadJsonDocumentAsync(forecastUrl);
+            return forecastDocument.RootElement.GetRawText();
+        }
+        catch (Exception ex)
+        {
+            return $"Error retrieving forecast: {ex.Message}\n{ex.StackTrace}";
+        }
     }
 }
