@@ -53,41 +53,17 @@ public static class McpClientManager
     /// </summary>
     /// <param name="scope">Optional scope to look in for servers.</param>
     /// <returns>A dictionary of server names to MCP clients.</returns>
-    public static async Task<Dictionary<string, IMcpClient>> CreateAllClientsAsync(ConfigFileScope scope = ConfigFileScope.Any)
+    public static async Task<Dictionary<string, IMcpClient>> CreateAllClientsAsync(Func<string, IMcpServerConfigItem, bool>? predicate = null, ConfigFileScope scope = ConfigFileScope.Any)
     {
-        var result = new Dictionary<string, IMcpClient>();
-        var servers = new Dictionary<string, IMcpServerConfigItem>();
-
-        // Get servers from all relevant scopes
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.Global)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.Global))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
-        
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.User)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.User))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
-        
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.Local)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.Local))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
+        var servers = McpFileHelpers.ListMcpServers(scope)
+            .Where(kvp => predicate == null || predicate(kvp.Key, kvp.Value))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         var start = DateTime.Now;
         ConsoleHelpers.Write($"Loading {servers.Count} MCP server(s) ...", ConsoleColor.DarkGray);
 
-        // Create clients for each server
         var loaded = 0;
+        var result = new Dictionary<string, IMcpClient>();
         foreach (var serverName in servers.Keys)
         {
             try

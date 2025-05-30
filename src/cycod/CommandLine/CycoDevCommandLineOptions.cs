@@ -422,14 +422,17 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         }
         else if (arg == "--use-mcps" || arg == "--mcp")
         {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var useMcp = max1Arg.FirstOrDefault() ?? "true";
-            command.UseMcps = useMcp.ToLower() == "true" || useMcp == "1";
-            i += max1Arg.Count();
+            var mcpArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += mcpArgs.Count();
+
+            var useAllMcps = mcpArgs.Count == 0;
+            if (useAllMcps) mcpArgs.Add("*");
+
+            command.UseMcps.AddRange(mcpArgs);
         }
         else if (arg == "--no-mcps")
         {
-            command.UseMcps = false;
+            command.UseMcps.Clear();
         }
         else if (arg == "--system-prompt")
         {

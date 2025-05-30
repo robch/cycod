@@ -669,17 +669,20 @@ public class ChatCommand : CommandWithVariables
 
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
-        if (!UseMcps)
+        var noMcps = UseMcps.Count == 0;
+        if (noMcps)
         {
             ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
-            return;
+            return; // No MCP criteria specified
         }
 
-        // Create clients for all configured MCP servers
-        var clients = await McpClientManager.CreateAllClientsAsync();
+        // Create clients for all matching MCP servers
+        var clients = await McpClientManager.CreateAllClientsAsync(ShouldUseMcp, ConfigFileScope.Any);
         if (clients.Count == 0)
         {
-            return; // No configured MCP servers
+            var criteria = string.Join(", ", UseMcps);
+            ConsoleHelpers.WriteDebugLine($"Searched {UseMcps.Count} MCPs; found no MCPs matching criteria: {criteria}");
+            return; // No matching MCPs found
         }
 
         // Add tools from each client
@@ -697,6 +700,11 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteErrorLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
             }
         }
+    }
+
+    private bool ShouldUseMcp(string name, IMcpServerConfigItem item)
+    {
+        return UseMcps.Contains(name) || UseMcps.Contains("*");
     }
 
     private bool ShouldAutoApprove(McpFunctionFactory factory, string name)
@@ -785,7 +793,8 @@ public class ChatCommand : CommandWithVariables
 
     public List<string> InputInstructions = new();
     public bool UseTemplates = true;
-    public bool UseMcps = false;
+
+    public List<string> UseMcps = new();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

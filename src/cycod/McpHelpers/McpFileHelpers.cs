@@ -33,9 +33,9 @@ public static class McpFileHelpers
     /// <param name="scope">The scope to save the configuration to</param>
     /// <returns>Path to the saved configuration file</returns>
     public static string SaveMcpServer(
-        string serverName, 
-        string? command, 
-        IEnumerable<string>? args, 
+        string serverName,
+        string? command,
+        IEnumerable<string>? args,
         IEnumerable<string>? envVars,
         string transport = "stdio",
         string? url = null,
@@ -43,7 +43,7 @@ public static class McpFileHelpers
     {
         // Get or create the config file for this scope
         var configFile = McpConfigFile.FromScope(scope) ?? McpConfigFile.Create(scope);
-        
+
         // Create the server configuration
         if (transport.ToLower() == "sse")
         {
@@ -100,10 +100,10 @@ public static class McpFileHelpers
                 return serverConfig;
             }
         }
-        
+
         return null;
     }
-    
+
     /// <summary>
     /// Gets a server configuration from a specific scope based on server name.
     /// </summary>
@@ -117,7 +117,7 @@ public static class McpFileHelpers
         {
             return null;
         }
-        
+
         return serverConfig;
     }
 
@@ -132,7 +132,7 @@ public static class McpFileHelpers
         // Find the server configuration
         IMcpServerConfigItem? serverConfig = null;
         McpConfigFile? configFile = null;
-        
+
         if (scope == ConfigFileScope.Any)
         {
             // Search in priority order
@@ -153,13 +153,13 @@ public static class McpFileHelpers
                 configFile.Servers.TryGetValue(serverName, out serverConfig);
             }
         }
-        
+
         if (configFile == null || serverConfig == null)
         {
             ConsoleHelpers.WriteDebugLine($"DeleteMcpServer: Server not found: {serverName}");
             return false;
         }
-        
+
         // Remove the server from the config file
         if (configFile.Servers.Remove(serverName))
         {
@@ -167,7 +167,7 @@ public static class McpFileHelpers
             configFile.Save();
             return true;
         }
-        
+
         return false;
     }
 
@@ -178,8 +178,33 @@ public static class McpFileHelpers
     /// <returns>A dictionary of server names to their configurations</returns>
     public static Dictionary<string, IMcpServerConfigItem> ListMcpServers(ConfigFileScope scope)
     {
-        var configFile = McpConfigFile.FromScope(scope);
-        return configFile?.Servers ?? new Dictionary<string, IMcpServerConfigItem>();
+        var servers = new Dictionary<string, IMcpServerConfigItem>();
+
+        var addGlobal = scope == ConfigFileScope.Any || scope == ConfigFileScope.Global;
+        if (addGlobal) AddServersFromScope(servers, ConfigFileScope.Global);
+
+        var addUser = scope == ConfigFileScope.Any || scope == ConfigFileScope.User;
+        if (addUser) AddServersFromScope(servers, ConfigFileScope.User);
+
+        var addLocal = scope == ConfigFileScope.Any || scope == ConfigFileScope.Local;
+        if (addLocal) AddServersFromScope(servers, ConfigFileScope.Local);
+
+        return servers;
     }
 
+    /// <summary>
+    /// Adds servers from a specific scope to the provided dictionary.
+    /// </summary>
+    /// <param name="servers"></param>
+    /// <param name="scope"></param>
+    private static void AddServersFromScope(Dictionary<string, IMcpServerConfigItem> servers, ConfigFileScope scope)
+    {
+        var configFile = McpConfigFile.FromScope(scope);
+        var serversFromScope = configFile?.Servers ?? new Dictionary<string, IMcpServerConfigItem>();
+
+        foreach (var server in serversFromScope)
+        {
+            servers.TryAdd(server.Key, server.Value);
+        }
+    }
 }
