@@ -21,6 +21,7 @@ public static class KnownSettings
     
     // OpenAI settings
     public const string OpenAIApiKey = "OpenAI.ApiKey";
+    public const string OpenAIEndpoint = "OpenAI.Endpoint";
     public const string OpenAIChatModelName = "OpenAI.ChatModelName";
     
     // GitHub settings
@@ -83,6 +84,7 @@ public static class KnownSettings
         
         // OpenAI mappings
         { OpenAIApiKey, "OPENAI_API_KEY" },
+        { OpenAIEndpoint, "OPENAI_ENDPOINT" },
         { OpenAIChatModelName, "OPENAI_CHAT_MODEL_NAME" },
         
         // GitHub mappings
@@ -120,6 +122,7 @@ public static class KnownSettings
         
         // OpenAI mappings
         { OpenAIApiKey, "--openai-api-key" },
+        { OpenAIEndpoint, "--openai-endpoint" },
         { OpenAIChatModelName, "--openai-chat-model-name" },
         
         // GitHub mappings
@@ -187,6 +190,7 @@ public static class KnownSettings
     public static readonly HashSet<string> OpenAISettings = new(StringComparer.OrdinalIgnoreCase)
     {
         OpenAIApiKey,
+        OpenAIEndpoint,
         OpenAIChatModelName
     };
     

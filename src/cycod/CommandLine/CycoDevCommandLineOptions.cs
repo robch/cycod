@@ -59,6 +59,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             "chat" => new ChatCommand(),
             "github login" => new GitHubLoginCommand(),
+            "github models" => new GitHubModelsCommand(),
             "config list" => new ConfigListCommand(),
             "config get" => new ConfigGetCommand(),
             "config set" => new ConfigSetCommand(),

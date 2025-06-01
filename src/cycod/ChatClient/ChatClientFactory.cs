@@ -46,8 +46,9 @@ public static class ChatClientFactory
     {
         var model = EnvironmentHelpers.FindEnvVar("OPENAI_CHAT_MODEL_NAME") ?? "gpt-4o";
         var apiKey = EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY") ?? throw new EnvVarSettingException("OPENAI_API_KEY is not set.");
+        var endpoint = EnvironmentHelpers.FindEnvVar("OPENAI_ENDPOINT");
 
-        var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions());
+        var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions(endpoint));
 
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
         return chatClient.AsIChatClient();
@@ -184,6 +185,7 @@ public static class ChatClientFactory
 
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
+                    - OPENAI_ENDPOINT (optional)
                     - OPENAI_CHAT_MODEL_NAME (optional)
 
                     To use GitHub Copilot with token authentication, please set:

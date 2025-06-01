@@ -15,7 +15,7 @@ COMMANDS
   cycod chat [...]        (see: cycod help chat)
 
   cycod config [...]      (see: cycod help config)
-  cycod github login      (see: cycod help github login)
+  cycod github [...]      (see: cycod help github)
 
   cycod mcp [...]         (see: cycod help mcp)
   cycod alias [...]       (see: cycod help alias)
