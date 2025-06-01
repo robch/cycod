@@ -1,35 +1,29 @@
 CYCOD MCP REMOVE
 
-  Delete a Model Context Protocol (MCP) server configuration.
+  Delete a Model Context Protocol (MCP) server registration.
 
 USAGE: cycod mcp remove SERVER_NAME [--scope]
 
 OPTIONS
 
-  SERVER_NAME       The name of the MCP server to remove
+  SERVER_NAME       The name of the MCP server registration to remove
 
   SCOPE OPTIONS
 
-    --global, -g    Remove only from global scope (all users)
-    --user, -u      Remove only from user scope (current user)
-    --local, -l     Remove only from local scope (current directory)
-    --any, -a       Look in all scopes and remove the first match (default)
+    --global, -g    Remove registration only from global scope (all users)
+    --user, -u      Remove registration only from user scope (current user)
+    --local, -l     Remove registration only from local scope (current directory)
+    --any, -a       Remove registration from first matching scope (default)
 
 EXAMPLES
 
-  EXAMPLE 1: Remove an MCP server from any scope
+  EXAMPLE 1: Remove an MCP server registration from any scope
 
-    cycod mcp remove unused-server
+    cycod mcp remove weather
 
-  EXAMPLE 2: Remove an MCP server only from the user scope
+  EXAMPLE 2: Remove an MCP server registration only from the user scope
 
-    cycod mcp remove postgres-server --user
-
-NOTES
-
-  The removal is permanent and cannot be undone.
-  If using the --any option, the command will remove the first matching MCP server
-  found when searching in this order: local, user, global.
+    cycod mcp remove weather --user
 
 SEE ALSO
 

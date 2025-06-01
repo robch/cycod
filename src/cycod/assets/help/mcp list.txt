@@ -1,6 +1,6 @@
 CYCOD MCP LIST
 
-  List all available Model Context Protocol (MCP) servers.
+  List all registered Model Context Protocol (MCP) server registrations.
 
 USAGE: cycod mcp list [--scope]
 
@@ -8,28 +8,20 @@ OPTIONS
 
   SCOPE OPTIONS
 
-    --global, -g    List only global MCP servers (all users)
-    --user, -u      List only user MCP servers (current user)
-    --local, -l     List only local MCP servers (current directory)
-    --any, -a       List MCP servers from all scopes (default)
+    --global, -g    List MCP server registrations only from global scope (all users)
+    --user, -u      List MCP server registrations only from user scope (current user)
+    --local, -l     List MCP server registrations only from local scope (current directory)
+    --any, -a       List MCP server registrations from all scopes (default)
 
 EXAMPLES
 
-  EXAMPLE 1: List all available MCP servers
+  EXAMPLE 1: List all registered MCP server registrations
 
     cycod mcp list
 
-  EXAMPLE 2: List only MCP servers in the user scope
+  EXAMPLE 2: List only MCP server registrations from user scope
 
     cycod mcp list --user
-
-NOTES
-
-  This command displays MCP servers from the specified scope(s).
-  The information shown for each server includes:
-  - Name
-  - Brief description (if available)
-  - Command path or URL
 
 SEE ALSO
 

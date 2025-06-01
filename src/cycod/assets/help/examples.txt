@@ -62,6 +62,15 @@ EXAMPLES
     > /files *.cs
     > /find "class Program"
     > /search Python best practices
+    
+  EXAMPLE 15: Using an external MCP server without registration
+  
+    cycod --with-mcp cycod-mcp-weather
+    
+  EXAMPLE 16: Using both registered MCP servers and an external MCP command
+  
+    cycod mcp add osm --command cycod-mcp-osm
+    cycod --use-mcps --with-mcp cycod-mcp-weather
 
 SEE ALSO
 

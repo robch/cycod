@@ -5,7 +5,7 @@ Using CYCOD, you can:
   - Use built-in function tools to:
     - Read and write files
     - Execute shell commands/scripts
-    - Use MCP (Model Context Protocol) tools
+    - Use MCP (Model Context Protocol) server registration tools
 
 USAGE: cycod <command> [...]
 

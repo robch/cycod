@@ -17,7 +17,8 @@ USAGE: cycod [...]
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates false
 
-    --use-mcps [NAME1 [...]]              Use Model Context Protocol servers (default: *)
+    --use-mcps [NAME1 [...]]              Use pre-registered Model Context Protocol servers (default name: *)
+    --with-mcp "COMMAND [ARGS...]"        Use an external Model Context Protocol server wo/ registration
     --no-mcps                             Do not use Model Context Protocol servers
 
   CHAT HISTORY                            (see: cycod help chat history)
