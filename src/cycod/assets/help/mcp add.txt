@@ -1,43 +1,40 @@
 CYCOD MCP ADD
 
-  Registers a new Model Context Protocol (MCP) server.
+  Adds a new Model Context Protocol (MCP) server registration.
   
 USAGE: cycod mcp add SERVER_NAME --command "COMMAND ARGS" [...]
    OR: cycod mcp add SERVER_NAME --url URL [...]
 
+  Where SERVER_NAME is the name for the new MCP server registration.
+
 OPTIONS
 
-  SERVER_NAME         The name for the new MCP server
+  STDIO SERVERS
 
-  --command           The command to execute for the MCP server (for STDIO transport)
-  --arg ARG           An argument to pass to the command (can be used multiple times)
-  --args "ARGS"       Multiple arguments to pass to the command
-  --env, -e           An environment variable in KEY=VALUE format (can be used multiple times)
-  --url               The URL for the SSE endpoint (for SSE transport)
+    --command       The command to execute to start the MCP server (for STDIO transport)
+    --arg ARG       An argument to pass to the command (can be used multiple times)
+    --args "ARGS"   Multiple arguments to pass to the command
+    --env, -e       An environment variable in KEY=VALUE format (can be used multiple times)
+
+  SSE SERVERS
+
+    --url           The URL for the SSE endpoint (for SSE transport)
 
   SCOPE OPTIONS
 
-    --global, -g    Create in global scope (all users)
-    --user, -u      Create in user scope (current user)
-    --local, -l     Create in local scope (current directory, default)
+    --global, -g    Add registration to global scope (all users)
+    --user, -u      Add registration to user scope (current user)
+    --local, -l     Add registration to local scope (current directory, default)
 
 EXAMPLES
 
-  EXAMPLE 1: Create a basic stdio MCP server
+  EXAMPLE 1: Register a basic stdio MCP server registration
 
-    cycod mcp add postgres-server --command "/path/to/postgres-mcp-server --connection-string \"postgresql://user:pass@localhost:5432/mydb\""
+    cycod mcp add weather --command cycod-mcp-weather
 
-  EXAMPLE 2: Create an MCP server with environment variables
+  EXAMPLE 2: Register an SSE MCP server registration
 
-    cycod mcp add weather-api --command /path/to/weather-cli --env API_KEY=abc123 --env CACHE_DIR=/tmp
-
-  EXAMPLE 3: Create an SSE MCP server
-
-    cycod mcp add sse-backend --url https://example.com/sse-endpoint
-
-  EXAMPLE 4: Create a user-level MCP server
-
-    cycod mcp add shared-tool --command "/usr/local/bin/tool-server --config /path/to/config.json" --user
+    cycod mcp add my-sse-mcp --url https://example.com/sse-endpoint
 
 SEE ALSO
 

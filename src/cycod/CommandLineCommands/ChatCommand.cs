@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using ModelContextProtocol.Client;
 using System.Text;
 
 public class ChatCommand : CommandWithVariables
@@ -25,8 +26,10 @@ public class ChatCommand : CommandWithVariables
         clone.SystemPrompt = this.SystemPrompt;
         clone.SystemPromptAdds = new List<string>(this.SystemPromptAdds);
         clone.UserPromptAdds = new List<string>(this.UserPromptAdds);
-        clone.TrimTokenTarget = this.TrimTokenTarget;
+        clone.MaxPromptTokenTarget = this.MaxPromptTokenTarget;
+        clone.MaxToolTokenTarget = this.MaxToolTokenTarget;
         clone.MaxOutputTokens = this.MaxOutputTokens;
+        clone.MaxChatTokenTarget = this.MaxChatTokenTarget;
         clone.LoadMostRecentChatHistory = this.LoadMostRecentChatHistory;
         clone.InputChatHistory = this.InputChatHistory;
         clone.OutputChatHistory = this.OutputChatHistory;
@@ -45,10 +48,13 @@ public class ChatCommand : CommandWithVariables
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
 
-        // Transfer known settings to the command if not already set
-        var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
-        var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
-        if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
+        // Transfer known settings to the command
+        var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
+        if (maxOutputTokens > 0) MaxOutputTokens = maxOutputTokens;
+
+        MaxPromptTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxPromptTokens).AsInt(DefaultMaxPromptTokenTarget);
+        MaxToolTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxToolTokens).AsInt(DefaultMaxToolTokenTarget);
+        MaxChatTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxChatTokens).AsInt(DefaultMaxChatTokenTarget);
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
@@ -79,11 +85,21 @@ public class ChatCommand : CommandWithVariables
         try
         {
             // Add the user prompt messages to the chat.
-            chat.AddUserMessages(UserPromptAdds);
+            chat.AddUserMessages(
+                UserPromptAdds,
+                maxPromptTokenTarget: MaxPromptTokenTarget,
+                maxChatTokenTarget: MaxChatTokenTarget);
 
             // Load the chat history from the file.
             var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
-            if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            if (loadChatHistory)
+            {
+                chat.LoadChatHistory(InputChatHistory!,
+                    maxPromptTokenTarget: MaxPromptTokenTarget,
+                    maxToolTokenTarget: MaxToolTokenTarget,
+                    maxChatTokenTarget: MaxChatTokenTarget,
+                    useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
             if (!interactive && InputInstructions.Count == 0)
@@ -429,7 +445,7 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
-        messages.TryTrimToTarget(TrimTokenTarget ?? DefaultTrimTokenTarget);
+        messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
         if (OutputChatHistory != null)
         {
@@ -669,23 +685,9 @@ public class ChatCommand : CommandWithVariables
 
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
-        var noMcps = UseMcps.Count == 0;
-        if (noMcps)
-        {
-            ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
-            return; // No MCP criteria specified
-        }
+        var clients = await CreateMcpClientsFromConfig();
+        await CreateWithMcpClients(clients);
 
-        // Create clients for all matching MCP servers
-        var clients = await McpClientManager.CreateAllClientsAsync(ShouldUseMcp, ConfigFileScope.Any);
-        if (clients.Count == 0)
-        {
-            var criteria = string.Join(", ", UseMcps);
-            ConsoleHelpers.WriteDebugLine($"Searched {UseMcps.Count} MCPs; found no MCPs matching criteria: {criteria}");
-            return; // No matching MCPs found
-        }
-
-        // Add tools from each client
         foreach (var clientEntry in clients)
         {
             var serverName = clientEntry.Key;
@@ -702,7 +704,73 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private bool ShouldUseMcp(string name, IMcpServerConfigItem item)
+    private async Task<Dictionary<string, IMcpClient>> CreateMcpClientsFromConfig()
+    {
+        var noMcps = UseMcps.Count == 0;
+        if (noMcps)
+        {
+            ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            return new();
+        }
+
+        var servers = McpFileHelpers.ListMcpServers(ConfigFileScope.Any)
+            .Where(kvp => ShouldUseMcpFromConfig(kvp.Key, kvp.Value))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        var clients = await McpClientManager.CreateClientsAsync(servers);
+        if (clients.Count == 0)
+        {
+            var criteria = string.Join(", ", UseMcps);
+            ConsoleHelpers.WriteDebugLine($"Searched {UseMcps.Count} MCPs; found no MCPs matching criteria: {criteria}");
+            return new();
+        }
+
+        return clients;
+    }
+
+    private async Task CreateWithMcpClients(Dictionary<string, IMcpClient> clients)
+    {
+        var servers = WithStdioMcps;
+
+        var noMcps = servers.Count == 0;
+        if (noMcps)
+        {
+            ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            return;
+        }
+
+        var start = DateTime.Now;
+        ConsoleHelpers.Write($"Loading {servers.Count} ad-hoc MCP server(s) ...", ConsoleColor.DarkGray);
+
+        var loaded = 0;
+        foreach (var serverName in servers.Keys)
+        {
+            var stdioConfig = servers[serverName];
+            try
+            {
+                var client = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
+                {
+                    Name = serverName,
+                    Command = stdioConfig.Command,
+                    Arguments = stdioConfig.Args,
+                    EnvironmentVariables = stdioConfig.Env,
+                }));
+
+                ConsoleHelpers.WriteDebugLine($"Created MCP client for '{serverName}' with command: {stdioConfig.Command}");
+                clients[serverName] = client;
+                loaded++;
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteErrorLine($"Failed to create MCP client for '{serverName}': {ex.Message}");
+            }
+        }
+
+        var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
+        ConsoleHelpers.WriteLine($"\rLoaded {loaded} ad-hoc MCP server(s) ({duration})", ConsoleColor.DarkGray);
+    }
+
+    private bool ShouldUseMcpFromConfig(string name, IMcpServerConfigItem item)
     {
         return UseMcps.Contains(name) || UseMcps.Contains("*");
     }
@@ -783,8 +851,10 @@ public class ChatCommand : CommandWithVariables
     public List<string> SystemPromptAdds { get; set; } = new List<string>();
     public List<string> UserPromptAdds { get; set; } = new List<string>();
 
-    public int? TrimTokenTarget { get; set; }
+    public int MaxPromptTokenTarget { get; set; }
+    public int MaxToolTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }
+    public int MaxChatTokenTarget { get; set; }
 
     public bool LoadMostRecentChatHistory = false;
     public string? InputChatHistory;
@@ -795,6 +865,7 @@ public class ChatCommand : CommandWithVariables
     public bool UseTemplates = true;
 
     public List<string> UseMcps = new();
+    public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
@@ -806,7 +877,10 @@ public class ChatCommand : CommandWithVariables
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
-    private const int DefaultTrimTokenTarget = 160000;
+
+    private const int DefaultMaxPromptTokenTarget = 50000;
+    private const int DefaultMaxToolTokenTarget = 50000;
+    private const int DefaultMaxChatTokenTarget = 160000;
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();

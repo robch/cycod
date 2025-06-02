@@ -58,6 +58,7 @@ public static class McpDisplayHelpers
             if (server.Value is StdioServerConfig stdioConfig)
             {
                 ConsoleHelpers.WriteLine($"  {server.Key} (stdio)", overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
                 ConsoleHelpers.WriteLine($"    Command: {stdioConfig.Command}", overrideQuiet: true);
                 if (stdioConfig.Args.Count > 0)
                 {
@@ -72,6 +73,7 @@ public static class McpDisplayHelpers
             else if (server.Value is SseServerConfig sseConfig)
             {
                 ConsoleHelpers.WriteLine($"  {server.Key} (sse)", overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
                 ConsoleHelpers.WriteLine($"    URL: {sseConfig.Url}", overrideQuiet: true);
             }
             ConsoleHelpers.WriteLine(overrideQuiet: true);

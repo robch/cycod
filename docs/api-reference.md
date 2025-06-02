@@ -227,8 +227,8 @@ public static class OpenAIChatHelpers {
     public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName);
     
     // Token management
-    public static bool IsTooBig(this IList<ChatMessage> messages, int maxTokens);
-    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int maxTokens, int maxToolCallContentTokens, string replaceToolCallContentWith);
+    public static bool IsTooBig(this IList<ChatMessage> messages, int maxTokenTarget);
+    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int maxTokenTarget, int maxToolCallContentTokens, string replaceToolCallContentWith);
 }
 ```
 
@@ -419,7 +419,7 @@ class ChatCommand : Command {
     
     // Properties for chat options
     public string? SystemPrompt { get; set; }
-    public int? TrimTokenTarget { get; set; }
+    public int? MaxTokenTarget { get; set; }
     public string? InputChatHistory;
     public string? OutputChatHistory;
     public List<string> InputInstructions = new();

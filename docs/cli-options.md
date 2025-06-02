@@ -60,7 +60,7 @@ These options control the chat interaction:
 | `--continue` | Continue the most recent chat history (auto-finds latest chat history file) |
 | `--output-chat-history <file>` | Save chat history to a JSONL file |
 | `--output-trajectory <file>` | Save chat history in a more readable trajectory format |
-| `--trim-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
+| `--max-token-target <n>` | Set a target token count for trimming chat history when it gets too large |
 | `--chat-completion-timeout <n>` | Set a timeout in seconds for chat completion API calls |
 
 ## Provider Selection Options
@@ -178,7 +178,7 @@ cycod --template-alias "Write a function to do X"
 If you're having long conversations that might exceed the AI model's context window:
 
 ```bash
-cycod --trim-token-target 120000 --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl"
+cycod --max-token-target 120000 --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl"
 ```
 
 This will automatically trim tool call content when the history approaches the specified token target.

@@ -37,46 +37,37 @@ public class FunctionCallingChat : IAsyncDisposable
     {
         _messages.Clear();
         _messages.Add(new ChatMessage(ChatRole.System, _systemPrompt));
-
-        foreach (var userMessage in _userMessageAdds)
-        {
-            _messages.Add(new ChatMessage(ChatRole.User, userMessage));
-        }
+        _messages.AddRange(_userMessageAdds);
     }
-    
-    public void AddUserMessage(string userMessage, int tokenTrimTarget = 0)
+
+    public void AddUserMessage(string userMessage, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
     {
-        _userMessageAdds.Add(userMessage);
-        _messages.Add(new ChatMessage(ChatRole.User, userMessage));
+        _userMessageAdds.Add(new ChatMessage(ChatRole.User, userMessage));
+        _userMessageAdds.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
 
-        if (tokenTrimTarget > 0)
-        {
-            _messages.TryTrimToTarget(tokenTrimTarget);
-        }
+        _messages.Add(new ChatMessage(ChatRole.User, userMessage));
+        _messages.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
     }
     
-    public void AddUserMessages(IEnumerable<string> userMessages, int tokenTrimTarget = 0)
+    public void AddUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
     {
         foreach (var userMessage in userMessages)
         {
-            AddUserMessage(userMessage);
+            AddUserMessage(userMessage, maxPromptTokenTarget);
         }
 
-        if (tokenTrimTarget > 0)
-        {
-            _messages.TryTrimToTarget(tokenTrimTarget);
-        }
+        _messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
     }
 
-    public void LoadChatHistory(string fileName, int tokenTrimTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
         _messages.FixDanglingToolCalls();
-
-        if (tokenTrimTarget > 0)
-        {
-            _messages.TryTrimToTarget(tokenTrimTarget);
-        }
+        _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
     }
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
@@ -214,7 +205,7 @@ public class FunctionCallingChat : IAsyncDisposable
     }
 
     private readonly string _systemPrompt;
-    private readonly List<string> _userMessageAdds = new();
+    private readonly List<ChatMessage> _userMessageAdds = new();
 
     private readonly FunctionFactory _functionFactory;
     private readonly FunctionCallDetector _functionCallDetector;

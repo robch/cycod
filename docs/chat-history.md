@@ -102,10 +102,10 @@ This loads the history from `previous-conversation.jsonl` and saves all new mess
 Long conversations can exceed the token limit of AI models. CycoD provides a token management feature to help with this:
 
 ```bash
-cycod --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl" --trim-token-target 160000
+cycod --input-chat-history "long-conversation.jsonl" --output-chat-history "long-conversation.jsonl" --max-token-target 160000
 ```
 
-The `--trim-token-target` option sets a target token count. When the history approaches this limit, CycoD will automatically trim content, prioritizing:
+The `--max-token-target` option sets a target token count. When the history approaches this limit, CycoD will automatically trim content, prioritizing:
 
 1. Reducing tool call outputs that are very large
 2. Maintaining the most recent messages for context
@@ -135,7 +135,7 @@ This approach helps maintain the AI's understanding of the conversation while ke
 
 ## Chat History and Context
 
-Without token management, very long chat histories may exceed the context window of the AI model. If you're not using `--trim-token-target`, you might need to:
+Without token management, very long chat histories may exceed the context window of the AI model. If you're not using `--max-token-target`, you might need to:
 
 1. Start a new history file with a summary of the previous conversation
 2. Edit the history file manually to remove less relevant parts
@@ -158,7 +158,7 @@ cycod --input-chat-history "web-app-project.jsonl" --output-chat-history "web-ap
 ### Managing a Long-Running Conversation
 
 ```bash
-cycod --input-chat-history "long-project.jsonl" --output-chat-history "long-project.jsonl" --trim-token-target 120000
+cycod --input-chat-history "long-project.jsonl" --output-chat-history "long-project.jsonl" --max-token-target 120000
 ```
 
 ### Creating a New Branch of a Conversation

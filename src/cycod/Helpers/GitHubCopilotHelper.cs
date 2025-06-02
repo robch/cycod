@@ -144,6 +144,7 @@ public class GitHubCopilotHelper
                 throw new InvalidOperationException("Failed to get Copilot token");
             }
             
+            ConsoleHelpers.WriteDebugLine($"Copilot token: {tokenData.token}");
             return tokenData;
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("401") || (ex.StatusCode.HasValue && (int)ex.StatusCode.Value == 401))

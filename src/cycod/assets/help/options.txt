@@ -17,7 +17,8 @@ USAGE: cycod [...]
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates false
 
-    --use-mcps [NAME1 [...]]              Use Model Context Protocol servers (default: *)
+    --use-mcps [NAME1 [...]]              Use pre-registered Model Context Protocol servers (default name: *)
+    --with-mcp "COMMAND [ARGS...]"        Use an external Model Context Protocol server wo/ registration
     --no-mcps                             Do not use Model Context Protocol servers
 
   CHAT HISTORY                            (see: cycod help chat history)
@@ -34,8 +35,10 @@ USAGE: cycod [...]
     --auto-deny read/write/run/*          Automatically deny all function calls of the specified type
 
   MODEL OPTIONS
-    --max-tokens TOKENS                   AI model should output no more than TOKENS
-    --trim-token-target TOKENS            Specify chat history maximum tokens target
+    --max-prompt-tokens TOKENS            Maximum prompt token target (managed by CYCOD)
+    --max-output-tokens TOKENS            Maximum AI output tokens (provided to AI model)
+    --max-tool-tokens TOKENS              Maximum tool output tokens target (managed by CYCOD)
+    --max-chat-tokens TOKENS              Maximum total chat tokens target (managed by CYCOD)
 
   MODEL PROVIDERS
     --use-copilot                         Prefer use of GitHub Copilot

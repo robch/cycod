@@ -150,7 +150,7 @@ public static class AIExtensionsChatHelpers
         }
     }
 
-    public static bool IsTooBig(this IList<ChatMessage> messages, int trimTokenTarget)
+    public static bool IsTooBig(this IList<ChatMessage> messages, int maxChatTokenTarget)
     {
         // Loop thru the messages and get the size of each message
         // and add them up to get the total size
@@ -165,32 +165,84 @@ public static class AIExtensionsChatHelpers
         }
 
         var estimatedTotalTokens = totalBytes / ESTIMATED_BYTES_PER_TOKEN;
-        var isTooBig = estimatedTotalTokens > trimTokenTarget;
-        ConsoleHelpers.WriteDebugLine($"Total bytes: {totalBytes}, estimated tokens: {estimatedTotalTokens}, trim target: {trimTokenTarget}, is too big: {isTooBig}");
+        var isTooBig = estimatedTotalTokens > maxChatTokenTarget;
+        ConsoleHelpers.WriteDebugLine($"Total bytes: {totalBytes}, estimated tokens: {estimatedTotalTokens}, chat token target: {maxChatTokenTarget}, is too big: {isTooBig}");
 
         return isTooBig;
     }
 
-    public static bool TryTrimToTarget(this IList<ChatMessage> messages, int trimTokenTarget)
+    public static bool TryTrimToTarget(this IList<ChatMessage> messages, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0)
     {
-        if (trimTokenTarget <= 0) return false;
+        var trimmedPrompt = maxPromptTokenTarget > 0 && messages.TryTrimPromptContentToTarget(maxPromptTokenTarget);
+        var trimmedTool = maxToolTokenTarget > 0 && messages.TryTrimToolCallContentToTarget(maxToolTokenTarget);
+        var trimmedChat = maxChatTokenTarget > 0 && messages.TryTrimChatToTarget(maxChatTokenTarget);
+        return trimmedChat || trimmedPrompt || trimmedTool;
+    }
+
+    public static bool TryTrimPromptContentToTarget(this IList<ChatMessage> messages, int maxPromptTokenTarget)
+    {
+        var didTrim = false;
+        for (var i = 0; i < messages.Count; i++)
+        {
+            var promptChatMessage = messages[i].Role == ChatRole.User
+                ? messages[i]
+                : null;
+            if (promptChatMessage != null && IsUserChatContentTooBig(promptChatMessage, maxPromptTokenTarget))
+            {
+                didTrim = true;
+                ConsoleHelpers.WriteDebugLine($"Prompt content is too big, trimming to {maxPromptTokenTarget} tokens");
+                messages[i] = new ChatMessage(ChatRole.User, promptChatMessage.Contents
+                    .Select(x => x is TextContent textContent
+                        ? new TextContent(TrimUserPromptContent(textContent.Text, maxPromptTokenTarget))
+                        : x)
+                    .ToList());
+            }
+        }
+        return didTrim;
+    }
+
+    public static bool TryTrimToolCallContentToTarget(this IList<ChatMessage> messages, int maxToolTokenTarget)
+    {
+        var didTrim = false;
+        for (var i = 0; i < messages.Count; i++)
+        {
+            var toolChatMessage = messages[i].Role == ChatRole.Tool
+                ? messages[i]
+                : null;
+            if (toolChatMessage != null && IsToolChatContentTooBig(toolChatMessage, maxToolTokenTarget))
+            {
+                didTrim = true;
+                ConsoleHelpers.WriteDebugLine($"Tool call content is too big, trimming to {maxToolTokenTarget} tokens");
+                messages[i] = new ChatMessage(ChatRole.Tool, toolChatMessage.Contents
+                    .Select(x => x is FunctionResultContent result
+                        ? new FunctionResultContent(result.CallId, TrimFunctionResultContent(result.Result, maxToolTokenTarget))
+                        : x)
+                    .ToList());
+            }
+        }
+        return didTrim;
+    }
+
+    public static bool TryTrimChatToTarget(this IList<ChatMessage> messages, int maxChatTokenTarget)
+    {
+        if (maxChatTokenTarget <= 0) return false;
 
         const int whenTrimmingToolContentTarget = 10;
         const string snippedIndicator = "...snip...";
 
-        if (messages.IsTooBig(trimTokenTarget))
+        if (messages.IsTooBig(maxChatTokenTarget))
         {
-            messages.ReduceToolCallContent(trimTokenTarget, whenTrimmingToolContentTarget, snippedIndicator);
+            messages.ReplaceTooBigToolCallContent(maxChatTokenTarget, whenTrimmingToolContentTarget, snippedIndicator);
             return true;
         }
 
         return false;
     }
 
-    public static void ReduceToolCallContent(this IList<ChatMessage> messages, int trimTokenTarget, int maxToolCallContentTokens, string replaceToolCallContentWith)
+    public static void ReplaceTooBigToolCallContent(this IList<ChatMessage> messages, int maxChatTokenTarget, int maxToolTokenTarget, string replaceToolCallContentWith)
     {
         // If the total size of the messages is not too big, we don't need to do anything
-        if (!messages.IsTooBig(trimTokenTarget)) return;
+        if (!messages.IsTooBig(maxChatTokenTarget)) return;
 
         // If assistant messages, there also won't be any tool calls
         var lastAssistantMessage = messages.LastOrDefault(x => x.Role == ChatRole.Assistant);
@@ -206,7 +258,7 @@ public static class AIExtensionsChatHelpers
             var toolChatMessage = messages[i].Role == ChatRole.Tool
                 ? messages[i]
                 : null;
-            if (toolChatMessage != null && IsTooBig(toolChatMessage, maxToolCallContentTokens))
+            if (toolChatMessage != null && IsToolChatContentTooBig(toolChatMessage, maxToolTokenTarget))
             {
                 ConsoleHelpers.WriteDebugLine($"Tool call content is too big, replacing with: {replaceToolCallContentWith}");
                 messages[i] = new ChatMessage(ChatRole.Tool, toolChatMessage.Contents
@@ -219,7 +271,21 @@ public static class AIExtensionsChatHelpers
 
     }
 
-    private static bool IsTooBig(ChatMessage toolChatMessage, int maxToolCallContentTokens)
+    private static bool IsUserChatContentTooBig(ChatMessage userChatMessage, int maxPromptTokenTarget)
+    {
+        var content = string.Join("", userChatMessage.Contents
+            .Where(x => x is TextContent)
+            .Cast<TextContent>()
+            .Select(x => x.Text));
+        if (string.IsNullOrEmpty(content)) return false;
+
+        var isTooBig = content.Length > maxPromptTokenTarget * ESTIMATED_BYTES_PER_TOKEN;
+        ConsoleHelpers.WriteDebugLine($"User chat content size: {content.Length}, max token size: {maxPromptTokenTarget}, is too big: {isTooBig}");
+
+        return isTooBig;
+    }
+
+    private static bool IsToolChatContentTooBig(ChatMessage toolChatMessage, int maxToolTokenTarget)
     {
         var content = string.Join("", toolChatMessage.Contents
             .Where(x => x is FunctionResultContent)
@@ -227,10 +293,31 @@ public static class AIExtensionsChatHelpers
             .Select(x => x.Result));
         if (string.IsNullOrEmpty(content)) return false;
 
-        var isTooBig = content.Length > maxToolCallContentTokens;
-        ConsoleHelpers.WriteDebugLine($"Tool call content size: {content.Length}, max size: {maxToolCallContentTokens}, is too big: {isTooBig}");
+        var isTooBig = content.Length > maxToolTokenTarget * ESTIMATED_BYTES_PER_TOKEN;
+        ConsoleHelpers.WriteDebugLine($"Tool call content size: {content.Length}, max token size: {maxToolTokenTarget}, is too big: {isTooBig}");
 
         return isTooBig;
+    }
+
+    private static string? TrimUserPromptContent(string text, int maxPromptTokenTarget, string trimIndicator = "...snip...")
+    {
+        var cchTake = Math.Min(text.Length, maxPromptTokenTarget * ESTIMATED_BYTES_PER_TOKEN - trimIndicator.Length);
+        return cchTake > 0
+            ? text.Substring(0, cchTake) + trimIndicator
+            : trimIndicator;
+    }
+
+    private static object? TrimFunctionResultContent(object? result, int maxToolTokenTarget, string trimIndicator = "...snip...")
+    {
+        if (result is string strResult)
+        {
+            var cchTake = Math.Min(strResult.Length, maxToolTokenTarget * ESTIMATED_BYTES_PER_TOKEN - trimIndicator.Length);
+            return cchTake > 0
+                ? strResult.Substring(0, cchTake) + trimIndicator
+                : trimIndicator;
+        }
+
+        return result;
     }
 
     private static JsonSerializerOptions _jsonlOptions = new JsonSerializerOptions

@@ -3,22 +3,73 @@ USE APP SETTINGS
   These settings control CycoD's application behavior, including auto-saving,
   function call permissions, and API timeouts.
 
-  MAX TOKENS
+  MAX PROMPT TOKENS
+
+    EXAMPLE 1: Set maximum prompt tokens via config
+
+      cycod config set App.MaxPromptTokens 50000
+      cycod config set App.MaxPromptTokens 50000 --local
+      cycod config set App.MaxPromptTokens 50000 --user
+      cycod config set App.MaxPromptTokens 50000 --global
+
+    EXAMPLE 2: Set maximum prompt tokens via environment variable
+
+      Set CYCOD_MAX_PROMPT_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum prompt tokens via command line
+
+      cycod chat --max-prompt-tokens 50000
+
+  MAX TOOL TOKENS
+
+    EXAMPLE 1: Set maximum tool tokens via config
+
+      cycod config set App.MaxToolTokens 50000
+      cycod config set App.MaxToolTokens 50000 --local
+      cycod config set App.MaxToolTokens 50000 --user
+      cycod config set App.MaxToolTokens 50000 --global
+
+    EXAMPLE 2: Set maximum tool tokens via environment variable
+
+      Set CYCOD_MAX_TOOL_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum tool tokens via command line
+
+      cycod chat --max-tool-tokens 50000
+
+  MAX OUTPUT TOKENS
 
     EXAMPLE 1: Set maximum tokens via config
 
-      cycod config set App.MaxTokens 1000
-      cycod config set App.MaxTokens 1000 --local
-      cycod config set App.MaxTokens 1000 --user
-      cycod config set App.MaxTokens 1000 --global
+      cycod config set App.MaxOutputTokens 4000
+      cycod config set App.MaxOutputTokens 4000 --local
+      cycod config set App.MaxOutputTokens 4000 --user
+      cycod config set App.MaxOutputTokens 4000 --global
 
     EXAMPLE 2: Set maximum tokens via environment variable
 
-      Set APP_MAX_TOKENS environment variable
+      Set CYCOD_MAX_OUTPUT_TOKENS environment variable
 
     EXAMPLE 3: Supply maximum tokens via command line
 
-      cycod chat --max-tokens 1000
+      cycod chat --max-output-tokens 4000
+
+  MAX CHAT TOKENS
+
+    EXAMPLE 1: Set maximum total chat tokens via config
+
+      cycod config set App.MaxChatTokens 50000
+      cycod config set App.MaxChatTokens 50000 --local
+      cycod config set App.MaxChatTokens 50000 --user
+      cycod config set App.MaxChatTokens 50000 --global
+
+    EXAMPLE 2: Set maximum total chat tokensvia environment variable
+
+      Set CYCOD_MAX_CHAT_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum total chat tokens via command line
+
+      cycod chat --max-chat-tokens 50000
 
   CHAT COMPLETION TIMEOUT
 

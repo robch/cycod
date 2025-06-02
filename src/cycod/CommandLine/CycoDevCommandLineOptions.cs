@@ -59,6 +59,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             "chat" => new ChatCommand(),
             "github login" => new GitHubLoginCommand(),
+            "github models" => new GitHubModelsCommand(),
             "config list" => new ConfigListCommand(),
             "config get" => new ConfigGetCommand(),
             "config set" => new ConfigSetCommand(),
@@ -465,6 +466,19 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             command.UseMcps.Clear();
         }
+        else if (arg == "--with-mcp")
+        {
+            var mcpCommandAndArgs = GetInputOptionArgs(i + 1, args);
+            var mcpCommand = ValidateString(arg, mcpCommandAndArgs.FirstOrDefault(), "command to execute with MCP");
+            var mcpName = $"mcp-{command.WithStdioMcps.Count + 1}";
+            command.WithStdioMcps[mcpName] = new StdioMcpServerConfig
+            {
+                Command = mcpCommand!,
+                Args = mcpCommandAndArgs.Skip(1).ToList(),
+                Env = new Dictionary<string, string?>()
+            };
+            i += mcpCommandAndArgs.Count();
+        }
         else if (arg == "--system-prompt")
         {
             var promptArgs = GetInputOptionArgs(i + 1, args);
@@ -571,13 +585,6 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var outputChatHistory = max1Arg.FirstOrDefault() ?? DefaultOutputChatHistoryFileNameTemplate;
             command.OutputChatHistory = outputChatHistory;
-            i += max1Arg.Count();
-        }
-        else if (arg == "--trim-token-target")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var trimTokenTarget = ValidateInt(arg, max1Arg.FirstOrDefault(), "trim token target");
-            command.TrimTokenTarget = trimTokenTarget;
             i += max1Arg.Count();
         }
         else if (arg == "--output-trajectory")
