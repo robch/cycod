@@ -1,3 +1,4 @@
+using System.Runtime.Intrinsics.X86;
 using ModelContextProtocol.Client;
 
 /// <summary>
@@ -26,8 +27,12 @@ public static class McpClientManager
         }
         else if (serverConfig is SseServerConfig sseConfig)
         {
-            // TODO: Implement SSE transport
-            throw new NotImplementedException("SSE transport is not yet implemented");
+            created = await McpClientFactory.CreateAsync(new SseClientTransport(new()
+            {
+                Name = serverName,
+                Endpoint = new Uri(sseConfig.Url!),
+                UseStreamableHttp = true
+            }));
         }
         else
         {
