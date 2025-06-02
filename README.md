@@ -81,7 +81,7 @@ cycod [options]
 - `--inputs <text...>` or `--questions <text...>`: Provide multiple inputs to process sequentially
 - `--input-chat-history <file>`: Load previous chat history from a file
 - `--output-chat-history <file>`: Save chat history to a file
-- `--trim-token-target <n>`: Set a target for trimming chat history when it gets too large
+- `--max-chat-tokens <n>`: Set a target for trimming chat history when it gets too large
 - `--interactive`: Control whether to enter interactive mode (default: true)
 - `--save-alias <name>`: Save the current command options as a named alias
 - `--foreach var <name> in <values>`: Define a loop variable with multiple values

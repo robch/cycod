@@ -34,7 +34,10 @@ public static class KnownSettings
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
 
     // Application settings
-    public const string AppMaxTokens = "App.MaxTokens";
+    public const string AppMaxPromptTokens = "App.MaxPromptTokens";
+    public const string AppMaxOutputTokens = "App.MaxOutputTokens";
+    public const string AppMaxToolTokens = "App.MaxToolTokens";
+    public const string AppMaxChatTokens = "App.MaxChatTokens";
     public const string AppPreferredProvider = "App.PreferredProvider";
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
@@ -97,7 +100,10 @@ public static class KnownSettings
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
         
         // Application settings
-        { AppMaxTokens, "APP_MAX_TOKENS" },
+        { AppMaxPromptTokens, "CYCOD_MAX_PROMPT_TOKENS" },
+        { AppMaxOutputTokens, "CYCOD_MAX_OUTPUT_TOKENS" },
+        { AppMaxToolTokens, "CYCOD_MAX_TOOL_TOKENS" },
+        { AppMaxChatTokens, "CYCOD_MAX_CHAT_TOKENS" },
         { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
@@ -135,7 +141,10 @@ public static class KnownSettings
         { CopilotEditorVersion, "--copilot-editor-version" },
         
         // Application settings
-        { AppMaxTokens, "--max-tokens" },
+        { AppMaxPromptTokens, "--max-prompt-tokens" },
+        { AppMaxOutputTokens, "--max-output-tokens" },
+        { AppMaxToolTokens, "--max-tool-tokens" },
+        { AppMaxChatTokens, "--max-chat-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
         { AppChatCompletionTimeout, "--chat-completion-timeout" },
@@ -218,7 +227,10 @@ public static class KnownSettings
     /// </summary>
     public static readonly HashSet<string> AppSettings = new(StringComparer.OrdinalIgnoreCase)
     {
-        AppMaxTokens,
+        AppMaxPromptTokens,
+        AppMaxOutputTokens,
+        AppMaxToolTokens,
+        AppMaxChatTokens,
         AppPreferredProvider,
         AppAutoSaveChatHistory,
         AppAutoSaveTrajectory,

@@ -559,13 +559,6 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.OutputChatHistory = outputChatHistory;
             i += max1Arg.Count();
         }
-        else if (arg == "--trim-token-target")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var trimTokenTarget = ValidateInt(arg, max1Arg.FirstOrDefault(), "trim token target");
-            command.TrimTokenTarget = trimTokenTarget;
-            i += max1Arg.Count();
-        }
         else if (arg == "--output-trajectory")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);

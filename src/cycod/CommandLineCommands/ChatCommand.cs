@@ -26,8 +26,10 @@ public class ChatCommand : CommandWithVariables
         clone.SystemPrompt = this.SystemPrompt;
         clone.SystemPromptAdds = new List<string>(this.SystemPromptAdds);
         clone.UserPromptAdds = new List<string>(this.UserPromptAdds);
-        clone.TrimTokenTarget = this.TrimTokenTarget;
+        clone.MaxPromptTokenTarget = this.MaxPromptTokenTarget;
+        clone.MaxToolTokenTarget = this.MaxToolTokenTarget;
         clone.MaxOutputTokens = this.MaxOutputTokens;
+        clone.MaxChatTokenTarget = this.MaxChatTokenTarget;
         clone.LoadMostRecentChatHistory = this.LoadMostRecentChatHistory;
         clone.InputChatHistory = this.InputChatHistory;
         clone.OutputChatHistory = this.OutputChatHistory;
@@ -46,10 +48,13 @@ public class ChatCommand : CommandWithVariables
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
 
-        // Transfer known settings to the command if not already set
-        var maxOutputTokensSetting = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxTokens);
-        var useMaxOutputTokenSetting = !MaxOutputTokens.HasValue && maxOutputTokensSetting.AsInt() > 0;
-        if (useMaxOutputTokenSetting) MaxOutputTokens = maxOutputTokensSetting.AsInt();
+        // Transfer known settings to the command
+        var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
+        if (maxOutputTokens > 0) MaxOutputTokens = maxOutputTokens;
+
+        MaxPromptTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxPromptTokens).AsInt(DefaultMaxPromptTokenTarget);
+        MaxToolTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxToolTokens).AsInt(DefaultMaxToolTokenTarget);
+        MaxChatTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxChatTokens).AsInt(DefaultMaxChatTokenTarget);
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
@@ -80,11 +85,21 @@ public class ChatCommand : CommandWithVariables
         try
         {
             // Add the user prompt messages to the chat.
-            chat.AddUserMessages(UserPromptAdds);
+            chat.AddUserMessages(
+                UserPromptAdds,
+                maxPromptTokenTarget: MaxPromptTokenTarget,
+                maxChatTokenTarget: MaxChatTokenTarget);
 
             // Load the chat history from the file.
             var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
-            if (loadChatHistory) chat.LoadChatHistory(InputChatHistory!, TrimTokenTarget ?? DefaultTrimTokenTarget, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            if (loadChatHistory)
+            {
+                chat.LoadChatHistory(InputChatHistory!,
+                    maxPromptTokenTarget: MaxPromptTokenTarget,
+                    maxToolTokenTarget: MaxToolTokenTarget,
+                    maxChatTokenTarget: MaxChatTokenTarget,
+                    useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
             if (!interactive && InputInstructions.Count == 0)
@@ -430,7 +445,7 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
-        messages.TryTrimToTarget(TrimTokenTarget ?? DefaultTrimTokenTarget);
+        messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
         if (OutputChatHistory != null)
         {
@@ -836,8 +851,10 @@ public class ChatCommand : CommandWithVariables
     public List<string> SystemPromptAdds { get; set; } = new List<string>();
     public List<string> UserPromptAdds { get; set; } = new List<string>();
 
-    public int? TrimTokenTarget { get; set; }
+    public int MaxPromptTokenTarget { get; set; }
+    public int MaxToolTokenTarget { get; set; }
     public int? MaxOutputTokens { get; set; }
+    public int MaxChatTokenTarget { get; set; }
 
     public bool LoadMostRecentChatHistory = false;
     public string? InputChatHistory;
@@ -860,7 +877,10 @@ public class ChatCommand : CommandWithVariables
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
-    private const int DefaultTrimTokenTarget = 160000;
+
+    private const int DefaultMaxPromptTokenTarget = 50000;
+    private const int DefaultMaxToolTokenTarget = 50000;
+    private const int DefaultMaxChatTokenTarget = 160000;
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
