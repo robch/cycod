@@ -8,7 +8,7 @@ class GitHubLoginCommand : Command
 
     public GitHubLoginCommand()
     {
-        Scope = ConfigFileScope.Local;
+        Scope = ConfigFileScope.User;
         ConfigFileName = null;
     }
 
