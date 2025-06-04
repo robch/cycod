@@ -2,7 +2,7 @@ CYCOD ALIAS ADD COMMAND
 
   Creates a new alias with raw content without syntax validation.
 
-USAGE: cycod alias add ALIAS_NAME --content "CONTENT" [--scope]
+USAGE: cycod alias add ALIAS_NAME "CONTENT" [--scope]
 
 DESCRIPTION
 
@@ -18,9 +18,7 @@ PARAMETERS
 
   ALIAS_NAME       Name of the alias to create
 
-OPTIONS
-
-  --content        Command-line arguments to include in the alias
+  CONTENT          Command-line arguments to include in the alias
                    Enclose in quotes if it contains spaces or special characters
 
   SCOPE OPTIONS
@@ -32,16 +30,13 @@ OPTIONS
 EXAMPLES
 
   # Create a local alias for code prompts
-  cycod alias add code-prompt --content "--add-system-prompt @/prompts/code-system-prompt.md --instruction"
+  cycod alias add code-prompt "--add-system-prompt @/prompts/code-system-prompt.md --instruction"
 
   # Create a user-scoped alias for Python programming
-  cycod alias add python-expert --user --content "--system-prompt \"You are a Python expert\""
+  cycod alias add python-expert --user "--system-prompt \"You are a Python expert\""
 
   # Create a global alias for Linux administration
-  cycod alias add linux-admin --global --content "--system-prompt \"You are a Linux administrator\""
-
-  # Create an alias from stdin
-  echo "--system-prompt \"Content from stdin\"" | cycod alias add stdin-alias
+  cycod alias add linux-admin --global "--system-prompt \"You are a Linux administrator\""
 
 USAGE EXAMPLES
 

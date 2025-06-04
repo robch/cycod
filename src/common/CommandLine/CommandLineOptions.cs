@@ -1,4 +1,3 @@
-using NuGet.Frameworks;
 using System.Text.RegularExpressions;
 
 public class CommandLineOptions
@@ -153,7 +152,7 @@ public class CommandLineOptions
         {
             if (args[i].StartsWith("--"))
             {
-                TryParseAliasOptions(ref command, ref args, ref i, args[i].Substring(2));
+                ExpandAliasOptions(ref command, ref args, ref i, args[i].Substring(2));
             }
         }
 
@@ -287,10 +286,6 @@ public class CommandLineOptions
             i = args.Count();
             parsedOption = true;
         }
-        else if (arg.StartsWith("--"))
-        {
-            parsedOption = TryParseAliasOptions(ref command, ref args, ref i, arg.Substring(2));
-        }
         else if (command is HelpCommand helpCommand)
         {
             this.HelpTopic = $"{this.HelpTopic} {arg}".Trim();
@@ -310,14 +305,13 @@ public class CommandLineOptions
         return parsedOption;
     }
 
-    protected bool TryParseAliasOptions(ref Command? command, ref string[] args, ref int currentIndex, string alias)
+    protected void ExpandAliasOptions(ref Command? command, ref string[] args, ref int currentIndex, string alias)
     {
         var aliasFilePath = AliasFileHelpers.FindAliasFile(alias);
         if (aliasFilePath != null && File.Exists(aliasFilePath))
         {
             var aliasLines = File.ReadAllLines(aliasFilePath);
 
-            // If it's a raw alias, skip the first line (metadata)
             var aliasArgs = aliasLines
                 .Select(x => x.StartsWith('@')
                     ? AtFileHelpers.ExpandAtFileValue(x)
@@ -325,10 +319,7 @@ public class CommandLineOptions
                 .ToArray();
 
             args = args.Take(currentIndex).Concat(aliasArgs).Concat(args.Skip(currentIndex + 1)).ToArray();
-
-            return true;
         }
-        return false;
     }
 
     protected bool TryParseGlobalCommandLineOptions(string[] args, ref int i, string arg)

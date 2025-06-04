@@ -280,18 +280,6 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             command.Scope = ConfigFileScope.Any;
         }
-        else if (command is AliasAddCommand addCommand && arg == "--content")
-        {
-            // Get all arguments until we hit a new option or the end
-            var contentArgs = GetInputOptionArgs(i + 1, args).ToList();
-            if (contentArgs.Count == 0)
-            {
-                throw new CommandLineException("Missing value for --content");
-            }
-            
-            addCommand.Content = string.Join(" ", contentArgs);
-            i += contentArgs.Count;
-        }
         else
         {
             parsed = false;
