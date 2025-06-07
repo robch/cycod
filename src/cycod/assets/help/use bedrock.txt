@@ -45,16 +45,3 @@ USE BEDROCK
     EXAMPLE 3: Supply AWS Bedrock model via command line
 
       cycod chat --aws-bedrock-model-id MODEL_ID
-
-  SUPPORTED MODELS
-
-    Amazon Bedrock supports various foundation models, including:
-    - anthropic.claude-v2.1
-    - anthropic.claude-v2
-    - anthropic.claude-instant-v1
-    - ai21.j2-ultra
-    - ai21.j2-mid
-    - meta.llama2-13b
-    - meta.llama2-70b
-    - mistral.mistral-7b
-    - mistral.mixtral-8x7b
