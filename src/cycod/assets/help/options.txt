@@ -69,7 +69,7 @@ USAGE: cycod [...]
     --profile NAME                        Load a specific profile's configuration from .cycod/profiles/NAME.yaml
       
   ALIASES                                 (see: cycod help aliases)
-    --save-alias ALIAS                    Same as --save-local-alias
+    --save-alias ALIAS                    Same as --save-user-alias
     --save-local-alias ALIAS              Save current options as an alias in local scope
     --save-user-alias ALIAS               Save current options as an alias in user scope
     --save-global-alias ALIAS             Save current options as an alias in global scope
