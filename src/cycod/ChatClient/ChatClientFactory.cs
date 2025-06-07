@@ -1,5 +1,7 @@
 using Anthropic.SDK;
 using Anthropic.SDK.Messaging;
+using Amazon;
+using Amazon.BedrockRuntime;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
@@ -52,6 +54,28 @@ public static class ChatClientFactory
 
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
         return chatClient.AsIChatClient();
+    }
+
+    public static IChatClient? CreateAWSBedrockChatClient(out ChatOptions? options)
+    {
+        var accessKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_ACCESS_KEY is not set.");
+        var secretKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_SECRET_KEY is not set.");
+        var region = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_REGION") ?? "us-east-1";
+        var modelId = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_MODEL_ID") ?? "anthropic.claude-3-7-sonnet-20250219-v1:0";
+
+        var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+        var runtime = new AmazonBedrockRuntimeClient(accessKey, secretKey, regionEndpoint);
+        var chatClient = runtime.AsIChatClient();
+        
+        options = new ChatOptions
+        {
+            ModelId = modelId,
+            ToolMode = ChatToolMode.Auto,
+            MaxOutputTokens = 4000
+        };
+
+        ConsoleHelpers.WriteDebugLine("Using AWS Bedrock API credentials for authentication");
+        return chatClient;
     }
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
@@ -114,6 +138,12 @@ public static class ChatClientFactory
             {
                 return CreateAnthropicChatClientWithApiKey(out options);
             }
+            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") && 
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) &&
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
+            {
+                return CreateAWSBedrockChatClient(out options);
+            }
             else if ((preferredProvider == "azure-openai" || preferredProvider == "azure") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
             {
                 return CreateAzureOpenAIChatClientWithApiKey();
@@ -144,6 +174,12 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY")))
         {
             return CreateAnthropicChatClientWithApiKey(out options);
+        }
+
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) && 
+            !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
+        {
+            return CreateAWSBedrockChatClient(out options);
         }
 
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
@@ -178,6 +214,12 @@ public static class ChatClientFactory
                     - ANTHROPIC_API_KEY
                     - ANTHROPIC_MODEL_NAME (optional)
 
+                    To use AWS Bedrock, please set:
+                    - AWS_BEDROCK_ACCESS_KEY
+                    - AWS_BEDROCK_SECRET_KEY
+                    - AWS_BEDROCK_REGION (optional, default: us-east-1)
+                    - AWS_BEDROCK_MODEL_ID (optional, default: anthropic.claude-3-7-sonnet-20250219-v1:0)
+                    
                     To use Azure OpenAI, please set:
                     - AZURE_OPENAI_API_KEY
                     - AZURE_OPENAI_ENDPOINT

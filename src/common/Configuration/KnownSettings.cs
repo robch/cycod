@@ -13,6 +13,12 @@ public static class KnownSettings
     // Anthropic settings
     public const string AnthropicApiKey = "Anthropic.ApiKey";
     public const string AnthropicModelName = "Anthropic.ModelName";
+    
+    // AWS Bedrock settings
+    public const string AWSBedrockAccessKey = "AWS.Bedrock.AccessKey";
+    public const string AWSBedrockSecretKey = "AWS.Bedrock.SecretKey";
+    public const string AWSBedrockRegion = "AWS.Bedrock.Region";
+    public const string AWSBedrockModelId = "AWS.Bedrock.ModelId";
 
     // Azure OpenAI settings
     public const string AzureOpenAIApiKey = "Azure.OpenAI.ApiKey";
@@ -57,6 +63,10 @@ public static class KnownSettings
         // Anthropic secrets
         AnthropicApiKey,
         
+        // AWS Bedrock secrets
+        AWSBedrockAccessKey,
+        AWSBedrockSecretKey,
+        
         // Azure OpenAI secrets
         AzureOpenAIApiKey,
         
@@ -79,6 +89,12 @@ public static class KnownSettings
         // Anthropic mappings
         { AnthropicApiKey, "ANTHROPIC_API_KEY" },
         { AnthropicModelName, "ANTHROPIC_MODEL_NAME" },
+        
+        // AWS Bedrock mappings
+        { AWSBedrockAccessKey, "AWS_BEDROCK_ACCESS_KEY" },
+        { AWSBedrockSecretKey, "AWS_BEDROCK_SECRET_KEY" },
+        { AWSBedrockRegion, "AWS_BEDROCK_REGION" },
+        { AWSBedrockModelId, "AWS_BEDROCK_MODEL_ID" },
 
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "AZURE_OPENAI_API_KEY" },
@@ -120,6 +136,12 @@ public static class KnownSettings
         // Anthropic mappings
         { AnthropicApiKey, "--anthropic-api-key" },
         { AnthropicModelName, "--anthropic-model-name" },
+        
+        // AWS Bedrock mappings
+        { AWSBedrockAccessKey, "--aws-bedrock-access-key" },
+        { AWSBedrockSecretKey, "--aws-bedrock-secret-key" },
+        { AWSBedrockRegion, "--aws-bedrock-region" },
+        { AWSBedrockModelId, "--aws-bedrock-model-id" },
 
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "--azure-openai-api-key" },
@@ -181,6 +203,17 @@ public static class KnownSettings
     {
         AnthropicApiKey,
         AnthropicModelName
+    };
+    
+    /// <summary>
+    /// Collection of settings for AWS Bedrock integration.
+    /// </summary>
+    public static readonly HashSet<string> AWSBedrockSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        AWSBedrockAccessKey,
+        AWSBedrockSecretKey,
+        AWSBedrockRegion,
+        AWSBedrockModelId
     };
     
     /// <summary>

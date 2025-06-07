@@ -570,6 +570,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
         }
+        else if (arg == "--use-aws" || arg == "--use-bedrock" || arg == "--use-aws-bedrock")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "aws-bedrock");
+        }
         else if (arg == "--use-azure-openai" || arg == "--use-azure")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");

@@ -1,0 +1,60 @@
+USE BEDROCK
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set AWS Bedrock credentials via config
+
+      cycod config set AWS.Bedrock.AccessKey ACCESS_KEY
+      cycod config set AWS.Bedrock.AccessKey ACCESS_KEY --local
+      cycod config set AWS.Bedrock.AccessKey ACCESS_KEY --user
+      cycod config set AWS.Bedrock.AccessKey ACCESS_KEY --global
+
+      cycod config set AWS.Bedrock.SecretKey SECRET_KEY
+      cycod config set AWS.Bedrock.SecretKey SECRET_KEY --local
+      cycod config set AWS.Bedrock.SecretKey SECRET_KEY --user
+      cycod config set AWS.Bedrock.SecretKey SECRET_KEY --global
+
+      cycod config set AWS.Bedrock.Region REGION_NAME
+      cycod config set AWS.Bedrock.Region REGION_NAME --local
+      cycod config set AWS.Bedrock.Region REGION_NAME --user
+      cycod config set AWS.Bedrock.Region REGION_NAME --global
+
+    EXAMPLE 2: Set AWS Bedrock credentials via environment variables
+
+      Set AWS_BEDROCK_ACCESS_KEY environment variable
+      Set AWS_BEDROCK_SECRET_KEY environment variable
+      Set AWS_BEDROCK_REGION environment variable (default: us-east-1)
+
+    EXAMPLE 3: Supply AWS Bedrock credentials via command line
+
+      cycod chat --aws-bedrock-access-key ACCESS_KEY --aws-bedrock-secret-key SECRET_KEY --aws-bedrock-region REGION_NAME
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set AWS Bedrock model via config
+
+      cycod config set AWS.Bedrock.ModelId MODEL_ID
+      cycod config set AWS.Bedrock.ModelId MODEL_ID --local
+      cycod config set AWS.Bedrock.ModelId MODEL_ID --user
+      cycod config set AWS.Bedrock.ModelId MODEL_ID --global
+
+    EXAMPLE 2: Set AWS Bedrock model via environment variable
+
+      Set AWS_BEDROCK_MODEL_ID environment variable
+
+    EXAMPLE 3: Supply AWS Bedrock model via command line
+
+      cycod chat --aws-bedrock-model-id MODEL_ID
+
+  SUPPORTED MODELS
+
+    Amazon Bedrock supports various foundation models, including:
+    - anthropic.claude-v2.1
+    - anthropic.claude-v2
+    - anthropic.claude-instant-v1
+    - ai21.j2-ultra
+    - ai21.j2-mid
+    - meta.llama2-13b
+    - meta.llama2-70b
+    - mistral.mistral-7b
+    - mistral.mixtral-8x7b
