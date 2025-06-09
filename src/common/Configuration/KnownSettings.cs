@@ -19,6 +19,10 @@ public static class KnownSettings
     public const string AWSBedrockSecretKey = "AWS.Bedrock.SecretKey";
     public const string AWSBedrockRegion = "AWS.Bedrock.Region";
     public const string AWSBedrockModelId = "AWS.Bedrock.ModelId";
+    
+    // Google Gemini settings
+    public const string GoogleGeminiApiKey = "Google.Gemini.ApiKey";
+    public const string GoogleGeminiModelId = "Google.Gemini.ModelId";
 
     // Azure OpenAI settings
     public const string AzureOpenAIApiKey = "Azure.OpenAI.ApiKey";
@@ -67,6 +71,9 @@ public static class KnownSettings
         AWSBedrockAccessKey,
         AWSBedrockSecretKey,
         
+        // Google Gemini secrets
+        GoogleGeminiApiKey,
+        
         // Azure OpenAI secrets
         AzureOpenAIApiKey,
         
@@ -95,6 +102,10 @@ public static class KnownSettings
         { AWSBedrockSecretKey, "AWS_BEDROCK_SECRET_KEY" },
         { AWSBedrockRegion, "AWS_BEDROCK_REGION" },
         { AWSBedrockModelId, "AWS_BEDROCK_MODEL_ID" },
+        
+        // Google Gemini mappings
+        { GoogleGeminiApiKey, "GOOGLE_GEMINI_API_KEY" },
+        { GoogleGeminiModelId, "GOOGLE_GEMINI_MODEL_ID" },
 
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "AZURE_OPENAI_API_KEY" },
@@ -140,8 +151,12 @@ public static class KnownSettings
         // AWS Bedrock mappings
         { AWSBedrockAccessKey, "--aws-bedrock-access-key" },
         { AWSBedrockSecretKey, "--aws-bedrock-secret-key" },
-        { AWSBedrockRegion, "--aws-bedrock-region" },
         { AWSBedrockModelId, "--aws-bedrock-model-id" },
+        { AWSBedrockRegion, "--aws-bedrock-region" },
+        
+        // Google Gemini mappings
+        { GoogleGeminiApiKey, "--google-gemini-api-key" },
+        { GoogleGeminiModelId, "--google-gemini-model-id" },
 
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "--azure-openai-api-key" },
@@ -214,6 +229,15 @@ public static class KnownSettings
         AWSBedrockSecretKey,
         AWSBedrockRegion,
         AWSBedrockModelId
+    };
+    
+    /// <summary>
+    /// Collection of settings for Google Gemini integration.
+    /// </summary>
+    public static readonly HashSet<string> GoogleGeminiSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        GoogleGeminiApiKey,
+        GoogleGeminiModelId
     };
     
     /// <summary>

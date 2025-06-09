@@ -62,7 +62,7 @@ jobs:
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net8.0:$(pwd)/src/cycodt/bin/Release/net8.0:$(pwd)/src/cycodmd/bin/Release/net8.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
         which cycod
         which cycodmd
         which cycodt
@@ -89,27 +89,27 @@ jobs:
       with:
         name: cycod-build
         path: |
-          src/cycod/bin/Release/net8.0/
-          src/cycod/bin/Release/net8.0/win-x64/publish/
-          src/cycod/bin/Release/net8.0/linux-x64/publish/
-          src/cycod/bin/Release/net8.0/osx-x64/publish/
+          src/cycod/bin/Release/net9.0/
+          src/cycod/bin/Release/net9.0/win-x64/publish/
+          src/cycod/bin/Release/net9.0/linux-x64/publish/
+          src/cycod/bin/Release/net9.0/osx-x64/publish/
     
     - name: Upload cycodt build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: cycodt-build
         path: |
-          src/cycodt/bin/Release/net8.0/
-          src/cycodt/bin/Release/net8.0/win-x64/publish/
-          src/cycodt/bin/Release/net8.0/linux-x64/publish/
-          src/cycodt/bin/Release/net8.0/osx-x64/publish/
+          src/cycodt/bin/Release/net9.0/
+          src/cycodt/bin/Release/net9.0/win-x64/publish/
+          src/cycodt/bin/Release/net9.0/linux-x64/publish/
+          src/cycodt/bin/Release/net9.0/osx-x64/publish/
           
     - name: Upload cycodmd build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: cycodmd-build
         path: |
-          src/cycodmd/bin/Release/net8.0/
-          src/cycodmd/bin/Release/net8.0/win-x64/publish/
-          src/cycodmd/bin/Release/net8.0/linux-x64/publish/
-          src/cycodmd/bin/Release/net8.0/osx-x64/publish/
+          src/cycodmd/bin/Release/net9.0/
+          src/cycodmd/bin/Release/net9.0/win-x64/publish/
+          src/cycodmd/bin/Release/net9.0/linux-x64/publish/
+          src/cycodmd/bin/Release/net9.0/osx-x64/publish/

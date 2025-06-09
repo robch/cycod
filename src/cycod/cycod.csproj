@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
@@ -19,7 +19,7 @@
     <PackageId>CycoD</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>AI-powered CLI application for chat-based interaction with AI assistants</Description>
-    <PackageTags>cli;ai;chat;openai;azure;github-copilot;aws;bedrock</PackageTags>
+    <PackageTags>cli;ai;chat;openai;azure;github-copilot;aws;bedrock;google;gemini</PackageTags>
     <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -33,6 +33,7 @@
   <ItemGroup>
     <PackageReference Include="Anthropic.SDK" Version="5.4.1" />
     <PackageReference Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.1.1" />
+    <PackageReference Include="GeminiDotnet.Extensions.AI" Version="0.12.0" />
     <PackageReference Include="Azure.Identity" Version="1.14.0" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="9.5.0" />

@@ -578,6 +578,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");
         }
+        else if (arg == "--use-google" || arg == "--use-gemini" || arg == "--use-google-gemini")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "google-gemini");
+        }
         else if (arg == "--use-openai")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
