@@ -28,7 +28,7 @@ USE GEMINI
     
     EXAMPLE 2: Set Google Gemini model via environment variable
     
-      Set GOOGLE_GEMINI_MODEL_ID environment variable (default: gemini-pro)
+      Set GOOGLE_GEMINI_MODEL_ID environment variable (default: gemini-2.5-flash-preview-04-17)
     
     EXAMPLE 3: Supply Google Gemini model via command line
     

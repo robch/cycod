@@ -61,7 +61,7 @@ public static class ChatClientFactory
     public static IChatClient? CreateGeminiChatClient(out ChatOptions? options)
     {
         var apiKey = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY") ?? throw new EnvVarSettingException("GOOGLE_GEMINI_API_KEY is not set.");
-        var modelId = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_MODEL_ID") ?? "gemini-pro";
+        var modelId = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_MODEL_ID") ?? "gemini-2.5-flash-preview-04-17";
 
         var clientOptions = new GeminiClientOptions { ApiKey = apiKey, ApiVersion = GeminiApiVersions.V1Beta };
         var client = new GeminiChatClient(clientOptions);
@@ -262,7 +262,7 @@ public static class ChatClientFactory
 
                     To use Google Gemini, please set:
                     - GOOGLE_GEMINI_API_KEY
-                    - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-pro)
+                    - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
 
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
