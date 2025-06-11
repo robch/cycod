@@ -465,7 +465,9 @@ public class FileHelpers
         // a single-file app (which we do when publishing the Dependency package),
         // warning IL3000
         var assembly = ProgramInfo.Assembly;
+        #pragma warning disable IL3000 // Assembly.Location returns empty when the project is built as a single-file app
         string assemblyPath = assembly?.Location ?? string.Empty;
+        #pragma warning restore IL3000
         if (assemblyPath == string.Empty)
         {
             assemblyPath = AppContext.BaseDirectory;
