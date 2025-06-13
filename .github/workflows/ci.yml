@@ -33,29 +33,39 @@ jobs:
       with:
         dotnet-version: 9.0.x
     
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    
-    - name: Publish cycod for multiple platforms (verification)
+    - name: Make scripts executable
+      run: chmod +x ./scripts/*.sh
+      
+    - name: Determine CI build version
+      id: get-version
       run: |
-        dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r linux-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r osx-x64
-
-    - name: Publish cycodt for multiple platforms (verification)
-      run: |
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r win-x64
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r linux-x64
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r osx-x64
+        # Source the functions library
+        source ./scripts/_functions.sh
         
-    - name: Publish cycodmd for multiple platforms (verification)
+        # Use a timestamp-based version for CI builds
+        YEAR=$(date +'%Y')
+        MONTH=$(date +'%m')
+        DAY=$(date +'%d')
+        HOUR=$(date +'%H')
+        MINUTE=$(date +'%M')
+        
+        CI_VERSION="1.0.0-ci-$YEAR$MONTH$DAY.$HOUR$MINUTE"
+        echo "CI_VERSION=$CI_VERSION" >> $GITHUB_ENV
+        echo "version=$CI_VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Build all projects
+      run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
+    
+    - name: Verify multi-platform publishing
       run: |
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r win-x64
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r linux-x64
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r osx-x64
+        # Quick verification that we can publish for all platforms
+        # We'll do a more comprehensive build with self-contained later
+        for TOOL in cycod cycodt cycodmd; do
+          for RID in win-x64 linux-x64 osx-x64; do
+            echo "Verifying $TOOL for $RID..."
+            dotnet publish src/$TOOL/$TOOL.csproj -c Release -r $RID --no-build
+          done
+        done
     
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
@@ -113,3 +123,14 @@ jobs:
           src/cycodmd/bin/Release/net9.0/win-x64/publish/
           src/cycodmd/bin/Release/net9.0/linux-x64/publish/
           src/cycodmd/bin/Release/net9.0/osx-x64/publish/
+
+    # Version already calculated above
+        
+    - name: Build self-contained executables
+      run: ./scripts/publish-self-contained.sh ${{ env.CI_VERSION }} ./self-contained Release
+        
+    - name: Upload self-contained executables
+      uses: actions/upload-artifact@v4
+      with:
+        name: self-contained-executables
+        path: self-contained/*

@@ -39,87 +39,35 @@ jobs:
     - name: Determine version
       id: get-version
       run: |
+        # Source the functions library to use its version calculation
+        source ./scripts/_functions.sh
+        
         if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
           VERSION="${{ github.event.inputs.version }}"
         else
           # Extract version from tag (remove leading 'v' if present)
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
         fi
+        
+        # Use the cycod_version_calculate function from _functions.sh
+        cycod_version_calculate "$VERSION"
+        
+        # Export to GitHub environment
         echo "VERSION=$VERSION" >> $GITHUB_ENV
         echo "version=$VERSION" >> $GITHUB_OUTPUT
-        
-        # Calculate numeric version components for both projects
-        # Extract the major.minor.build parts from the version
-        MAJOR=$(echo $VERSION | sed -E 's/^([0-9]+).*/\1/')
-        MINOR=$(echo $VERSION | sed -E 's/^[0-9]+\.([0-9]+).*/\1/')
-        BUILD=$(echo $VERSION | sed -E 's/^[0-9]+\.[0-9]+\.([0-9]+).*/\1/')
-        
-        # Try to extract a YYYYMMDD date pattern from the version
-        DATE_PART=$(echo $VERSION | grep -oE '20[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])')
-        
-        if [ -n "$DATE_PART" ]; then
-          echo "Found date in version: $DATE_PART"
-          # Convert YYYYMMDD to day of year
-          # Extract year, month, day
-          YEAR=${DATE_PART:0:4}
-          MONTH=${DATE_PART:4:2}
-          DAY=${DATE_PART:6:2}
-          
-          # Use date command to convert to day of year
-          DAY_OF_YEAR=$(date -d "$YEAR-$MONTH-$DAY" +%j | sed 's/^0*//')
-          echo "Using date from version: $YEAR-$MONTH-$DAY (day of year: $DAY_OF_YEAR)"
-        else
-          echo "No date found in version, using today's date as fallback"
-          DAY_OF_YEAR=$(date '+%j' | sed 's/^0*//')
-        fi
-        
-        # Extract final decimal part if it exists (match the last .digit sequence)
-        FINAL_PART=$(echo $VERSION | grep -oE '\.[0-9]+$' | grep -oE '[0-9]+')
-        if [ -z "$FINAL_PART" ]; then
-          FINAL_PART=0
-        fi
-        
-        # Calculate revision: day_of_year * 100 + final_part
-        REVISION=$((DAY_OF_YEAR * 100 + FINAL_PART))
-        
-        # Safety check: ensure revision doesn't exceed maximum allowed value
-        if [ $REVISION -gt 65535 ]; then
-          echo "WARNING: Revision exceeds maximum allowed value (65535). Capping at 65535."
-          REVISION=65535
-        fi
-        
-        # Combine for a valid .NET version with 4 parts
-        NUMERIC_VERSION="$MAJOR.$MINOR.$BUILD.$REVISION"
-        echo "Using numeric version: $NUMERIC_VERSION for AssemblyVersion and FileVersion"
         echo "NUMERIC_VERSION=$NUMERIC_VERSION" >> $GITHUB_ENV
+        
+        # Display for logging
+        echo "Using version: $VERSION"
+        echo "Using numeric version: $NUMERIC_VERSION for AssemblyVersion and FileVersion"
     
-    - name: Update project versions
+    - name: Make scripts executable
+      run: chmod +x ./scripts/*.sh
+    
+    - name: Build all projects with correct version
       run: |
-        # Update all projects with the same version information
-        # Apply semantic version (can include pre-release tags)
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycod/cycod.csproj
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycodt/cycodt.csproj
-        sed -i "s/<Version>.*<\/Version>/<Version>${{ env.VERSION }}<\/Version>/" src/cycodmd/cycodmd.csproj
-        
-        # Apply informational version (can include pre-release tags)
-        sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycod/cycod.csproj
-        sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycodt/cycodt.csproj
-        sed -i "s/<InformationalVersion>.*<\/InformationalVersion>/<InformationalVersion>${{ env.VERSION }}<\/InformationalVersion>/" src/cycodmd/cycodmd.csproj
-        
-        # Apply numeric versions for assembly and file versions (must be numeric only)
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycod/cycod.csproj
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycodt/cycodt.csproj
-        sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>${{ env.NUMERIC_VERSION }}<\/AssemblyVersion>/" src/cycodmd/cycodmd.csproj
-        
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycod/cycod.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycodt/cycodt.csproj
-        sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>${{ env.NUMERIC_VERSION }}<\/FileVersion>/" src/cycodmd/cycodmd.csproj
-    
-    - name: Restore dependencies
-      run: dotnet restore
-    
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+        # Using the script approach - builds all projects with the specified version
+        ./scripts/build.sh ${{ env.VERSION }} Release
     
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
@@ -148,49 +96,67 @@ jobs:
         reporter: dotnet-trx
         fail-on-error: false
     
-    - name: Pack cycod
+    - name: Pack all tools
       run: |
-        # Publish for multiple platforms first
-        dotnet publish src/cycod/cycod.csproj -c Release -r win-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r linux-x64
-        dotnet publish src/cycod/cycod.csproj -c Release -r osx-x64
-        
-        # Then pack the NuGet package (will include all published runtimes)
-        dotnet pack src/cycod/cycod.csproj --configuration Release --no-build -o nuget-packages
-    
-    - name: Pack cycodt
-      run: |
-        # Publish for multiple platforms first
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r win-x64
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r linux-x64
-        dotnet publish src/cycodt/cycodt.csproj -c Release -r osx-x64
-        
-        # Then pack the NuGet package (will include all published runtimes)
-        dotnet pack src/cycodt/cycodt.csproj --configuration Release --no-build -o nuget-packages
-        
-    - name: Pack cycodmd
-      run: |
-        # Publish for multiple platforms first
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r win-x64
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r linux-x64
-        dotnet publish src/cycodmd/cycodmd.csproj -c Release -r osx-x64
-        
-        # Then pack the NuGet package (will include all published runtimes)
-        dotnet pack src/cycodmd/cycodmd.csproj --configuration Release --no-build -o nuget-packages
-    
-    - name: Generate package checksums
-      run: |
-        cd nuget-packages
-        for f in *.nupkg; do
-          sha256sum "$f" > "${f}.sha256"
-        done
-        cd ..
+        # Use the new script to handle all packing in one command
+        ./scripts/pack.sh ${{ env.VERSION }} nuget-packages Release
     
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
         name: cycod-cycodt-cycodmd-nuget-packages
         path: nuget-packages/*
+    
+    - name: Build self-contained executables
+      run: |
+        # Use the new script that doesn't modify project files
+        ./scripts/publish-self-contained.sh ${{ env.VERSION }} ./self-contained Release
+        
+    - name: Upload self-contained executables as artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: self-contained-executables
+        path: |
+          self-contained/*.zip
+          self-contained/*.sha256
+    
+    - name: Create Release
+      id: create_release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: ${{ env.VERSION }}
+        tag_name: ${{ github.ref_name }}
+        draft: false
+        prerelease: ${{ contains(env.VERSION, '-') }}
+        files: |
+          nuget-packages/*.nupkg
+          nuget-packages/*.sha256
+          self-contained/*.zip
+          self-contained/*.sha256
+        body: |
+          # CycoDev Tools ${{ env.VERSION }}
+          
+          ## Packages
+          
+          ### NuGet packages (requires .NET 9 SDK)
+          - Install with: `dotnet tool install -g [TOOL_NAME] --version ${{ env.VERSION }}`
+          
+          ### Self-contained executables (no .NET SDK required)
+          - Individual tool packages:
+            - cycod-win-x64-${{ env.VERSION }}.zip
+            - cycod-linux-x64-${{ env.VERSION }}.zip
+            - cycod-osx-x64-${{ env.VERSION }}.zip
+            - cycodt-win-x64-${{ env.VERSION }}.zip
+            - cycodt-linux-x64-${{ env.VERSION }}.zip
+            - cycodt-osx-x64-${{ env.VERSION }}.zip
+            - cycodmd-win-x64-${{ env.VERSION }}.zip
+            - cycodmd-linux-x64-${{ env.VERSION }}.zip
+            - cycodmd-osx-x64-${{ env.VERSION }}.zip
+
+          - Platform packages (all tools):
+            - cycodev-tools-win-x64-${{ env.VERSION }}.zip
+            - cycodev-tools-linux-x64-${{ env.VERSION }}.zip
+            - cycodev-tools-osx-x64-${{ env.VERSION }}.zip
     
     - name: Publish to NuGet
       if: ${{ env.NUGET_API_KEY != '' }}
