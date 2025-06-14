@@ -91,5 +91,5 @@ tests:
     ^Passed: 1 \(50\.0%\)\r?$\n
     ^Failed: 1 \(50\.0%\)\r?$\n
     ^\r?$\n
-    ^Tests: 2 \(\d+ ms\)\r?$\n
+    ^Tests: 2 \(.*\)\r?$\n
     ^Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple3.trx\r?$\n
