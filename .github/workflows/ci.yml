@@ -110,14 +110,3 @@ jobs:
           src/cycodmd/bin/Release/net9.0/win-x64/publish/
           src/cycodmd/bin/Release/net9.0/linux-x64/publish/
           src/cycodmd/bin/Release/net9.0/osx-x64/publish/
-
-    # Version already calculated above
-        
-    - name: Build self-contained executables
-      run: ./scripts/publish-self-contained.sh ${{ env.CI_VERSION }} ./self-contained Release
-        
-    - name: Upload self-contained executables
-      uses: actions/upload-artifact@v4
-      with:
-        name: self-contained-executables
-        path: self-contained/*
