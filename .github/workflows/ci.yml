@@ -56,17 +56,6 @@ jobs:
     - name: Build all projects
       run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
     
-    - name: Verify multi-platform publishing
-      run: |
-        # Quick verification that we can publish for all platforms
-        # We'll do a more comprehensive build with self-contained later
-        for TOOL in cycod cycodt cycodmd; do
-          for RID in win-x64 linux-x64 osx-x64; do
-            echo "Verifying $TOOL for $RID..."
-            dotnet publish src/$TOOL/$TOOL.csproj -c Release -r $RID --no-build
-          done
-        done
-    
     - name: Test
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
