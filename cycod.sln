@@ -1,11 +1,10 @@
-﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod", "src\cycod\cycod.csproj", "{DB044106-F4A8-4302-5900-40BB88156AE7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "tests\cycod\Tests.csproj", "{CC47CF8A-A12B-4D4E-8500-2011ED6B566B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod-tests", "tests\cycod\cycod-tests.csproj", "{CC47CF8A-A12B-4D4E-8500-2011ED6B566B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycodt", "src\cycodt\cycodt.csproj", "{7152EDEF-2E93-4F54-94B0-892FD9D1218B}"
 EndProject
@@ -24,6 +23,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod-mcp-mxlookup", "src\mcp\mxlookup\cycod-mcp-mxlookup.csproj", "{7DC30BDB-675F-4228-8494-3BCCFF91E879}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod-mcp-geolocation", "src\mcp\geolocation\cycod-mcp-geolocation.csproj", "{5283A75C-3392-4C80-B4DE-A8C62779ACFC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "cycod-bench", "src\cycod-bench\cycod-bench.csproj", "{F9152AD5-B7A9-4BE4-9124-A26B741E336A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycod-bench-tests", "tests\cycod-bench\cycod-bench-tests.csproj", "{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{88F53BA7-00B0-44AE-A682-B69705059519}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -71,16 +78,27 @@ Global
 		{5283A75C-3392-4C80-B4DE-A8C62779ACFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5283A75C-3392-4C80-B4DE-A8C62779ACFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5283A75C-3392-4C80-B4DE-A8C62779ACFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9152AD5-B7A9-4BE4-9124-A26B741E336A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9152AD5-B7A9-4BE4-9124-A26B741E336A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9152AD5-B7A9-4BE4-9124-A26B741E336A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9152AD5-B7A9-4BE4-9124-A26B741E336A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{CC47CF8A-A12B-4D4E-8500-2011ED6B566B} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{E3E4452D-A9E3-4805-B6B9-CE6E851D1DD9} = {691974F9-483A-4232-9746-F777D75C8958}
 		{AD1A2448-25D4-4082-1DD2-82D1DACBCC69} = {691974F9-483A-4232-9746-F777D75C8958}
 		{C796B41A-7601-2016-C85F-3D6024B9046F} = {691974F9-483A-4232-9746-F777D75C8958}
 		{7DC30BDB-675F-4228-8494-3BCCFF91E879} = {691974F9-483A-4232-9746-F777D75C8958}
 		{5283A75C-3392-4C80-B4DE-A8C62779ACFC} = {691974F9-483A-4232-9746-F777D75C8958}
+		{F9152AD5-B7A9-4BE4-9124-A26B741E336A} = {88F53BA7-00B0-44AE-A682-B69705059519}
+		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4317ED2-53B7-4A13-8AC7-3FD18B517E96}
