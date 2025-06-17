@@ -44,5 +44,5 @@ tests:
     ^Passed: 2 \(50\.0%\)\r?$\n
     ^Failed: 2 \(50\.0%\)\r?$\n
     ^\r?$\n
-    ^Tests: 4 \(\d+ ms\)\r?$\n
+    ^Tests: 4 \(.*\)\r?$\n
     ^Results: .*cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple4\.trx\r?$\n

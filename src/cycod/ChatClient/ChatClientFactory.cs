@@ -1,5 +1,9 @@
 using Anthropic.SDK;
 using Anthropic.SDK.Messaging;
+using Amazon;
+using Amazon.BedrockRuntime;
+using GeminiDotnet;
+using GeminiDotnet.Extensions.AI;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
@@ -52,6 +56,44 @@ public static class ChatClientFactory
 
         ConsoleHelpers.WriteDebugLine("Using OpenAI API key for authentication");
         return chatClient.AsIChatClient();
+    }
+
+    public static IChatClient? CreateGeminiChatClient(out ChatOptions? options)
+    {
+        var apiKey = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY") ?? throw new EnvVarSettingException("GOOGLE_GEMINI_API_KEY is not set.");
+        var modelId = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_MODEL_ID") ?? "gemini-2.5-flash-preview-04-17";
+
+        var clientOptions = new GeminiClientOptions { ApiKey = apiKey, ApiVersion = GeminiApiVersions.V1Beta };
+        var client = new GeminiChatClient(clientOptions);
+        options = new ChatOptions
+        {
+            ModelId = modelId
+        };
+        
+        ConsoleHelpers.WriteDebugLine("Using Google Gemini API credentials for authentication");
+        return client;
+    }
+    
+    public static IChatClient? CreateAWSBedrockChatClient(out ChatOptions? options)
+    {
+        var accessKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_ACCESS_KEY is not set.");
+        var secretKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_SECRET_KEY is not set.");
+        var region = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_REGION") ?? "us-east-1";
+        var modelId = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_MODEL_ID") ?? "anthropic.claude-3-7-sonnet-20250219-v1:0";
+
+        var regionEndpoint = RegionEndpoint.GetBySystemName(region);
+        var runtime = new AmazonBedrockRuntimeClient(accessKey, secretKey, regionEndpoint);
+        var chatClient = runtime.AsIChatClient();
+        
+        options = new ChatOptions
+        {
+            ModelId = modelId,
+            ToolMode = ChatToolMode.Auto,
+            MaxOutputTokens = 4000
+        };
+
+        ConsoleHelpers.WriteDebugLine("Using AWS Bedrock API credentials for authentication");
+        return chatClient;
     }
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
@@ -114,6 +156,17 @@ public static class ChatClientFactory
             {
                 return CreateAnthropicChatClientWithApiKey(out options);
             }
+            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") && 
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) &&
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
+            {
+                return CreateAWSBedrockChatClient(out options);
+            }
+            else if ((preferredProvider == "google" || preferredProvider == "gemini" || preferredProvider == "google-gemini") && 
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
+            {
+                return CreateGeminiChatClient(out options);
+            }
             else if ((preferredProvider == "azure-openai" || preferredProvider == "azure") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
             {
                 return CreateAzureOpenAIChatClientWithApiKey();
@@ -144,6 +197,17 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY")))
         {
             return CreateAnthropicChatClientWithApiKey(out options);
+        }
+
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
+        {
+            return CreateGeminiChatClient(out options);
+        }
+        
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) && 
+            !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
+        {
+            return CreateAWSBedrockChatClient(out options);
         }
 
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
@@ -177,23 +241,33 @@ public static class ChatClientFactory
                     To use Anthropic, please set:
                     - ANTHROPIC_API_KEY
                     - ANTHROPIC_MODEL_NAME (optional)
-
+                    
+                    To use AWS Bedrock, please set:
+                    - AWS_BEDROCK_ACCESS_KEY
+                    - AWS_BEDROCK_SECRET_KEY
+                    - AWS_BEDROCK_REGION (optional, default: us-east-1)
+                    - AWS_BEDROCK_MODEL_ID (optional, default: anthropic.claude-3-7-sonnet-20250219-v1:0)
+                    
                     To use Azure OpenAI, please set:
                     - AZURE_OPENAI_API_KEY
                     - AZURE_OPENAI_ENDPOINT
                     - AZURE_OPENAI_CHAT_DEPLOYMENT
-
-                    To use OpenAI, please set:
-                    - OPENAI_API_KEY
-                    - OPENAI_ENDPOINT (optional)
-                    - OPENAI_CHAT_MODEL_NAME (optional)
 
                     To use GitHub Copilot with token authentication, please set:
                     - GITHUB_TOKEN
                     - COPILOT_API_ENDPOINT (optional)
                     - COPILOT_INTEGRATION_ID (optional)
                     - COPILOT_EDITOR_VERSION (optional)
-                    - COPILOT_MODEL_NAME (optional)"
+                    - COPILOT_MODEL_NAME (optional)
+
+                    To use Google Gemini, please set:
+                    - GOOGLE_GEMINI_API_KEY
+                    - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
+
+                    To use OpenAI, please set:
+                    - OPENAI_API_KEY
+                    - OPENAI_ENDPOINT (optional)
+                    - OPENAI_CHAT_MODEL_NAME (optional)"
                 .Split(new[] { '\n' })
                 .Select(line => line.Trim()));
 

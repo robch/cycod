@@ -350,7 +350,7 @@ public class CommandLineOptions
         {
             this.Quiet = true;
         }
-        else if (arg == "--save-alias" || arg == "--save-local-alias")
+        else if (arg == "--save-local-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-alias");
@@ -358,7 +358,7 @@ public class CommandLineOptions
             this.SaveAliasScope = ConfigFileScope.Local;
             i += max1Arg.Count();
         }
-        else if (arg == "--save-user-alias")
+        else if (arg == "--save-alias" || arg == "--save-user-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-user-alias");
