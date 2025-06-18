@@ -142,7 +142,7 @@ public class ConfigurationTests
         }";
         
         string configPath = Path.GetTempFileName();
-        File.WriteAllText(configPath, configJson);
+        FileHelpers.WriteAllText(configPath, configJson);
         
         var args = Array.Empty<string>();
         var config = new CycodBench.Configuration.Configuration(_loggerMock.Object, args, configPath, null);

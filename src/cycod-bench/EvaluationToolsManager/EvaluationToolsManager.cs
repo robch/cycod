@@ -125,7 +125,7 @@ public class EvaluationToolsManager : IEvaluationToolsManager
         var predictions = new[] { prediction };
         string json = JsonConvert.SerializeObject(predictions, Formatting.Indented);
         Directory.CreateDirectory(outputDirectory);
-        await File.WriteAllTextAsync(predictionsFilePath, json);
+        FileHelpers.WriteAllText(predictionsFilePath, json);
         
         _logger.Debug($"Created predictions file at {predictionsFilePath}");
         return predictionsFilePath;

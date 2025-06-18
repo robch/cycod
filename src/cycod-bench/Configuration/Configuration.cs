@@ -214,16 +214,39 @@ public class Configuration : IConfiguration
     {
         return new Dictionary<string, string?>
         {
+            // Docker configuration
             ["Docker:Image"] = "swebench/base:latest",
             ["Docker:WorkDir"] = "/workspace",
+            ["Docker:Enabled"] = "true",
+            
+            // Sharding configuration
             ["ShardCount"] = "1",
             ["ShardId"] = "0", 
+            
+            // Execution configuration
             ["CandidateCount"] = "8",
             ["Parallelism"] = "4",
+            
+            // Dataset configuration
             ["Dataset:Path"] = "swebench_dataset",
+            
+            // Agent configuration
             ["Agent:ExecutablePath"] = "cycod",
             ["Agent:Timeout"] = "3600", // 1 hour in seconds
-            ["Evaluation:Timeout"] = "600", // 10 minutes in seconds
+            
+            // Workspace configuration
+            ["Workspace:RootDirectory"] = Path.Combine(Directory.GetCurrentDirectory(), "workspaces"),
+            
+            // Evaluation configuration
+            ["Evaluation:BuildTimeout"] = "600", // 10 minutes in seconds
+            ["Evaluation:TestTimeout"] = "600", // 10 minutes in seconds
+            ["Evaluation:DefaultBuildCommand"] = "make",
+            ["Evaluation:DefaultTestCommand"] = "make test",
+            
+            // Ensemble configuration
+            ["Ensemble:UseAgent"] = "true",
+            
+            // Logging configuration
             ["Logging:Level"] = "Information",
             ["Logging:FilePath"] = "logs/cycodbench.log"
         };

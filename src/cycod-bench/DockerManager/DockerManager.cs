@@ -31,8 +31,7 @@ public class DockerManager : IDockerManager
     /// <inheritdoc/>
     public string GetProblemImageName(string problemId)
     {
-        // Following the same pattern as Augment Code's implementation
-        // Convert double underscores to _1776_ as per their convention
+        // Convert double underscores to _1776_ as per swebench convention
         string issueKey = problemId.Replace("__", "_1776_");
         return $"swebench/sweb.eval.x86_64.{issueKey}:latest";
     }
@@ -99,22 +98,23 @@ public class DockerManager : IDockerManager
                            "-d " + // Detached mode
                            "--volume /testbed " + 
                            $"{imageName} " +
-                           "bash -c 'git config --global user.email a && git config --global user.name a && " +
+                           "bash -c \"git config --global user.email a && git config --global user.name a && " +
                            "git config --global --add safe.directory /testbed && " + 
-                           "git commit --allow-empty -am cycodbench && sleep 7200'";
+                           "git commit --allow-empty -am cycodbench && sleep 7200\"";
         
         await _dockerSemaphore.WaitAsync();
         try
         {
             string output = await RunDockerCommandAsync(runCommand);
             string containerId = output.Trim();
-            _logger.Info($"Started container with ID: {containerId}");
+            _logger.Info($"Created container: {containerId}");
             
-            // Wait a moment for the container to fully start
-            await Task.Delay(5000);
-            
+            await RunDockerCommandAsync($"start {containerId}");
+            _logger.Info($"Started container: {containerId}");
+                
             // Create symlink from workspace to container volume
             string volumePath = await GetVolumePathAsync(containerId, "/testbed");
+            _logger.Debug($"Volume path for container {containerId}: {volumePath}");
             
             // Make sure the workspace directory exists
             Directory.CreateDirectory(workspacePath);
@@ -129,7 +129,7 @@ public class DockerManager : IDockerManager
             // On Windows, we can't create symlinks easily, so we'll store the path
             if (Environment.OSVersion.Platform == PlatformID.Win32NT)
             {
-                File.WriteAllText(problemWorkspacePath, volumePath);
+                FileHelpers.WriteAllText(problemWorkspacePath, volumePath);
             }
             else
             {
@@ -200,12 +200,148 @@ public class DockerManager : IDockerManager
         string execCommand = $"exec {containerId} {command}";
         return await RunDockerCommandAsync(execCommand, timeoutMs);
     }
+    
+    /// <inheritdoc/>
+    public async Task<CommandResult> ExecuteCommandInContainerAsync(
+        string containerId, 
+        string command, 
+        int timeoutMs = 30000, 
+        CancellationToken cancellationToken = default)
+    {
+        _logger.Debug($"Executing command in container {containerId} with detailed result: {command}");
+        
+        // Create process start info
+        var processStartInfo = new ProcessStartInfo
+        {
+            FileName = "docker",
+            Arguments = $"exec {containerId} {command}",
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        _logger.Debug($"Docker command: {processStartInfo.FileName} {processStartInfo.Arguments}");
+        
+        var result = new CommandResult();
+        var stopwatch = Stopwatch.StartNew();
+        
+        try
+        {
+            using var process = new Process { StartInfo = processStartInfo };
+            
+            var outputBuilder = new StringBuilder();
+            var errorBuilder = new StringBuilder();
+            
+            process.OutputDataReceived += (sender, e) => 
+            {
+                if (e.Data != null)
+                {
+                    outputBuilder.AppendLine(e.Data);
+                }
+            };
+            
+            process.ErrorDataReceived += (sender, e) => 
+            {
+                if (e.Data != null)
+                {
+                    errorBuilder.AppendLine(e.Data);
+                }
+            };
+            
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            
+            // Create a linked cancellation token with the timeout
+            using var timeoutCts = new CancellationTokenSource(timeoutMs);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(timeoutCts.Token, cancellationToken);
+            
+            try
+            {
+                await process.WaitForExitAsync(linkedCts.Token);
+                result.ExitCode = process.ExitCode;
+            }
+            catch (OperationCanceledException)
+            {
+                // Check if it was a timeout or cancellation
+                if (timeoutCts.Token.IsCancellationRequested)
+                {
+                    result.TimedOut = true;
+                    _logger.Warning($"Command timed out after {timeoutMs}ms: {command}");
+                    
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill(entireProcessTree: true);
+                        }
+                    }
+                    catch
+                    {
+                        // Best effort to kill the process
+                    }
+                }
+                else
+                {
+                    // It was an external cancellation
+                    _logger.Info($"Command execution was cancelled: {command}");
+                    
+                    try
+                    {
+                        if (!process.HasExited)
+                        {
+                            process.Kill(entireProcessTree: true);
+                        }
+                    }
+                    catch
+                    {
+                        // Best effort to kill the process
+                    }
+                }
+            }
+            
+            result.Output = outputBuilder.ToString();
+            result.Error = errorBuilder.ToString();
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, $"Error executing command in container: {ex.Message}");
+            result.ExitCode = -1;
+            result.Error = ex.ToString();
+        }
+        finally
+        {
+            stopwatch.Stop();
+            result.ExecutionTimeMs = stopwatch.ElapsedMilliseconds;
+        }
+
+        _logger.Debug($"Docker command exited with code {result.ExitCode}: {command}");
+        _logger.Debug($"Docker command output: {result.Output}");
+        _logger.Debug($"Docker command error: {result.Error}");
+        _logger.Debug($"Docker command execution time: {result.ExecutionTimeMs}ms");
+        _logger.Debug($"Docker command timed out: {result.TimedOut}");
+        
+        return result;
+    }
 
     /// <inheritdoc/>
     public async Task CopyToContainerAsync(string containerId, string sourcePath, string destinationPath)
     {
         _logger.Debug($"Copying to container {containerId}: {sourcePath} -> {destinationPath}");
         await RunDockerCommandAsync($"cp \"{sourcePath}\" {containerId}:\"{destinationPath}\"");
+    }
+    
+    /// <inheritdoc/>
+    public async Task CopyFileToContainerAsync(string containerId, string sourcePath, string destinationPath, CancellationToken cancellationToken = default)
+    {
+        _logger.Debug($"Copying file to container {containerId}: {sourcePath} -> {destinationPath}");
+        
+        // Use the existing method but wrap it in a cancellation token check
+        using (var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+        {
+            await CopyToContainerAsync(containerId, sourcePath, destinationPath);
+        }
     }
 
     /// <inheritdoc/>
@@ -256,6 +392,8 @@ public class DockerManager : IDockerManager
             }
         };
 
+        _logger.Debug($"Running Docker command: docker {arguments}");
+
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();
 
@@ -290,6 +428,7 @@ public class DockerManager : IDockerManager
                 throw new Exception($"Docker command failed with exit code {process.ExitCode}: {errorOutput}");
             }
 
+            _logger.Debug($"Docker command succeeded: {outputBuilder.ToString()}");
             return outputBuilder.ToString();
         }
         else

@@ -43,7 +43,7 @@ public static class ModelSerializationExtensions
     /// <param name="filePath">The path to the file to write to.</param>
     public static void ToJsonFile<T>(this T obj, string filePath) where T : class
     {
-        File.WriteAllText(filePath, obj.ToJson());
+        FileHelpers.WriteAllText(filePath, obj.ToJson());
     }
 
     /// <summary>

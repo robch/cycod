@@ -30,6 +30,16 @@ public interface IDockerManager
     /// <param name="timeoutMs">Timeout in milliseconds.</param>
     /// <returns>The command output.</returns>
     Task<string> ExecuteCommandAsync(string containerId, string command, int timeoutMs = 30000);
+    
+    /// <summary>
+    /// Executes a command in the specified Docker container and returns detailed result.
+    /// </summary>
+    /// <param name="containerId">The ID or name of the container.</param>
+    /// <param name="command">The command to execute.</param>
+    /// <param name="timeoutMs">Timeout in milliseconds.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    /// <returns>A result object containing exit code, output, and error information.</returns>
+    Task<CommandResult> ExecuteCommandInContainerAsync(string containerId, string command, int timeoutMs = 30000, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Copies a file or directory into the Docker container.
@@ -38,6 +48,15 @@ public interface IDockerManager
     /// <param name="sourcePath">The source path on the host system.</param>
     /// <param name="destinationPath">The destination path in the container.</param>
     Task CopyToContainerAsync(string containerId, string sourcePath, string destinationPath);
+    
+    /// <summary>
+    /// Copies a file into the Docker container with cancellation support.
+    /// </summary>
+    /// <param name="containerId">The ID or name of the container.</param>
+    /// <param name="sourcePath">The source path on the host system.</param>
+    /// <param name="destinationPath">The destination path in the container.</param>
+    /// <param name="cancellationToken">Optional cancellation token.</param>
+    Task CopyFileToContainerAsync(string containerId, string sourcePath, string destinationPath, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Copies a file or directory from the Docker container to the host.

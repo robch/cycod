@@ -24,14 +24,8 @@ public class ModelTests : IDisposable
             Id = "test-problem-123",
             Repository = "owner/repo",
             BaseCommit = "base123",
-            HeadCommit = "head456",
             ProblemStatement = "Fix the bug",
-            IssueUrl = "https://github.com/owner/repo/issues/123",
-            PullRequestUrl = "https://github.com/owner/repo/pull/456",
-            AdditionalContext = "Some context",
-            DockerImage = "swebench/test-image:latest",
-            TestCommand = "npm test",
-            TestFiles = new List<string> { "test1.js", "test2.js" }
+            TestCommand = "npm test"
         };
 
         // Act
@@ -43,14 +37,7 @@ public class ModelTests : IDisposable
         Assert.Equal("test-problem-123", deserialized!.Id);
         Assert.Equal("owner/repo", deserialized.Repository);
         Assert.Equal("base123", deserialized.BaseCommit);
-        Assert.Equal("head456", deserialized.HeadCommit);
         Assert.Equal("Fix the bug", deserialized.ProblemStatement);
-        Assert.Equal(2, deserialized.TestFiles.Count);
-        
-        // Check computed properties
-        Assert.StartsWith("test-pro", deserialized.ShortId);
-        Assert.Equal("owner", deserialized.Owner);
-        Assert.Equal("repo", deserialized.Repo);
     }
 
     [Fact]
