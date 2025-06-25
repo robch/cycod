@@ -1,0 +1,51 @@
+CYCODBENCH PROBLEMS SOLVE
+
+  Generate solutions for one or more problems.
+
+USAGE: cycodbench problems solve [dataset-name-or-file-path] [problem-id] [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-path   Dataset name ('verified', 'full', 'lite') or file path (default: 'verified')
+  problem-id                  ID of the problem to solve (optional, default: all problems in dataset)
+
+OPTIONS
+
+  SINGLE PROBLEM OPTIONS
+  --container <id>            Use specific container instead of implicitly creating/using/destroying
+
+  MULTIPLE PROBLEMS OPTIONS
+  --max <n>                   Maximum number of problems to solve (default: all in dataset)
+  --parallel <count>          Number of problems to process in parallel
+
+  CONTAINER OPTIONS
+  --docker                    Use Docker containers (default)
+  --aca                       Use Azure Container Apps for running the agent
+  --aws                       Use Amazon Web Services for running the agent
+
+  OTHER OPTIONS
+  --timeout <seconds>         Timeout for agent execution (default: 3600)
+  --output <path>             Path to solutions file (default: 'solutions.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Solve a single problem
+    cycodbench problems solve verified astropy__astropy-12907 --output astropy-solution.json
+
+  EXAMPLE 2: Solve problems from a custom dataset with parallelism
+    cycodbench problems solve tensorflow-problems.json --parallel 4 --timeout 7200
+
+  EXAMPLE 3: Solve problems using an existing container
+    cycodbench problems solve verified astropy__astropy-12907 --container container-abc123
+
+NOTES
+
+  - The agent will attempt to generate a solution for each problem in the dataset.
+  - For multiple problems, solutions are generated in parallel if --parallel is specified.
+  - Solutions are saved to the specified output file in JSON format.
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help solutions eval
+  cycodbench help container init

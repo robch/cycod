@@ -1,3 +1,4 @@
+using System;
 using CycodBench.Models;
 
 namespace CycodBench.AgentExecutor;
@@ -28,10 +29,12 @@ public interface IAgentExecutor
         CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Extracts a diff from the agent's output.
+    /// [Deprecated] This method is kept for compatibility but no longer extracts diffs from agent output.
+    /// Diffs are now generated using Git CLI.
     /// </summary>
     /// <param name="agentOutput">The raw output from the agent.</param>
-    /// <returns>The extracted diff or an empty string if no diff is found.</returns>
+    /// <returns>An empty string as this method is deprecated.</returns>
+    [Obsolete("This method is deprecated. Diffs are now generated using Git CLI.")]
     string ExtractDiffFromOutput(string agentOutput);
 
     /// <summary>

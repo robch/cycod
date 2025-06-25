@@ -2,19 +2,22 @@ using System.Diagnostics;
 using System.Text;
 using CycodBench.Configuration;
 using CycodBench.DockerManager;
+using CycodBench.EvaluationToolsManager;
 using CycodBench.Logging;
 using CycodBench.Models;
+using Newtonsoft.Json;
 
 namespace CycodBench.EvaluationService;
 
 /// <summary>
-/// Service for evaluating candidate solutions against test cases.
+/// Service for evaluating candidate solutions using SWEBench evaluation tools.
 /// </summary>
 public class EvaluationService : IEvaluationService
 {
     private readonly ILogger _logger;
     private readonly IConfiguration _configuration;
     private readonly IDockerManager _dockerManager;
+    private readonly IEvaluationToolsManager _evaluationToolsManager;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="EvaluationService"/> class.
@@ -22,11 +25,17 @@ public class EvaluationService : IEvaluationService
     /// <param name="logger">The logger.</param>
     /// <param name="configuration">The configuration.</param>
     /// <param name="dockerManager">The Docker manager.</param>
-    public EvaluationService(ILogger logger, IConfiguration configuration, IDockerManager dockerManager)
+    /// <param name="evaluationToolsManager">The evaluation tools manager.</param>
+    public EvaluationService(
+        ILogger logger, 
+        IConfiguration configuration, 
+        IDockerManager dockerManager,
+        IEvaluationToolsManager evaluationToolsManager)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _dockerManager = dockerManager ?? throw new ArgumentNullException(nameof(dockerManager));
+        _evaluationToolsManager = evaluationToolsManager ?? throw new ArgumentNullException(nameof(evaluationToolsManager));
     }
 
     /// <inheritdoc />
@@ -63,48 +72,36 @@ public class EvaluationService : IEvaluationService
             }
             
             _logger.Debug("Diff applied successfully");
-            
-            // Run the build command
-            _logger.Debug("Running build command...");
-            (evaluationResult.BuildExitCode, evaluationResult.BuildOutput) = await RunBuildCommandAsync(
-                problem,
-                candidateSolution.WorkspacePath,
-                containerId,
-                _configuration.BuildTimeoutSeconds,
-                cancellationToken);
-            
-            if (evaluationResult.BuildExitCode != 0)
+
+            // Make sure SWEBench evaluation tools are set up
+            if (!await _evaluationToolsManager.AreToolsSetupAsync())
             {
-                _logger.Warning($"Build command failed with exit code {evaluationResult.BuildExitCode}");
-                evaluationResult.ErrorMessage = $"Build command failed with exit code {evaluationResult.BuildExitCode}";
-                evaluationResult.Passed = false;
-            }
-            else
-            {
-                _logger.Debug("Build completed successfully");
-                
-                // Run the test command
-                _logger.Debug("Running test command...");
-                (evaluationResult.TestExitCode, evaluationResult.TestOutput) = await RunTestCommandAsync(
-                    problem,
-                    candidateSolution.WorkspacePath,
-                    containerId,
-                    _configuration.TestTimeoutSeconds,
-                    cancellationToken);
-                
-                // The solution passes if the test exit code is 0
-                evaluationResult.Passed = evaluationResult.TestExitCode == 0;
-                
-                if (evaluationResult.Passed)
+                _logger.Info("Setting up SWEBench evaluation tools...");
+                bool setupSuccess = await _evaluationToolsManager.SetupToolsAsync();
+                if (!setupSuccess)
                 {
-                    _logger.Info("Solution passed the test!");
-                }
-                else
-                {
-                    _logger.Warning($"Test command failed with exit code {evaluationResult.TestExitCode}");
-                    evaluationResult.ErrorMessage = $"Test command failed with exit code {evaluationResult.TestExitCode}";
+                    _logger.Error("Failed to set up SWEBench evaluation tools");
+                    evaluationResult.ErrorMessage = "Failed to set up SWEBench evaluation tools";
+                    evaluationResult.Passed = false;
+                    return evaluationResult;
                 }
             }
+            
+            // Create predictions file for SWEBench evaluator
+            string outputDirectory = Path.Combine(candidateSolution.WorkspacePath, "evaluation");
+            string predictionsFile = await CreatePredictionsFileAsync(problem, candidateSolution, outputDirectory);
+            
+            // Run SWEBench evaluation
+            _logger.Debug("Running SWEBench evaluation...");
+            var swebenchResult = await _evaluationToolsManager.EvaluateAsync(problem, candidateSolution, outputDirectory);
+            
+            // Update evaluation result from SWEBench evaluation
+            evaluationResult.Passed = swebenchResult.Passed;
+            evaluationResult.BuildExitCode = swebenchResult.BuildExitCode;
+            evaluationResult.TestExitCode = 0; // Not used with SWEBench evaluation
+            evaluationResult.BuildOutput = swebenchResult.BuildOutput;
+            evaluationResult.TestOutput = swebenchResult.TestOutput;
+            evaluationResult.ErrorMessage = swebenchResult.ErrorMessage;
             
             // Stop timer
             stopwatch.Stop();
@@ -114,7 +111,7 @@ public class EvaluationService : IEvaluationService
             
             // Save evaluation results to a file
             string evaluationResultsPath = Path.Combine(candidateSolution.WorkspacePath, "evaluation_results.json");
-            FileHelpers.WriteAllText(evaluationResultsPath, Newtonsoft.Json.JsonConvert.SerializeObject(evaluationResult, Newtonsoft.Json.Formatting.Indented));
+            FileHelpers.WriteAllText(evaluationResultsPath, JsonConvert.SerializeObject(evaluationResult, Formatting.Indented));
             
             return evaluationResult;
         }
@@ -156,7 +153,7 @@ public class EvaluationService : IEvaluationService
                 // Execute in Docker container
                 var result = await _dockerManager.ExecuteCommandInContainerAsync(
                     containerId,
-                    $"cd {workspacePath} && git apply --ignore-whitespace --reject {diffPath} || true",
+                    $"bash -c \"cd {workspacePath} && git apply --ignore-whitespace --reject {diffPath} || true\"",
                     timeoutMs: 60000,
                     cancellationToken);
                 
@@ -228,155 +225,31 @@ public class EvaluationService : IEvaluationService
     }
 
     /// <inheritdoc />
-    public async Task<(int ExitCode, string Output)> RunBuildCommandAsync(
+    public async Task<string> CreatePredictionsFileAsync(
         SwebenchProblem problem,
-        string workspacePath,
-        string containerId,
-        int? timeoutSeconds = null,
-        CancellationToken cancellationToken = default)
+        CandidateSolution candidateSolution,
+        string outputDirectory)
     {
-        // Use default build command if not specified by the problem
-        string buildCommand = _configuration.DefaultBuildCommand;
-        int timeout = timeoutSeconds ?? _configuration.BuildTimeoutSeconds;
+        // Create the output directory if it doesn't exist
+        Directory.CreateDirectory(outputDirectory);
         
-        _logger.Debug($"Running build command: {buildCommand}");
+        string predictionsFilePath = Path.Combine(outputDirectory, "predictions.json");
         
-        if (_configuration.UseContainer)
+        // Create the predictions object in SWEBench format
+        var prediction = new
         {
-            // Execute in Docker container
-            var result = await _dockerManager.ExecuteCommandInContainerAsync(
-                containerId,
-                $"cd {workspacePath} && {buildCommand}",
-                timeoutMs: timeout * 1000,
-                cancellationToken);
-            
-            return (result.ExitCode, result.Output);
-        }
-        else
-        {
-            // Execute locally
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{buildCommand}\"",
-                WorkingDirectory = workspacePath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            
-            // Execute the process
-            var process = Process.Start(processStartInfo);
-            if (process == null)
-            {
-                return (1, "Failed to start build process");
-            }
-            
-            // Read output
-            var output = new StringBuilder();
-            string? line;
-            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
-            {
-                output.AppendLine(line);
-            }
-            
-            while ((line = await process.StandardError.ReadLineAsync()) != null)
-            {
-                output.AppendLine(line);
-            }
-            
-            // Wait for process to complete with timeout
-            bool completed = await Task.WhenAny(
-                process.WaitForExitAsync(cancellationToken),
-                Task.Delay(timeout * 1000, cancellationToken)
-            ) == Task.CompletedTask;
-            
-            if (!completed)
-            {
-                process.Kill();
-                return (1, $"Build command timed out after {timeout} seconds");
-            }
-            
-            return (process.ExitCode, output.ToString());
-        }
-    }
-
-    /// <inheritdoc />
-    public async Task<(int ExitCode, string Output)> RunTestCommandAsync(
-        SwebenchProblem problem,
-        string workspacePath,
-        string containerId,
-        int? timeoutSeconds = null,
-        CancellationToken cancellationToken = default)
-    {
-        // Use the test command specified by the problem, or fall back to default
-        string testCommand = !string.IsNullOrEmpty(problem.TestCommand) 
-            ? problem.TestCommand 
-            : _configuration.DefaultTestCommand;
+            instance_id = problem.Id,
+            commit_hash = problem.BaseCommit,
+            repo_path = problem.Repository,
+            diff = candidateSolution.Diff
+        };
         
-        int timeout = timeoutSeconds ?? _configuration.TestTimeoutSeconds;
+        // Write the prediction to a file
+        var predictions = new[] { prediction };
+        string json = JsonConvert.SerializeObject(predictions, Formatting.Indented);
+        FileHelpers.WriteAllText(predictionsFilePath, json);
         
-        _logger.Debug($"Running test command: {testCommand}");
-        
-        if (_configuration.UseContainer)
-        {
-            // Execute in Docker container
-            var result = await _dockerManager.ExecuteCommandInContainerAsync(
-                containerId,
-                $"cd {workspacePath} && {testCommand}",
-                timeoutMs: timeout * 1000,
-                cancellationToken);
-            
-            return (result.ExitCode, result.Output);
-        }
-        else
-        {
-            // Execute locally
-            var processStartInfo = new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{testCommand}\"",
-                WorkingDirectory = workspacePath,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
-            
-            // Execute the process
-            var process = Process.Start(processStartInfo);
-            if (process == null)
-            {
-                return (1, "Failed to start test process");
-            }
-            
-            // Read output
-            var output = new StringBuilder();
-            string? line;
-            while ((line = await process.StandardOutput.ReadLineAsync()) != null)
-            {
-                output.AppendLine(line);
-            }
-            
-            while ((line = await process.StandardError.ReadLineAsync()) != null)
-            {
-                output.AppendLine(line);
-            }
-            
-            // Wait for process to complete with timeout
-            bool completed = await Task.WhenAny(
-                process.WaitForExitAsync(cancellationToken),
-                Task.Delay(timeout * 1000, cancellationToken)
-            ) == Task.CompletedTask;
-            
-            if (!completed)
-            {
-                process.Kill();
-                return (1, $"Test command timed out after {timeout} seconds");
-            }
-            
-            return (process.ExitCode, output.ToString());
-        }
+        _logger.Debug($"Created predictions file at {predictionsFilePath}");
+        return predictionsFilePath;
     }
 }

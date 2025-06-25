@@ -1,0 +1,41 @@
+CYCODBENCH RESULTS REPORT
+
+  Generate a report from evaluation results.
+
+USAGE: cycodbench results report <results-file-path> [options]
+
+ARGUMENTS
+
+  results-file-path          Path to results file
+
+OPTIONS
+
+  --output <path>            Path to save the report file (default: 'results.md')
+  --verbose                  Show detailed information in the report
+
+EXAMPLES
+
+  EXAMPLE 1: Generate a basic report
+    cycodbench results report results.json --output report.md
+
+  EXAMPLE 2: Generate a detailed report with verbose information
+    cycodbench results report results.json --output detailed-report.md --verbose
+
+NOTES
+
+  - The report is generated in Markdown format.
+  - The report includes:
+    * Summary statistics (total, passed, failed, skipped)
+    * Results by repository
+    * Table of all problems and their status
+  - When using --verbose, the report includes:
+    * Solution patches
+    * Evaluation outputs
+    * Detailed error messages
+  - The report can be converted to HTML or PDF using external tools.
+
+SEE ALSO
+
+  cycodbench help results
+  cycodbench help results list
+  cycodbench help solutions eval

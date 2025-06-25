@@ -1,0 +1,34 @@
+Using CYCODBENCH, you can:
+
+  - Download and manage SWE-bench problem datasets
+  - Generate solutions for software engineering problems
+  - Evaluate solutions against test criteria
+  - Generate reports on benchmark performance
+
+USAGE: cycodbench <noun> <verb> [options]
+   OR: cycodbench run [options]
+
+COMMANDS
+
+  cycodbench problems [...]    Download and manage problem datasets
+  cycodbench container [...]   Manage containers for problem solving
+  cycodbench solutions [...]   Manage and evaluate solutions
+  cycodbench results [...]     Process and report evaluation results
+
+  cycodbench run [...]         Run the complete benchmark workflow
+
+COMMON OPTIONS
+
+  --debug                 Enable debug output
+  --verbose               Enable verbose output
+  --quiet                 Suppress non-essential output
+  --working-dir, -w DIR   Set the working directory
+  --threads, -t N         Set maximum thread count
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help container
+  cycodbench help solutions
+  cycodbench help results
+  cycodbench help run

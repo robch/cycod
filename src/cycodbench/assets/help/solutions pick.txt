@@ -1,0 +1,40 @@
+CYCODBENCH SOLUTIONS PICK
+
+  Select the best solution from multiple candidates.
+
+USAGE: cycodbench solutions pick <solutions-file-path> [options]
+
+ARGUMENTS
+
+  solutions-file-path        Path to solutions file to select solutions from
+
+OPTIONS
+
+  --id <problem-id>          ID of the problem to select solutions for (optional, default: all problems)
+  --repo <repository>        Filter by repository name
+  --contains <pattern>       Filter by text in problem (id, name, patch, tests)
+  --max <n>                  Maximum number of problems to select
+  --output <path>            Path to save selected solutions file (default: 'best-solutions.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Select best solution for each problem
+    cycodbench solutions pick solutions.json --output best-solutions.json
+
+  EXAMPLE 2: Select best solution for a specific problem
+    cycodbench solutions pick solutions.json --id astropy__astropy-12907 --output astropy-best.json
+
+  EXAMPLE 3: Select best solutions from a specific repository
+    cycodbench solutions pick solutions.json --repo "pandas" --output pandas-best.json
+
+NOTES
+
+  - This command selects the best solution for each problem from multiple candidates.
+  - The selection process uses heuristics to determine which solution is most likely to succeed.
+  - For problems with only one solution, that solution is automatically selected.
+
+SEE ALSO
+
+  cycodbench help solutions
+  cycodbench help solutions list
+  cycodbench help solutions eval

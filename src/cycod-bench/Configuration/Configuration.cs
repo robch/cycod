@@ -117,21 +117,37 @@ public class Configuration : IConfiguration
     /// <inheritdoc/>
     public string? GetString(string key)
     {
+        if (_runtimeValues.TryGetValue(key, out string? runtimeValue))
+        {
+            return runtimeValue;
+        }
+
         return _configuration[key];
     }
 
     /// <inheritdoc/>
     public string GetString(string key, string defaultValue)
     {
+        if (_runtimeValues.TryGetValue(key, out string? runtimeValue))
+        {
+            return runtimeValue ?? defaultValue;
+        }
+
         return _configuration[key] ?? defaultValue;
     }
 
     /// <inheritdoc/>
     public int GetInt(string key, int defaultValue)
     {
-        if (int.TryParse(_configuration[key], out int result))
+        if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+            int.TryParse(runtimeValue, out int result))
         {
             return result;
+        }
+
+        if (int.TryParse(_configuration[key], out int configResult))
+        {
+            return configResult;
         }
         
         return defaultValue;
@@ -140,9 +156,15 @@ public class Configuration : IConfiguration
     /// <inheritdoc/>
     public bool GetBool(string key, bool defaultValue)
     {
-        if (bool.TryParse(_configuration[key], out bool result))
+        if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+            bool.TryParse(runtimeValue, out bool result))
         {
             return result;
+        }
+
+        if (bool.TryParse(_configuration[key], out bool configResult))
+        {
+            return configResult;
         }
         
         return defaultValue;
@@ -151,9 +173,15 @@ public class Configuration : IConfiguration
     /// <inheritdoc/>
     public double GetDouble(string key, double defaultValue)
     {
-        if (double.TryParse(_configuration[key], out double result))
+        if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+            double.TryParse(runtimeValue, out double result))
         {
             return result;
+        }
+
+        if (double.TryParse(_configuration[key], out double configResult))
+        {
+            return configResult;
         }
         
         return defaultValue;
@@ -162,6 +190,7 @@ public class Configuration : IConfiguration
     /// <inheritdoc/>
     public string[] GetStringArray(string key)
     {
+        // Runtime values can't override arrays currently
         var section = _configuration.GetSection(key);
         if (section.Exists())
         {
@@ -181,13 +210,15 @@ public class Configuration : IConfiguration
     /// <inheritdoc/>
     public IEnumerable<string> GetKeys()
     {
-        return _configuration.AsEnumerable().Select(x => x.Key);
+        return _configuration.AsEnumerable().Select(x => x.Key)
+               .Concat(_runtimeValues.Keys)
+               .Distinct();
     }
 
     /// <inheritdoc/>
     public bool Exists(string key)
     {
-        return !string.IsNullOrEmpty(_configuration[key]);
+        return _runtimeValues.ContainsKey(key) || !string.IsNullOrEmpty(_configuration[key]);
     }
     
     // Helper method to log all configuration settings at debug level
@@ -277,11 +308,30 @@ public class Configuration : IConfiguration
         return defaultPath;
     }
     
+    // Dictionary to hold runtime configuration values that override the loaded configuration
+    private readonly Dictionary<string, string?> _runtimeValues = new();
+
+    /// <inheritdoc/>
+    public void SetValue(string key, string? value)
+    {
+        if (value == null)
+        {
+            _runtimeValues.Remove(key);
+            _logger.Debug($"Removed runtime configuration value for key: {key}");
+        }
+        else
+        {
+            _runtimeValues[key] = value;
+            _logger.Debug($"Set runtime configuration value for key: {key} = {value}");
+        }
+    }
+
     // Inner class to handle configuration sections
     private class ConfigurationSection : IConfiguration
     {
         private readonly Microsoft.Extensions.Configuration.IConfigurationSection _section;
         private readonly CycodBench.Logging.ILogger _logger;
+        private readonly Dictionary<string, string?> _runtimeValues = new();
         
         public ConfigurationSection(Microsoft.Extensions.Configuration.IConfigurationSection section, CycodBench.Logging.ILogger logger)
         {
@@ -293,19 +343,35 @@ public class Configuration : IConfiguration
 
         public string? GetString(string key)
         {
+            if (_runtimeValues.TryGetValue(key, out string? runtimeValue))
+            {
+                return runtimeValue;
+            }
+
             return _section[key];
         }
 
         public string GetString(string key, string defaultValue)
         {
+            if (_runtimeValues.TryGetValue(key, out string? runtimeValue))
+            {
+                return runtimeValue ?? defaultValue;
+            }
+
             return _section[key] ?? defaultValue;
         }
 
         public int GetInt(string key, int defaultValue)
         {
-            if (int.TryParse(_section[key], out int result))
+            if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+                int.TryParse(runtimeValue, out int result))
             {
                 return result;
+            }
+
+            if (int.TryParse(_section[key], out int sectionResult))
+            {
+                return sectionResult;
             }
             
             return defaultValue;
@@ -313,9 +379,15 @@ public class Configuration : IConfiguration
 
         public bool GetBool(string key, bool defaultValue)
         {
-            if (bool.TryParse(_section[key], out bool result))
+            if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+                bool.TryParse(runtimeValue, out bool result))
             {
                 return result;
+            }
+
+            if (bool.TryParse(_section[key], out bool sectionResult))
+            {
+                return sectionResult;
             }
             
             return defaultValue;
@@ -323,9 +395,15 @@ public class Configuration : IConfiguration
 
         public double GetDouble(string key, double defaultValue)
         {
-            if (double.TryParse(_section[key], out double result))
+            if (_runtimeValues.TryGetValue(key, out string? runtimeValue) && 
+                double.TryParse(runtimeValue, out double result))
             {
                 return result;
+            }
+
+            if (double.TryParse(_section[key], out double sectionResult))
+            {
+                return sectionResult;
             }
             
             return defaultValue;
@@ -333,6 +411,7 @@ public class Configuration : IConfiguration
 
         public string[] GetStringArray(string key)
         {
+            // Runtime values can't override arrays currently
             var section = _section.GetSection(key);
             if (section.Exists())
             {
@@ -350,12 +429,28 @@ public class Configuration : IConfiguration
 
         public IEnumerable<string> GetKeys()
         {
-            return _section.GetChildren().Select(x => x.Key);
+            return _section.GetChildren().Select(x => x.Key)
+                   .Concat(_runtimeValues.Keys)
+                   .Distinct();
         }
 
         public bool Exists(string key)
         {
-            return _section.GetSection(key).Exists();
+            return _runtimeValues.ContainsKey(key) || _section.GetSection(key).Exists();
+        }
+
+        public void SetValue(string key, string? value)
+        {
+            if (value == null)
+            {
+                _runtimeValues.Remove(key);
+                _logger.Debug($"Removed runtime configuration value for key: {key}");
+            }
+            else
+            {
+                _runtimeValues[key] = value;
+                _logger.Debug($"Set runtime configuration value for key: {key} = {value}");
+            }
         }
     }
 }

@@ -1,0 +1,42 @@
+CYCODBENCH CONTAINER COMMANDS
+
+  The 'container' commands allow you to manage containers for problem solving and evaluation.
+
+USAGE: cycodbench container init [dataset-name-or-file-path] [problem-id] [options]
+   OR: cycodbench container copy [to | from] <container-id> <src> <dest> [options]
+   OR: cycodbench container exec <container-id> <command> [options]
+   OR: cycodbench container list [options]
+   OR: cycodbench container stop <container-id> [options]
+
+COMMANDS
+
+  init            Start/initialize a container for a specific problem
+  copy            Copy files to or from a container
+  exec            Execute a command in a container
+  list            List running containers
+  stop            Stop and remove a container
+
+CONTAINER PROVIDERS
+
+  --docker        Use Docker containers (default)
+  --aca           Use Azure Container Apps
+  --aws           Use Amazon Web Services
+
+EXAMPLES
+
+  EXAMPLE 1: Initialize a container for a specific problem
+    cycodbench container init verified astropy__astropy-12907 --setup-tools
+
+  EXAMPLE 2: Copy files to a container
+    cycodbench container copy to container-abc123 ./agent /workspace/agent
+
+  EXAMPLE 3: Execute a command in a container
+    cycodbench container exec container-abc123 "ls -la /workspace"
+
+SEE ALSO
+
+  cycodbench help container init
+  cycodbench help container copy
+  cycodbench help container exec
+  cycodbench help container list
+  cycodbench help container stop

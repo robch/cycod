@@ -1,0 +1,42 @@
+CYCODBENCH PROBLEMS COMMANDS
+
+  The 'problems' commands allow you to download, manage, and solve SWE-bench problems.
+
+USAGE: cycodbench problems download [dataset-name] [options]
+   OR: cycodbench problems list [dataset-name-or-file-path] [options]
+   OR: cycodbench problems merge <dataset-name-or-file-paths...> [options]
+   OR: cycodbench problems shard [dataset-name-or-file-path] [options]
+   OR: cycodbench problems solve [dataset-name-or-file-path] [problem-id] [options]
+
+COMMANDS
+
+  download        Download a SWE-bench problem dataset
+  list            List available problems
+  merge           Merge multiple problem datasets into one
+  shard           Filter problems into 'shards'
+  solve           Generate solutions for one or more problems
+
+DATASET NAMES
+
+  verified        Curated dataset with verified problems
+  full            Complete dataset of all problems
+  lite            Small dataset for testing purposes
+
+EXAMPLES
+
+  EXAMPLE 1: Download the verified dataset
+    cycodbench problems download verified
+
+  EXAMPLE 2: List problems in a repository
+    cycodbench problems list verified --repo "tensorflow/tensorflow"
+
+  EXAMPLE 3: Create a shard of problems
+    cycodbench problems shard verified --repo "numpy/numpy" --output numpy-problems.json
+
+SEE ALSO
+
+  cycodbench help problems download
+  cycodbench help problems list
+  cycodbench help problems merge
+  cycodbench help problems shard
+  cycodbench help problems solve

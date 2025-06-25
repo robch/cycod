@@ -1,0 +1,41 @@
+CYCODBENCH
+
+CycodBench is a benchmark runner and evaluation tool for the cycod agent against SWE-bench problems.
+
+USAGE: cycodbench <noun> <verb> [options]
+   OR: cycodbench run [options]
+
+MAIN COMMANDS
+
+  problems               Download and manage SWE-bench problem datasets
+  container              Manage containers for problem solving and evaluation
+  solutions              Manage and evaluate solutions for problems
+  results                Process and report evaluation results
+
+  run                    Run the complete benchmark workflow
+
+GET STARTED
+
+  1. Download a problem dataset:
+     cycodbench problems download verified
+
+  2. Run the benchmark:
+     cycodbench run verified --output results.json
+
+  3. Generate a report:
+     cycodbench results report results.json --output report.md
+
+GET HELP
+
+  cycodbench help                      Show general help
+  cycodbench help <command>            Show help for a specific command
+  cycodbench help examples             Show usage examples
+
+SEE ALSO
+
+  cycodbench help usage
+  cycodbench help problems
+  cycodbench help container
+  cycodbench help solutions
+  cycodbench help results
+  cycodbench help run

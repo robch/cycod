@@ -174,7 +174,7 @@ public class Program
         services.AddSingleton<CycodBench.Logging.ILogger>(provider =>
         {
             var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
-            return new CycodBench.Logging.Logger(loggerFactory, "CycodBench", "logs/cycodbench.log");
+            return new CycodBench.Logging.Logger(loggerFactory, "CycodBench", "cycodbench.log");
         });
 
         // Add Configuration (singleton)
@@ -228,7 +228,9 @@ public class Program
             var logger = provider.GetRequiredService<CycodBench.Logging.ILogger>();
             var config = provider.GetRequiredService<CycodBench.Configuration.IConfiguration>();
             var dockerManager = provider.GetRequiredService<IDockerManager>();
-            return new EvaluationService.EvaluationService(logger, config, dockerManager);
+            var evalToolsManager = provider.GetRequiredService<IEvaluationToolsManager>();
+
+            return new EvaluationService.EvaluationService(logger, config, dockerManager, evalToolsManager);
         });
         
         // Add EnsemblerService (singleton)

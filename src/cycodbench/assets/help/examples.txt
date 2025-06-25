@@ -1,0 +1,69 @@
+CYCODBENCH EXAMPLES
+
+Here are some example workflows to help you get started with CycodBench:
+
+BASIC WORKFLOW (END-TO-END)
+
+  # Download the verified dataset
+  cycodbench problems download verified
+
+  # Run the complete benchmark workflow
+  cycodbench run verified --parallel 4 --output results.json
+
+  # Generate a report
+  cycodbench results report results.json --output report.md
+
+REPOSITORY-SPECIFIC WORKFLOW
+
+  # Download the verified dataset
+  cycodbench problems download verified
+
+  # List problems for a specific repository
+  cycodbench problems list verified --repo "numpy"
+
+  # Create a filtered dataset
+  cycodbench problems shard verified --repo "numpy" --output numpy-problems.json
+
+  # Solve the problems
+  cycodbench problems solve numpy-problems.json --parallel 2
+
+  # Evaluate the solutions
+  cycodbench solutions eval solutions.json --output numpy-results.json
+
+  # Generate a report
+  cycodbench results report numpy-results.json --output numpy-report.md
+
+DISTRIBUTED WORKFLOW (SHARDING)
+
+  # Download the full dataset
+  cycodbench problems download full
+
+  # Create 4 shards
+  cycodbench problems shard full --shards 4
+
+  # Process each shard separately (on different machines)
+  cycodbench run shard1.json --parallel 4 --output results1.json
+  cycodbench run shard2.json --parallel 4 --output results2.json
+  cycodbench run shard3.json --parallel 4 --output results3.json
+  cycodbench run shard4.json --parallel 4 --output results4.json
+
+  # Merge the results
+  cycodbench results merge results1.json results2.json results3.json results4.json --output merged.json
+
+  # Generate a comprehensive report
+  cycodbench results report merged.json --output full-report.md
+
+CONTAINER MANAGEMENT
+
+  # Initialize a container
+  cycodbench container init verified --workspace ./workspace --setup-tools
+  # This returns a container ID, e.g., container-abc123
+
+  # Solve a specific problem using the container
+  cycodbench problems solve verified astropy__astropy-12907 --container container-abc123
+
+  # Execute a custom command in the container
+  cycodbench container exec container-abc123 "ls -la /workspace"
+
+  # Stop the container
+  cycodbench container stop container-abc123

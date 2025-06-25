@@ -1,0 +1,46 @@
+CYCODBENCH COMMON OPTIONS
+
+  The following options are available in most CycodBench commands:
+
+GENERAL OPTIONS
+
+  --debug                 Enable debug output with detailed information
+  --verbose               Enable more verbose output
+  --quiet                 Suppress non-essential output
+  --working-dir, -w DIR   Set the working directory
+  --threads, -t N         Set maximum thread count
+
+CONTAINER PROVIDER OPTIONS
+
+  --docker                Use Docker containers (default)
+  --aca                   Use Azure Container Apps for running the agent
+  --aws                   Use Amazon Web Services for running the agent
+
+OUTPUT OPTIONS
+
+  --output <path>         Specify the output file path
+
+SPECIFIC COMMAND OPTION GROUPS
+
+  PROBLEM FILTERING OPTIONS
+    --id <problem-id>     Filter by specific problem ID
+    --repo <repository>   Filter by repository name
+    --contains <pattern>  Filter by text in problem details
+    --max <n>             Maximum number of problems to process
+
+  CONTAINER RESOURCE OPTIONS
+    --memory <limit>      Memory limit (e.g., "8g")
+    --cpus <limit>        CPU limit (e.g., 4)
+    --timeout <seconds>   Timeout for operations
+
+  SHARDING OPTIONS
+    --shard <id>/<total>  Process shard X of Y (e.g., '1/4')
+    --shards <count>      Number of shards to create
+
+  PARALLELISM OPTIONS
+    --parallel <count>    Number of problems to process in parallel
+
+SEE ALSO
+
+  cycodbench help usage
+  cycodbench help examples

@@ -1,0 +1,39 @@
+CYCODBENCH CONTAINER EXEC
+
+  Execute a command in a container.
+
+USAGE: cycodbench container exec <container-id> <command> [options]
+
+ARGUMENTS
+
+  container-id               ID or name of the container
+  command                    Command to execute in the container
+
+OPTIONS
+
+  --timeout <seconds>        Command timeout in seconds (default: 60)
+  --workdir <path>           Working directory in container (default: /workspace)
+  --output <path>            Save command output to file
+
+EXAMPLES
+
+  EXAMPLE 1: Run a simple command in a container
+    cycodbench container exec container-abc123 "ls -la /testbed"
+
+  EXAMPLE 2: Run a command with a longer timeout in a specific directory
+    cycodbench container exec container-abc123 "pytest tests/" --timeout 300 --workdir /testbed/tests
+
+  EXAMPLE 3: Run a command and save the output to a file
+    cycodbench container exec container-abc123 "python -m pip list" --output packages.txt
+
+NOTES
+
+  - The command is executed in a bash shell inside the container.
+  - If the command times out, the execution is terminated.
+  - The exit code and output of the command are returned.
+
+SEE ALSO
+
+  cycodbench help container
+  cycodbench help container init
+  cycodbench help container copy

@@ -1,0 +1,43 @@
+CYCODBENCH PROBLEMS SHARD
+
+  Filter problems into 'shards' (subsets of problems).
+
+USAGE: cycodbench problems shard [dataset-name-or-file-path] [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-path   Dataset name ('verified', 'full', 'lite') or file path (default: 'verified')
+
+OPTIONS
+
+  --id <problem-id>           Filter by specific problem ID
+  --repo <repository>         Filter by repository name
+  --contains <pattern>        Filter by text in problem (id, name, patch, tests)
+  --shard <id>/<total>        Process shard X of Y (e.g., '1/4')
+  --shards <count>            Number of shards to create (default: 1)
+  --candidates <count>        Number of solution candidates to generate per problem (default: 1)
+  --max <n>                   Maximum number of problems to select/filter/shard
+  --output <path>             New dataset name or filename for the output problem dataset file
+
+EXAMPLES
+
+  EXAMPLE 1: Create 4 shards from verified dataset
+    cycodbench problems shard verified --shards 4
+
+  EXAMPLE 2: Get the first shard of 4 for TensorFlow problems
+    cycodbench problems shard verified --repo "tensorflow" --shard 1/4 --output tensorflow-shard1.json
+
+  EXAMPLE 3: Create a single-problem shard
+    cycodbench problems shard --id astropy__astropy-12907 --output single-problem.json
+
+NOTES
+
+  - If --shard is specified, only that shard will be processed.
+  - If --shards is specified without --shard, all shards will be created.
+  - If --output is not specified, the output file will be named based on the input dataset, filters, and shard.
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help problems list
+  cycodbench help problems solve

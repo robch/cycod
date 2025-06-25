@@ -1,0 +1,41 @@
+CYCODBENCH RESULTS LIST
+
+  List results by criteria.
+
+USAGE: cycodbench results list <results-file-path> [options]
+
+ARGUMENTS
+
+  results-file-path          Path to results file
+
+OPTIONS
+
+  --id <problem-id>          Filter by specific problem ID
+  --repo <repository>        Filter by repository name
+  --contains <pattern>       Filter by text in problem (id, name, patch, tests)
+  --status <status>          Filter by status: 'passed', 'failed', 'skipped' (default: all results)
+  --output <path>            Path to save filtered results file
+  --verbose                  Show detailed information about each solution
+
+EXAMPLES
+
+  EXAMPLE 1: List all results in a file
+    cycodbench results list results.json
+
+  EXAMPLE 2: List only passed results
+    cycodbench results list results.json --status passed
+
+  EXAMPLE 3: List results for a specific repository and save to file
+    cycodbench results list results.json --repo "numpy" --output numpy-results.json
+
+NOTES
+
+  - Results are displayed in a condensed format unless --verbose is specified.
+  - When using --verbose, both the solution patches and evaluation outputs will be displayed.
+  - If --output is specified, the filtered results will be saved to a new file.
+
+SEE ALSO
+
+  cycodbench help results
+  cycodbench help results merge
+  cycodbench help results report

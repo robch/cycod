@@ -1,0 +1,40 @@
+CYCODBENCH HELP
+
+  cycodbench help [topic]
+
+  Get help on using CYCODBENCH.
+
+COMMAND HELP
+
+  To get help on a specific command, use:
+
+    cycodbench help <command>
+
+  For example:
+    cycodbench help problems download
+    cycodbench help run
+    cycodbench help container init
+
+MAIN HELP TOPICS
+
+  usage               General usage information
+  problems            Problem dataset commands
+  container           Container management commands
+  solutions           Solution management commands
+  results             Results management commands
+  run                 Integrated workflow command
+
+EXAMPLE WORKFLOWS
+
+  Basic workflow:
+    cycodbench problems download verified
+    cycodbench run verified --output results.json
+    cycodbench results report results.json --output report.md
+
+  Advanced workflow:
+    cycodbench problems download verified
+    cycodbench problems list verified --repo "tensorflow"
+    cycodbench problems shard --repo "tensorflow" --shards 4
+    cycodbench problems solve shard1.json --parallel 2
+    cycodbench solutions eval solutions.json
+    cycodbench results report results.json --output report.md

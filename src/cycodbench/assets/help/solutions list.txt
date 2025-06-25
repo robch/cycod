@@ -1,0 +1,41 @@
+CYCODBENCH SOLUTIONS LIST
+
+  List solutions for a problem or problems.
+
+USAGE: cycodbench solutions list <solutions-file-path> [options]
+
+ARGUMENTS
+
+  solutions-file-path        Path to solutions file
+
+OPTIONS
+
+  --id <problem-id>          Filter by specific problem ID
+  --repo <repository>        Filter by repository name
+  --contains <pattern>       Filter by text in problem (id, name, patch, tests)
+  --max <n>                  Maximum number of problems to list
+  --output <path>            Path to save filtered solutions file
+  --verbose                  Show detailed information about each solution
+
+EXAMPLES
+
+  EXAMPLE 1: List all solutions in a file
+    cycodbench solutions list solutions.json
+
+  EXAMPLE 2: List solutions for a specific repository
+    cycodbench solutions list solutions.json --repo "tensorflow"
+
+  EXAMPLE 3: List solutions containing specific text and save to file
+    cycodbench solutions list solutions.json --contains "bug fix" --output bug-fixes.json
+
+NOTES
+
+  - Solutions are displayed in a condensed format unless --verbose is specified.
+  - When using --verbose, the solution patches will be displayed.
+  - If --output is specified, the filtered solutions will be saved to a new file.
+
+SEE ALSO
+
+  cycodbench help solutions
+  cycodbench help solutions merge
+  cycodbench help solutions pick

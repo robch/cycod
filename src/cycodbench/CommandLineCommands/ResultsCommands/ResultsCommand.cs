@@ -1,0 +1,33 @@
+using System;
+using System.Threading.Tasks;
+
+/// <summary>
+/// Base class for results commands
+/// </summary>
+public abstract class ResultsCommand : CycodBenchCommand
+{
+    /// <summary>
+    /// Filter by problem ID
+    /// </summary>
+    public string? ProblemId { get; set; }
+    
+    /// <summary>
+    /// Filter by repository name
+    /// </summary>
+    public string? Repository { get; set; }
+    
+    /// <summary>
+    /// Filter by text in problem
+    /// </summary>
+    public string? ContainsPattern { get; set; }
+    
+    /// <summary>
+    /// Path to save the output
+    /// </summary>
+    public string? OutputPath { get; set; }
+
+    public override string GetCommandName()
+    {
+        return "results";
+    }
+}

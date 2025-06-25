@@ -72,6 +72,14 @@ public interface IConfiguration
     bool Exists(string key);
     
     /// <summary>
+    /// Sets a configuration value for the current session.
+    /// Note: This does not persist the value to the configuration file.
+    /// </summary>
+    /// <param name="key">The configuration key.</param>
+    /// <param name="value">The value to set.</param>
+    void SetValue(string key, string? value);
+    
+    /// <summary>
     /// Gets the file path of the configuration source, if applicable.
     /// </summary>
     string? ConfigFilePath { get; }
@@ -154,7 +162,7 @@ public interface IConfiguration
     /// <summary>
     /// Gets whether to keep workspace directories after processing.
     /// </summary>
-    bool KeepWorkspaces => GetBool("Workspace:KeepWorkspaces", false);
+    bool KeepWorkspaces => GetBool("Workspace:KeepWorkspaces", true);
     
     /// <summary>
     /// Gets the directory where results will be stored.

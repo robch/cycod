@@ -9,6 +9,8 @@ src/cycodmd/bin/
 src/cycodmd/obj/
 src/cycodt/obj/
 src/cycodt/bin/
+src/cycodbench/obj/
+src/cycodbench/bin/
 src/mcp/**/obj/
 src/mcp/**/bin/
 

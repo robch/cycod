@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -67,7 +68,7 @@ public class AgentExecutor : IAgentExecutor
             }
             
             // Prepare problem statement file
-            var problemStatementFile = Path.Combine(workspacePath, "problem_statement.txt");
+            var problemStatementFile = Path.Combine(workspacePath, "input", "problem_statement.txt");
             FileHelpers.WriteAllText(problemStatementFile, problem.ProblemStatement);
             _logger.Debug($"Problem statement ({problem.ProblemStatement.Length} chars) written to: {problemStatementFile}");
             
@@ -88,7 +89,7 @@ public class AgentExecutor : IAgentExecutor
                 await _dockerManager.CopyFileToContainerAsync(
                     containerId,
                     agentPath,
-                    "/tmp/cycod",
+                    "/workspace/bin/cycod",
                     cancellationToken);
 
                 // Copy agent settings to container
@@ -98,24 +99,22 @@ public class AgentExecutor : IAgentExecutor
                     $"/testbed/.cycod",
                     cancellationToken);
 
-                // Copy problem statement file to container
-                await _dockerManager.CopyFileToContainerAsync(
-                    containerId,
-                    problemStatementFile,
-                    "/testbed/problem_statement.txt",
-                    cancellationToken);
-                
                 // Set execute permissions
                 await _dockerManager.ExecuteCommandInContainerAsync(
                     containerId,
-                    "chmod +x /tmp/cycod",
+                    "chmod +x /workspace/bin/cycod",
                     timeoutMs: 5000,
                     cancellationToken);
                 
                 // Execute the agent in the container
                 var result = await _dockerManager.ExecuteCommandInContainerAsync(
                     containerId,
-                    $"/tmp/cycod --input /testbed/problem_statement.txt --folder /testbed",
+                    "/workspace/bin/cycod " +
+                        "--folder /testbed " +
+                        "--add-system-prompt \"Ensure your work is on current commit. Don't consider using newer commits, nor look at them\" " +
+                        "--input /workspace/input/problem_statement.txt " +
+                        "--output-chat-history /workspace/output/chat-history.jsonl " +
+                        "--output-trajectory /workspace/output/trajectory.md",
                     timeoutMs: timeoutSeconds.Value * 1000,
                     cancellationToken);
                 
@@ -167,18 +166,18 @@ public class AgentExecutor : IAgentExecutor
             
             _logger.Debug($"Agent execution completed in {stopwatch.ElapsedMilliseconds}ms");
             
-            // Extract diff from the agent output
-            candidateSolution.Diff = ExtractDiffFromOutput(agentOutput);
+            // Generate diff using Git CLI based on the base commit
+            candidateSolution.Diff = await GenerateDiffFromGitAsync(workspacePath, problem.BaseCommit, containerId);
             
-            // If we extracted a diff, save it to a separate file
+            // Save the generated diff to a file
             if (!string.IsNullOrEmpty(candidateSolution.Diff))
             {
                 FileHelpers.WriteAllText(Path.Combine(workspacePath, "solution.diff"), candidateSolution.Diff);
-                _logger.Debug($"Extracted diff of {candidateSolution.Diff.Length} characters");
+                _logger.Debug($"Generated diff of {candidateSolution.Diff.Length} characters");
             }
             else
             {
-                _logger.Warning("No diff was extracted from agent output");
+                _logger.Warning("No diff was generated from Git");
             }
             
             // Save logs
@@ -203,51 +202,89 @@ public class AgentExecutor : IAgentExecutor
     /// <inheritdoc />
     public string ExtractDiffFromOutput(string agentOutput)
     {
-        if (string.IsNullOrEmpty(agentOutput))
+        // This method is kept for backward compatibility
+        // It's no longer used to extract diffs from agent output
+        // as we now generate diffs using Git CLI
+        _logger.Debug("ExtractDiffFromOutput is deprecated. Using Git to generate diffs instead.");
+        return string.Empty;
+    }
+    
+    /// <summary>
+    /// Generates a diff using Git CLI by comparing the current state with the specified base commit.
+    /// </summary>
+    /// <param name="workspacePath">The path to the workspace directory (testbed).</param>
+    /// <param name="baseCommit">The base commit hash to diff against.</param>
+    /// <param name="containerId">The Docker container ID where the agent is executed, or null if running locally.</param>
+    /// <returns>The generated diff as a string.</returns>
+    private async Task<string> GenerateDiffFromGitAsync(string workspacePath, string baseCommit, string? containerId)
+    {
+        if (string.IsNullOrEmpty(baseCommit))
         {
+            _logger.Warning("Base commit is empty, cannot generate diff");
             return string.Empty;
         }
         
         try
         {
-            // Look for diff markers in the output
-            // This regex pattern looks for the typical diff format starting with "diff --git"
-            var diffPattern = @"(?:^|\n)diff --git.*?(?=\n(?:diff --git|$))";
-            var diffMatches = Regex.Matches(agentOutput, diffPattern, RegexOptions.Singleline);
+            _logger.Debug($"Generating diff against base commit: {baseCommit}");
             
-            if (diffMatches.Count > 0)
+            string diff;
+            
+            if (!string.IsNullOrEmpty(containerId))
             {
-                // Collect all diff blocks
-                var diffBuilder = new StringBuilder();
-                foreach (Match match in diffMatches)
+                _logger.Debug($"Running Git commands inside container: {containerId}");
+                
+                // Generate diff between the current state and base commit inside the container
+                var diffResult = await _dockerManager.ExecuteCommandInContainerAsync(
+                    containerId, 
+                    $"bash -c \"cd /testbed && git diff {baseCommit}\"", 
+                    timeoutMs: 30000);
+                    
+                if (!string.IsNullOrEmpty(diffResult.Error))
                 {
-                    diffBuilder.AppendLine(match.Value);
+                    _logger.Warning($"Git diff warning/error in container: {diffResult.Error}");
                 }
                 
-                return diffBuilder.ToString().TrimEnd();
+                diff = diffResult.Output;
             }
-            
-            // If no standard diff format, look for blocks marked with triple backticks
-            var codeBlockPattern = @"```diff\n(.*?)```";
-            var codeBlockMatches = Regex.Matches(agentOutput, codeBlockPattern, RegexOptions.Singleline);
-            
-            if (codeBlockMatches.Count > 0)
+            else
             {
-                // Collect all diff blocks from markdown code blocks
-                var diffBuilder = new StringBuilder();
-                foreach (Match match in codeBlockMatches)
+                _logger.Debug("Running Git commands locally");
+                
+                // Generate diff between the current state and base commit locally
+                var diffResult = await CycodBench.Helpers.ProcessHelpers.ExecuteProcessAsync(
+                    new ProcessStartInfo
+                    {
+                        FileName = "git",
+                        Arguments = $"diff {baseCommit}",
+                        WorkingDirectory = workspacePath,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    },
+                    timeoutMs: 30000);
+                    
+                if (!string.IsNullOrEmpty(diffResult.StdErr))
                 {
-                    diffBuilder.AppendLine(match.Groups[1].Value);
+                    _logger.Warning($"Git diff warning/error locally: {diffResult.StdErr}");
                 }
                 
-                return diffBuilder.ToString().TrimEnd();
+                diff = diffResult.StdOut;
             }
             
-            return string.Empty;
+            if (string.IsNullOrWhiteSpace(diff))
+            {
+                _logger.Warning("Git diff produced no output");
+                return string.Empty;
+            }
+            
+            _logger.Debug($"Successfully generated diff of {diff.Length} characters");
+            return diff;
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, $"Error extracting diff from agent output: {ex.Message}");
+            _logger.Error(ex, $"Error generating diff using Git: {ex.Message}");
             return string.Empty;
         }
     }

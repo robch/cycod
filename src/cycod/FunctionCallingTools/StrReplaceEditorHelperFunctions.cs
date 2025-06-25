@@ -76,15 +76,26 @@ public class StrReplaceEditorHelperFunctions
     }
 
     [ReadOnly(false)]
-    [Description("Creates a new file at the specified path with the given content. The `create` command cannot be used if the file already exists.")]
+    [Description("Creates a new file at the specified path with the given content. The `CreateFile` command cannot be used if the file already exists.")]
     public string CreateFile(
         [Description("Absolute or relative path to file.")] string path,
         [Description("Content to be written to the file.")] string fileText)
     {
         if (File.Exists(path))
         {
-            return $"Path {path} already exists; cannot create file. Use ViewFile and then StrReplace to edit the file.";
+            return $"Path {path} already exists; cannot create file. Use ViewFile to ensure you know what's in the file, and then use StrReplace to modify it or OverwriteFile to replace it.";
         }
+        DirectoryHelpers.EnsureDirectoryForFileExists(path);
+        File.WriteAllText(path, fileText);
+        return $"Created file {path} with {fileText.Length} characters.";
+    }
+
+    [ReadOnly(false)]
+    [Description("Overwrites an existing file at the specified path with the given content.")]
+    public string OverwriteFile(
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Content to be written to the file.")] string fileText)
+    {
         DirectoryHelpers.EnsureDirectoryForFileExists(path);
         File.WriteAllText(path, fileText);
         return $"Created file {path} with {fileText.Length} characters.";

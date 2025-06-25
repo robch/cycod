@@ -95,8 +95,9 @@ public class DockerManager : IDockerManager
         string runCommand = $"run --name {containerName} " +
                            $"--memory={memoryLimit} " +
                            $"--cpus={cpuLimit} " +
-                           "-d " + // Detached mode
-                           "--volume /testbed " + 
+                           "-d " +
+                           "-v /testbed " + 
+                           $"-v {workspacePath}:/workspace " +
                            $"{imageName} " +
                            "bash -c \"git config --global user.email a && git config --global user.name a && " +
                            "git config --global --add safe.directory /testbed && " + 
@@ -117,7 +118,10 @@ public class DockerManager : IDockerManager
             _logger.Debug($"Volume path for container {containerId}: {volumePath}");
             
             // Make sure the workspace directory exists
-            Directory.CreateDirectory(workspacePath);
+            DirectoryHelpers.EnsureDirectoryExists(workspacePath);
+            DirectoryHelpers.EnsureDirectoryExists($"{workspacePath}/input");
+            DirectoryHelpers.EnsureDirectoryExists($"{workspacePath}/output");
+            DirectoryHelpers.EnsureDirectoryExists($"{workspacePath}/bin");
             
             // Create a symlink or directory reference
             string problemWorkspacePath = Path.Combine(workspacePath, problemId);

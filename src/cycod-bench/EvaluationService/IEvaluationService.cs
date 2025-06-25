@@ -3,16 +3,16 @@ using CycodBench.Models;
 namespace CycodBench.EvaluationService;
 
 /// <summary>
-/// Defines methods for evaluating candidate solutions against test cases.
+/// Defines methods for evaluating candidate solutions against SWEBench problems.
 /// </summary>
 public interface IEvaluationService
 {
     /// <summary>
-    /// Evaluates a candidate solution against the test cases.
+    /// Evaluates a candidate solution for a SWEBench problem.
     /// </summary>
     /// <param name="problem">The SWE-bench problem being solved.</param>
     /// <param name="candidateSolution">The candidate solution to evaluate.</param>
-    /// <param name="containerId">The ID of the Docker container to use for evaluation.</param>
+    /// <param name="containerId">The ID of the Docker container to use for evaluation (if applicable).</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>The evaluation result.</returns>
     Task<EvaluationResult> EvaluateSolutionAsync(
@@ -26,7 +26,7 @@ public interface IEvaluationService
     /// </summary>
     /// <param name="diff">The diff to apply.</param>
     /// <param name="workspacePath">The path to the workspace directory where the codebase is located.</param>
-    /// <param name="containerId">The ID of the Docker container to use for applying the diff.</param>
+    /// <param name="containerId">The ID of the Docker container to use for applying the diff (if applicable).</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>True if the diff was applied successfully, false otherwise.</returns>
     Task<bool> ApplyDiffAsync(
@@ -36,34 +36,14 @@ public interface IEvaluationService
         CancellationToken cancellationToken = default);
     
     /// <summary>
-    /// Runs the build command for a problem.
+    /// Creates a predictions file in the format expected by SWEBench evaluator.
     /// </summary>
-    /// <param name="problem">The SWE-bench problem.</param>
-    /// <param name="workspacePath">The path to the workspace directory.</param>
-    /// <param name="containerId">The ID of the Docker container to use for running the build command.</param>
-    /// <param name="timeoutSeconds">Optional timeout in seconds. If null, the default timeout from configuration will be used.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A tuple containing the exit code and the output of the build command.</returns>
-    Task<(int ExitCode, string Output)> RunBuildCommandAsync(
+    /// <param name="problem">The SWEBench problem.</param>
+    /// <param name="candidateSolution">The candidate solution.</param>
+    /// <param name="outputDirectory">The directory where to save the predictions file.</param>
+    /// <returns>The path to the created predictions file.</returns>
+    Task<string> CreatePredictionsFileAsync(
         SwebenchProblem problem,
-        string workspacePath,
-        string containerId,
-        int? timeoutSeconds = null,
-        CancellationToken cancellationToken = default);
-    
-    /// <summary>
-    /// Runs the test command for a problem.
-    /// </summary>
-    /// <param name="problem">The SWE-bench problem.</param>
-    /// <param name="workspacePath">The path to the workspace directory.</param>
-    /// <param name="containerId">The ID of the Docker container to use for running the test command.</param>
-    /// <param name="timeoutSeconds">Optional timeout in seconds. If null, the default timeout from configuration will be used.</param>
-    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
-    /// <returns>A tuple containing the exit code and the output of the test command.</returns>
-    Task<(int ExitCode, string Output)> RunTestCommandAsync(
-        SwebenchProblem problem,
-        string workspacePath,
-        string containerId,
-        int? timeoutSeconds = null,
-        CancellationToken cancellationToken = default);
+        CandidateSolution candidateSolution,
+        string outputDirectory);
 }

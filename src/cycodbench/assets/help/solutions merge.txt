@@ -1,0 +1,33 @@
+CYCODBENCH SOLUTIONS MERGE
+
+  Merge multiple solutions files.
+
+USAGE: cycodbench solutions merge <solution-file-paths...> [options]
+
+ARGUMENTS
+
+  solution-file-paths...     One or more solution file paths to merge
+
+OPTIONS
+
+  --output <path>            Path to save merged solutions file (default: 'merged-solutions.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Merge two solution files
+    cycodbench solutions merge solutions1.json solutions2.json --output merged.json
+
+  EXAMPLE 2: Merge multiple solution files with default output name
+    cycodbench solutions merge shard1-solutions.json shard2-solutions.json shard3-solutions.json
+
+NOTES
+
+  - All solutions from the input files will be included in the merged file.
+  - Solutions with identical IDs will be preserved (no deduplication).
+  - This command is useful for combining solutions from different runs or shards.
+
+SEE ALSO
+
+  cycodbench help solutions
+  cycodbench help solutions list
+  cycodbench help solutions pick

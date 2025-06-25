@@ -1,0 +1,36 @@
+CYCODBENCH CONTAINER LIST
+
+  List running containers.
+
+USAGE: cycodbench container list [options]
+
+OPTIONS
+
+  --docker                   Use Docker containers (default)
+  --aca                      List containers in Azure Container Apps
+  --aws                      List containers in Amazon Web Services
+  --output <path>            Path to save the list of containers
+  --verbose                  Show detailed information about each container
+
+EXAMPLES
+
+  EXAMPLE 1: List all running containers
+    cycodbench container list
+
+  EXAMPLE 2: List containers with detailed information
+    cycodbench container list --verbose
+
+  EXAMPLE 3: Save container list to a file
+    cycodbench container list --output containers.json
+
+NOTES
+
+  - Only containers created by CycodBench are listed by default.
+  - The --verbose option shows additional information such as image, creation time, and resource usage.
+  - The list can be saved to a file in JSON format for further processing.
+
+SEE ALSO
+
+  cycodbench help container
+  cycodbench help container init
+  cycodbench help container stop

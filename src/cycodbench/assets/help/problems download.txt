@@ -1,0 +1,42 @@
+CYCODBENCH PROBLEMS DOWNLOAD
+
+  Download a SWE-bench problem dataset.
+
+USAGE: cycodbench problems download [dataset-name] [options]
+
+ARGUMENTS
+
+  dataset-name               Dataset to download: 'verified', 'full', or 'lite' (default: 'verified')
+
+OPTIONS
+
+  --force                    Force redownload even if dataset exists
+  --output <path>            Path to save the dataset file
+
+DATASET NAMES
+
+  verified                   Curated dataset with verified problems
+  full                       Complete dataset of all problems
+  lite                       Small dataset for testing purposes
+
+EXAMPLES
+
+  EXAMPLE 1: Download the verified dataset
+    cycodbench problems download verified
+
+  EXAMPLE 2: Download the full dataset with a custom name
+    cycodbench problems download full --output swe-bench-full.json
+
+  EXAMPLE 3: Force redownload of an existing dataset
+    cycodbench problems download lite --force
+
+NOTES
+
+  - Datasets are downloaded from the SWE-bench repository.
+  - If the dataset file already exists, it will not be redownloaded unless --force is specified.
+  - Downloaded datasets are saved in JSON format.
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help problems list

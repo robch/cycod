@@ -1,0 +1,44 @@
+CYCODBENCH PROBLEMS LIST
+
+  List available problems.
+
+USAGE: cycodbench problems list [dataset-name-or-file-path] [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-path   Dataset name ('verified', 'full', 'lite') or custom file path (default: 'verified')
+
+OPTIONS
+
+  --id <problem-id>           Filter by specific problem ID
+  --repo <repository>         Filter by repository name
+  --contains <pattern>        Filter by text in problem (id, name, patch, tests)
+  --max <n>                   Maximum number of problems to list
+  --output <path>             Path to save the problem dataset file
+  --verbose                   Show detailed information about each problem
+
+EXAMPLES
+
+  EXAMPLE 1: List all problems in the verified dataset
+    cycodbench problems list verified
+
+  EXAMPLE 2: List problems in the TensorFlow repository
+    cycodbench problems list verified --repo "tensorflow"
+
+  EXAMPLE 3: List problems containing specific text
+    cycodbench problems list verified --contains "memory leak"
+
+  EXAMPLE 4: Save filtered problems to a new dataset file
+    cycodbench problems list verified --repo "numpy" --output numpy-problems.json
+
+NOTES
+
+  - If a file path is provided instead of a dataset name, problems will be loaded from that file.
+  - When using --verbose, additional details about each problem are displayed.
+  - The --output option creates a new dataset file with the filtered problems.
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help problems download
+  cycodbench help problems shard

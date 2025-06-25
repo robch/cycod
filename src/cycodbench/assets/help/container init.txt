@@ -1,0 +1,53 @@
+CYCODBENCH CONTAINER INIT
+
+  Start/initialize a container for a specific problem or environment.
+
+USAGE: cycodbench container init [dataset-name-or-file-path] [problem-id] [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-path   Dataset name ('verified', 'full', 'lite') or file path (default: 'verified')
+  problem-id                  ID of the problem to create a container for (optional)
+
+NEW CONTAINER OPTIONS
+
+  --name <name>               Custom name for the container
+  --image <name>              Container image to use (default: derived from problem)
+  --memory <limit>            Memory limit (e.g., "8g")
+  --cpus <limit>              CPU limit (e.g., 4)
+
+EXISTING CONTAINER OPTIONS
+
+  --container <id>            Use existing container ID instead of creating a new one
+
+OTHER OPTIONS
+
+  --docker                    Use Docker containers (default)
+  --aca                       Use Azure Container Apps for running the agent
+  --aws                       Use Amazon Web Services for running the agent
+  --workspace <path>          Host path to mount as workspace
+  --setup-tools               Automatically set up evaluation tools in the container
+  --setup-agent               Automatically set up the agent in the container
+
+EXAMPLES
+
+  EXAMPLE 1: Initialize a container for a specific problem
+    cycodbench container init verified astropy__astropy-12907
+
+  EXAMPLE 2: Initialize a container with custom resources
+    cycodbench container init --name tf-container --image tensorflow/tensorflow:latest --memory 16g --cpus 8
+
+  EXAMPLE 3: Initialize a container with workspace and tools
+    cycodbench container init --workspace ./workspace --setup-tools --setup-agent
+
+NOTES
+
+  - The container id will be returned after initialization.
+  - If --setup-tools is specified, SWE-bench evaluation tools will be installed.
+  - If --setup-agent is specified, the agent will be set up in the container.
+
+SEE ALSO
+
+  cycodbench help container
+  cycodbench help container exec
+  cycodbench help container stop

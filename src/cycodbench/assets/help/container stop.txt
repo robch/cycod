@@ -1,0 +1,40 @@
+CYCODBENCH CONTAINER STOP
+
+  Stop and remove a container.
+
+USAGE: cycodbench container stop <container-id> [options]
+
+ARGUMENTS
+
+  container-id               ID or name of the container to stop
+
+OPTIONS
+
+  --docker                   Use Docker containers (default)
+  --aca                      Stop container in Azure Container Apps
+  --aws                      Stop container in Amazon Web Services
+  --keep                     Keep the container, just stop it
+  --timeout <seconds>        Timeout for graceful stop (default: 10)
+
+EXAMPLES
+
+  EXAMPLE 1: Stop and remove a container
+    cycodbench container stop container-abc123
+
+  EXAMPLE 2: Stop a container without removing it
+    cycodbench container stop container-abc123 --keep
+
+  EXAMPLE 3: Stop a container with a longer timeout
+    cycodbench container stop container-abc123 --timeout 30
+
+NOTES
+
+  - By default, the container is both stopped and removed.
+  - Use --keep to stop the container without removing it (allowing it to be restarted later).
+  - If the container doesn't stop within the timeout period, it will be forcefully terminated.
+
+SEE ALSO
+
+  cycodbench help container
+  cycodbench help container list
+  cycodbench help container init

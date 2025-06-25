@@ -1,0 +1,42 @@
+CYCODBENCH CONTAINER COPY
+
+  Copy files to or from a container.
+
+USAGE: cycodbench container copy [to | from] <container-id> <src> <dest> [options]
+
+ARGUMENTS
+
+  to                         Copy from host to container
+  from                       Copy from container to host
+  container-id               ID or name of the container
+  src                        Source path
+  dest                       Destination path
+
+OPTIONS
+
+  --docker                   Use Docker containers (default)
+  --aca                      Use Azure Container Apps for copying files
+  --aws                      Use Amazon Web Services for copying files
+
+EXAMPLES
+
+  EXAMPLE 1: Copy a file from host to container
+    cycodbench container copy to container-abc123 ./agent /workspace/bin/agent
+
+  EXAMPLE 2: Copy a file from container to host
+    cycodbench container copy from container-abc123 /testbed/output/results.json ./results.json
+
+  EXAMPLE 3: Copy a directory from host to container
+    cycodbench container copy to container-abc123 ./test-data /workspace/test-data
+
+NOTES
+
+  - When copying directories, the contents are copied recursively.
+  - The destination directory must exist in the container.
+  - The container must be running for the copy operation to work.
+
+SEE ALSO
+
+  cycodbench help container
+  cycodbench help container init
+  cycodbench help container exec

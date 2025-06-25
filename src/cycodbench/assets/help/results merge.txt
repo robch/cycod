@@ -1,0 +1,34 @@
+CYCODBENCH RESULTS MERGE
+
+  Merge multiple evaluation results files.
+
+USAGE: cycodbench results merge <results-file-paths...> [options]
+
+ARGUMENTS
+
+  results-file-paths...      One or more results file paths to merge
+
+OPTIONS
+
+  --output <path>            Path to save merged results file (default: 'merged-results.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Merge two results files
+    cycodbench results merge results1.json results2.json --output merged.json
+
+  EXAMPLE 2: Merge multiple shard results
+    cycodbench results merge shard1.json shard2.json shard3.json --output merged.json
+
+NOTES
+
+  - All results from the input files will be included in the merged file.
+  - Results with identical IDs will be preserved (no deduplication).
+  - This command is useful for combining results from different runs or shards.
+  - The merged file can be used with 'results report' to generate a comprehensive report.
+
+SEE ALSO
+
+  cycodbench help results
+  cycodbench help results list
+  cycodbench help results report

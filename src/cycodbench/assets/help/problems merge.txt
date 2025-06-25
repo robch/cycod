@@ -1,0 +1,33 @@
+CYCODBENCH PROBLEMS MERGE
+
+  Merge multiple problem datasets into one.
+
+USAGE: cycodbench problems merge <dataset-name-or-file-paths...> [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-paths   One or more dataset names ('verified', 'full', 'lite') or file paths to merge
+
+OPTIONS
+
+  --output <path>              Dataset name or path for the merged output file (default: 'merged-problems.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Merge multiple dataset files
+    cycodbench problems merge dataset1.json dataset2.json --output merged.json
+
+  EXAMPLE 2: Merge standard datasets with custom datasets
+    cycodbench problems merge verified custom-problems.json --output combined.json
+
+NOTES
+
+  - Duplicate problems (with the same ID) will be removed during merging.
+  - If a dataset name is provided instead of a file path, the tool will try to download it.
+  - The merged dataset can be used with other commands like 'problems solve'.
+
+SEE ALSO
+
+  cycodbench help problems
+  cycodbench help problems list
+  cycodbench help problems shard

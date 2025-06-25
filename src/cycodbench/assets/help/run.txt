@@ -1,0 +1,43 @@
+CYCODBENCH RUN COMMAND
+
+  The 'run' command executes the complete benchmark workflow in one step.
+
+USAGE: cycodbench run [dataset-name-or-file-path] [problem-id] [options]
+
+ARGUMENTS
+
+  dataset-name-or-file-path   Dataset name ('verified', 'full', 'lite') or file path (default: 'verified')
+  problem-id                  Optional ID of the problem to run (e.g., 'astropy__astropy-12907')
+
+OPTIONS
+
+  --docker                    Use Docker containers (default)
+  --aca                       Use Azure Container Apps for running the agent
+  --aws                       Use Amazon Web Services for running the agent
+  --container <id>            Use specific container instead of creating one
+  --candidates <count>        Candidates per problem (default: 1)
+  --shard <id>/<total>        Process shard X of Y (e.g., '1/4')
+  --parallel <count>          Problems to process in parallel (default: 1)
+  --timeout <seconds>         Timeout for agent execution (default: 3600)
+  --output <path>             Path to save results file (default: 'results.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Run benchmark on verified dataset with default settings
+    cycodbench run --output results.json
+
+  EXAMPLE 2: Run benchmark for a specific repository with parallelism
+    cycodbench run verified --repo "tensorflow" --parallel 4
+
+  EXAMPLE 3: Run benchmark for a specific problem with multiple candidates
+    cycodbench run verified astropy__astropy-12907 --candidates 5
+
+  EXAMPLE 4: Run benchmark on a specific shard
+    cycodbench run verified --shard 1/4 --output shard1-results.json
+
+SEE ALSO
+
+  cycodbench help problems download
+  cycodbench help problems solve
+  cycodbench help solutions eval
+  cycodbench help results report

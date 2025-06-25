@@ -1,0 +1,45 @@
+CYCODBENCH SOLUTIONS EVAL
+
+  Evaluate solutions of a problem.
+
+USAGE: cycodbench solutions eval <solutions-file-path> [problem-id] [options]
+
+ARGUMENTS
+
+  solutions-file-path        Path to solutions file
+  problem-id                 ID of the problem to evaluate (optional, default: all problems in solutions file)
+
+OPTIONS
+
+  --docker                   Use Docker containers (default)
+  --aca                      Use Azure Container Apps for running the agent
+  --aws                      Use Amazon Web Services for running the agent
+  --container <id>           Use specific container instead of creating one
+  --timeout <seconds>        Evaluation timeout (default: 600)
+  --output <path>            Path to save evaluation results file (default: 'results.json')
+
+EXAMPLES
+
+  EXAMPLE 1: Evaluate all solutions in a file
+    cycodbench solutions eval solutions.json --output results.json
+
+  EXAMPLE 2: Evaluate a specific problem solution
+    cycodbench solutions eval solutions.json astropy__astropy-12907
+
+  EXAMPLE 3: Evaluate using an existing container with a longer timeout
+    cycodbench solutions eval solutions.json --container container-abc123 --timeout 1200
+
+NOTES
+
+  - The evaluation process:
+    1. Sets up the problem environment in a container
+    2. Applies the solution patch
+    3. Runs the test suite to verify the solution
+  - A solution is considered successful if all tests pass
+  - Results are saved in JSON format and can be analyzed with 'results' commands
+
+SEE ALSO
+
+  cycodbench help solutions
+  cycodbench help container init
+  cycodbench help results report
