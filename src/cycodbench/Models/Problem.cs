@@ -16,6 +16,12 @@ namespace CycodBench.Models
         public string Id { get; set; } = string.Empty;
 
         /// <summary>
+        /// Candidate index for the problem, used to differentiate multiple instances of the same problem.
+        /// </summary>
+        [JsonPropertyName("idx")]
+        public int Idx { get; set; }
+
+        /// <summary>
         /// Repository name and owner in the format "owner/repo".
         /// </summary>
         [JsonPropertyName("repo")]

@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycod-bench-tests", "tests\
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmarks", "benchmarks", "{88F53BA7-00B0-44AE-A682-B69705059519}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cycodbench", "src\cycodbench\cycodbench.csproj", "{F6D76347-6B86-3979-C04C-3E2C56DFB17C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,10 @@ Global
 		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6D76347-6B86-3979-C04C-3E2C56DFB17C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6D76347-6B86-3979-C04C-3E2C56DFB17C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6D76347-6B86-3979-C04C-3E2C56DFB17C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6D76347-6B86-3979-C04C-3E2C56DFB17C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +105,7 @@ Global
 		{5283A75C-3392-4C80-B4DE-A8C62779ACFC} = {691974F9-483A-4232-9746-F777D75C8958}
 		{F9152AD5-B7A9-4BE4-9124-A26B741E336A} = {88F53BA7-00B0-44AE-A682-B69705059519}
 		{CE8CA2C3-A740-AB1F-2685-CE086A8C480E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{F6D76347-6B86-3979-C04C-3E2C56DFB17C} = {88F53BA7-00B0-44AE-A682-B69705059519}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E4317ED2-53B7-4A13-8AC7-3FD18B517E96}

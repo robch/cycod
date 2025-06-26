@@ -1,0 +1,23 @@
+cycodbench problems download
+cycodbench problems list
+cycodbench problems merge
+cycodbench problems shard
+
+cycodbench container init
+cycodbench container copy from
+cycodbench container copy to
+cycodbench container exec
+cycodbench container list
+cycodbench container stop
+
+cycodbench problems solve
+cycodbench solutions list
+cycodbench solutions merge
+cycodbench solutions pick
+
+cycodbench solutions eval
+cycodbench results list
+cycodbench results merge
+cycodbench results report
+
+cycodbench run

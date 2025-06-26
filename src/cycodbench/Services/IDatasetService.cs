@@ -60,8 +60,9 @@ namespace CycodBench.Services
         /// </summary>
         /// <param name="dataset">Dataset to shard</param>
         /// <param name="totalShards">Total number of shards</param>
+        /// <param name="candidatesPerProblem">Optional number of solution candidates to generate per problem</param>
         /// <returns>Array of sharded datasets</returns>
-        Task<ProblemDataset[]> CreateShardsAsync(ProblemDataset dataset, int totalShards);
+        Task<ProblemDataset[]> CreateShardsAsync(ProblemDataset dataset, int totalShards, int candidatesPerProblem = 1);
         
         /// <summary>
         /// Get a specific shard from a dataset.
@@ -69,7 +70,8 @@ namespace CycodBench.Services
         /// <param name="dataset">Dataset to get shard from</param>
         /// <param name="shardIndex">Shard index (0-based)</param>
         /// <param name="totalShards">Total number of shards</param>
+        /// <param name="candidatesPerProblem">Optional number of solution candidates to generate per problem</param>
         /// <returns>The specified shard</returns>
-        Task<ProblemDataset> GetShardAsync(ProblemDataset dataset, int shardIndex, int totalShards);
+        Task<ProblemDataset> GetShardAsync(ProblemDataset dataset, int shardIndex, int totalShards, int candidatesPerProblem = 1);
     }
 }

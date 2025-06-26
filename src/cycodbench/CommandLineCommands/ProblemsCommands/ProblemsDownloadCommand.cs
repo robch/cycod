@@ -12,7 +12,7 @@ public class ProblemsDownloadCommand : ProblemsCommand
     /// <summary>
     /// Dataset name to download: verified, full, or lite
     /// </summary>
-    public string? DatasetName { get; set; } = "verified";
+    public string? DatasetName { get; set; }
     
     /// <summary>
     /// Force redownload even if dataset exists

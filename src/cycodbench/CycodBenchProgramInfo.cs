@@ -2,7 +2,7 @@ public class CycodBenchProgramInfo : ProgramInfo
 {
     public CycodBenchProgramInfo() : base(
         () => "cycodbench",
-        () => "Benchmark runner for SWE-bench problems",
+        () => "CYCOD SWE-Bench runner",
         () => ".cycod",
         () => typeof(CycodBenchProgramInfo).Assembly)
     {
