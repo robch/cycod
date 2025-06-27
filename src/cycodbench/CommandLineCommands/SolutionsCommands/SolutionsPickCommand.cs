@@ -12,11 +12,6 @@ public class SolutionsPickCommand : SolutionsCommand
     /// </summary>
     public string? SolutionsFilePath { get; set; }
 
-    /// <summary>
-    /// Show detailed information in the report
-    /// </summary>
-    public bool Verbose { get; set; } = false;
-
     public SolutionsPickCommand()
     {
         // Set default output path
@@ -67,7 +62,7 @@ public class SolutionsPickCommand : SolutionsCommand
             Console.WriteLine($"Maximum problems to select: {MaxItems}");
         }
         
-        if (Verbose)
+        if (ConsoleHelpers.IsVerbose())
         {
             Console.WriteLine("Showing detailed information about each solution");
         }

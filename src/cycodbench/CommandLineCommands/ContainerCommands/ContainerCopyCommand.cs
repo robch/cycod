@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CycodBench.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System.IO;
 
 /// <summary>
 /// Command to copy files to or from a container.
@@ -38,9 +41,57 @@ public class ContainerCopyCommand : ContainerCommand
         Console.WriteLine($"Source: {SourcePath}");
         Console.WriteLine($"Destination: {DestinationPath}");
         
-        // TODO: Implement the actual file copy logic
-        
-        return await Task.FromResult<object>("File copied successfully");
+        try
+        {
+            // Get the appropriate container service
+            var serviceProvider = ServiceConfiguration.GetServiceProvider();
+            var containerServiceFactory = serviceProvider.GetRequiredService<Func<string, IContainerService>>();
+            var containerService = containerServiceFactory(ContainerProvider);
+
+            bool success;
+            if (Direction == "to")
+            {
+                // Ensure source file exists
+                if (!File.Exists(SourcePath))
+                {
+                    throw new FileNotFoundException($"Source file not found: {SourcePath}");
+                }
+                
+                success = await containerService.CopyToContainerAsync(
+                    ContainerId, 
+                    SourcePath, 
+                    DestinationPath);
+            }
+            else // "from"
+            {
+                // Ensure destination directory exists
+                var destDir = Path.GetDirectoryName(DestinationPath);
+                if (!string.IsNullOrEmpty(destDir) && !Directory.Exists(destDir))
+                {
+                    Directory.CreateDirectory(destDir);
+                }
+                
+                success = await containerService.CopyFromContainerAsync(
+                    ContainerId,
+                    SourcePath,
+                    DestinationPath);
+            }
+            
+            if (success)
+            {
+                Console.WriteLine($"File copied successfully");
+                return "File copied successfully";
+            }
+            else
+            {
+                throw new Exception("File copy operation failed");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error copying file: {ex.Message}");
+            return false;
+        }
     }
     
     public override bool IsEmpty()

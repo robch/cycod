@@ -16,11 +16,6 @@ public class ProblemsListCommand : ProblemsCommand
     /// </summary>
     public string? DatasetPath { get; set; }
     
-    /// <summary>
-    /// Show detailed information about each problem
-    /// </summary>
-    public bool Verbose { get; set; } = false;
-
     public override string GetCommandName()
     {
         return "problems list";
@@ -106,7 +101,7 @@ public class ProblemsListCommand : ProblemsCommand
             {
                 var problem = filteredDataset.Problems[i];
                 
-                if (Verbose)
+                if (ConsoleHelpers.IsVerbose())
                 {
                     Console.WriteLine($"{i+1}. {problem.Id} ({problem.Repo})");
                     Console.WriteLine($"   Base commit: {problem.BaseCommit}");

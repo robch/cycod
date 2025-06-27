@@ -130,17 +130,6 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
                 parsed = false;
             }
         }
-        else if (command is ProblemsListCommand listCmd)
-        {
-            if (arg == "--verbose")
-            {
-                listCmd.Verbose = true;
-            }
-            else
-            {
-                parsed = false;
-            }
-        }
         else if (command is ProblemsShardCommand shardCmd)
         {
             if (arg == "--shard")
@@ -327,10 +316,6 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
                 listCmd.OutputPath = output;
                 i += max1Arg.Count();
             }
-            else if (arg == "--verbose")
-            {
-                listCmd.Verbose = true;
-            }
             else
             {
                 parsed = false;
@@ -400,28 +385,6 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
         {
             var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
             command.MaxItems = ValidateInt(arg, countStr, "maximum count");
-        }
-        else if (command is SolutionsListCommand listCmd)
-        {
-            if (arg == "--verbose")
-            {
-                listCmd.Verbose = true;
-            }
-            else
-            {
-                parsed = false;
-            }
-        }
-        else if (command is SolutionsPickCommand pickCmd)
-        {
-            if (arg == "--verbose")
-            {
-                pickCmd.Verbose = true;
-            }
-            else
-            {
-                parsed = false;
-            }
         }
         else if (command is SolutionsEvalCommand evalCmd)
         {
@@ -507,25 +470,10 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
                 listCmd.Status = status;
                 i += max1Arg.Count();
             }
-            else if (arg == "--verbose")
-            {
-                listCmd.Verbose = true;
-            }
             else if (arg == "--max")
             {
                 var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
                 listCmd.MaxItems = ValidateInt(arg, countStr, "maximum count");
-            }
-            else
-            {
-                parsed = false;
-            }
-        }
-        else if (command is ResultsReportCommand reportCmd)
-        {
-            if (arg == "--verbose")
-            {
-                reportCmd.Verbose = true;
             }
             else
             {

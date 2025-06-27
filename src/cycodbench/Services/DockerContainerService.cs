@@ -15,6 +15,9 @@ namespace CycodBench.Services
     /// </summary>
     public class DockerContainerService : IContainerService
     {
+        private static readonly Random _random = new();
+        private static readonly SemaphoreSlim _dockerSemaphore = new(4); // Limit concurrent Docker operations
+        
         /// <inheritdoc />
         public async Task<string> InitContainerAsync(
             string? problemId = null, 
@@ -29,13 +32,29 @@ namespace CycodBench.Services
             try
             {
                 // Determine image to use
-                var containerImage = image ?? "ubuntu:latest";
+                var containerImage = image;
+                if (string.IsNullOrEmpty(containerImage) && !string.IsNullOrEmpty(problemId))
+                {
+                    // Get the SWEbench image for this problem
+                    containerImage = GetProblemImageName(problemId);
+                    
+                    // Pull the image if necessary
+                    await PullImageAsync(containerImage);
+                }
+                else if (string.IsNullOrEmpty(containerImage))
+                {
+                    // Fallback only if no problem ID and no image specified
+                    containerImage = "ubuntu:latest";
+                }
                 
                 // Generate container name if not specified
-                var containerName = name ?? $"cycodbench-{Guid.NewGuid().ToString().Substring(0, 8)}";
+                var randomSuffix = GenerateRandomString(8);
+                var containerName = name ?? (problemId != null ? 
+                    $"cycodbench-{problemId}-{randomSuffix}" : 
+                    $"cycodbench-{randomSuffix}");
                 
-                // Build docker run command
-                var arguments = new StringBuilder("docker run -d");
+                // Build docker run command with a StringBuilder
+                var arguments = new StringBuilder("run");
                 
                 // Add resource limits if specified
                 if (!string.IsNullOrEmpty(memoryLimit))
@@ -47,6 +66,9 @@ namespace CycodBench.Services
                 {
                     arguments.Append($" --cpus={cpuLimit}");
                 }
+
+                // Run in detached mode
+                arguments.Append(" -d");
                 
                 // Add workspace mount if specified
                 if (!string.IsNullOrEmpty(workspacePath))
@@ -54,6 +76,9 @@ namespace CycodBench.Services
                     var hostPath = Path.GetFullPath(workspacePath);
                     arguments.Append($" -v \"{hostPath}:/workspace\"");
                 }
+
+                // Add testbed volume for problem code
+                arguments.Append(" -v /testbed");
                 
                 // Add container name
                 arguments.Append($" --name {containerName}");
@@ -61,14 +86,21 @@ namespace CycodBench.Services
                 // Add image
                 arguments.Append($" {containerImage}");
                 
-                // Add command to keep container running
-                arguments.Append(" tail -f /dev/null");
+                // Add command to keep container running with proper git config
+                arguments.Append(" bash -c \"git config --global user.email a && git config --global user.name a && " +
+                                "git config --global --add safe.directory /testbed && tail -f /dev/null\"");
                 
                 // Execute docker run command
-                var output = await ExecuteCommandAsync(arguments.ToString());
+                var output = await RunDockerCommandAsync(arguments.ToString());
                 var containerId = output.Trim();
                 
                 Console.WriteLine($"Created container: {containerId}");
+                
+                // Create standard directories in the container
+                if (!string.IsNullOrEmpty(workspacePath))
+                {
+                    await EnsureWorkspaceDirectoriesAsync(containerId);
+                }
                 
                 // Setup tools if requested
                 if (setupTools)
@@ -95,9 +127,17 @@ namespace CycodBench.Services
         {
             try
             {
-                var command = $"docker cp \"{sourcePath}\" {containerId}:{destinationPath}";
-                await ExecuteCommandAsync(command);
-                return true;
+                await _dockerSemaphore.WaitAsync();
+                try
+                {
+                    var command = $"cp \"{sourcePath}\" {containerId}:\"{destinationPath}\"";
+                    await RunDockerCommandAsync(command);
+                    return true;
+                }
+                finally
+                {
+                    _dockerSemaphore.Release();
+                }
             }
             catch (Exception ex)
             {
@@ -110,9 +150,17 @@ namespace CycodBench.Services
         {
             try
             {
-                var command = $"docker cp {containerId}:{sourcePath} \"{destinationPath}\"";
-                await ExecuteCommandAsync(command);
-                return true;
+                await _dockerSemaphore.WaitAsync();
+                try
+                {
+                    var command = $"cp {containerId}:\"{sourcePath}\" \"{destinationPath}\"";
+                    await RunDockerCommandAsync(command);
+                    return true;
+                }
+                finally
+                {
+                    _dockerSemaphore.Release();
+                }
             }
             catch (Exception ex)
             {
@@ -125,16 +173,16 @@ namespace CycodBench.Services
         {
             try
             {
-                var dockerCommand = new StringBuilder($"docker exec");
+                var dockerCommand = new StringBuilder("exec");
                 
                 if (!string.IsNullOrEmpty(workDir))
                 {
-                    dockerCommand.Append($" -w {workDir}");
+                    dockerCommand.Append($" -w \"{workDir}\"");
                 }
                 
                 dockerCommand.Append($" {containerId} /bin/bash -c \"{command.Replace("\"", "\\\"")}\"");
                 
-                return await ExecuteCommandAsync(dockerCommand.ToString(), timeout);
+                return await RunDockerCommandAsync(dockerCommand.ToString(), timeout * 1000);
             }
             catch (Exception ex)
             {
@@ -147,7 +195,7 @@ namespace CycodBench.Services
         {
             try
             {
-                var output = await ExecuteCommandAsync("docker ps -q");
+                var output = await RunDockerCommandAsync("ps -q");
                 return output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
             }
             catch (Exception ex)
@@ -161,28 +209,30 @@ namespace CycodBench.Services
         {
             try
             {
-                var containerIds = await ListContainersAsync();
-                var containerInfos = new List<ContainerInfo>();
-                
-                if (containerIds.Count == 0)
-                {
-                    return containerInfos;
-                }
-                
                 // Get container details in JSON format
                 var format = "--format \"{{json .}}\"";
-                var output = await ExecuteCommandAsync($"docker ps {format}");
+                var output = await RunDockerCommandAsync($"ps -a {format}");
                 var lines = output.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                 
+                var containerInfos = new List<ContainerInfo>();
                 foreach (var line in lines)
                 {
                     try
                     {
-                        var containerInfo = JsonSerializer.Deserialize<ContainerInfo>(line);
-                        if (containerInfo != null)
+                        // Process each container JSON
+                        var jsonElement = JsonDocument.Parse(line).RootElement;
+                        
+                        var containerInfo = new ContainerInfo
                         {
-                            containerInfos.Add(containerInfo);
-                        }
+                            Id = GetJsonPropertyValue(jsonElement, "ID", "ContainerId"),
+                            Name = GetJsonPropertyValue(jsonElement, "Names", "Name"),
+                            Status = GetJsonPropertyValue(jsonElement, "Status"),
+                            Image = GetJsonPropertyValue(jsonElement, "Image"),
+                            Ports = GetJsonPropertyValue(jsonElement, "Ports"),
+                            CreatedAt = GetJsonPropertyValue(jsonElement, "CreatedAt")
+                        };
+                        
+                        containerInfos.Add(containerInfo);
                     }
                     catch (JsonException)
                     {
@@ -203,34 +253,132 @@ namespace CycodBench.Services
         {
             try
             {
-                // Stop the container
-                await ExecuteCommandAsync($"docker stop --time={timeout} {containerId}");
-                
-                // Remove the container if requested
-                if (remove)
+                await _dockerSemaphore.WaitAsync();
+                try
                 {
-                    await ExecuteCommandAsync($"docker rm {containerId}");
+                    // Check if container exists
+                    var checkCommand = $"ps -a --filter \"id={containerId}\" --filter \"name={containerId}\" --format \"{{{{.ID}}}}\"";
+                    var containerIds = await RunDockerCommandAsync(checkCommand);
+                    
+                    if (string.IsNullOrWhiteSpace(containerIds))
+                    {
+                        // Container not found
+                        return false;
+                    }
+                    
+                    // Stop the container
+                    await RunDockerCommandAsync($"stop --time={timeout} {containerId}");
+                    
+                    // Remove the container if requested
+                    if (remove)
+                    {
+                        await RunDockerCommandAsync($"rm {containerId}");
+                    }
+                    
+                    return true;
                 }
-                
-                return true;
+                finally
+                {
+                    _dockerSemaphore.Release();
+                }
             }
             catch (Exception ex)
             {
                 throw new Exception($"Failed to stop container: {ex.Message}", ex);
             }
         }
+
+        /// <summary>
+        /// Gets the image name for a SWE-bench problem.
+        /// </summary>
+        /// <param name="problemId">The ID of the problem.</param>
+        /// <returns>The Docker image name for the problem.</returns>
+        private string GetProblemImageName(string problemId)
+        {
+            // Convert double underscores to _1776_ as per swebench convention
+            string issueKey = problemId.Replace("__", "_1776_");
+            return $"swebench/sweb.eval.x86_64.{issueKey}:latest";
+        }
         
-        private async Task<string> ExecuteCommandAsync(string command, int timeout = 60)
+        /// <summary>
+        /// Pulls a Docker image.
+        /// </summary>
+        /// <param name="imageName">The name of the image to pull.</param>
+        private async Task PullImageAsync(string imageName)
+        {
+            Console.WriteLine($"Pulling Docker image: {imageName}");
+            
+            // Use semaphore to limit concurrent pulls
+            await _dockerSemaphore.WaitAsync();
+            try
+            {
+                await RunDockerCommandAsync($"pull {imageName}");
+            }
+            finally
+            {
+                _dockerSemaphore.Release();
+            }
+        }
+        
+        /// <summary>
+        /// Ensures that the standard workspace directories exist in the container.
+        /// </summary>
+        /// <param name="containerId">The container ID.</param>
+        private async Task EnsureWorkspaceDirectoriesAsync(string containerId)
+        {
+            var command = "mkdir -p /workspace/input /workspace/output /workspace/bin";
+            await ExecuteCommandAsync(containerId, command);
+        }
+        
+        /// <summary>
+        /// Sets up evaluation tools in the container.
+        /// </summary>
+        /// <param name="containerId">The container ID.</param>
+        private async Task SetupEvaluationToolsAsync(string containerId)
+        {
+            // For SWEbench images, most tools are already installed
+            // Just make sure directories have the right permissions
+            var commands = new[]
+            {
+                "chmod -R 755 /workspace",
+                "chmod -R 755 /testbed || true"
+            };
+            
+            foreach (var command in commands)
+            {
+                await ExecuteCommandAsync(containerId, command, timeout: 30);
+            }
+        }
+        
+        /// <summary>
+        /// Sets up the agent in the container.
+        /// </summary>
+        /// <param name="containerId">The container ID.</param>
+        private async Task SetupAgentAsync(string containerId)
+        {
+            // Ensure agent directory exists
+            await ExecuteCommandAsync(containerId, "mkdir -p /workspace/agent", timeout: 10);
+        }
+        
+        /// <summary>
+        /// Execute a Docker command and return the output.
+        /// </summary>
+        /// <param name="arguments">The arguments for the Docker command.</param>
+        /// <param name="timeoutMs">Timeout in milliseconds.</param>
+        /// <returns>The command output.</returns>
+        private async Task<string> RunDockerCommandAsync(string arguments, int timeoutMs = 60000)
         {
             var processStartInfo = new ProcessStartInfo
             {
-                FileName = "cmd.exe",
-                Arguments = $"/c {command}",
+                FileName = "docker",
+                Arguments = arguments,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
+
+            Console.WriteLine($"Running Docker command: docker {arguments}");
             
             using var process = new Process { StartInfo = processStartInfo };
             
@@ -257,11 +405,19 @@ namespace CycodBench.Services
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
             
-            if (await Task.Run(() => process.WaitForExit(timeout * 1000)))
+            if (await Task.Run(() => process.WaitForExit(timeoutMs)))
             {
                 if (process.ExitCode != 0)
                 {
-                    throw new Exception($"Command failed with exit code {process.ExitCode}: {errorBuilder}");
+                    string errorOutput = errorBuilder.ToString().Trim();
+                    
+                    // Some docker commands like 'docker stop' may return non-zero when container doesn't exist
+                    if (errorOutput.Contains("No such container") || errorOutput.Contains("not found"))
+                    {
+                        return string.Empty;
+                    }
+                    
+                    throw new Exception($"Docker command failed with exit code {process.ExitCode}: {errorOutput}");
                 }
                 
                 return outputBuilder.ToString().Trim();
@@ -274,34 +430,62 @@ namespace CycodBench.Services
                 }
                 catch
                 {
-                    // Ignore process kill errors
+                    // Ignore errors when trying to kill the process
                 }
                 
-                throw new TimeoutException($"Command timed out after {timeout} seconds: {command}");
+                throw new TimeoutException($"Docker command timed out after {timeoutMs / 1000} seconds: docker {arguments}");
             }
         }
-        
-        private async Task SetupEvaluationToolsAsync(string containerId)
+
+        /// <summary>
+        /// Gets a JSON property value from a JsonElement with fallback property names.
+        /// </summary>
+        /// <param name="element">The JsonElement to extract from.</param>
+        /// <param name="propertyNames">One or more property names to try.</param>
+        /// <returns>The property value or empty string if not found.</returns>
+        private string GetJsonPropertyValue(JsonElement element, params string[] propertyNames)
         {
-            // Basic setup for Ubuntu-based containers
-            var commands = new[]
+            foreach (var propName in propertyNames)
             {
-                "apt-get update",
-                "apt-get install -y git python3 python3-pip",
-                "pip3 install pytest"
-            };
+                if (element.TryGetProperty(propName, out var prop))
+                {
+                    return prop.ToString();
+                }
+            }
+            return string.Empty;
+        }
+        
+        /// <summary>
+        /// Generates a random alphanumeric string.
+        /// </summary>
+        /// <param name="length">The length of the string to generate.</param>
+        /// <returns>A random string.</returns>
+        private string GenerateRandomString(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            return new string(Enumerable.Repeat(chars, length)
+                .Select(s => s[_random.Next(s.Length)]).ToArray());
+        }
+        
+        /// <summary>
+        /// Run an evaluation in the container.
+        /// </summary>
+        /// <param name="containerId">The container ID.</param>
+        /// <param name="predictionPath">Path to the predictions file in the container.</param>
+        /// <param name="outputPath">Path to the output directory in the container.</param>
+        /// <param name="numWorkers">Number of worker processes.</param>
+        /// <returns>The evaluation output.</returns>
+        public async Task<string> RunEvaluationAsync(string containerId, string predictionPath, string outputPath, int numWorkers = 1)
+        {
+            var command = $"python -m swebench.harness.run_evaluation " +
+                          $"--predictions_path {predictionPath} " +
+                          $"--report_dir {outputPath} " +
+                          $"--max_workers {numWorkers} " +
+                          $"--cache_level instance " +
+                          $"--namespace swebench " +
+                          $"--instance_image_tag latest";
             
-            foreach (var command in commands)
-            {
-                await ExecuteCommandAsync(containerId, command, timeout: 300);
-            }
-        }
-        
-        private async Task SetupAgentAsync(string containerId)
-        {
-            // Copy agent files and install dependencies
-            // This is a placeholder - actual agent setup would depend on the agent implementation
-            await ExecuteCommandAsync(containerId, "mkdir -p /agent", timeout: 10);
+            return await ExecuteCommandAsync(containerId, command, workDir: "/workspace", timeout: 300);
         }
     }
 }

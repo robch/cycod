@@ -15,11 +15,6 @@ public class ResultsReportCommand : ResultsCommand
     /// </summary>
     public string? ResultsFilePath { get; set; }
     
-    /// <summary>
-    /// Show detailed information in the report
-    /// </summary>
-    public bool Verbose { get; set; } = false;
-
     public ResultsReportCommand()
     {
         // Set default output path
@@ -66,7 +61,7 @@ public class ResultsReportCommand : ResultsCommand
             Console.WriteLine($"Loaded {results.Results.Count} results from {ResultsFilePath}");
             
             // Generate report
-            string reportContent = await resultService.GenerateReportAsync(results, Verbose);
+            string reportContent = await resultService.GenerateReportAsync(results, ConsoleHelpers.IsVerbose());
             
             // Save report
             await File.WriteAllTextAsync(OutputPath!, reportContent);

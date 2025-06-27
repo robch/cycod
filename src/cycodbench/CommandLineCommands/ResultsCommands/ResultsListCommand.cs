@@ -22,11 +22,6 @@ public class ResultsListCommand : ResultsCommand
     /// </summary>
     public int MaxItems { get; set; } = 0;
     
-    /// <summary>
-    /// Show detailed information about each result
-    /// </summary>
-    public bool Verbose { get; set; } = false;
-
     public override string GetCommandName()
     {
         return "results list";
@@ -36,7 +31,7 @@ public class ResultsListCommand : ResultsCommand
     {
         Console.WriteLine($"Listing results from {ResultsFilePath}");
         
-        if (Verbose)
+        if (ConsoleHelpers.IsVerbose())
         {
             Console.WriteLine("Showing detailed information about each result");
         }

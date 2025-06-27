@@ -12,11 +12,6 @@ public class SolutionsListCommand : SolutionsCommand
     /// </summary>
     public string? SolutionsFilePath { get; set; }
     
-    /// <summary>
-    /// Show detailed information about each solution
-    /// </summary>
-    public bool Verbose { get; set; } = false;
-
     public override string GetCommandName()
     {
         return "solutions list";
@@ -26,7 +21,7 @@ public class SolutionsListCommand : SolutionsCommand
     {
         Console.WriteLine($"Listing solutions from {SolutionsFilePath}");
         
-        if (Verbose)
+        if (ConsoleHelpers.IsVerbose())
         {
             Console.WriteLine("Showing detailed information about each solution");
         }

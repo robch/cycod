@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.IO;
+using CycodBench.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Command to execute a command in a container.
@@ -25,7 +28,7 @@ public class ContainerExecCommand : ContainerCommand
     /// <summary>
     /// Working directory in the container
     /// </summary>
-    public string? WorkingDirectory { get; set; } = "/workspace";
+    public string? WorkingDirectory { get; set; }
     
     /// <summary>
     /// Path to save command output
@@ -49,9 +52,48 @@ public class ContainerExecCommand : ContainerCommand
             Console.WriteLine($"Output path: {OutputPath}");
         }
         
-        // TODO: Implement the actual command execution logic
-        
-        return await Task.FromResult<object>("Command output would appear here");
+        try
+        {
+            // Get the appropriate container service
+            var serviceProvider = ServiceConfiguration.GetServiceProvider();
+            var containerServiceFactory = serviceProvider.GetRequiredService<Func<string, IContainerService>>();
+            var containerService = containerServiceFactory(ContainerProvider);
+
+            // Execute the command
+            string result = await containerService.ExecuteCommandAsync(
+                ContainerId,
+                Command,
+                WorkingDirectory,
+                Timeout
+            );
+            
+            // Save output to file if requested
+            if (!string.IsNullOrEmpty(OutputPath))
+            {
+                // Ensure the directory exists
+                var directory = Path.GetDirectoryName(OutputPath);
+                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+                
+                await File.WriteAllTextAsync(OutputPath, result);
+            }
+            
+            // Show output in console
+            if (interactive)
+            {
+                Console.WriteLine("Command output:");
+                Console.WriteLine(result);
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error executing command: {ex.Message}");
+            return false;
+        }
     }
     
     public override bool IsEmpty()
