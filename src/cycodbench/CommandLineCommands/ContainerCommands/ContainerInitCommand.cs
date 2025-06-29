@@ -67,6 +67,17 @@ public class ContainerInitCommand : ContainerCommand
     public override Command Validate()
     {
         // TODO: Implement validation logic
+
+        if (string.IsNullOrEmpty(ProblemId))
+        {
+            throw new CommandLineException("ProblemId is required for container initialization.", "container init");
+        }
+
+        if (string.IsNullOrEmpty(DatasetPath))
+        {
+            DatasetPath = "verified";
+        }
+
         return this;
     }
 
@@ -79,6 +90,7 @@ public class ContainerInitCommand : ContainerCommand
     public override async Task<object> ExecuteAsync(bool interactive)
     {
         Console.WriteLine($"Initializing container for dataset: {DatasetPath}");
+        Console.WriteLine($"Problem ID: {ProblemId}");
 
         try
         {

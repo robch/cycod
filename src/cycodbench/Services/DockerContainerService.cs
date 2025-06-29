@@ -249,7 +249,7 @@ namespace CycodBench.Services
         }
         
         /// <inheritdoc />
-        public async Task<bool> StopContainerAsync(string containerId, bool remove = true, int timeout = 10)
+        public async Task<bool> StopContainerAsync(string containerId, bool remove = true, int timeout = 60)
         {
             try
             {
@@ -257,22 +257,23 @@ namespace CycodBench.Services
                 try
                 {
                     // Check if container exists
-                    var checkCommand = $"ps -a --filter \"id={containerId}\" --filter \"name={containerId}\" --format \"{{{{.ID}}}}\"";
-                    var containerIds = await RunDockerCommandAsync(checkCommand);
-                    
-                    if (string.IsNullOrWhiteSpace(containerIds))
-                    {
-                        // Container not found
-                        return false;
-                    }
+                    var checkCommand1 = $"ps -a --filter \"id={containerId}\" --format \"{{{{.ID}}}}\"";
+                    var checkCommand2 = $"ps -a --filter \"name={containerId}\" --format \"{{{{.ID}}}}\"";
+                    var containerIds1 = await RunDockerCommandAsync(checkCommand1);
+                    var containerIds2 = await RunDockerCommandAsync(checkCommand2);
+                    var ok1 = !string.IsNullOrWhiteSpace(containerIds1);
+                    var ok2 = !string.IsNullOrWhiteSpace(containerIds2);
+
+                    var notFound = !ok1 && !ok2;
+                    if (notFound) return false;
                     
                     // Stop the container
-                    await RunDockerCommandAsync($"stop --time={timeout} {containerId}");
+                    await RunDockerCommandAsync($"stop {containerId}", timeout * 1000);
                     
                     // Remove the container if requested
                     if (remove)
                     {
-                        await RunDockerCommandAsync($"rm {containerId}");
+                        await RunDockerCommandAsync($"rm {containerId}", timeout * 1000);
                     }
                     
                     return true;

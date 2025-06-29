@@ -611,7 +611,10 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
         }
         else if (command is ProblemsSolveCommand solveCmd)
         {
-            if (string.IsNullOrEmpty(solveCmd.DatasetPath))
+            var isStandardDataset = arg == "verified" || arg == "full" || arg == "lite";
+            var isFilePath = FileHelpers.FileExists(arg);
+
+            if (string.IsNullOrEmpty(solveCmd.DatasetPath) && (isStandardDataset || isFilePath))
             {
                 solveCmd.DatasetPath = arg;
                 parsedOption = true;
@@ -624,7 +627,10 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
         }
         else if (command is ContainerInitCommand initCmd)
         {
-            if (string.IsNullOrEmpty(initCmd.DatasetPath))
+            var isStandardDataset = arg == "verified" || arg == "full" || arg == "lite";
+            var isFilePath = FileHelpers.FileExists(arg);
+
+            if (string.IsNullOrEmpty(initCmd.DatasetPath) && (isStandardDataset || isFilePath))
             {
                 initCmd.DatasetPath = arg;
                 parsedOption = true;
@@ -739,7 +745,10 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
         }
         else if (command is RunCommand runCmd)
         {
-            if (string.IsNullOrEmpty(runCmd.DatasetPath))
+            var isStandardDataset = arg == "verified" || arg == "full" || arg == "lite";
+            var isFilePath = FileHelpers.FileExists(arg);
+
+            if (string.IsNullOrEmpty(runCmd.DatasetPath) && (isStandardDataset || isFilePath))
             {
                 runCmd.DatasetPath = arg;
                 parsedOption = true;

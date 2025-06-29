@@ -521,11 +521,11 @@ class Program
                     var size = FileHelpers.GetFriendlySize(fileInfo);
                     var lang = FileHelpers.GetMarkdownLanguage(fileInfo.Extension);
 
-                    content = $"## {fileName}\n\nModified: {modified}\nSize: {size}\n\n{backticks}{lang}\n{content}\n{backticks}\n";
+                    content = $"## File: {fileName}\n\nModified: {modified}\nSize: {size}\n\n{backticks}{lang}\n{content}\n{backticks}\n";
                 }
                 else
                 {
-                    content = $"## (stdin)\n\n{backticks}\n{content}\n{backticks}\n";
+                    content = $"## File: (stdin)\n\n{backticks}\n{content}\n{backticks}\n";
                 }
             }
 
@@ -533,7 +533,7 @@ class Program
         }
         catch (Exception ex)
         {
-            return $"## {fileName} - Error reading file: {ex.Message}\n\n{ex.StackTrace}";
+            return $"## File: {fileName} - Error reading file: {ex.Message}\n\n{ex.StackTrace}";
         }
     }
 

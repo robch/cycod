@@ -77,7 +77,7 @@ namespace CycodBench.Services
         /// <param name="remove">Whether to remove the container after stopping</param>
         /// <param name="timeout">Timeout in seconds</param>
         /// <returns>Whether the stop was successful</returns>
-        Task<bool> StopContainerAsync(string containerId, bool remove = true, int timeout = 10);
+        Task<bool> StopContainerAsync(string containerId, bool remove = true, int timeout = 60);
     }
 
     /// <summary>

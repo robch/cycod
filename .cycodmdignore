@@ -1,2 +1,4 @@
 **/chat-history*.jsonl
 **/trajectory*.md
+**/obj/
+**/bin/

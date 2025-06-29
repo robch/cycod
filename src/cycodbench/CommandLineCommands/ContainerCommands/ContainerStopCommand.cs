@@ -22,7 +22,7 @@ public class ContainerStopCommand : ContainerCommand
     /// <summary>
     /// Timeout for stopping the container in seconds
     /// </summary>
-    public int Timeout { get; set; } = 10;
+    public int Timeout { get; set; } = 60;
 
     public override string GetCommandName()
     {
