@@ -357,10 +357,30 @@ namespace CycodBench.Services
         /// <param name="containerId">The container ID.</param>
         private async Task SetupAgentAsync(string containerId)
         {
-            // Ensure agent directory exists
-            await ExecuteCommandAsync(containerId, "mkdir -p /workspace/agent", timeout: 10);
+            try
+            {
+                ConsoleHelpers.WriteLine("Setting up agent in container...");
+
+                var localDotCycodPath = PathHelpers.Combine(Directory.GetCurrentDirectory(), ".cycod");
+                var localAgentPath = PathHelpers.Combine(Directory.GetCurrentDirectory(), "cycod");
+
+                await ExecuteCommandAsync(containerId, "mkdir -p /testbed/.cycod", timeout: 10);
+                await CopyToContainerAsync(containerId, localDotCycodPath!, "/testbed/.cycod");
+
+                await ExecuteCommandAsync(containerId, "mkdir -p /workspace/bin", timeout: 10);
+                await CopyToContainerAsync(containerId, localAgentPath!, "/workspace/bin/cycod");
+
+                await ExecuteCommandAsync(containerId, "chmod +x /workspace/bin/cycod", timeout: 10);
+
+                ConsoleHelpers.WriteLine("Setting up agent in container... Done!");
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteErrorLine($"Error setting up agent: {ex.Message}");
+                throw;
+            }
         }
-        
+
         /// <summary>
         /// Execute a Docker command and return the output.
         /// </summary>
