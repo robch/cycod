@@ -53,21 +53,9 @@ public class ProblemsMergeCommand : ProblemsCommand
             {
                 try
                 {
-                    // Check if it's a file or a standard dataset name
-                    if (File.Exists(path))
-                    {
-                        var dataset = await datasetService.LoadDatasetAsync(path);
-                        datasetsToMerge.Add(dataset);
-                        Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {path}");
-                    }
-                    else
-                    {
-                        // Try to download standard dataset
-                        var datasetFile = await datasetService.DownloadDatasetAsync(path);
-                        var dataset = await datasetService.LoadDatasetAsync(datasetFile);
-                        datasetsToMerge.Add(dataset);
-                        Console.WriteLine($"Downloaded and loaded {dataset.Problems.Count} problems from {path}");
-                    }
+                    var dataset = await datasetService.LoadDatasetAsync(path);
+                    Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {path} dataset");
+                    datasetsToMerge.Add(dataset);
                 }
                 catch (Exception ex)
                 {

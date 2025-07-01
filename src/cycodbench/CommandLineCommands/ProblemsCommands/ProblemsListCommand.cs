@@ -46,44 +46,10 @@ public class ProblemsListCommand : ProblemsCommand
             // Get the dataset service
             var serviceProvider = ServiceConfiguration.GetServiceProvider();
             var datasetService = serviceProvider.GetRequiredService<IDatasetService>();
-            
+
             // Load the dataset
-            ProblemDataset dataset;
-            string datasetFile;
-            
-            // Check if DatasetPath is one of our standard dataset names
-            bool isStandardDataset = DatasetPath == "verified" || DatasetPath == "full" || DatasetPath == "lite";
-            
-            if (File.Exists(DatasetPath))
-            {
-                // Load from specified file directly
-                datasetFile = DatasetPath;
-                dataset = await datasetService.LoadDatasetAsync(datasetFile);
-                Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {DatasetPath}");
-            }
-            else if (isStandardDataset)
-            {
-                // Try to download standard dataset if needed
-                try
-                {
-                    datasetFile = await datasetService.DownloadDatasetAsync(DatasetPath!, null, false);
-                    dataset = await datasetService.LoadDatasetAsync(datasetFile);
-                    Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {DatasetPath} dataset");
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"Error loading dataset: {ex.Message}");
-                    Console.Error.WriteLine("Please provide a valid dataset name (verified, full, lite) or a path to a dataset file.");
-                    return false;
-                }
-            }
-            else
-            {
-                // Neither a file nor a standard dataset name
-                Console.Error.WriteLine($"Dataset file not found: {DatasetPath}");
-                Console.Error.WriteLine("Please provide a valid dataset name (verified, full, lite) or a path to an existing dataset file.");
-                return false;
-            }
+            var dataset = await datasetService.LoadDatasetAsync(DatasetPath!);
+            Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {DatasetPath} dataset");
             
             // Apply filters
             var filteredDataset = await datasetService.FilterProblemsAsync(

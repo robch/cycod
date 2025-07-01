@@ -20,9 +20,9 @@ namespace CycodBench.Services
         /// <summary>
         /// Load a dataset from a file.
         /// </summary>
-        /// <param name="filePath">Path to the dataset file</param>
+        /// <param name="nameOrFilePath">Standard dataset name or file path to the dataset file</param>
         /// <returns>The loaded dataset</returns>
-        Task<ProblemDataset> LoadDatasetAsync(string filePath);
+        Task<ProblemDataset> LoadDatasetAsync(string nameOrFilePath);
         
         /// <summary>
         /// Save a dataset to a file.

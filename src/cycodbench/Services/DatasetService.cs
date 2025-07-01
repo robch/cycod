@@ -279,10 +279,15 @@ namespace CycodBench.Services
         }
         
         /// <inheritdoc />
-        public async Task<ProblemDataset> LoadDatasetAsync(string filePath)
+        public async Task<ProblemDataset> LoadDatasetAsync(string nameOrFilePath)
         {
             try
             {
+                bool isStandardDataset = nameOrFilePath == "verified" || nameOrFilePath == "full" || nameOrFilePath == "lite";
+                var filePath = isStandardDataset 
+                    ? await DownloadDatasetAsync(nameOrFilePath, null, false) 
+                    : nameOrFilePath;
+
                 if (!File.Exists(filePath))
                 {
                     throw new FileNotFoundException($"Dataset file not found: {filePath}");

@@ -88,28 +88,7 @@ public class SolutionsEvalCommand : SolutionsCommand
             
             // Load the problems dataset (infer from the first solution)
             string datasetName = solutions.Solutions.FirstOrDefault()?.ProblemDataset ?? "verified";
-            ProblemDataset dataset;
-            
-            try
-            {
-                if (File.Exists(datasetName))
-                {
-                    dataset = await datasetService.LoadDatasetAsync(datasetName);
-                }
-                else
-                {
-                    var datasetFile = await datasetService.DownloadDatasetAsync(datasetName);
-                    dataset = await datasetService.LoadDatasetAsync(datasetFile);
-                }
-                
-                Console.WriteLine($"Loaded {dataset.Problems.Count} problems from dataset");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error loading dataset: {ex.Message}");
-                Console.Error.WriteLine($"Using empty dataset - evaluation may not work correctly");
-                dataset = new ProblemDataset();
-            }
+            var dataset = await datasetService.LoadDatasetAsync(datasetName);
             
             // Evaluate solutions
             var results = new ResultCollection();

@@ -43,21 +43,8 @@ namespace CycodBench.Services
             Console.WriteLine($"Running benchmark on {datasetName} dataset...");
             
             // Load or download the dataset
-            ProblemDataset dataset;
-            
-            if (File.Exists(datasetName))
-            {
-                // Load from file
-                dataset = await _datasetService.LoadDatasetAsync(datasetName);
-                Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {datasetName}");
-            }
-            else
-            {
-                // Download the dataset
-                var datasetFile = await _datasetService.DownloadDatasetAsync(datasetName);
-                dataset = await _datasetService.LoadDatasetAsync(datasetFile);
-                Console.WriteLine($"Downloaded {dataset.Problems.Count} problems from {datasetName}");
-            }
+            var dataset = await _datasetService.LoadDatasetAsync(datasetName);
+            Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {datasetName} dataset");
             
             // Filter problems if a specific problem ID is provided
             if (!string.IsNullOrEmpty(problemId))
