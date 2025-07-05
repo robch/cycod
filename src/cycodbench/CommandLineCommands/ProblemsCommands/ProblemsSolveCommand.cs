@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using CycodBench.Models;
+using CycodBench.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 /// <summary>
 /// Command to generate solutions for one or more problems.
@@ -67,9 +70,88 @@ public class ProblemsSolveCommand : ProblemsCommand
             Console.WriteLine($"Output path: {OutputPath}");
         }
         
-        // TODO: Implement the actual solve logic
-        
-        return await Task.FromResult<object>(true);
+        try
+        {
+            // Get the required services
+            var serviceProvider = ServiceConfiguration.GetServiceProvider();
+            var datasetService = serviceProvider.GetRequiredService<IDatasetService>();
+            var solutionService = serviceProvider.GetRequiredService<ISolutionService>();
+            
+            // Load or download the dataset
+            var dataset = await datasetService.LoadDatasetAsync(DatasetPath!);
+            Console.WriteLine($"Loaded {dataset.Problems.Count} problems from {DatasetPath} dataset");
+            
+            // Filter problems if a specific problem ID is provided
+            if (!string.IsNullOrEmpty(ProblemId))
+            {
+                dataset = await datasetService.FilterProblemsAsync(dataset, problemId: ProblemId);
+                Console.WriteLine($"Filtered to {dataset.Problems.Count} problems matching ID: {ProblemId}");
+            }
+            
+            // Filter by repository if specified
+            if (!string.IsNullOrEmpty(Repository))
+            {
+                dataset = await datasetService.FilterProblemsAsync(dataset, repository: Repository);
+                Console.WriteLine($"Filtered to {dataset.Problems.Count} problems from repository: {Repository}");
+            }
+            
+            // Filter by text pattern if specified
+            if (!string.IsNullOrEmpty(ContainsPattern))
+            {
+                dataset = await datasetService.FilterProblemsAsync(dataset, containsText: ContainsPattern);
+                Console.WriteLine($"Filtered to {dataset.Problems.Count} problems containing: {ContainsPattern}");
+            }
+            
+            // Limit the number of problems if MaxItems is set
+            if (MaxItems > 0 && dataset.Problems.Count > MaxItems)
+            {
+                dataset.Problems = dataset.Problems.GetRange(0, MaxItems);
+                Console.WriteLine($"Limited to {dataset.Problems.Count} problems");
+            }
+            
+            // Solve problems
+            Console.WriteLine($"Solving {dataset.Problems.Count} problems...");
+            
+            var solutions = new SolutionCollection();
+            
+            // Set up parallelism
+            var options = new ParallelOptions { MaxDegreeOfParallelism = ParallelCount };
+            
+            await Parallel.ForEachAsync(dataset.Problems, options, async (problem, cancellationToken) =>
+            {
+                try
+                {
+                    Console.WriteLine($"Solving problem {problem.Id}...");
+                    
+                    var solution = await solutionService.SolveProblemAsync(problem, ContainerId, Timeout);
+                    solution.ProblemDataset = DatasetPath;
+                    
+                    lock (solutions)
+                    {
+                        solutions.Solutions.Add(solution);
+                    }
+                    
+                    Console.WriteLine($"Generated solution for {problem.Id}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to solve problem {problem.Id}: {ex.Message}");
+                }
+            });
+            
+            // Save solutions to file
+            string outputPath = OutputPath ?? "solutions.json";
+            await solutionService.SaveSolutionsAsync(solutions, outputPath);
+            
+            Console.WriteLine($"Completed solving problems. Solutions saved to {outputPath}");
+            
+            return solutions;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error solving problems: {ex.Message}");
+            return false;
+        }
     }
     
     public override bool IsEmpty()

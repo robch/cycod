@@ -268,13 +268,16 @@ public class CycodBenchCommandLineOptions : CommandLineOptions
                 initCmd.WorkspacePath = workspace;
                 i += max1Arg.Count();
             }
+            else if (arg == "--setup-agent")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var setupAgentPath = ValidateString(arg, max1Arg.FirstOrDefault(), "setup agent path");
+                initCmd.SetupAgentFromPath = setupAgentPath;
+                i += max1Arg.Count();
+            }
             else if (arg == "--setup-tools")
             {
                 initCmd.SetupTools = true;
-            }
-            else if (arg == "--setup-agent")
-            {
-                initCmd.SetupAgent = true;
             }
             else
             {

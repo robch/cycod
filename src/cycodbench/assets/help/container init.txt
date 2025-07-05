@@ -26,8 +26,8 @@ OTHER OPTIONS
   --aca                       Use Azure Container Apps for running the agent
   --aws                       Use Amazon Web Services for running the agent
   --workspace <path>          Host path to mount as workspace
-  --setup-tools               Automatically set up evaluation tools in the container
-  --setup-agent               Automatically set up the agent in the container
+  --setup-agent <path>        Set up the agent in the container
+  --setup-tools               Set up evaluation tools in the container
 
 EXAMPLES
 
@@ -43,8 +43,8 @@ EXAMPLES
 NOTES
 
   - The container id will be returned after initialization.
-  - If --setup-tools is specified, SWE-bench evaluation tools will be installed.
   - If --setup-agent is specified, the agent will be set up in the container.
+  - If --setup-tools is specified, SWE-bench evaluation tools will be installed.
 
 SEE ALSO
 

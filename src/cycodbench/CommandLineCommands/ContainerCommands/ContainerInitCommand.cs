@@ -57,7 +57,7 @@ public class ContainerInitCommand : ContainerCommand
     /// <summary>
     /// Whether to set up the agent in the container
     /// </summary>
-    public bool SetupAgent { get; set; }
+    public string? SetupAgentFromPath { get; set; }
 
     public override string GetCommandName()
     {
@@ -94,12 +94,16 @@ public class ContainerInitCommand : ContainerCommand
 
         try
         {
-            // Get the appropriate container service
             var serviceProvider = ServiceConfiguration.GetServiceProvider();
             var containerServiceFactory = serviceProvider.GetRequiredService<Func<string, IContainerService>>();
-            var containerService = containerServiceFactory(ContainerProvider);
 
             Console.WriteLine($"Using container provider: {ContainerProvider}");
+            var containerService = containerServiceFactory(ContainerProvider);
+
+            var newContainer = string.IsNullOrEmpty(ContainerId);
+            var useDefaultAgentPath = newContainer && string.IsNullOrEmpty(SetupAgentFromPath);
+            if (useDefaultAgentPath) SetupAgentFromPath = "self-contained";
+
             var containerId = await containerService.InitContainerAsync(
                 problemId: ProblemId,
                 name: Name,
@@ -107,8 +111,8 @@ public class ContainerInitCommand : ContainerCommand
                 memoryLimit: Memory,
                 cpuLimit: Cpus.ToString(),
                 workspacePath: WorkspacePath,
-                setupTools: SetupTools,
-                setupAgent: SetupAgent
+                setupAgentFromPath: SetupAgentFromPath,
+                setupTools: SetupTools || newContainer
             );
 
             Console.WriteLine($"Container initialized successfully: {containerId}");

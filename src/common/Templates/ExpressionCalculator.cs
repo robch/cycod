@@ -1487,13 +1487,18 @@ public class ExpressionCalculator
         }
         NextToken();
 
-        var value = Expression();
-        if (!(value is string))
+        var value1 = Expression();
+        if (!(value1 is string))
         {
             throw new CalcException("Expected string", _expression, _position);
         }
 
-        value = string.IsNullOrEmpty((string)value);
+        var isActuallyEmpty = string.IsNullOrEmpty((string)value1);
+        var isPseudoEmpty = !isActuallyEmpty &&
+            string.IsNullOrEmpty(((string)value1)
+                .ReplaceValues(new NoNamedValues(), deleteUnresolved: true));
+        var value = isActuallyEmpty || isPseudoEmpty;
+
         if (_tokenType != TokenType.CloseParen)
         {
             throw new CalcException("Expected ')'", _expression, _position);

@@ -24,7 +24,7 @@ public class TemplateVariables : INamedValues
     {
         _variables = new Dictionary<string, string>(variables, StringComparer.OrdinalIgnoreCase);
     }
-    
+
     /// <summary>
     /// Gets a value by name, or an empty string if not found
     /// </summary>
@@ -37,21 +37,21 @@ public class TemplateVariables : INamedValues
         {
             return value;
         }
-        
+
         // Then check configuration
         var configValue = ConfigStore.Instance.GetFromAnyScope(name);
         if (configValue.Source != ConfigSource.NotFound)
         {
             return configValue!.AsString();
         }
-        
+
         // Then check environment variables
         var envValue = Environment.GetEnvironmentVariable(name);
         if (envValue != null)
         {
             return envValue;
         }
-        
+
         // Finally check special variables
         var builtInValue = GetBuiltInVariable(name);
         if (builtInValue != null)
@@ -79,7 +79,7 @@ public class TemplateVariables : INamedValues
     /// <returns>True if the value exists, false otherwise</returns>
     public bool Contains(string name)
     {
-        return _variables.ContainsKey(name) || 
+        return _variables.ContainsKey(name) ||
                ConfigStore.Instance.GetFromAnyScope(name).Value != null ||
                Environment.GetEnvironmentVariable(name) != null ||
                GetBuiltInVariable(name) != null;
@@ -120,7 +120,7 @@ public class TemplateVariables : INamedValues
             case "random":
                 return new Random().Next(0, 1000).ToString();
         }
-        
+
         return null;
     }
 }

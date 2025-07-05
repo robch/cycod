@@ -17,8 +17,8 @@ namespace CycodBench.Services
         /// <param name="memoryLimit">Memory limit (e.g. "8g") (optional)</param>
         /// <param name="cpuLimit">CPU limit (e.g. 4) (optional)</param>
         /// <param name="workspacePath">Host path to mount as workspace (optional)</param>
+        /// <param name="setupAgentFromPath">Path to setup agent from (optional)</param>
         /// <param name="setupTools">Whether to set up evaluation tools in the container</param>
-        /// <param name="setupAgent">Whether to set up the agent in the container</param>
         /// <returns>The ID of the created container</returns>
         Task<string> InitContainerAsync(
             string? problemId = null,
@@ -27,8 +27,8 @@ namespace CycodBench.Services
             string? memoryLimit = null,
             string? cpuLimit = null,
             string? workspacePath = null,
-            bool setupTools = false,
-            bool setupAgent = false);
+            string? setupAgentFromPath = null,
+            bool setupTools = false);
         
         /// <summary>
         /// Copy files to a container.

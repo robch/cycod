@@ -2,6 +2,7 @@
 ✅ cycodbench problems list
 ✅ cycodbench problems merge
 ✅ cycodbench problems shard
+✅ cycodbench problems solve
 
 ✅ cycodbench container init
 ✅ cycodbench container copy from
@@ -10,14 +11,14 @@
 ✅ cycodbench container list
 ✅ cycodbench container stop
 
-⏹️ cycodbench problems solve
-cycodbench solutions list
-cycodbench solutions merge
-cycodbench solutions pick
+⏹️ cycodbench solutions list
+⏹️ cycodbench solutions merge
+⏹️ cycodbench solutions pick
 
-cycodbench solutions eval
-cycodbench results list
-cycodbench results merge
-cycodbench results report
+⏹️ cycodbench solutions eval
 
-cycodbench run
+⏹️ cycodbench results list
+⏹️ cycodbench results merge
+⏹️ cycodbench results report
+
+⏹️ cycodbench run

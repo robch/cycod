@@ -26,94 +26,45 @@ namespace CycodBench.Services
             string? memoryLimit = null, 
             string? cpuLimit = null, 
             string? workspacePath = null, 
-            bool setupTools = false, 
-            bool setupAgent = false)
+            string? setupAgentFromPath = null,
+            bool setupTools = false)
         {
             try
             {
-                // Determine image to use
-                var containerImage = image;
-                if (string.IsNullOrEmpty(containerImage) && !string.IsNullOrEmpty(problemId))
-                {
-                    // Get the SWEbench image for this problem
-                    containerImage = GetProblemImageName(problemId);
-                    
-                    // Pull the image if necessary
-                    await PullImageAsync(containerImage);
-                }
-                else if (string.IsNullOrEmpty(containerImage))
-                {
-                    // Fallback only if no problem ID and no image specified
-                    containerImage = "ubuntu:latest";
-                }
-                
-                // Generate container name if not specified
-                var randomSuffix = GenerateRandomString(8);
-                var containerName = name ?? (problemId != null ? 
-                    $"cycodbench-{problemId}-{randomSuffix}" : 
-                    $"cycodbench-{randomSuffix}");
-                
+                // Validate/create container name and local workspace path
+                var containerImage = await EnsureImageName(image, problemId);
+                var containerName = EnsureContainerName(name, problemId);
+                workspacePath = EnsureLocalWorkspacePath(workspacePath, containerName);
+
                 // Build docker run command with a StringBuilder
                 var arguments = new StringBuilder("run");
-                
-                // Add resource limits if specified
-                if (!string.IsNullOrEmpty(memoryLimit))
-                {
-                    arguments.Append($" --memory={memoryLimit}");
-                }
-                
-                if (!string.IsNullOrEmpty(cpuLimit))
-                {
-                    arguments.Append($" --cpus={cpuLimit}");
-                }
 
-                // Run in detached mode
+                var addMemory = !string.IsNullOrEmpty(memoryLimit);
+                if (addMemory) arguments.Append($" --memory={memoryLimit}");
+
+                var addCpus = !string.IsNullOrEmpty(cpuLimit);
+                if (addCpus) arguments.Append($" --cpus={cpuLimit}");
+
                 arguments.Append(" -d");
-                
-                // Add workspace mount if specified
-                if (!string.IsNullOrEmpty(workspacePath))
-                {
-                    var hostPath = Path.GetFullPath(workspacePath);
-                    arguments.Append($" -v \"{hostPath}:/workspace\"");
-                }
-
-                // Add testbed volume for problem code
+                arguments.Append($" -v \"{Path.GetFullPath(workspacePath)}:/workspace\"");
                 arguments.Append(" -v /testbed");
-                
-                // Add container name
                 arguments.Append($" --name {containerName}");
-                
-                // Add image
                 arguments.Append($" {containerImage}");
-                
-                // Add command to keep container running with proper git config
                 arguments.Append(" bash -c \"git config --global user.email a && git config --global user.name a && " +
                                 "git config --global --add safe.directory /testbed && tail -f /dev/null\"");
-                
-                // Execute docker run command
+
+                // Execute docker run command to create the container
                 var output = await RunDockerCommandAsync(arguments.ToString());
                 var containerId = output.Trim();
-                
                 Console.WriteLine($"Created container: {containerId}");
-                
-                // Create standard directories in the container
-                if (!string.IsNullOrEmpty(workspacePath))
-                {
-                    await EnsureWorkspaceDirectoriesAsync(containerId);
-                }
-                
-                // Setup tools if requested
-                if (setupTools)
-                {
-                    await SetupEvaluationToolsAsync(containerId);
-                }
-                
-                // Setup agent if requested
-                if (setupAgent)
-                {
-                    await SetupAgentAsync(containerId);
-                }
-                
+
+                // Ensure the container workspace paths exist and set up tools/agent if requested
+                await EnsureContainerWorkspacePaths(containerId);
+                if (setupTools) await SetupEvaluationToolsAsync(containerId);
+
+                var setupAgent = !string.IsNullOrEmpty(setupAgentFromPath);
+                if (setupAgent) await SetupAgentAsync(containerId, setupAgentFromPath!);
+
                 return containerId;
             }
             catch (Exception ex)
@@ -121,7 +72,7 @@ namespace CycodBench.Services
                 throw new Exception($"Failed to initialize container: {ex.Message}", ex);
             }
         }
-        
+
         /// <inheritdoc />
         public async Task<bool> CopyToContainerAsync(string containerId, string sourcePath, string destinationPath)
         {
@@ -290,6 +241,76 @@ namespace CycodBench.Services
         }
 
         /// <summary>
+        /// Ensures the local workspace path exists or creates a new one based on the container name.
+        /// </summary>
+        /// <param name="workspacePath">The specified workspace path, or null to create a new one.</param>
+        /// <param name="containerName">The name of the container to base the new workspace path on.</param>
+        /// <returns>The full path to the workspace directory.</returns>
+        private string EnsureLocalWorkspacePath(string? workspacePath, string containerName)
+        {
+            // If workspacePath is specified, ensure it exists
+            var specified = !string.IsNullOrEmpty(workspacePath);
+            var needsCreation = specified && !Directory.Exists(workspacePath);
+            if (needsCreation) DirectoryHelpers.EnsureDirectoryExists(workspacePath!);
+
+            var ok = specified && Directory.Exists(workspacePath);
+            if (ok) return Path.GetFullPath(workspacePath!);
+
+            // If not specified, create a new workspace path based on container name
+            var shortId = containerName.Length > 32 ? containerName[..32] : containerName;
+            string workspaceId = $"{shortId}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+            workspacePath = PathHelpers.Combine(Directory.GetCurrentDirectory(), "workspaces", workspaceId);
+
+            needsCreation = !string.IsNullOrEmpty(workspacePath) && !Directory.Exists(workspacePath);
+            if (needsCreation) DirectoryHelpers.EnsureDirectoryExists(workspacePath!);
+
+            ok = !string.IsNullOrEmpty(workspacePath) && Directory.Exists(workspacePath);
+            if (ok) return Path.GetFullPath(workspacePath!);
+
+            // Fallback to system temp path if workspacePath is still invalid
+            return Path.GetTempPath();
+        }
+
+        /// <summary>
+        /// Ensures a valid container name is provided.
+        /// </summary>
+        /// <param name="containerName">The specified container name, or null to generate a new one.</param>
+        /// <param name="problemId">The ID of the problem, used to generate a container name if none is specified.</param>
+        /// <returns></returns>
+        private string EnsureContainerName(string? containerName, string? problemId)
+        {
+            var randomSuffix = GenerateRandomString(8);
+            containerName ??= (problemId != null ?
+                $"cycodbench-{problemId}-{randomSuffix}" :
+                $"cycodbench-{randomSuffix}");
+            return containerName;
+        }
+
+        /// <summary>
+        /// Ensures a valid Docker image is specified or pulls the appropriate image for the problem.
+        /// </summary>
+        /// <param name="image">The specified Docker image, or null to use the default image.</param>
+        /// <param name="problemId">The ID of the problem, used to determine the image if none is specified.</param>
+        /// <returns>The Docker image name to use.</returns>
+        private async Task<string?> EnsureImageName(string? image, string? problemId)
+        {
+
+            // Determine image to use
+            var containerImage = image;
+            if (string.IsNullOrEmpty(containerImage) && !string.IsNullOrEmpty(problemId))
+            {
+                containerImage = GetProblemImageName(problemId);
+                await PullImageAsync(containerImage);
+            }
+            else if (string.IsNullOrEmpty(containerImage))
+            {
+                containerImage = "ubuntu:latest";
+            }
+
+            return containerImage;
+        }
+
+        /// <summary>
         /// Gets the image name for a SWE-bench problem.
         /// </summary>
         /// <param name="problemId">The ID of the problem.</param>
@@ -325,7 +346,7 @@ namespace CycodBench.Services
         /// Ensures that the standard workspace directories exist in the container.
         /// </summary>
         /// <param name="containerId">The container ID.</param>
-        private async Task EnsureWorkspaceDirectoriesAsync(string containerId)
+        private async Task EnsureContainerWorkspacePaths(string containerId)
         {
             var command = "mkdir -p /workspace/input /workspace/output /workspace/bin";
             await ExecuteCommandAsync(containerId, command);
@@ -355,22 +376,27 @@ namespace CycodBench.Services
         /// Sets up the agent in the container.
         /// </summary>
         /// <param name="containerId">The container ID.</param>
-        private async Task SetupAgentAsync(string containerId)
+        /// <param name="localAgentPath">The local path to the agent files.</param>
+        private async Task SetupAgentAsync(string containerId, string localAgentPath)
         {
             try
             {
                 ConsoleHelpers.WriteLine("Setting up agent in container...");
 
                 var localDotCycodPath = PathHelpers.Combine(Directory.GetCurrentDirectory(), ".cycod");
-                var localAgentPath = PathHelpers.Combine(Directory.GetCurrentDirectory(), "cycod");
-
-                await ExecuteCommandAsync(containerId, "mkdir -p /testbed/.cycod", timeout: 10);
                 await CopyToContainerAsync(containerId, localDotCycodPath!, "/testbed/.cycod");
 
                 await ExecuteCommandAsync(containerId, "mkdir -p /workspace/bin", timeout: 10);
-                await CopyToContainerAsync(containerId, localAgentPath!, "/workspace/bin/cycod");
-
+                await CopyToContainerAsync(containerId, $"{localAgentPath}/linux/cycod/cycod", "/workspace/bin/cycod");
                 await ExecuteCommandAsync(containerId, "chmod +x /workspace/bin/cycod", timeout: 10);
+
+                var cycoDmdLocalFilePath = PathHelpers.Combine(localAgentPath, "linux/cycodmd/cycodmd");
+                var copyCycoDmd = FileHelpers.FileExists(cycoDmdLocalFilePath);
+                if (copyCycoDmd) 
+                {
+                    await CopyToContainerAsync(containerId, cycoDmdLocalFilePath!, "/workspace/bin/cycodmd");
+                    await ExecuteCommandAsync(containerId, "chmod +x /workspace/bin/cycodmd", timeout: 10);
+                }
 
                 ConsoleHelpers.WriteLine("Setting up agent in container... Done!");
             }
@@ -410,6 +436,7 @@ namespace CycodBench.Services
             {
                 if (args.Data != null)
                 {
+                    ConsoleHelpers.WriteDebugLine(args.Data);
                     outputBuilder.AppendLine(args.Data);
                 }
             };
@@ -418,6 +445,7 @@ namespace CycodBench.Services
             {
                 if (args.Data != null)
                 {
+                    ConsoleHelpers.WriteDebugLine(args.Data);
                     errorBuilder.AppendLine(args.Data);
                 }
             };

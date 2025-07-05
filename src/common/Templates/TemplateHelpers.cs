@@ -31,11 +31,12 @@ public static class TemplateHelpers
             var name = s.Split('=')[0].Trim();
             values.Set(name, result.ToString());
         };
+        Func<string, string> include = (nakedAtFile) => AtFileHelpers.ExpandAtFileValue($"@{nakedAtFile}", values);
 
-        return ProcessTemplate(template, evaluateCondition, interpolate, setVariable);
+        return ProcessTemplate(template, evaluateCondition, interpolate, setVariable, include);
     }
 
-    public static string ProcessTemplate(string template, Func<string, bool> evaluateCondition, Func<string, string> interpolate, Action<string> setVariable)
+    public static string ProcessTemplate(string template, Func<string, bool> evaluateCondition, Func<string, string> interpolate, Action<string> setVariable, Func<string, string> include)
     {
         var safeEvaluateCondition = TryCatchHelpers.NoThrowWrapException(evaluateCondition, false);
 
@@ -48,8 +49,9 @@ public static class TemplateHelpers
         var skipElseBranches = new Stack<bool>();
         skipElseBranches.Push(true);
 
-        foreach (var line in lines)
+        for (var i = 0; i < lines.Count(); i++)
         {
+            var line = lines[i];
             var trimmedLine = line.Trim('\n', '\r', ' ', '\t');
 
             if (trimmedLine.StartsWith("{{if ") && trimmedLine.EndsWith("}}") && !trimmedLine.EndsWith("{{endif}}"))
@@ -123,7 +125,19 @@ public static class TemplateHelpers
                 }
                 continue;
             }
-
+            else if (trimmedLine.StartsWith("{{include ") && trimmedLine.EndsWith("}}"))
+            {
+                if (inTrueBranchNow.All(b => b))
+                {
+                    var includeWhat = trimmedLine[10..^2].Trim();
+                    var expanded = include(includeWhat)
+                        .Split('\n', StringSplitOptions.None)
+                        .Select(line => line.TrimEnd('\r').TrimEnd())
+                        .ToList();
+                    lines.InsertRange(i + 1, expanded);
+                }
+                continue;
+            }
             if (inTrueBranchNow.All(b => b))
             {
                 var updated = line.TrimEnd('\n', '\r');
