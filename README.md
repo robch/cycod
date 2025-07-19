@@ -42,9 +42,10 @@ Or locally in your current directory:
 dotnet tool install --local CycoD --prerelease
 ```
 
-After installation, you can run CycoD directly from your terminal:
+After installation, you can authenticate with GitHub and run CycoD directly from your terminal:
 
 ```bash
+cycod github login
 cycod --input "Hello, how can you help me?"
 ```
 
