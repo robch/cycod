@@ -7,8 +7,8 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 # Configuration
-RESOURCE_GROUP="robch-cycod-website-rg"
-STORAGE_ACCOUNT_NAME="cycoddocs"  # Fixed storage account name
+RESOURCE_GROUP="cycod-docs-website-rg"
+STORAGE_ACCOUNT_NAME="cycoddocs100"  # Fixed storage account name
 LOCATION="eastus"  # Default location
 WEBSITE_ROOT="."
 SOURCE_DIR="$WEBSITE_ROOT/site"
