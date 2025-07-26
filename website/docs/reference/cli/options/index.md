@@ -31,7 +31,7 @@ These options manage chat history and conversations:
 
 | Option | Description |
 |--------|-------------|
-| [`--continue`](continue.md) | Continue the most recent chat history |
+| [`--continue`](continue.md) | Continue the most recent conversation |
 | [`--chat-history`](chat-history.md) | Load from and save to the same JSONL file |
 | [`--input-chat-history`](input-chat-history.md) | Load chat history from the specified JSONL file |
 | [`--output-chat-history`](output-chat-history.md) | Save chat history to the specified file |
@@ -44,9 +44,12 @@ These options control which AI provider to use:
 | Option | Description |
 |--------|-------------|
 | [`--use-copilot`](use-copilot.md) | Prefer use of GitHub Copilot |
-| [`--use-openai`](use-openai.md) | Prefer use of OpenAI API |
-| [`--use-azure-openai`](use-azure-openai.md) | Prefer use of Azure OpenAI API |
+| [`--use-anthropic`](use-anthropic.md) | Prefer use of Anthropic Claude API |
 | [`--use-azure`](use-azure.md) | Alias for `--use-azure-openai` |
+| [`--use-azure-openai`](use-azure-openai.md) | Prefer use of Azure OpenAI API |
+| [`--use-bedrock`](use-bedrock.md) | Prefer use of Amazon Bedrock |
+| [`--use-gemini`](use-gemini.md) | Prefer use of Google Gemini API |
+| [`--use-openai`](use-openai.md) | Prefer use of OpenAI API |
 
 ### Azure OpenAI Options
 
@@ -77,7 +80,34 @@ These options configure OpenAI API:
 | [`--openai-api-key`](openai-api-key.md) | Use a specific API key |
 | [`--openai-chat-model-name`](openai-chat-model-name.md) | Use a specific chat model |
 
-### Configuration and Profile Options
+### Anthropic Options
+
+These options configure Anthropic Claude API:
+
+| Option | Description |
+|--------|-------------|
+| [`--anthropic-api-key`](anthropic-api-key.md) | Use a specific API key |
+| [`--anthropic-model-name`](anthropic-model.md) | Use a specific Claude model |
+
+### Gemini Options
+
+These options configure Google Gemini API:
+
+| Option | Description |
+|--------|-------------|
+| [`--google-gemini-api-key`](gemini-api-key.md) | Use a specific API key |
+| [`--google-gemini-model-id`](gemini-model.md) | Use a specific Gemini model |
+
+### Bedrock Options
+
+These options configure Amazon Bedrock:
+
+| Option | Description |
+|--------|-------------|
+| [`--aws-bedrock-access-key`](bedrock-access-key-id.md) | Use a specific AWS access key ID |
+| [`--aws-bedrock-secret-key`](bedrock-secret-access-key.md) | Use a specific AWS secret access key |
+| [`--aws-bedrock-region`](bedrock-region.md) | Use a specific AWS region |
+| [`--aws-bedrock-model-id`](bedrock-model.md) | Use a specific foundation model |
 
 These options manage configurations and profiles:
 

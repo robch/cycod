@@ -87,7 +87,10 @@ nav:
     - SETUP:
       - Providers: providers/overview.md
       - Setup GitHub Copilot: providers/github-copilot.md
+      - Setup Anthropic: providers/anthropic.md
+      - Setup Amazon Bedrock: providers/bedrock.md
       - Setup Azure OpenAI: providers/azure-openai.md
+      - Setup Google Gemini: providers/gemini.md
       - Setup OpenAI: providers/openai.md
   - CHAT:
       - The Basics: basics/chat.md
@@ -163,9 +166,15 @@ nav:
         - --add-user-prompt: reference/cli/options/add-user-prompt.md
         - --any: reference/cli/options/any.md
         - --arg: reference/cli/options/arg.md
+        - --anthropic-api-key: reference/cli/options/anthropic-api-key.md
+        - --anthropic-model-name: reference/cli/options/anthropic-model.md
         - --azure-openai-api-key: reference/cli/options/azure-openai-api-key.md
         - --azure-openai-chat-deployment: reference/cli/options/azure-openai-chat-deployment.md
         - --azure-openai-endpoint: reference/cli/options/azure-openai-endpoint.md
+        - --aws-bedrock-access-key: reference/cli/options/bedrock-access-key-id.md
+        - --aws-bedrock-secret-key: reference/cli/options/bedrock-secret-access-key.md
+        - --aws-bedrock-region: reference/cli/options/bedrock-region.md
+        - --aws-bedrock-model-id: reference/cli/options/bedrock-model.md
         - --ALIAS: reference/cli/options/alias.md
         - --chat-history: reference/cli/options/chat-history.md
         - --config: reference/cli/options/config.md
@@ -177,6 +186,8 @@ nav:
         - --env: reference/cli/options/env.md
         - --expand: reference/cli/options/expand.md
         - --foreach: reference/cli/options/foreach.md
+        - --google-gemini-api-key: reference/cli/options/gemini-api-key.md
+        - --google-gemini-model-id: reference/cli/options/gemini-model.md
         - --github-token: reference/cli/options/github-token.md
         - --global: reference/cli/options/global.md
         - --input: reference/cli/options/input.md
@@ -206,9 +217,12 @@ nav:
         - --threads: reference/cli/options/threads.md
         - --trim-token-target: reference/cli/options/trim-token-target.md
         - --url: reference/cli/options/url.md
+        - --use-anthropic: reference/cli/options/use-anthropic.md
         - --use-azure: reference/cli/options/use-azure.md
         - --use-azure-openai: reference/cli/options/use-azure-openai.md
+        - --use-bedrock: reference/cli/options/use-bedrock.md
         - --use-copilot: reference/cli/options/use-copilot.md
+        - --use-gemini: reference/cli/options/use-gemini.md
         - --use-openai: reference/cli/options/use-openai.md
         - --use-templates: reference/cli/options/use-templates.md
         - --user: reference/cli/options/user.md

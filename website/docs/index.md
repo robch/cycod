@@ -20,10 +20,12 @@ CYCOD is an AI-powered CLI tool that brings the power of large language models t
 
     -   **MULTIPLE AI PROVIDERS**  
 
-        :material-microsoft-azure: Azure OpenAI API!  
-        :material-brain: OpenAI API!  
-        :material-brain: GitHub Copilot!  
-        :material-account-group: Custom model providers with MCP!  
+        :material-github: GitHub Copilot!  
+        :material-aws: Amazon Bedrock!  
+        :material-robot: Anthropic Claude/Opus!  
+        :material-microsoft-azure: Azure OpenAI!  
+        :material-google: Google Gemini!  
+        :material-brain: OpenAI O3/O4!  
 
     -  **FLEXIBLE CONFIGURATION**  
 
@@ -42,18 +44,23 @@ CYCOD is an AI-powered CLI tool that brings the power of large language models t
 
     **Installation and Setup**  
     [:material-download: CYCOD Installation](/install-cycod-cli.md)  
-    [:material-github:{ .med } GitHub Copilot Setup](/providers/github-copilot.md)  
+    [:material-github:{ .med } GitHub Copilot](/providers/github-copilot.md)  
+    [:material-robot:{ .med } Anthropic Setup](/providers/anthropic.md)  
     [:material-microsoft-azure:{ .med } Azure OpenAI Setup](/providers/azure-openai.md)  
+    [:material-aws:{ .med } Amazon Bedrock Setup](/providers/bedrock.md)  
+    [:material-google:{ .med } Google Gemini Setup](/providers/gemini.md)  
     [:material-brain:{ .med } OpenAI Setup](/providers/openai.md)  
 
 -   :material-console-line:{ .lg .middle } __Basic Usage__
 
     ---
 
-    **Core Functionality**  
-    [:material-chat: Chat Basics](/basics/chat.md)  
+    **Learn the Basics**  
+    [:material-message-text: Chat Basics](/basics/chat.md)  
     [:material-history: Chat History](/basics/chat-history.md)  
-    [:material-cog: Configuration](/usage/configuration.md)  
+    [:material-slash-forward: Slash Commands](/basics/slash-commands.md)  
+    [:material-form-textbox: Custom Prompts](/basics/custom-prompts.md)  
+    [:material-variable: Variables](/basics/variables.md)
 
 -   :material-hammer-wrench:{ .lg .middle } __Advanced Features__
 
