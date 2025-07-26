@@ -61,9 +61,9 @@ cycod --add-system-prompt "You are a Python expert with deep knowledge of the la
 
 ## Related Options
 
-- [`--ALIAS`](/reference/cli/options/alias.md) - How to use saved aliases
-- [`--save-alias`](/reference/cli/options/save-alias.md) - How to save aliases
-- [`--add-system-prompt`](/reference/cli/options/add-system-prompt.md) - Add text to the system prompt
+- [`--ALIAS`](/reference/cycod/options/alias.md) - How to use saved aliases
+- [`--save-alias`](/reference/cycod/options/save-alias.md) - How to save aliases
+- [`--add-system-prompt`](/reference/cycod/options/add-system-prompt.md) - Add text to the system prompt
 
 ## See Also
 

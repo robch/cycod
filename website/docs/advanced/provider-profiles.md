@@ -92,4 +92,4 @@ cycod config get copilot
 
 * [Profiles](../advanced/profiles.md) - Learn more about using profiles to manage different configurations
 * [Configuration](../usage/configuration.md) - Learn more about configuring CycoD
-* [Command-Line Options](../reference/cli/index.md) - Reference for all command-line options
+* [Command-Line Options](../reference/cycod/index.md) - Reference for all command-line options

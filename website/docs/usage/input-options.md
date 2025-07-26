@@ -154,7 +154,7 @@ cycod --foreach var name in Alice Bob Charlie --inp "Hello, {name}! How are you 
 
 - [Template Variables](templates-and-variables.md)
 - [Creating Aliases](../advanced/aliases.md)
-- [--input Option Reference](../reference/cli/options/input.md)
-- [--inp Option Reference](../reference/cli/options/inp.md)
-- [--instructions Option Reference](../reference/cli/options/instructions.md)
-- [--inpu Option Reference](../reference/cli/options/inpu.md)
+- [--input Option Reference](../reference/cycod/options/input.md)
+- [--inp Option Reference](../reference/cycod/options/inp.md)
+- [--instructions Option Reference](../reference/cycod/options/instructions.md)
+- [--inpu Option Reference](../reference/cycod/options/inpu.md)

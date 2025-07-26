@@ -131,8 +131,8 @@ Since local settings are stored within the current directory structure:
 
 ## Related
 
-- [`--user`](/reference/cli/options/user.md): Apply command at user scope (current user)
-- [`--global`](/reference/cli/options/global.md): Apply command at global scope (all users)
-- [`--any`](/reference/cli/options/any.md): Apply command across all scopes
-- [`--save-local-alias`](/reference/cli/options/save-local-alias.md): Save current options as an alias in local scope
-- [`--save-alias`](/reference/cli/options/save-alias.md): Alias for --save-local-alias
+- [`--user`](/reference/cycod/options/user.md): Apply command at user scope (current user)
+- [`--global`](/reference/cycod/options/global.md): Apply command at global scope (all users)
+- [`--any`](/reference/cycod/options/any.md): Apply command across all scopes
+- [`--save-local-alias`](/reference/cycod/options/save-local-alias.md): Save current options as an alias in local scope
+- [`--save-alias`](/reference/cycod/options/save-alias.md): Alias for --save-local-alias

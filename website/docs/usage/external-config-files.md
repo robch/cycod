@@ -371,7 +371,7 @@ For INI format issues:
 
 ## See Also
 
-- [CLI Reference: --config option](../reference/cli/options/config.md)
-- [CLI Reference: --profile option](../reference/cli/options/profile.md)
+- [CLI Reference: --config option](../reference/cycod/options/config.md)
+- [CLI Reference: --profile option](../reference/cycod/options/profile.md)
 - [Configuration Overview](./configuration.md)
 - [Configuration Profiles](../advanced/profiles.md)

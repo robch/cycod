@@ -222,7 +222,7 @@ cycod --no-templates --input '{
 
 ## See Also
 
-- [--foreach reference](../reference/cli/options/foreach.md)
-- [--var reference](../reference/cli/options/var.md)
-- [--vars reference](../reference/cli/options/vars.md)
-- [--threads reference](../reference/cli/options/threads.md)
+- [--foreach reference](../reference/cycod/options/foreach.md)
+- [--var reference](../reference/cycod/options/var.md)
+- [--vars reference](../reference/cycod/options/vars.md)
+- [--threads reference](../reference/cycod/options/threads.md)

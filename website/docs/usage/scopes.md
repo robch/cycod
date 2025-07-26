@@ -226,7 +226,7 @@ User scope settings are perfect for migrating your configuration between machine
 
 ## Related Commands
 
-- [cycod config](/reference/cli/config/index.md): Manage configuration settings
-- [cycod alias](/reference/cli/alias/index.md): Manage command aliases
-- [cycod prompt](/reference/cli/prompt/index.md): Manage custom prompts
-- [cycod mcp](/reference/cli/mcp/index.md): Manage MCP servers
+- [cycod config](/reference/cycod/config/index.md): Manage configuration settings
+- [cycod alias](/reference/cycod/alias/index.md): Manage command aliases
+- [cycod prompt](/reference/cycod/prompt/index.md): Manage custom prompts
+- [cycod mcp](/reference/cycod/mcp/index.md): Manage MCP servers

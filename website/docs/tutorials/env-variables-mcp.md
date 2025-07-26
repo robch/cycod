@@ -224,4 +224,4 @@ Environment variables provide a secure and flexible way to configure MCP servers
 - Create reusable MCP servers that work across different environments
 - Avoid hardcoding configuration values in your scripts
 
-For more information, see the [--env option reference](../reference/cli/options/env.md) and the [advanced MCP documentation](../advanced/mcp.md).
+For more information, see the [--env option reference](../reference/cycod/options/env.md) and the [advanced MCP documentation](../advanced/mcp.md).

@@ -114,7 +114,7 @@ Use the global scope when:
 
 ## Related
 
-- [`--local`](/reference/cli/options/local.md): Apply command at local scope (current directory)
-- [`--user`](/reference/cli/options/user.md): Apply command at user scope (current user)
-- [`--any`](/reference/cli/options/any.md): Apply command across all scopes
-- [`--save-global-alias`](/reference/cli/options/save-global-alias.md): Save current options as an alias in global scope
+- [`--local`](/reference/cycod/options/local.md): Apply command at local scope (current directory)
+- [`--user`](/reference/cycod/options/user.md): Apply command at user scope (current user)
+- [`--any`](/reference/cycod/options/any.md): Apply command across all scopes
+- [`--save-global-alias`](/reference/cycod/options/save-global-alias.md): Save current options as an alias in global scope

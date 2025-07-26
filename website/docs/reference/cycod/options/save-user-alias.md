@@ -87,7 +87,7 @@ User aliases are ideal for:
 - Specialized tools that match your workflow (regardless of which project you're in)
 - Configurations that reflect your personal preferences for interacting with AI
 
-If you need project-specific aliases, use [`--save-local-alias`](/reference/cli/options/save-local-alias.md) instead.
+If you need project-specific aliases, use [`--save-local-alias`](/reference/cycod/options/save-local-alias.md) instead.
 
 ## Notes
 
@@ -99,9 +99,9 @@ If you need project-specific aliases, use [`--save-local-alias`](/reference/cli/
 
 ## Related
 
-- [`--user`](/reference/cli/options/user.md): Apply command at user scope
-- [`--save-alias`](/reference/cli/options/save-alias.md): Alias for --save-local-alias
-- [`--save-local-alias`](/reference/cli/options/save-local-alias.md): Save alias to local scope
-- [`--save-global-alias`](/reference/cli/options/save-global-alias.md): Save alias to global scope
+- [`--user`](/reference/cycod/options/user.md): Apply command at user scope
+- [`--save-alias`](/reference/cycod/options/save-alias.md): Alias for --save-local-alias
+- [`--save-local-alias`](/reference/cycod/options/save-local-alias.md): Save alias to local scope
+- [`--save-global-alias`](/reference/cycod/options/save-global-alias.md): Save alias to global scope
 - [Creating User Aliases Tutorial](/tutorials/creating-user-aliases.md)
 - [Using Aliases in CycoD](/usage/aliases.md)

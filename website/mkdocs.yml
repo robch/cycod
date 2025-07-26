@@ -157,104 +157,104 @@ nav:
       - Shell Commands: basics/shell-commands.md
   - REFERENCE:
     - cycod:
-      - reference/cli/index.md
-      - help: reference/cli/help.md
-      - version: reference/cli/version.md
+      - reference/cycod/index.md
+      - help: reference/cycod/help.md
+      - version: reference/cycod/version.md
       - Options:
-        - Overview: reference/cli/options/index.md
-        - --add-system-prompt: reference/cli/options/add-system-prompt.md
-        - --add-user-prompt: reference/cli/options/add-user-prompt.md
-        - --any: reference/cli/options/any.md
-        - --arg: reference/cli/options/arg.md
-        - --anthropic-api-key: reference/cli/options/anthropic-api-key.md
-        - --anthropic-model-name: reference/cli/options/anthropic-model.md
-        - --azure-openai-api-key: reference/cli/options/azure-openai-api-key.md
-        - --azure-openai-chat-deployment: reference/cli/options/azure-openai-chat-deployment.md
-        - --azure-openai-endpoint: reference/cli/options/azure-openai-endpoint.md
-        - --aws-bedrock-access-key: reference/cli/options/bedrock-access-key-id.md
-        - --aws-bedrock-secret-key: reference/cli/options/bedrock-secret-access-key.md
-        - --aws-bedrock-region: reference/cli/options/bedrock-region.md
-        - --aws-bedrock-model-id: reference/cli/options/bedrock-model.md
-        - --ALIAS: reference/cli/options/alias.md
-        - --chat-history: reference/cli/options/chat-history.md
-        - --config: reference/cli/options/config.md
-        - --command: reference/cli/options/command.md
-        - --continue: reference/cli/options/continue.md
-        - --copilot-api-endpoint: reference/cli/options/copilot-api-endpoint.md
-        - --copilot-model-name: reference/cli/options/copilot-model-name.md
-        - --debug: reference/cli/options/debug.md
-        - --env: reference/cli/options/env.md
-        - --expand: reference/cli/options/expand.md
-        - --foreach: reference/cli/options/foreach.md
-        - --google-gemini-api-key: reference/cli/options/gemini-api-key.md
-        - --google-gemini-model-id: reference/cli/options/gemini-model.md
-        - --github-token: reference/cli/options/github-token.md
-        - --global: reference/cli/options/global.md
-        - --input: reference/cli/options/input.md
-        - --input-chat-history: reference/cli/options/input-chat-history.md
-        - --inp: reference/cli/options/inp.md
-        - --inputs: reference/cli/options/inputs.md
-        - --instruction: reference/cli/options/instruction.md
-        - --inpu: reference/cli/options/inpu.md
-        - --interactive: reference/cli/options/interactive.md
-        - --instructions: reference/cli/options/instructions.md
-        - --local: reference/cli/options/local.md
-        - --no-templates: reference/cli/options/no-templates.md
-        - --openai-api-key: reference/cli/options/openai-api-key.md
-        - --openai-chat-model-name: reference/cli/options/openai-chat-model-name.md
-        - --output-chat-history: reference/cli/options/output-chat-history.md
-        - --output-trajectory: reference/cli/options/output-trajectory.md
-        - --profile: reference/cli/options/profile.md
-        - --python-expert: reference/cli/options/python-expert.md
-        - --question: reference/cli/options/question.md
-        - --questions: reference/cli/options/questions.md
-        - --quiet: reference/cli/options/quiet.md
-        - --save-alias: reference/cli/options/save-alias.md
-        - --save-global-alias: reference/cli/options/save-global-alias.md
-        - --save-local-alias: reference/cli/options/save-local-alias.md
-        - --save-user-alias: reference/cli/options/save-user-alias.md
-        - --system-prompt: reference/cli/options/system-prompt.md
-        - --threads: reference/cli/options/threads.md
-        - --trim-token-target: reference/cli/options/trim-token-target.md
-        - --url: reference/cli/options/url.md
-        - --use-anthropic: reference/cli/options/use-anthropic.md
-        - --use-azure: reference/cli/options/use-azure.md
-        - --use-azure-openai: reference/cli/options/use-azure-openai.md
-        - --use-bedrock: reference/cli/options/use-bedrock.md
-        - --use-copilot: reference/cli/options/use-copilot.md
-        - --use-gemini: reference/cli/options/use-gemini.md
-        - --use-openai: reference/cli/options/use-openai.md
-        - --use-templates: reference/cli/options/use-templates.md
-        - --user: reference/cli/options/user.md
-        - --var: reference/cli/options/var.md
-        - --vars: reference/cli/options/vars.md
-        - --verbose: reference/cli/options/verbose.md
-        - --working-dir: reference/cli/options/working-dir.md
+        - Overview: reference/cycod/options/index.md
+        - --add-system-prompt: reference/cycod/options/add-system-prompt.md
+        - --add-user-prompt: reference/cycod/options/add-user-prompt.md
+        - --any: reference/cycod/options/any.md
+        - --arg: reference/cycod/options/arg.md
+        - --anthropic-api-key: reference/cycod/options/anthropic-api-key.md
+        - --anthropic-model-name: reference/cycod/options/anthropic-model.md
+        - --azure-openai-api-key: reference/cycod/options/azure-openai-api-key.md
+        - --azure-openai-chat-deployment: reference/cycod/options/azure-openai-chat-deployment.md
+        - --azure-openai-endpoint: reference/cycod/options/azure-openai-endpoint.md
+        - --aws-bedrock-access-key: reference/cycod/options/bedrock-access-key-id.md
+        - --aws-bedrock-secret-key: reference/cycod/options/bedrock-secret-access-key.md
+        - --aws-bedrock-region: reference/cycod/options/bedrock-region.md
+        - --aws-bedrock-model-id: reference/cycod/options/bedrock-model.md
+        - --ALIAS: reference/cycod/options/alias.md
+        - --chat-history: reference/cycod/options/chat-history.md
+        - --config: reference/cycod/options/config.md
+        - --command: reference/cycod/options/command.md
+        - --continue: reference/cycod/options/continue.md
+        - --copilot-api-endpoint: reference/cycod/options/copilot-api-endpoint.md
+        - --copilot-model-name: reference/cycod/options/copilot-model-name.md
+        - --debug: reference/cycod/options/debug.md
+        - --env: reference/cycod/options/env.md
+        - --expand: reference/cycod/options/expand.md
+        - --foreach: reference/cycod/options/foreach.md
+        - --google-gemini-api-key: reference/cycod/options/gemini-api-key.md
+        - --google-gemini-model-id: reference/cycod/options/gemini-model.md
+        - --github-token: reference/cycod/options/github-token.md
+        - --global: reference/cycod/options/global.md
+        - --input: reference/cycod/options/input.md
+        - --input-chat-history: reference/cycod/options/input-chat-history.md
+        - --inp: reference/cycod/options/inp.md
+        - --inputs: reference/cycod/options/inputs.md
+        - --instruction: reference/cycod/options/instruction.md
+        - --inpu: reference/cycod/options/inpu.md
+        - --interactive: reference/cycod/options/interactive.md
+        - --instructions: reference/cycod/options/instructions.md
+        - --local: reference/cycod/options/local.md
+        - --no-templates: reference/cycod/options/no-templates.md
+        - --openai-api-key: reference/cycod/options/openai-api-key.md
+        - --openai-chat-model-name: reference/cycod/options/openai-chat-model-name.md
+        - --output-chat-history: reference/cycod/options/output-chat-history.md
+        - --output-trajectory: reference/cycod/options/output-trajectory.md
+        - --profile: reference/cycod/options/profile.md
+        - --python-expert: reference/cycod/options/python-expert.md
+        - --question: reference/cycod/options/question.md
+        - --questions: reference/cycod/options/questions.md
+        - --quiet: reference/cycod/options/quiet.md
+        - --save-alias: reference/cycod/options/save-alias.md
+        - --save-global-alias: reference/cycod/options/save-global-alias.md
+        - --save-local-alias: reference/cycod/options/save-local-alias.md
+        - --save-user-alias: reference/cycod/options/save-user-alias.md
+        - --system-prompt: reference/cycod/options/system-prompt.md
+        - --threads: reference/cycod/options/threads.md
+        - --trim-token-target: reference/cycod/options/trim-token-target.md
+        - --url: reference/cycod/options/url.md
+        - --use-anthropic: reference/cycod/options/use-anthropic.md
+        - --use-azure: reference/cycod/options/use-azure.md
+        - --use-azure-openai: reference/cycod/options/use-azure-openai.md
+        - --use-bedrock: reference/cycod/options/use-bedrock.md
+        - --use-copilot: reference/cycod/options/use-copilot.md
+        - --use-gemini: reference/cycod/options/use-gemini.md
+        - --use-openai: reference/cycod/options/use-openai.md
+        - --use-templates: reference/cycod/options/use-templates.md
+        - --user: reference/cycod/options/user.md
+        - --var: reference/cycod/options/var.md
+        - --vars: reference/cycod/options/vars.md
+        - --verbose: reference/cycod/options/verbose.md
+        - --working-dir: reference/cycod/options/working-dir.md
       - alias:
-        - reference/cli/alias/index.md
-        - List: reference/cli/alias/list.md
-        - Get: reference/cli/alias/get.md
-        - Delete: reference/cli/alias/delete.md
+        - reference/cycod/alias/index.md
+        - List: reference/cycod/alias/list.md
+        - Get: reference/cycod/alias/get.md
+        - Delete: reference/cycod/alias/delete.md
       - config:
-        - reference/cli/config/index.md
-        - List: reference/cli/config/list.md
-        - Get: reference/cli/config/get.md
-        - Set: reference/cli/config/set.md
-        - Clear: reference/cli/config/clear.md
-        - Add: reference/cli/config/add.md
-        - Remove: reference/cli/config/remove.md
+        - reference/cycod/config/index.md
+        - List: reference/cycod/config/list.md
+        - Get: reference/cycod/config/get.md
+        - Set: reference/cycod/config/set.md
+        - Clear: reference/cycod/config/clear.md
+        - Add: reference/cycod/config/add.md
+        - Remove: reference/cycod/config/remove.md
       - prompt:
-        - reference/cli/prompt/index.md
-        - List: reference/cli/prompt/list.md
-        - Get: reference/cli/prompt/get.md
-        - Create: reference/cli/prompt/create.md
-        - Delete: reference/cli/prompt/delete.md
+        - reference/cycod/prompt/index.md
+        - List: reference/cycod/prompt/list.md
+        - Get: reference/cycod/prompt/get.md
+        - Create: reference/cycod/prompt/create.md
+        - Delete: reference/cycod/prompt/delete.md
       - mcp:
-        - reference/cli/mcp/index.md
-        - List: reference/cli/mcp/list.md
-        - Get: reference/cli/mcp/get.md
-        - Add: reference/cli/mcp/add.md
-        - Remove: reference/cli/mcp/remove.md
+        - reference/cycod/mcp/index.md
+        - List: reference/cycod/mcp/list.md
+        - Get: reference/cycod/mcp/get.md
+        - Add: reference/cycod/mcp/add.md
+        - Remove: reference/cycod/mcp/remove.md
       - github:
-        - reference/cli/github/index.md
-        - Login: reference/cli/github/login.md
+        - reference/cycod/github/index.md
+        - Login: reference/cycod/github/login.md

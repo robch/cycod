@@ -53,12 +53,12 @@ The options specified in the `python-expert` alias will be applied first, and th
 
 ## Related Commands
 
-- [`--save-alias`](/reference/cli/options/save-alias.md) - Save current options as an alias in local scope
-- [`--save-local-alias`](/reference/cli/options/save-local-alias.md) - Save current options as an alias in local scope
-- [`--save-user-alias`](/reference/cli/options/save-user-alias.md) - Save current options as an alias in user scope
-- [`--save-global-alias`](/reference/cli/options/save-global-alias.md) - Save current options as an alias in global scope
+- [`--save-alias`](/reference/cycod/options/save-alias.md) - Save current options as an alias in local scope
+- [`--save-local-alias`](/reference/cycod/options/save-local-alias.md) - Save current options as an alias in local scope
+- [`--save-user-alias`](/reference/cycod/options/save-user-alias.md) - Save current options as an alias in user scope
+- [`--save-global-alias`](/reference/cycod/options/save-global-alias.md) - Save current options as an alias in global scope
 
 ## See Also
 
-- [alias command](/reference/cli/alias/index.md)
+- [alias command](/reference/cycod/alias/index.md)
 - [Managing aliases](/advanced/aliases.md)

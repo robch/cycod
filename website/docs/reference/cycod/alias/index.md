@@ -12,9 +12,9 @@ cycod alias SUBCOMMAND [options]
 
 | Subcommand | Description |
 |------------|-------------|
-| [`list`](/reference/cli/alias/list.md) | List defined aliases |
-| [`get`](/reference/cli/alias/get.md) | Get details of a specific alias |
-| [`delete`](/reference/cli/alias/delete.md) | Delete an alias |
+| [`list`](/reference/cycod/alias/list.md) | List defined aliases |
+| [`get`](/reference/cycod/alias/get.md) | Get details of a specific alias |
+| [`delete`](/reference/cycod/alias/delete.md) | Delete an alias |
 
 ## Options
 

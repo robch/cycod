@@ -462,8 +462,8 @@ For more details on profiles, see the [Profiles documentation](../advanced/profi
 
 ## Further Reading
 
-- [CLI Reference: config set](../reference/cli/config/set.md)
-- [CLI Reference: config get](../reference/cli/config/get.md)
-- [CLI Reference: config list](../reference/cli/config/list.md)
-- [CLI Reference: config clear](../reference/cli/config/clear.md)
+- [CLI Reference: config set](../reference/cycod/config/set.md)
+- [CLI Reference: config get](../reference/cycod/config/get.md)
+- [CLI Reference: config list](../reference/cycod/config/list.md)
+- [CLI Reference: config clear](../reference/cycod/config/clear.md)
 - [Configuration Profiles](../advanced/profiles.md)

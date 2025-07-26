@@ -80,7 +80,7 @@ cycod --interactive --output-chat-history my-history.jsonl
 
 #### Using `--output-chat-history`
 
-When using the [`--output-chat-history`](../reference/cli/options/output-chat-history.md) option:
+When using the [`--output-chat-history`](../reference/cycod/options/output-chat-history.md) option:
 
 - If the specified file doesn't exist, CycoD creates it
 - If the file already exists, CycoD appends new messages to it
@@ -99,12 +99,12 @@ cycod --input-chat-history main-chat.jsonl --output-chat-history branch-chat.jso
 
 #### When to use `--output-chat-history` vs. `--chat-history`
 
-- Use [`--output-chat-history`](../reference/cli/options/output-chat-history.md) when:
+- Use [`--output-chat-history`](../reference/cycod/options/output-chat-history.md) when:
   - You want to save to a file but load from a different file (or no file)
   - You're creating a "branch" of an existing conversation
   - You want explicit control over where the output goes
 
-- Use [`--chat-history`](../reference/cli/options/chat-history.md) when:
+- Use [`--chat-history`](../reference/cycod/options/chat-history.md) when:
   - You want both input and output to use the same file
   - You're continuing a conversation in the same file over time
 
@@ -177,7 +177,7 @@ cycod --input-chat-history conversation.jsonl --output-chat-history conversation
 
 #### When to Use `--chat-history`
 
-The [`--chat-history`](../reference/cli/options/chat-history.md) option is ideal for:
+The [`--chat-history`](../reference/cycod/options/chat-history.md) option is ideal for:
 
 - Project-specific conversations that you want to continue over time
 - Daily work logs where you want to maintain continuity
@@ -398,9 +398,9 @@ Chat history files contain all messages exchanged with AI models, which may incl
 
 ## See Also
 
-- [--output-chat-history](../reference/cli/options/output-chat-history.md): Reference for saving chat history
-- [--input-chat-history](../reference/cli/options/input-chat-history.md): Reference for loading chat history
-- [--chat-history](../reference/cli/options/chat-history.md): Reference for combined history loading/saving
-- [--output-trajectory](../reference/cli/options/output-trajectory.md): Reference for saving human-readable history
-- [--continue](../reference/cli/options/continue.md): Reference for continuing recent conversations
+- [--output-chat-history](../reference/cycod/options/output-chat-history.md): Reference for saving chat history
+- [--input-chat-history](../reference/cycod/options/input-chat-history.md): Reference for loading chat history
+- [--chat-history](../reference/cycod/options/chat-history.md): Reference for combined history loading/saving
+- [--output-trajectory](../reference/cycod/options/output-trajectory.md): Reference for saving human-readable history
+- [--continue](../reference/cycod/options/continue.md): Reference for continuing recent conversations
 - [Configuration](configuration.md): How to configure CycoD's behavior

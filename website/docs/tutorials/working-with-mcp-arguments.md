@@ -227,10 +227,10 @@ If your MCP server isn't receiving arguments correctly:
 
 ## Related
 
-- [MCP Add Command](../reference/cli/mcp/add.md): Documentation for adding MCP servers
-- [--arg Option Reference](../reference/cli/options/arg.md): Detailed reference for the `--arg` option
-- [--env Option](../reference/cli/options/env.md): Setting environment variables for MCP servers
-- [--command Option](../reference/cli/options/command.md): Specifying the command to run
+- [MCP Add Command](../reference/cycod/mcp/add.md): Documentation for adding MCP servers
+- [--arg Option Reference](../reference/cycod/options/arg.md): Detailed reference for the `--arg` option
+- [--env Option](../reference/cycod/options/env.md): Setting environment variables for MCP servers
+- [--command Option](../reference/cycod/options/command.md): Specifying the command to run
 
 ## Next Steps
 

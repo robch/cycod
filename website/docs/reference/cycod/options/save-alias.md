@@ -80,7 +80,7 @@ Since local aliases are stored within the project directory:
 
 ## Related
 
-- [`--save-local-alias`](/reference/cli/options/save-local-alias.md): Same as --save-alias
-- [`--save-user-alias`](/reference/cli/options/save-user-alias.md): Save alias to user scope
-- [`--save-global-alias`](/reference/cli/options/save-global-alias.md): Save alias to global scope
-- [`--local`](/reference/cli/options/local.md): Apply command at local scope
+- [`--save-local-alias`](/reference/cycod/options/save-local-alias.md): Same as --save-alias
+- [`--save-user-alias`](/reference/cycod/options/save-user-alias.md): Save alias to user scope
+- [`--save-global-alias`](/reference/cycod/options/save-global-alias.md): Save alias to global scope
+- [`--local`](/reference/cycod/options/local.md): Apply command at local scope

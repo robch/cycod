@@ -155,7 +155,7 @@ If an alias is no longer needed:
 cycod alias delete py-expert --local
 ```
 
-This will remove the alias file from your project's `.cycod/aliases/` directory. For more details about deleting aliases, see the [cycod alias delete reference](/reference/cli/alias/delete.md).
+This will remove the alias file from your project's `.cycod/aliases/` directory. For more details about deleting aliases, see the [cycod alias delete reference](/reference/cycod/alias/delete.md).
 
 ## Best Practices for Project Aliases
 
@@ -207,6 +207,6 @@ By including these aliases in version control, you ensure that your team has acc
 
 ## Next Steps
 
-- Learn about [user-level aliases](/reference/cli/options/save-user-alias.md) for personal preferences
-- Explore [global aliases](/reference/cli/options/save-global-alias.md) for organization-wide standards
+- Learn about [user-level aliases](/reference/cycod/options/save-user-alias.md) for personal preferences
+- Explore [global aliases](/reference/cycod/options/save-global-alias.md) for organization-wide standards
 - Check out [configuration profiles](/advanced/profiles.md) for more complex setups

@@ -211,7 +211,7 @@ cycod --add-system-prompt "Be direct and concise in all responses." --question "
 
 To deepen your understanding of effective system prompts:
 
-1. Review the [CycoD CLI Option Reference](../reference/cli/options/add-system-prompt.md) for detailed syntax and examples
+1. Review the [CycoD CLI Option Reference](../reference/cycod/options/add-system-prompt.md) for detailed syntax and examples
 2. Experiment with different system prompts and compare the results
 3. Save effective system prompts as [aliases](./creating-user-aliases.md) for reuse
 4. Use the `--verbose` flag to see token usage and optimize your system prompts

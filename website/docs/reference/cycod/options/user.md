@@ -122,7 +122,7 @@ Use the user scope when:
 
 ## Related
 
-- [`--local`](/reference/cli/options/local.md): Apply command at local scope (current directory)
-- [`--global`](/reference/cli/options/global.md): Apply command at global scope (all users)
-- [`--any`](/reference/cli/options/any.md): Apply command across all scopes
-- [`--save-user-alias`](/reference/cli/options/save-user-alias.md): Save current options as an alias in user scope
+- [`--local`](/reference/cycod/options/local.md): Apply command at local scope (current directory)
+- [`--global`](/reference/cycod/options/global.md): Apply command at global scope (all users)
+- [`--any`](/reference/cycod/options/any.md): Apply command across all scopes
+- [`--save-user-alias`](/reference/cycod/options/save-user-alias.md): Save current options as an alias in user scope

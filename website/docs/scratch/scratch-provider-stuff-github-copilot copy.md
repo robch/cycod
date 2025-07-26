@@ -171,5 +171,5 @@ For more detailed information about GitHub Copilot, refer to the [GitHub Copilot
 ## Related Topics
 
 - [Authenticating with GitHub Copilot Tutorial](../tutorials/github-copilot-auth.md) - Step-by-step guide to setting up GitHub authentication
-- [`github login` Command Reference](../reference/cli/github/login.md) - Detailed documentation of the login command
-- [`--use-copilot` Option](../reference/cli/options/use-copilot.md) - How to specify GitHub Copilot as your AI provider
+- [`github login` Command Reference](../reference/cycod/github/login.md) - Detailed documentation of the login command
+- [`--use-copilot` Option](../reference/cycod/options/use-copilot.md) - How to specify GitHub Copilot as your AI provider

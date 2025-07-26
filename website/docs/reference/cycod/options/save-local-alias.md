@@ -121,7 +121,7 @@ Error: Cannot create alias file at 'C:\read-only-dir\.cycod\aliases\my-alias.ali
 
 ## Related
 
-- [`--local`](/reference/cli/options/local.md): Apply command at local scope
-- [`--save-alias`](/reference/cli/options/save-alias.md): Alias for --save-local-alias
-- [`--save-user-alias`](/reference/cli/options/save-user-alias.md): Save alias to user scope
-- [`--save-global-alias`](/reference/cli/options/save-global-alias.md): Save alias to global scope
+- [`--local`](/reference/cycod/options/local.md): Apply command at local scope
+- [`--save-alias`](/reference/cycod/options/save-alias.md): Alias for --save-local-alias
+- [`--save-user-alias`](/reference/cycod/options/save-user-alias.md): Save alias to user scope
+- [`--save-global-alias`](/reference/cycod/options/save-global-alias.md): Save alias to global scope

@@ -27,7 +27,7 @@ To use a profile:
 cycod --profile development --question "What is the capital of France?"
 ```
 
-This loads all the settings from the `development` profile before executing the command. For detailed syntax and examples, see the [--profile option reference](../reference/cli/options/profile.md).
+This loads all the settings from the `development` profile before executing the command. For detailed syntax and examples, see the [--profile option reference](../reference/cycod/options/profile.md).
 
 ### Combining Profiles with Command-Line Options
 

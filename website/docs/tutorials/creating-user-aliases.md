@@ -82,7 +82,7 @@ To delete an alias you no longer need:
 cycod alias delete sql-helper --user
 ```
 
-This command removes the alias from your user scope. See the [cycod alias delete reference](/reference/cli/alias/delete.md) for more details on deleting aliases.
+This command removes the alias from your user scope. See the [cycod alias delete reference](/reference/cycod/alias/delete.md) for more details on deleting aliases.
 
 ## Advanced User Alias Example: Daily Standup Helper
 
@@ -109,13 +109,13 @@ cycod --standup-helper --question "Yesterday I fixed the authentication bug and 
 
 - Try creating user aliases for other repetitive tasks you perform
 - Experiment with different system prompts to refine your assistants
-- Consider creating [local aliases](/reference/cli/options/save-local-alias.md) for project-specific needs
+- Consider creating [local aliases](/reference/cycod/options/save-local-alias.md) for project-specific needs
 
 ## Related Resources
 
 - [Using Aliases in CycoD](/usage/aliases.md)
 - [Understanding Scopes](/usage/scopes.md)
-- [cycod alias delete Reference](/reference/cli/alias/delete.md)
-- [cycod alias get Reference](/reference/cli/alias/get.md)
-- [cycod alias list Reference](/reference/cli/alias/list.md)
-- [--save-user-alias Reference](/reference/cli/options/save-user-alias.md)
+- [cycod alias delete Reference](/reference/cycod/alias/delete.md)
+- [cycod alias get Reference](/reference/cycod/alias/get.md)
+- [cycod alias list Reference](/reference/cycod/alias/list.md)
+- [--save-user-alias Reference](/reference/cycod/options/save-user-alias.md)

@@ -156,6 +156,6 @@ Now that you understand how to effectively remove MCP servers, you can:
 - Learn how to [manage MCP servers](managing-mcp-servers.md) in general
 - Explore how to [create custom MCP servers](../advanced/mcp.md)
 - Set up [environment variables for MCP servers](env-variables-mcp.md)
-- See the [command reference](../reference/cli/mcp/remove.md) for complete details on the `mcp remove` command
+- See the [command reference](../reference/cycod/mcp/remove.md) for complete details on the `mcp remove` command
 
 By maintaining a clean and well-organized set of MCP servers, you'll ensure that your CycoD environment stays efficient and easy to manage.

@@ -82,7 +82,7 @@ Without proper privileges, the command may fail with a permission error.
 
 ## Related
 
-- [`--global`](/reference/cli/options/global.md): Apply command at global scope
-- [`--save-alias`](/reference/cli/options/save-alias.md): Alias for --save-local-alias
-- [`--save-local-alias`](/reference/cli/options/save-local-alias.md): Save alias to local scope
-- [`--save-user-alias`](/reference/cli/options/save-user-alias.md): Save alias to user scope
+- [`--global`](/reference/cycod/options/global.md): Apply command at global scope
+- [`--save-alias`](/reference/cycod/options/save-alias.md): Alias for --save-local-alias
+- [`--save-local-alias`](/reference/cycod/options/save-local-alias.md): Save alias to local scope
+- [`--save-user-alias`](/reference/cycod/options/save-user-alias.md): Save alias to user scope
