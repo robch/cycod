@@ -2,8 +2,8 @@ using System.ComponentModel;
 
 public class ShellCommandToolHelperFunctions
 {
-    [Description("Run commands in a bash shell. This persistent session maintains state across commands. " +
-        "You can run commands such as Python, Node.js and Go, and install packages with apt, pip, npm, or go. " +
+    [Description("Run commands in a bash shell (uses Git Bash on Windows). This persistent session maintains state across commands. " +
+        "You can run commands such as Python, Node.js and Go, and install packages with apt (on Linux/Mac), winget (on Windows), pip, npm, or go. " +
         "If a command times out, the session is reset.")]
     public async Task<string> RunBashCommandAsync(
         [Description("The bash command to run.")] string command,
@@ -22,7 +22,7 @@ public class ShellCommandToolHelperFunctions
         catch (TimeoutException te)
         {
             // If there is a timeout, reset the session.
-            BashShellSession.Instance.Shutdown();
+            BashShellSession.Instance.ForceShutdown();
             return $"<timed out and killed process - environment state has been reset>\n{te.Message}";
         }
         catch (Exception ex)
@@ -31,7 +31,7 @@ public class ShellCommandToolHelperFunctions
         }
     }
 
-    [Description("Run commands in a cmd shell. This persistent session maintains state across commands. " +
+    [Description("Run commands in a cmd shell on Windows. This persistent session maintains state across commands. " +
         "You can run commands such as Python, Node.js and Go, and install packages with winget, pip, npm, or go. " +
         "If a command times out, the session is reset.")]
     public async Task<string> RunCmdCommandAsync(
@@ -51,7 +51,7 @@ public class ShellCommandToolHelperFunctions
         catch (TimeoutException te)
         {
             // If there is a timeout, reset the session.
-            CmdShellSession.Instance.Shutdown();
+            CmdShellSession.Instance.ForceShutdown();
             return $"<timed out and killed process - environment state has been reset>\n{te.Message}";
         }
         catch (Exception ex)
@@ -61,7 +61,7 @@ public class ShellCommandToolHelperFunctions
     }
 
     [Description("Run commands in a PowerShell shell. This persistent session maintains state across commands. " +
-        "You can run commands such as Python, Node.js and Go, and install packages with winget, pip, npm, or go. " +
+        "You can run commands such as Python, Node.js and Go, and install packages with winget (on Windows), pip, npm, or go. " +
         "If a command times out, the session is reset.")]
     public async Task<string> RunPowershellCommandAsync(
         [Description("The PowerShell command to run.")] string command,
@@ -80,7 +80,7 @@ public class ShellCommandToolHelperFunctions
         catch (TimeoutException te)
         {
             // If there is a timeout, reset the session.
-            PowershellShellSession.Instance.Shutdown();
+            PowershellShellSession.Instance.ForceShutdown();
             return $"<timed out and killed process - environment state has been reset>\n{te.Message}";
         }
         catch (Exception ex)

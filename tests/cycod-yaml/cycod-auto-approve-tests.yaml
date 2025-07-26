@@ -1,0 +1,64 @@
+class: auto-approve
+optional: needsAI
+tag: cycod
+tests:
+- name: interactively deny (once) list files
+  run: cycod --input "what files are in this folder?" --copilot-model-name "gpt-4o-mini" --use-copilot --auto-approve none --auto-deny none
+  input: no
+  workingDirectory: testfiles
+  expect-regex: |
+    User: what files are in this folder\?\r?$\n
+    Assistant:
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.
+     Approve\? \(Y/n or \?\) \r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.                     \r?$\n
+     Declined \(once\)\r?$\n
+     User did not approve function call\r?$\n
+    Assistant:
+    User: exit\r?$\n
+
+- name: interactively deny (session) list files
+  run: cycod --input "what files are in this folder?" --copilot-model-name "gpt-4o-mini" --use-copilot --auto-approve none --auto-deny none
+  input: No
+  workingDirectory: testfiles
+  expect-regex: |
+    User: what files are in this folder\?\r?$\n
+    Assistant:
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.
+     Approve\? \(Y/n or \?\) \r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.                     \r?$\n
+     Declined \(session\)\r?$\n
+     User did not approve function call\r?$\n
+    Assistant:
+    User: exit\r?$\n
+
+- name: interactively approve (once) list files
+  run: cycod --input "what files are in this folder?" --copilot-model-name "gpt-4o-mini" --use-copilot --auto-approve none --auto-deny none
+  input: yes
+  workingDirectory: testfiles
+  expect-regex: |
+    User: what files are in this folder\?\r?$\n
+    Assistant:
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.
+     Approve\? \(Y/n or \?\) \r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.                     \r?$\n
+     Approved \(once\)\r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => README.md\r?$\n
+    Assistant:
+    User: exit\r?$\n
+
+- name: interactively approve (session) list files
+  run: cycod --input "what files are in this folder?" --copilot-model-name "gpt-4o-mini" --use-copilot --auto-approve none --auto-deny none
+  input: Yes
+  workingDirectory: testfiles
+  expect-regex: |
+    User: what files are in this folder\?\r?$\n
+    Assistant:
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.
+     Approve\? \(Y/n or \?\) \r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => \.\.\.                     \r?$\n
+     Approved \(session\)\r?$\n
+    assistant-function: ListFiles \{"path":".*".*\} => README.md\r?$\n
+    Assistant:
+    User: exit\r?$\n
+

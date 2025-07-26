@@ -10,6 +10,20 @@ public static class KnownSettings
 {
     #region Setting Keys (Dot Notation)
 
+    // Anthropic settings
+    public const string AnthropicApiKey = "Anthropic.ApiKey";
+    public const string AnthropicModelName = "Anthropic.ModelName";
+    
+    // AWS Bedrock settings
+    public const string AWSBedrockAccessKey = "AWS.Bedrock.AccessKey";
+    public const string AWSBedrockSecretKey = "AWS.Bedrock.SecretKey";
+    public const string AWSBedrockRegion = "AWS.Bedrock.Region";
+    public const string AWSBedrockModelId = "AWS.Bedrock.ModelId";
+    
+    // Google Gemini settings
+    public const string GoogleGeminiApiKey = "Google.Gemini.ApiKey";
+    public const string GoogleGeminiModelId = "Google.Gemini.ModelId";
+
     // Azure OpenAI settings
     public const string AzureOpenAIApiKey = "Azure.OpenAI.ApiKey";
     public const string AzureOpenAIEndpoint = "Azure.OpenAI.Endpoint";
@@ -17,6 +31,7 @@ public static class KnownSettings
     
     // OpenAI settings
     public const string OpenAIApiKey = "OpenAI.ApiKey";
+    public const string OpenAIEndpoint = "OpenAI.Endpoint";
     public const string OpenAIChatModelName = "OpenAI.ChatModelName";
     
     // GitHub settings
@@ -29,11 +44,16 @@ public static class KnownSettings
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
 
     // Application settings
-    public const string AppMaxTokens = "App.MaxTokens";
+    public const string AppMaxPromptTokens = "App.MaxPromptTokens";
+    public const string AppMaxOutputTokens = "App.MaxOutputTokens";
+    public const string AppMaxToolTokens = "App.MaxToolTokens";
+    public const string AppMaxChatTokens = "App.MaxChatTokens";
     public const string AppPreferredProvider = "App.PreferredProvider";
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
+    public const string AppAutoApprove = "App.AutoApprove";
+    public const string AppAutoDeny = "App.AutoDeny";
     
     #endregion
     
@@ -44,6 +64,16 @@ public static class KnownSettings
     /// </summary>
     private static readonly HashSet<string> _secretSettings = new(StringComparer.OrdinalIgnoreCase)
     {
+        // Anthropic secrets
+        AnthropicApiKey,
+        
+        // AWS Bedrock secrets
+        AWSBedrockAccessKey,
+        AWSBedrockSecretKey,
+        
+        // Google Gemini secrets
+        GoogleGeminiApiKey,
+        
         // Azure OpenAI secrets
         AzureOpenAIApiKey,
         
@@ -63,6 +93,20 @@ public static class KnownSettings
     /// </summary>
     private static readonly Dictionary<string, string> _dotToEnvVarMap = new(StringComparer.OrdinalIgnoreCase)
     {
+        // Anthropic mappings
+        { AnthropicApiKey, "ANTHROPIC_API_KEY" },
+        { AnthropicModelName, "ANTHROPIC_MODEL_NAME" },
+        
+        // AWS Bedrock mappings
+        { AWSBedrockAccessKey, "AWS_BEDROCK_ACCESS_KEY" },
+        { AWSBedrockSecretKey, "AWS_BEDROCK_SECRET_KEY" },
+        { AWSBedrockRegion, "AWS_BEDROCK_REGION" },
+        { AWSBedrockModelId, "AWS_BEDROCK_MODEL_ID" },
+        
+        // Google Gemini mappings
+        { GoogleGeminiApiKey, "GOOGLE_GEMINI_API_KEY" },
+        { GoogleGeminiModelId, "GOOGLE_GEMINI_MODEL_ID" },
+
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "AZURE_OPENAI_API_KEY" },
         { AzureOpenAIEndpoint, "AZURE_OPENAI_ENDPOINT" },
@@ -70,6 +114,7 @@ public static class KnownSettings
         
         // OpenAI mappings
         { OpenAIApiKey, "OPENAI_API_KEY" },
+        { OpenAIEndpoint, "OPENAI_ENDPOINT" },
         { OpenAIChatModelName, "OPENAI_CHAT_MODEL_NAME" },
         
         // GitHub mappings
@@ -82,11 +127,16 @@ public static class KnownSettings
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
         
         // Application settings
-        { AppMaxTokens, "APP_MAX_TOKENS" },
+        { AppMaxPromptTokens, "CYCOD_MAX_PROMPT_TOKENS" },
+        { AppMaxOutputTokens, "CYCOD_MAX_OUTPUT_TOKENS" },
+        { AppMaxToolTokens, "CYCOD_MAX_TOOL_TOKENS" },
+        { AppMaxChatTokens, "CYCOD_MAX_CHAT_TOKENS" },
         { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
-        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" }
+        { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
+        { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
+        { AppAutoDeny, "CYCOD_AUTO_DENY" }
     };
     
     /// <summary>
@@ -94,6 +144,20 @@ public static class KnownSettings
     /// </summary>
     private static readonly Dictionary<string, string> _dotToCLIOptionMap = new(StringComparer.OrdinalIgnoreCase)
     {
+        // Anthropic mappings
+        { AnthropicApiKey, "--anthropic-api-key" },
+        { AnthropicModelName, "--anthropic-model-name" },
+        
+        // AWS Bedrock mappings
+        { AWSBedrockAccessKey, "--aws-bedrock-access-key" },
+        { AWSBedrockSecretKey, "--aws-bedrock-secret-key" },
+        { AWSBedrockModelId, "--aws-bedrock-model-id" },
+        { AWSBedrockRegion, "--aws-bedrock-region" },
+        
+        // Google Gemini mappings
+        { GoogleGeminiApiKey, "--google-gemini-api-key" },
+        { GoogleGeminiModelId, "--google-gemini-model-id" },
+
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "--azure-openai-api-key" },
         { AzureOpenAIEndpoint, "--azure-openai-endpoint" },
@@ -101,6 +165,7 @@ public static class KnownSettings
         
         // OpenAI mappings
         { OpenAIApiKey, "--openai-api-key" },
+        { OpenAIEndpoint, "--openai-endpoint" },
         { OpenAIChatModelName, "--openai-chat-model-name" },
         
         // GitHub mappings
@@ -113,10 +178,15 @@ public static class KnownSettings
         { CopilotEditorVersion, "--copilot-editor-version" },
         
         // Application settings
-        { AppMaxTokens, "--max-tokens" },
+        { AppMaxPromptTokens, "--max-prompt-tokens" },
+        { AppMaxOutputTokens, "--max-output-tokens" },
+        { AppMaxToolTokens, "--max-tool-tokens" },
+        { AppMaxChatTokens, "--max-chat-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
-        { AppChatCompletionTimeout, "--chat-completion-timeout" }
+        { AppChatCompletionTimeout, "--chat-completion-timeout" },
+        { AppAutoApprove, "--auto-approve" },
+        { AppAutoDeny, "--auto-deny" }
     };
     
     /// <summary>
@@ -128,10 +198,47 @@ public static class KnownSettings
     /// Mapping from CLI option format to dot notation.
     /// </summary>
     private static readonly Dictionary<string, string> _cliOptionToDotMap;
-    
+
+    /// <summary>
+    /// Collection of settings that can have multiple values.
+    /// </summary>
+    private static readonly List<string> _multiValueSettings = new()
+    {
+        AppAutoApprove, AppAutoDeny
+    };
+
     #endregion
-    
+
     #region Category Groupings
+
+    /// <summary>
+    /// Collection of settings for Anthropic integration.
+    /// </summary>
+    public static readonly HashSet<string> AnthropicSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        AnthropicApiKey,
+        AnthropicModelName
+    };
+    
+    /// <summary>
+    /// Collection of settings for AWS Bedrock integration.
+    /// </summary>
+    public static readonly HashSet<string> AWSBedrockSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        AWSBedrockAccessKey,
+        AWSBedrockSecretKey,
+        AWSBedrockRegion,
+        AWSBedrockModelId
+    };
+    
+    /// <summary>
+    /// Collection of settings for Google Gemini integration.
+    /// </summary>
+    public static readonly HashSet<string> GoogleGeminiSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        GoogleGeminiApiKey,
+        GoogleGeminiModelId
+    };
     
     /// <summary>
     /// Collection of settings for Azure OpenAI integration.
@@ -149,6 +256,7 @@ public static class KnownSettings
     public static readonly HashSet<string> OpenAISettings = new(StringComparer.OrdinalIgnoreCase)
     {
         OpenAIApiKey,
+        OpenAIEndpoint,
         OpenAIChatModelName
     };
     
@@ -176,11 +284,16 @@ public static class KnownSettings
     /// </summary>
     public static readonly HashSet<string> AppSettings = new(StringComparer.OrdinalIgnoreCase)
     {
-        AppMaxTokens,
+        AppMaxPromptTokens,
+        AppMaxOutputTokens,
+        AppMaxToolTokens,
+        AppMaxChatTokens,
         AppPreferredProvider,
         AppAutoSaveChatHistory,
         AppAutoSaveTrajectory,
-        AppChatCompletionTimeout
+        AppChatCompletionTimeout,
+        AppAutoApprove,
+        AppAutoDeny
     };
     
     #endregion
@@ -224,6 +337,17 @@ public static class KnownSettings
     {
         return _dotToEnvVarMap.Keys;
     }
+
+    /// <summary>
+    /// Checks if the given key can have multiple values.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns>True if the key can have multiple values, false otherwise.</returns>
+    public static bool IsMultiValue(string key)
+    {
+        var dotNotationKey = ToDotNotation(key);
+        return _multiValueSettings.Contains(dotNotationKey, StringComparer.OrdinalIgnoreCase);
+    }
     
     /// <summary>
     /// Converts a setting name to environment variable format.
@@ -233,7 +357,7 @@ public static class KnownSettings
     public static string ToEnvironmentVariable(string key)
     {
         if (IsEnvironmentVariableFormat(key)) return key;
-        
+
         // Try to map to an environment variable
         var dotNotationKey = ToDotNotation(key);
         if (_dotToEnvVarMap.TryGetValue(dotNotationKey, out string? envVarKey))

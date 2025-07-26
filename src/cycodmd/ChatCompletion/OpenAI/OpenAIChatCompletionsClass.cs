@@ -59,9 +59,9 @@ public class OpenAIChatCompletionsClass
         var imageBytes = File.ReadAllBytes(imageFileName);
         var contentType = ImageTypeDetector.GetContentType(imageFileName, imageBytes);
 
-        var detail = ImageChatMessageContentPartDetail.High;
-        var imagePart = ChatMessageContentPart.CreateImageMessageContentPart(BinaryData.FromBytes(imageBytes), contentType, detail);
-        var userPart = ChatMessageContentPart.CreateTextMessageContentPart(userPrompt);
+        var detail = ChatImageDetailLevel.High;
+        var imagePart = ChatMessageContentPart.CreateImagePart(BinaryData.FromBytes(imageBytes), contentType, detail);
+        var userPart = ChatMessageContentPart.CreateTextPart(userPrompt);
 
         return GetChatCompletion(new UserChatMessage(imagePart, userPart));
     }

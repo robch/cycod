@@ -20,16 +20,16 @@ public class GitHubCopilotHelper
     {
         { "accept", "application/json" },
         { "editor-version", "Neovim/0.6.1" },
-        { "editor-plugin-version", "copilot.vim/1.16.0" },
+        { "editor-plugin-version", "copilot.vim/1.31.0" },
         { "content-type", "application/json" },
-        { "user-agent", "GithubCopilot/1.155.0" }
+        { "user-agent", "GithubCopilot/1.189.0" }
     };
 
     private readonly HttpClient _httpClient;
 
     public GitHubCopilotHelper()
     {
-        _httpClient = new HttpClient();
+        _httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
         foreach (var header in DEFAULT_HEADERS)
         {
             _httpClient.DefaultRequestHeaders.TryAddWithoutValidation(header.Key, header.Value);
@@ -144,6 +144,7 @@ public class GitHubCopilotHelper
                 throw new InvalidOperationException("Failed to get Copilot token");
             }
             
+            ConsoleHelpers.WriteDebugLine($"Copilot token: {tokenData.token}");
             return tokenData;
         }
         catch (HttpRequestException ex) when (ex.Message.Contains("401") || (ex.StatusCode.HasValue && (int)ex.StatusCode.Value == 401))

@@ -1,0 +1,13 @@
+﻿class: simple5
+optional: check-timeouts
+tests:
+
+- name: timeouts
+  matrix:
+    timeout: 1500
+    sleep: [1, 2, 3]
+  timeout: ${{ matrix.timeout }}
+  bash: |
+    echo sleeping for ${{ matrix.sleep }} seconds - timeout after ${{ matrix.timeout }} seconds
+    sleep ${{ matrix.sleep }}
+    echo done sleeping

@@ -28,21 +28,18 @@ public static class AliasFileHelpers
     public static List<string> SaveAlias(string aliasName, string[] allOptions, ConfigFileScope scope = ConfigFileScope.Local)
     {
         var filesSaved = new List<string>();
-        
-        // Filter options to exclude scope-related save options
-        var optionsToFilter = new[] { 
-            "--save-alias", 
-            "--save-local-alias", 
-            "--save-user-alias", 
-            "--save-global-alias", 
-            aliasName 
-        };
-        
+
         var aliasDirectory = FindAliasDirectoryInScope(scope, create: true)!;
         var fileName = Path.Combine(aliasDirectory, aliasName + ".alias");
 
-        var options = allOptions
-            .Where(x => !optionsToFilter.Contains(x))
+        var possibilities = new[] { "--save-alias", "--save-local-alias", "--save-user-alias", "--save-global-alias" };
+        var saveAliasOption = allOptions.LastOrDefault(x => possibilities.Contains(x));
+
+        var optionPosition = Array.IndexOf(allOptions, "--save-alias");
+        var filtered = allOptions.Where((_, index) => optionPosition < 0 || index < optionPosition || index > optionPosition + 1).ToArray();
+
+        var options = filtered
+            .Where(x => !possibilities.Contains(x))
             .Select(x => SingleLineOrNewAtFile(x, fileName, ref filesSaved));
 
         var asMultiLineString = string.Join('\n', options);

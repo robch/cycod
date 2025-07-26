@@ -1,0 +1,195 @@
+USE APP SETTINGS
+
+  These settings control CycoD's application behavior, including auto-saving,
+  function call permissions, and API timeouts.
+
+  MAX PROMPT TOKENS
+
+    EXAMPLE 1: Set maximum prompt tokens via config
+
+      cycod config set App.MaxPromptTokens 50000
+      cycod config set App.MaxPromptTokens 50000 --local
+      cycod config set App.MaxPromptTokens 50000 --user
+      cycod config set App.MaxPromptTokens 50000 --global
+
+    EXAMPLE 2: Set maximum prompt tokens via environment variable
+
+      Set CYCOD_MAX_PROMPT_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum prompt tokens via command line
+
+      cycod chat --max-prompt-tokens 50000
+
+  MAX TOOL TOKENS
+
+    EXAMPLE 1: Set maximum tool tokens via config
+
+      cycod config set App.MaxToolTokens 50000
+      cycod config set App.MaxToolTokens 50000 --local
+      cycod config set App.MaxToolTokens 50000 --user
+      cycod config set App.MaxToolTokens 50000 --global
+
+    EXAMPLE 2: Set maximum tool tokens via environment variable
+
+      Set CYCOD_MAX_TOOL_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum tool tokens via command line
+
+      cycod chat --max-tool-tokens 50000
+
+  MAX OUTPUT TOKENS
+
+    EXAMPLE 1: Set maximum tokens via config
+
+      cycod config set App.MaxOutputTokens 4000
+      cycod config set App.MaxOutputTokens 4000 --local
+      cycod config set App.MaxOutputTokens 4000 --user
+      cycod config set App.MaxOutputTokens 4000 --global
+
+    EXAMPLE 2: Set maximum tokens via environment variable
+
+      Set CYCOD_MAX_OUTPUT_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum tokens via command line
+
+      cycod chat --max-output-tokens 4000
+
+  MAX CHAT TOKENS
+
+    EXAMPLE 1: Set maximum total chat tokens via config
+
+      cycod config set App.MaxChatTokens 50000
+      cycod config set App.MaxChatTokens 50000 --local
+      cycod config set App.MaxChatTokens 50000 --user
+      cycod config set App.MaxChatTokens 50000 --global
+
+    EXAMPLE 2: Set maximum total chat tokensvia environment variable
+
+      Set CYCOD_MAX_CHAT_TOKENS environment variable
+
+    EXAMPLE 3: Supply maximum total chat tokens via command line
+
+      cycod chat --max-chat-tokens 50000
+
+  CHAT COMPLETION TIMEOUT
+
+    EXAMPLE 1: Set chat completion timeout via config
+
+      cycod config set App.ChatCompletionTimeout 120
+      cycod config set App.ChatCompletionTimeout 120 --local
+      cycod config set App.ChatCompletionTimeout 120 --user
+      cycod config set App.ChatCompletionTimeout 120 --global
+
+    EXAMPLE 2: Set chat completion timeout via environment variable
+
+      Set CYCOD_CHAT_COMPLETION_TIMEOUT environment variable
+
+    EXAMPLE 3: Supply chat completion timeout via command line
+
+      cycod chat --chat-completion-timeout 120
+
+  AUTO-SAVE CHAT HISTORY
+
+    EXAMPLE 1: Control auto-saving chat history via config
+
+      cycod config set App.AutoSaveChatHistory true
+      cycod config set App.AutoSaveChatHistory false --local
+      cycod config set App.AutoSaveChatHistory false --user
+      cycod config set App.AutoSaveChatHistory false --global
+
+    EXAMPLE 2: Control auto-saving chat history via environment variable
+
+      Set CYCOD_AUTO_SAVE_CHAT_HISTORY environment variable to true/false
+
+    EXAMPLE 3: Control auto-saving chat history via command line
+
+      cycod chat --auto-save-chat-history true
+      cycod chat --auto-save-chat-history false
+
+  AUTO-SAVE TRAJECTORY
+
+    EXAMPLE 1: Control auto-saving trajectory via config
+
+      cycod config set App.AutoSaveTrajectory true
+      cycod config set App.AutoSaveTrajectory false --local
+      cycod config set App.AutoSaveTrajectory false --user
+      cycod config set App.AutoSaveTrajectory false --global
+
+    EXAMPLE 2: Control auto-saving trajectory via environment variable
+
+      Set CYCOD_AUTO_SAVE_TRAJECTORY environment variable to true/false
+
+    EXAMPLE 3: Control auto-saving trajectory via command line
+
+      cycod chat --auto-save-trajectory true
+      cycod chat --auto-save-trajectory false
+
+  FUNCTION CALL AUTO-APPROVE
+
+    EXAMPLE 1: Set function auto-approval via config
+
+      cycod config set App.AutoApprove read
+      cycod config set App.AutoApprove "read write" --local
+      cycod config set App.AutoApprove "*" --user
+      cycod config set App.AutoApprove "ViewFile ListFiles" --global
+
+    EXAMPLE 2: Set function auto-approval via environment variable
+
+      Set CYCOD_AUTO_APPROVE environment variable
+      (Use space-separated values for multiple items)
+
+    EXAMPLE 3: Supply function auto-approval via command line
+
+      cycod chat --auto-approve read
+      cycod chat --auto-approve read write
+      cycod chat --auto-approve "*"
+      cycod chat --auto-approve ViewFile ListFiles
+
+  FUNCTION CALL AUTO-DENY
+
+    EXAMPLE 1: Set function auto-denial via config
+
+      cycod config set App.AutoDeny run
+      cycod config set App.AutoDeny "DeleteFile RunBashCommandAsync" --local
+      cycod config set App.AutoDeny write --user
+      cycod config set App.AutoDeny "CreateFile StrReplace" --global
+
+    EXAMPLE 2: Set function auto-denial via environment variable
+
+      Set CYCOD_AUTO_DENY environment variable
+      (Use space-separated values for multiple items)
+
+    EXAMPLE 3: Supply function auto-denial via command line
+
+      cycod chat --auto-deny run
+      cycod chat --auto-deny DeleteFile RunBashCommandAsync
+      cycod chat --auto-deny write
+      cycod chat --auto-deny "CreateFile StrReplace"
+
+  PREFERRED PROVIDER
+
+    EXAMPLE 1: Set preferred AI provider via config
+
+      cycod config set App.PreferredProvider openai
+      cycod config set App.PreferredProvider azure-openai --local
+      cycod config set App.PreferredProvider copilot --user
+      cycod config set App.PreferredProvider anthropic --global
+
+    EXAMPLE 2: Set preferred AI provider via environment variable
+
+      Set CYCOD_PREFERRED_PROVIDER environment variable
+
+    EXAMPLE 3: Use specific provider via command line flags
+
+      cycod chat --use-openai
+      cycod chat --use-azure-openai
+      cycod chat --use-copilot
+      cycod chat --use-anthropic
+
+SEE ALSO
+
+  cycod help function calls
+  cycod help chat history
+  cycod help provider
+  cycod help config
+  cycod help options

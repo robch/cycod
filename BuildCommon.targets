@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <!-- Default versions that can be overridden via command line -->
+    <Version Condition="'$(Version)' == ''">1.0.0</Version>
+    <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">1.0.0.0</AssemblyVersion>
+    <FileVersion Condition="'$(FileVersion)' == ''">1.0.0.0</FileVersion>
+    
+    <!-- For local dev builds, create an informative version with username and timestamp -->
+    <DevVersionSuffix Condition="'$(DevVersionSuffix)' == ''">DEV-$([System.Environment]::UserName)-$([System.DateTime]::Now.ToString("yyyyMMdd.HHmm"))</DevVersionSuffix>
+    <InformationalVersion Condition="'$(InformationalVersion)' == ''">$(Version)-$(DevVersionSuffix)</InformationalVersion>
+  </PropertyGroup>
+</Project>

@@ -82,8 +82,11 @@ public class FunctionFactory
             var funcDescriptionAttrib = attributes[0] as DescriptionAttribute;
             var funcDescription = funcDescriptionAttrib!.Description;
 
+            var readonlyAttrib = method.GetCustomAttribute<ReadOnlyAttribute>();
+            var readOnly = readonlyAttrib?.IsReadOnly;
+
             var aiFunction = AIFunctionFactory.Create(method, instance, method.Name, funcDescription);
-            AddFunction(aiFunction, method, instance);
+            AddFunction(aiFunction, method, instance, readOnly);
         }
     }
 
@@ -93,7 +96,7 @@ public class FunctionFactory
         AddFunction(aiFunction, methodInfo!, aiFunction);
     }
 
-    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null)
+    public void AddFunction(AIFunction aiFunction, MethodInfo method, object? instance = null, bool? readOnly = null)
     {
         const int shortDescriptionMacCch = 50;
         var shortDescription = aiFunction.Description.Length > shortDescriptionMacCch
@@ -101,12 +104,22 @@ public class FunctionFactory
             : aiFunction.Description;
 
         ConsoleHelpers.WriteDebugLine($"Adding function '{aiFunction.Name}' - {shortDescription}");
-        _functions.TryAdd(method, (aiFunction, instance));
+        _functions.TryAdd(aiFunction.Name, (aiFunction, method, instance, readOnly));
+        ConsoleHelpers.WriteDebugLine($"Count of functions in factory: {_functions.Count}");
     }
 
     public IEnumerable<AITool> GetAITools()
     {
         return _functions.Select(x => x.Value.Function);
+    }
+
+    public bool? IsReadOnlyFunction(string functionName)
+    {
+        if (_functions.TryGetValue(functionName, out var function))
+        {
+            return function.ReadOnly;
+        }
+        return null;
     }
 
     public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
@@ -117,7 +130,7 @@ public class FunctionFactory
             var function = _functions.FirstOrDefault(x => x.Value.Function.Name == functionName);
             if (function.Key != null)
             {
-                result = TryCallFunction(function.Key, function.Value.Function, functionArguments, function.Value.Instance);
+                result = TryCallFunction(function.Value.Method, function.Value.Function, functionArguments, function.Value.Instance);
                 return true;
             }
         }
@@ -379,6 +392,6 @@ public class FunctionFactory
         return t.IsGenericType && t.GetGenericTypeDefinition() == typeof(Nullable<>);
     }
 
-    private readonly Dictionary<MethodInfo, (AIFunction Function, object? Instance)> _functions = new();
+    private readonly Dictionary<string, (AIFunction Function, MethodInfo Method, object? Instance, bool? ReadOnly)> _functions = new();
 }
 

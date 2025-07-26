@@ -1,5 +1,5 @@
+using System.Runtime.Intrinsics.X86;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Protocol.Transport;
 
 /// <summary>
 /// Factory for creating MCP clients from configuration.
@@ -7,97 +7,73 @@ using ModelContextProtocol.Protocol.Transport;
 public static class McpClientManager
 {
     /// <summary>
-    /// Creates an MCP client for the specified server name.
+    /// Creates an MCP client based on the provided server configuration.
     /// </summary>
-    /// <param name="serverName">The name of the configured MCP server.</param>
-    /// <param name="scope">Optional scope to look in for the server.</param>
-    /// <returns>An initialized MCP client or null if the server is not found.</returns>
-    public static async Task<IMcpClient?> CreateClientAsync(string serverName, ConfigFileScope scope = ConfigFileScope.Any)
+    /// <param name="serverName">The name of the MCP server</param>
+    /// <param name="serverConfig">The configuration item for the MCP server</param>
+    /// <returns>An instance of IMcpClient if created successfully, null otherwise</returns>
+    public static async Task<IMcpClient?> CreateClientAsync(string serverName, IMcpServerConfigItem serverConfig)
     {
-        // Find the MCP server configuration
-        var serverConfig = scope == ConfigFileScope.Any
-            ? McpFileHelpers.GetFromAnyScope(serverName)
-            : McpFileHelpers.GetFromScope(serverName, scope);
-
-        if (serverConfig == null)
-        {
-            Console.WriteLine($"MCP server '{serverName}' not found");
-            return null;
-        }
-
-        // Create the MCP client based on the transport type
+        IMcpClient? created = null;
         if (serverConfig is StdioServerConfig stdioConfig)
         {
-            return await McpClientFactory.CreateAsync(new()
+            created = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
             {
-                Id = serverName,
                 Name = serverName,
-                TransportType = TransportTypes.StdIo,
-                TransportOptions = new()
-                {
-                    ["command"] = stdioConfig.Command,
-                    ["arguments"] = string.Join(" ", stdioConfig.Args),
-                    // environmentVariables = stdioConfig.Env
-                }
-            });
+                Command = stdioConfig.Command,
+                Arguments = stdioConfig.Args,
+                EnvironmentVariables = stdioConfig.Env,
+            }));
         }
         else if (serverConfig is SseServerConfig sseConfig)
         {
-            // TODO: Implement SSE transport
-            throw new NotImplementedException("SSE transport is not yet implemented");
+            created = await McpClientFactory.CreateAsync(new SseClientTransport(new()
+            {
+                Name = serverName,
+                Endpoint = new Uri(sseConfig.Url!),
+                UseStreamableHttp = true
+            }));
         }
         else
         {
-            Console.WriteLine($"Unsupported transport type '{serverConfig.Type}' for MCP server '{serverName}'");
+            ConsoleHelpers.WriteErrorLine($"Unsupported transport type '{serverConfig.Type}' for MCP server '{serverName}'");
         }
 
-        return null;
+        return created;
     }
 
     /// <summary>
-    /// Creates MCP clients for all configured servers.
+    /// Creates MCP clients for all servers in the provided configuration.
     /// </summary>
-    /// <param name="scope">Optional scope to look in for servers.</param>
-    /// <returns>A dictionary of server names to MCP clients.</returns>
-    public static async Task<Dictionary<string, IMcpClient>> CreateAllClientsAsync(ConfigFileScope scope = ConfigFileScope.Any)
+    /// <param name="servers">Dictionary of server names to their configuration items</param>
+    /// <returns>A dictionary mapping server names to their created MCP clients</returns>
+    public static async Task<Dictionary<string, IMcpClient>> CreateClientsAsync(Dictionary<string, IMcpServerConfigItem> servers)
     {
+        var start = DateTime.Now;
+        ConsoleHelpers.Write($"Loading {servers.Count} registered MCP server(s) ...", ConsoleColor.DarkGray);
+
+        var loaded = 0;
         var result = new Dictionary<string, IMcpClient>();
-        var servers = new Dictionary<string, IMcpServerConfigItem>();
-
-        // Get servers from all relevant scopes
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.Global)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.Global))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
-        
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.User)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.User))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
-        
-        if (scope == ConfigFileScope.Any || scope == ConfigFileScope.Local)
-        {
-            foreach (var server in McpFileHelpers.ListMcpServers(ConfigFileScope.Local))
-            {
-                servers[server.Key] = server.Value;
-            }
-        }
-
-        // Create clients for each server
         foreach (var serverName in servers.Keys)
         {
-            var client = await CreateClientAsync(serverName, scope);
-            if (client != null)
+            try
             {
-                result[serverName] = client;
+                var client = await CreateClientAsync(serverName, servers[serverName]);
+                if (client != null)
+                {
+                    result[serverName] = client;
+                    loaded++;
+                }
+            }
+            catch (Exception ex)
+            {
+                var message = "  " + ex.Message.Replace("\n", "\n  ").TrimEnd();
+                ConsoleHelpers.WriteErrorLine($"\rSkipping MCP server '{serverName}'; failed to load\n\n{message}\n");
             }
         }
+
+        var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
+        ConsoleHelpers.WriteLine($"\rLoaded {result.Count} registered MCP server(s) ({duration})", ConsoleColor.DarkGray);
 
         return result;
     }

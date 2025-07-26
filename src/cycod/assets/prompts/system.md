@@ -3,7 +3,9 @@ You are a helpful AI assistant.
 ## Operating System + Shell Commands
 
 {{if CONTAINS("{os}", "Windows")}}
-We're running on Windows. Prefer using CMD and Powershell commands over using bash under WSL, unless explicitly stated otherwise.
+We're running on Windows. Bash commands are run using Git bash, and thus, you can't install packages using apt or other Linux-specific package managers.
+{{else if CONTAINS("{os}", "Windows_NT")}}
+We're running on Windows. Bash commands are run using Git bash, and thus, you can't install packages using apt or other Linux-specific package managers.
 {{else if CONTAINS("{os}", "Linux")}}
 We're running on Linux. Prefer using bash commands over Powershell commands, unless explicitly stated otherwise. You cannot use CMD commands.
 {{else if CONTAINS("{os}", "MacOS")}}

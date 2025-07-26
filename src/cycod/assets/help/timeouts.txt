@@ -1,0 +1,63 @@
+CYCOD TIMEOUTS
+
+  CycoD provides controls for API call timeouts to help manage network issues
+  and long-running operations.
+
+CHAT COMPLETION TIMEOUT
+
+  The chat completion timeout controls how long CycoD will wait for a response
+  from the AI provider API before timing out.
+
+  USAGE: cycod --chat-completion-timeout SECONDS
+
+  The timeout is specified in seconds. A value of 0 means no timeout (wait indefinitely).
+
+SETTING THE TIMEOUT
+
+  EXAMPLE 1: Set a timeout via command line
+
+    cycod --chat-completion-timeout 60
+    cycod --chat-completion-timeout 120
+    cycod --chat-completion-timeout 300
+
+  EXAMPLE 2: Set a timeout via config command
+
+    cycod config set App.ChatCompletionTimeout 60
+    cycod config set App.ChatCompletionTimeout 120 --user
+    cycod config set App.ChatCompletionTimeout 300 --global
+
+  EXAMPLE 3: Set a timeout via environment variable
+
+    Set CYCOD_CHAT_COMPLETION_TIMEOUT to the desired timeout in seconds
+
+DEFAULT TIMEOUT
+
+  If not specified, CycoD uses a default timeout of 180 seconds (3 minutes).
+  This can vary based on the AI model and provider being used.
+
+RECOMMENDED TIMEOUT VALUES
+
+  * 30-60 seconds: Quick questions with simple models
+  * 120-180 seconds: Default for most interactions
+  * 300+ seconds: Complex tasks like code generation or debugging
+  * 0 (infinite): Long-running tasks that require deep analysis
+
+HANDLING TIMEOUTS
+
+  When a timeout occurs:
+  1. CycoD will display a timeout message
+  2. The current response will be truncated
+  3. You may need to retry with a longer timeout value
+
+PROVIDER-SPECIFIC CONSIDERATIONS
+
+  Some providers may have their own timeout limitations:
+  * OpenAI: May have server-side timeouts for certain models
+  * Azure OpenAI: Configurable server-side timeouts
+  * GitHub Copilot: May have different timeout behavior
+
+SEE ALSO
+
+  cycod help use app
+  cycod help options
+  cycod help config

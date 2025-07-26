@@ -1,15 +1,15 @@
-# `ai test`
+# `cycodt`
 
-`ai test` is a YAML-based test framework/runner that can be used to run tests on any command-line tool or script. It is designed to be simple to use and understand, and to be able to run tests in parallel.
+`cycodt` is a YAML-based test framework/runner that can be used to run tests on any command-line tool or script. It is designed to be simple to use and understand, and to be able to run tests in parallel.
 
 Example:
 
 ```yaml
-- name: Build search index
-  command: ai search index update --files "data/*.md" --index-name myindex
+- name: Ensure nothing to commit in worktree
+  run: git status
   expect-regex: |
-    Updating search index 'myindex' ...
-    Updating search index 'myindex' ... Done!
+    On branch master
+    nothing to commit, working tree clean
 ```
 
 The test case YAML file contains a list of test cases. Each test case is a dictionary with the following keys:
@@ -36,10 +36,10 @@ Test cases can be organized into areas, sub-areas, and so on.
   tests:
 
   - name: Test 1
-    command: echo "Hello, world!"
+    bash: echo "Hello, world!"
 
   - name: Test 2
-    command: echo "Goodbye, world!"
+    bash: echo "Goodbye, world!"
 ```
 
 Test cases can also be grouped into classes. 
@@ -49,10 +49,10 @@ Test cases can also be grouped into classes.
   tests:
 
   - name: Test 1
-    command: echo "Hello, world!"
+    bash: echo "Hello, world!"
 
   - name: Test 2
-    command: echo "Goodbye, world!"
+    bash: echo "Goodbye, world!"
 ```
 
 If no class is specified, the default class is "TestCases".
@@ -70,9 +70,9 @@ Examples:
 ```yaml
 tests:
 - name: Test 1
-  command: echo "Hello, world!"
+  bash: echo "Hello, world!"
 - name: Test 2
-  command: echo "Goodbye, world!"
+  bash: echo "Goodbye, world!"
 ```
 
 ```yaml
@@ -83,7 +83,7 @@ steps:
   bash: echo "Goodbye, world!"
 ```
 
-## `command`, `script`, `bash`
+## `run`, `script`, `shell`, `bash`, `cmd`, `pwsh`, `powershell`
 
 Required.
 
@@ -91,11 +91,22 @@ Represents how the test case will be run.
 
 If the specified command or script returns an error level of non-zero, the test will fail. If it returns zero, it will pass (given that all 'expect' conditions are also met).
 
-Example command:
+Example run command:
 
 ```yaml
-command: ai chat --interactive
+run: git status
 ```
+
+Example for a script with a specific shell:
+
+```yaml
+script: |
+  echo "Hello, world!"
+  echo "Goodbye, world!"
+shell: bash
+```
+
+For convenience, you can use shell-specific shortcuts like `bash`, `cmd`, `pwsh`, or `powershell`:
 
 Example for a bash script:
 
@@ -108,6 +119,44 @@ bash: |
   fi
 ```
 
+Example for a PowerShell script:
+
+```yaml
+pwsh: |
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    Write-Host "Running on PowerShell Core"
+  } else {
+    Write-Host "Running on Windows PowerShell"
+  }
+```
+
+Example for a Windows PowerShell script:
+
+```yaml
+powershell: |
+  if ($PSVersionTable.PSVersion.Major -ge 6) {
+    Write-Host "Running on PowerShell Core"
+  } else {
+    Write-Host "Running on Windows PowerShell"
+  }
+```
+
+You can also use custom shells, like python, etc. Just specify the shell template and the script.
+The template will be used to run the script.  
+- The `{0}` placeholder will be replaced with a temporary filename where the script is saved  
+- The `{1}` placeholder will be replaced with the arguments passed to the script.  
+
+```yaml
+shell: python {0} {1}
+script: |
+  import sys
+  print("Hello from Python")
+  print("Arguments:", sys.argv)
+arguments: 1 2 3
+expect-regex: |
+  Hello from Python
+  Arguments: .*, '1', '2', '3'
+```
 
 ## `env`
 
@@ -131,6 +180,7 @@ When present, will be passed to the command or script as stdin.
 Example:
 
 ```yaml
+run: cycod chat
 input: |
   Tell me a joke
   Tell me another
@@ -180,6 +230,20 @@ not-expect-regex: |
   ERROR
   curseword1
   curseword2
+```
+
+## `expect-exit-code`
+
+Optional.
+
+When present, specifies the expected exit code of the command or script.
+
+By default, it is set to `0`.
+
+Example:
+
+```yaml
+expect-exit-code: 1
 ```
 
 ## `parallelize`
@@ -237,11 +301,11 @@ tags: [echo]
 tests:
 
 - name: Test 1
-  command: echo "Hello, world!"
+  bash: echo "Hello, world!"
   tags: [hello]
 
 - name: Test 2
-  command: echo "Goodbye, world!"
+  bash: echo "Goodbye, world!"
   tags: [bye]
 ```
 
@@ -286,7 +350,7 @@ In this example, the test case will run three times with `VALUE` set to 1, 2, an
 matrix:
   animals: [ cats, bears, goats ]
   temperature: [ 0.8, 1.0 ]
-command: 'ai chat --question "Tell me a joke about ${{ matrix.animals }}"'
+run: cycod chat --input "Tell me a joke about ${{ matrix.animals }}"
 expect: 'The joke should be about ${{ matrix.animals }}'
 ```
 
@@ -294,17 +358,17 @@ In this example the test case will run six times (2x3) with `temperature` set to
 
 ```yaml
 matrix:
-  assistant-id: asst_TqfFCksyWK83VKe76kiBYWGt
+  temperature: asst_TqfFCksyWK83VKe76kiBYWGt
   foreach:
   - question: How do you create an MP3 file with speech synthesis from the text "Hello, World!"?
   - question: How do you recognize speech from an MP3 file?
   - question: How do you recognize speech from a microphone?
 steps:
-- name: Inference call to `ai chat`
-  command: ai chat
+- name: Inference call to `cycod chat`
+  run: cycod chat
   arguments:
-    question: ${{ matrix.question }}
-    assistant-id: ${{ matrix.assistant-id }}
+    input: ${{ matrix.question }}
+    temperature: ${{ matrix.temperature }}
     output-chat-history: chat-history-${{ matrix.__matrix_id__ }}.jsonl
 ```
 
@@ -316,6 +380,7 @@ matrix-file: questions.yaml
 
 `questions.yaml`:
 ```yaml
+temperature: asst_TqfFCksyWK83VKe76kiBYWGt
 foreach:
 - question: How do you create an MP3 file with speech synthesis from the text "Hello, World!"?
 - question: How do you recognize speech from an MP3 file?
@@ -323,5 +388,3 @@ foreach:
 ```
 
 In this example, the matrix is loaded from a file.
-
-

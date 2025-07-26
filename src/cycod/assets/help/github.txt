@@ -1,14 +1,18 @@
 CYCOD GITHUB COMMANDS
 
-  These commands allow you to integrate CYCOD with GitHub.
+  These commands allow you to login to GitHub and see what models are available
+  for use with CYCOD.
 
 USAGE: cycod github login
+   OR: cycod github models
 
 COMMANDS
 
   login           Authenticate with GitHub
+  models          List available models on GitHub
 
 SEE ALSO
 
   cycod help github login
-  cycod help config
+  cycod help github models
+  cycod help use github

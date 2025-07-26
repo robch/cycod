@@ -1,0 +1,23 @@
+class: cycodt-expect-check
+tag: cycodt
+tests:
+
+- name: regex success
+  run: cycodt expect check --regex Hi
+  input: Hi
+  expect-regex: |
+    ^Checking expectations\.\.\.\r?$\n
+    ^Checking expectations\.\.\. PASS!\r?$\n
+
+- name: regex failed
+  run: cycodt expect check --regex Hiz
+  input: Hi
+  expect-exit-code: 1
+  expect-regex: |
+    ^Checking expectations\.\.\.\r?$\n
+    ^Checking expectations\.\.\. FAILED!\r?$\n
+    ^\r?$\n
+    ^UNEXPECTED: Couldn't find 'Hiz' in:\r?$\n
+    ^```\r?$\n
+    ^Hi\r?$\n
+    ^```\r?$\n

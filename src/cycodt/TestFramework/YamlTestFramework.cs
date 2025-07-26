@@ -2,19 +2,6 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class YamlTestFramework
 {
-    public static IEnumerable<TestCase> GetTestsFromDirectory(string source, DirectoryInfo directory)
-    {
-        Logger.Log($"YamlTestFramework.GetTestsFromDirectory('{source}', '{directory.FullName}'): ENTER");
-
-        directory = YamlTestConfigHelpers.GetTestDirectory(directory);
-
-        var files = FindFiles(directory);
-        var tests = files.SelectMany(file => GetTestsFromYaml(source, file));
-
-        Logger.Log($"YamlTestFramework.GetTestsFromDirectory('{source}', '{directory.FullName}'): EXIT");
-        return tests.ToList();
-    }
-
     public static IEnumerable<TestCase> GetTestsFromYaml(string source, FileInfo file)
     {
         Logger.Log($"YamlTestFramework.GetTestsFromYaml('{source}', '{file.FullName}'): ENTER");
@@ -250,13 +237,6 @@ public class YamlTestFramework
         return itemFromItemIdMap[nextItemId];
     }
 
-    private static IEnumerable<FileInfo> FindFiles(DirectoryInfo directory)
-    {
-        return directory.GetFiles($"*{YamlFileExtension}", SearchOption.AllDirectories)
-            .Where(file => file.Name != YamlDefaultTagsFileName)
-            .Where(file => file.Name != YamlTestsConfigFileName);
-    }
-
     private static bool IsTrait(Trait trait, string check)
     {
         return trait.Name == check || trait.Value == check;
@@ -289,9 +269,9 @@ public class YamlTestFramework
     #region constants
     public const string YamlFileExtension = ".yaml";
     public const string FakeExecutor = "executor://cycodt/cli/TestFramework/v1";
-    public readonly static string YamlDefaultTagsFileName = $"{ProgramInfo.Name}-tests-default-tags.yaml";
+    public readonly static string YamlDefaultTagsFileName = $"cycodt-tags.yaml";
     public const string YamlTestsConfigDirectoryName = "tests";
-    public const string YamlTestsConfigFileName = "config.yaml";
+    public const string YamlTestsConfigFileName = "cycodt-config.yaml";
     public const string DefaultTimeout = "600000";
     #endregion
 }

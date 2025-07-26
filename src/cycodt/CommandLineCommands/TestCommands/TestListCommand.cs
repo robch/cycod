@@ -17,14 +17,33 @@ class TestListCommand : TestBaseCommand
             Logger.Log(new CycoDtTestFrameworkLogger());
             var tests = FindAndFilterTests();
             
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            foreach (var test in tests)
+            if (ConsoleHelpers.IsVerbose())
             {
-                Console.WriteLine(test.FullyQualifiedName);
-            }
-            Console.ResetColor();
+                var grouped = tests
+                    .GroupBy(t => t.CodeFilePath)
+                    .OrderBy(g => g.Key)
+                    .ToList();
+                for (var i = 0; i < grouped.Count; i++)
+                {
+                    if (i > 0) ConsoleHelpers.WriteLine();
 
-            Console.WriteLine(tests.Count() == 1
+                    var group = grouped[i];
+                    ConsoleHelpers.WriteLine($"{group.Key}\n", ConsoleColor.DarkGray);
+                    foreach (var test in group)
+                    {
+                        ConsoleHelpers.WriteLine($"  {test.FullyQualifiedName}", ConsoleColor.DarkGray);
+                    }
+                }
+            }
+            else
+            {
+                foreach (var test in tests)
+                {
+                    ConsoleHelpers.WriteLine(test.FullyQualifiedName, ConsoleColor.DarkGray);
+                }
+            }
+
+            ConsoleHelpers.WriteLine(tests.Count() == 1
                 ? $"\nFound {tests.Count()} test..."
                 : $"\nFound {tests.Count()} tests...");
 
@@ -32,9 +51,7 @@ class TestListCommand : TestBaseCommand
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
-            Console.ResetColor();
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             return 1;
         }
     }

@@ -6,6 +6,7 @@ using System.ComponentModel;
 /// </summary>
 public class StrReplaceEditorHelperFunctions
 {
+    [ReadOnly(true)]
     [Description("Returns a list of non-hidden files and directories up to 2 levels deep.")]
     public string ListFiles([Description("Absolute or relative path to directory.")] string path)
     {
@@ -35,6 +36,7 @@ public class StrReplaceEditorHelperFunctions
         }
     }
 
+    [ReadOnly(true)]
     [Description("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
     public string ViewFile(
         [Description("Absolute or relative path to file or directory.")] string path,
@@ -73,6 +75,7 @@ public class StrReplaceEditorHelperFunctions
         }
     }
 
+    [ReadOnly(false)]
     [Description("Creates a new file at the specified path with the given content. The `create` command cannot be used if the file already exists.")]
     public string CreateFile(
         [Description("Absolute or relative path to file.")] string path,
@@ -87,6 +90,7 @@ public class StrReplaceEditorHelperFunctions
         return $"Created file {path} with {fileText.Length} characters.";
     }
 
+    // [ReadOnly(false)]
     // [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
     // public string LinesReplace(
     //     [Description("Absolute or relative path to file.")] string path,
@@ -129,6 +133,7 @@ public class StrReplaceEditorHelperFunctions
     //     return $"Replaced lines {startLine} to {endLine} in {path} with {newStr.Length} characters.";
     // }
 
+    [ReadOnly(false)]
     [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
     public string StrReplace(
         [Description("Absolute or relative path to file.")] string path,
@@ -158,6 +163,7 @@ public class StrReplaceEditorHelperFunctions
         return $"File {path} updated: replaced 1 occurrence of specified text.";
     }
 
+    [ReadOnly(false)]
     [Description("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
     public string Insert(
         [Description("Absolute path to file.")] string path,
@@ -186,6 +192,7 @@ public class StrReplaceEditorHelperFunctions
         return $"Inserted {newStr.Length} characters at line {insertLine} in {path}.";
     }
 
+    [ReadOnly(false)]
     [Description("Reverts the last edit made to the file at `path`, undoing the last change if available.")]
     public string UndoEdit(
         [Description("Absolute path to file.")] string path)

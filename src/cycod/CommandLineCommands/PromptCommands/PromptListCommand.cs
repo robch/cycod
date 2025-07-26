@@ -48,13 +48,13 @@ class PromptListCommand : PromptBaseCommand
         if (isAnyScope || scope == ConfigFileScope.Global)
         {
             PromptDisplayHelpers.DisplayPrompts(ConfigFileScope.Global);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.User)
         {
             PromptDisplayHelpers.DisplayPrompts(ConfigFileScope.User);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.Local)

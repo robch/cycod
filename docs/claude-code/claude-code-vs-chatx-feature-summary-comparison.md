@@ -197,7 +197,7 @@ This comparison was done using [cycodmd](https://github.com/robch/cycodmd) and [
 - Implements intelligent context window management
 - Features sophisticated token estimation and tracking
 - Includes smart trimming strategies that prioritize tool call content reduction:
-  - Token trimming via `--trim-token-target`
+  - Token trimming via `--max-token-target`
   - Chat history persistence `--input-chat-history` and `--output-chat-history`
 - Still needs more sophisticated context window optimization techniques
 

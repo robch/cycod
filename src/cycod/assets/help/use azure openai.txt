@@ -1,0 +1,54 @@
+USE AZURE OPENAI
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set Azure OpenAI API key via config
+
+      cycod config set Azure.OpenAI.ApiKey KEY
+      cycod config set Azure.OpenAI.ApiKey KEY --local
+      cycod config set Azure.OpenAI.ApiKey KEY --user
+      cycod config set Azure.OpenAI.ApiKey KEY --global
+
+    EXAMPLE 2: Set Azure OpenAI API key via environment variable
+
+      Set AZURE_OPENAI_API_KEY environment variable
+
+    EXAMPLE 3: Supply Azure OpenAI API key via command line
+
+      cycod chat --azure-openai-api-key KEY
+
+  ENDPOINT 
+
+    EXAMPLE 1: Set Azure OpenAI API endpoint via config
+
+      cycod config set Azure.OpenAI.Endpoint ENDPOINT
+      cycod config set Azure.OpenAI.Endpoint ENDPOINT --local
+      cycod config set Azure.OpenAI.Endpoint ENDPOINT --user
+      cycod config set Azure.OpenAI.Endpoint ENDPOINT --global
+
+    EXAMPLE 2: Set Azure OpenAI API endpoint via environment variable
+
+      Set AZURE_OPENAI_ENDPOINT environment variable
+
+    EXAMPLE 3: Supply Azure OpenAI API endpoint via command line
+
+      cycod chat --azure-openai-endpoint ENDPOINT
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Azure OpenAI model deployment name via config
+
+      cycod config set Azure.OpenAI.ChatDeployment MODEL_NAME
+      cycod config set Azure.OpenAI.ChatDeployment MODEL_NAME --local
+      cycod config set Azure.OpenAI.ChatDeployment MODEL_NAME --user
+      cycod config set Azure.OpenAI.ChatDeployment MODEL_NAME --global
+
+    EXAMPLE 2: Set Azure OpenAI deployment name via environment variable
+
+      Set AZURE_OPENAI_CHAT_DEPLOYMENT environment variable
+
+    EXAMPLE 3: Supply Azure OpenAI deployment name via command line
+
+      cycod chat --azure-openai-chat-deployment MODEL_NAME
+
+  

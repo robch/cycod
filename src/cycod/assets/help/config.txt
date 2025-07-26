@@ -40,3 +40,8 @@ SEE ALSO
   cycod help config clear
   cycod help config add
   cycod help config remove
+  cycod help configuration
+  cycod help use openai
+  cycod help use azure openai
+  cycod help use github copilot
+  cycod help use anthropic

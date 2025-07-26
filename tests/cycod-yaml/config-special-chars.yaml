@@ -1,0 +1,296 @@
+# - area: Config with Special Characters
+#   tests:
+#   - name: List operations with special characters
+#     steps:
+#     # Clean up any existing test lists
+#     - name: Clean up test lists
+#       run: cycod config clear "Special.List.Name" --any
+#       skipOnFailure: true
+    
+#     # Test adding values with special characters to a list with a special character name
+#     - name: Add value with special characters to list with special name
+#       run: cycod config add "Special.List.Name" "Item with spaces and \"quotes\"" --local
+#       expect-regex: |
+#         Special\.List\.Name:
+#         - Item with spaces and "quotes"
+    
+#     # Add more special values
+#     - name: Add value with backslashes
+#       run: cycod config add "Special.List.Name" "Item\\with\\backslashes" --local
+#       expect-regex: |
+#         Special\.List\.Name:
+#         - Item with spaces and "quotes"
+#         - Item\\with\\backslashes
+    
+#     # Verify retrieving the list with special characters
+#     - name: Get list with special characters
+#       run: cycod config get "Special.List.Name" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         Special\.List\.Name:
+#           - Item with spaces and "quotes"
+#           - Item\\with\\backslashes
+    
+#     # Remove special value
+#     - name: Remove special value from list
+#       run: cycod config remove "Special.List.Name" "Item with spaces and \"quotes\"" --local
+#       expect-regex: |
+#         Special\.List\.Name:
+#         - Item\\with\\backslashes
+    
+#     # Clean up
+#     - name: Clean up special list
+#       run: cycod config clear "Special.List.Name" --local
+#       expect-regex: |
+#         Special\.List\.Name: \(cleared\)
+
+#   - name: Set values with quotes and special characters
+#     steps:
+#     # Clean up test keys
+#     - name: Clean up test keys
+#       run: cycod config clear SpecialCharTest --any
+#       skipOnFailure: true
+#     - run: cycod config clear "Special.Key.Name" --any
+#       skipOnFailure: true
+    
+#     # Test setting value with double quotes
+#     - name: Set value with double quotes
+#       run: cycod config set SpecialCharTest "Value with \"quotes\" inside" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialCharTest: Value with "quotes" inside
+    
+#     # Test getting value with double quotes
+#     - name: Get value with double quotes
+#       run: cycod config get SpecialCharTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialCharTest: Value with "quotes" inside
+    
+#     # Test setting value with single quotes
+#     - name: Set value with single quotes
+#       run: cycod config set SpecialCharTest "Value with 'single quotes' inside" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialCharTest: Value with 'single quotes' inside
+    
+#     # Test setting value with backslashes
+#     - name: Set value with backslashes
+#       run: cycod config set SpecialCharTest "Value\\with\\backslashes" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialCharTest: Value\\with\\backslashes
+    
+#     # Test setting value with special characters in key name
+#     - name: Set value with special characters in key name
+#       run: cycod config set "Special.Key.Name" "Special key value" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         Special\.Key\.Name: Special key value
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       run: cycod config clear SpecialCharTest --local
+#       expect-regex: |
+#         SpecialCharTest: \(cleared\)
+#     - run: cycod config clear "Special.Key.Name" --local
+#       expect-regex: |
+#         Special\.Key\.Name: \(cleared\)
+
+#   - name: Set values with special YAML characters
+#     steps:
+#     # Clean up test keys
+#     - name: Clean up test keys
+#       run: cycod config clear YamlSpecialChars --any
+#       skipOnFailure: true
+    
+#     # Test setting value with characters that have special meaning in YAML
+#     - name: Set value with colon
+#       run: cycod config set YamlSpecialChars "Value: with colon" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         YamlSpecialChars: Value: with colon
+    
+#     # Test setting value with braces
+#     - name: Set value with braces
+#       run: cycod config set YamlSpecialChars "Value with {braces} inside" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         YamlSpecialChars: Value with \{braces\} inside
+    
+#     # Test setting value with square brackets
+#     - name: Set value with square brackets
+#       run: cycod config set YamlSpecialChars "Value with [brackets] inside" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         YamlSpecialChars: Value with \[brackets\] inside
+    
+#     # Test setting value with multiple YAML special characters
+#     - name: Set value with multiple YAML special characters
+#       run: cycod config set YamlSpecialChars "Complex: {key: value, list: [1, 2]}" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         YamlSpecialChars: Complex: \{key: value, list: \[1, 2\]\}
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       run: cycod config clear YamlSpecialChars --local
+#       expect-regex: |
+#         YamlSpecialChars: \(cleared\)
+  
+#   - name: Set values with Unicode and emoji characters
+#     steps:
+#     # Clean up test keys
+#     - name: Clean up test keys
+#       run: cycod config clear UnicodeTest --any
+#       skipOnFailure: true
+    
+#     # Test setting value with Unicode characters
+#     - name: Set value with Unicode characters
+#       run: cycod config set UnicodeTest "Value with Unicode: éèêë" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         UnicodeTest: Value with Unicode: éèêë
+    
+#     # Test setting value with emoji
+#     - name: Set value with emoji
+#       run: cycod config set UnicodeTest "Value with emoji: 😊🚀" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         UnicodeTest: Value with emoji: 😊🚀
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       run: cycod config clear UnicodeTest --local
+#       expect-regex: |
+#         UnicodeTest: \(cleared\)
+  
+#   - name: Set values with escape sequences
+#     steps:
+#     # Clean up test keys
+#     - name: Clean up test keys
+#       run: cycod config clear EscapeTest --any
+#       skipOnFailure: true
+    
+#     # Test setting value with tab and newline characters
+#     - name: Set value with tab character
+#       run: cycod config set EscapeTest "Value with tab:\t and newline:\n" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EscapeTest: Value with tab:	 and newline:
+    
+#     # Test setting value with multiple escape sequences
+#     - name: Set value with multiple escape sequences
+#       run: cycod config set EscapeTest "Multiple\\tescapes\\nand\\rreturns" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         EscapeTest: Multiple\\tescapes\\nand\\rreturns
+    
+#     # Clean up
+#     - name: Clean up test keys
+#       run: cycod config clear EscapeTest --local
+#       expect-regex: |
+#         EscapeTest: \(cleared\)
+        
+#   - name: Special characters in different scopes
+#     steps:
+#     # Clean up test keys
+#     - name: Clean up test keys in all scopes
+#       run: cycod config clear SpecialScopeTest --any
+#       skipOnFailure: true
+    
+#     # Set special character values in different scopes
+#     - name: Set special value in local scope
+#       run: cycod config set SpecialScopeTest "Local \"quoted\" value with {braces}" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialScopeTest: Local "quoted" value with \{braces\}
+    
+#     - name: Set special value in user scope
+#       run: cycod config set SpecialScopeTest "User value with 'apostrophes' and [brackets]" --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         SpecialScopeTest: User value with 'apostrophes' and \[brackets\]
+    
+#     - name: Set special value in global scope
+#       run: cycod config set SpecialScopeTest "Global value with backslash\\ and colon: here" --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         SpecialScopeTest: Global value with backslash\\ and colon: here
+    
+#     # Test retrieving from specific scopes
+#     - name: Get special value from local scope
+#       run: cycod config get SpecialScopeTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialScopeTest: Local "quoted" value with \{braces\}
+    
+#     - name: Get special value from user scope
+#       run: cycod config get SpecialScopeTest --user
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         SpecialScopeTest: User value with 'apostrophes' and \[brackets\]
+    
+#     - name: Get special value from global scope
+#       run: cycod config get SpecialScopeTest --global
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(global\)
+#         SpecialScopeTest: Global value with backslash\\ and colon: here
+    
+#     # Test inheritance with --any flag
+#     - name: Get special value with any scope (should return local value)
+#       run: cycod config get SpecialScopeTest --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialScopeTest: Local "quoted" value with \{braces\}
+    
+#     # Test clearing one scope and retrieving from the next
+#     - name: Clear special value in local scope
+#       run: cycod config clear SpecialScopeTest --local
+#       expect-regex: |
+#         SpecialScopeTest: \(cleared\)
+    
+#     - name: Get special value with any scope after clearing local (should return user value)
+#       run: cycod config get SpecialScopeTest --any
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(user\)
+#         SpecialScopeTest: User value with 'apostrophes' and \[brackets\]
+    
+#     # Clean up
+#     - name: Clean up all special values
+#       run: cycod config clear SpecialScopeTest --any
+#       skipOnFailure: true
+      
+#   - name: Override values with special characters
+#     steps:
+#     # Clean up test key
+#     - name: Clean up test key
+#       run: cycod config clear SpecialOverrideTest --any
+#       skipOnFailure: true
+    
+#     # Set initial value with special characters
+#     - name: Set initial value with special characters
+#       run: cycod config set SpecialOverrideTest "Initial value with \"quotes\" and {braces}" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialOverrideTest: Initial value with "quotes" and \{braces\}
+    
+#     # Override with different special characters
+#     - name: Override with different special characters
+#       run: cycod config set SpecialOverrideTest "Overridden value with 'apostrophes' and [brackets]" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialOverrideTest: Overridden value with 'apostrophes' and \[brackets\]
+    
+#     # Override with mixed special characters
+#     - name: Override with mixed special characters
+#       run: cycod config set SpecialOverrideTest "Mixed \"quotes\", {braces}, [brackets], and \\backslashes\\" --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         SpecialOverrideTest: Mixed "quotes", \{braces\}, \[brackets\], and \\backslashes\\
+    
+#     # Clean up
+#     - name: Clean up test key
+#       run: cycod config clear SpecialOverrideTest --local
+#       expect-regex: |
+#         SpecialOverrideTest: \(cleared\)

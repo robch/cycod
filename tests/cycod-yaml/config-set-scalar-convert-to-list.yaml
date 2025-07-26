@@ -1,0 +1,55 @@
+# - area: Set Scalar and Convert to List
+#   tests:
+#   - name: Convert scalar to list when adding value
+#     steps:
+#     # Clean up any existing test keys
+#     - name: Clean up test key
+#       run: cycod config clear ScalarToListTest --any
+#       skipOnFailure: true
+    
+#     # Set initial scalar value
+#     - name: Set scalar value
+#       run: cycod config set ScalarToListTest ScalarValue --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScalarToListTest: ScalarValue
+    
+#     # Verify the scalar value was set correctly
+#     - name: Verify scalar value
+#       run: cycod config get ScalarToListTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScalarToListTest: ScalarValue
+    
+#     # Add a value to convert to list
+#     - name: Add value to convert scalar to list
+#       run: cycod config add ScalarToListTest ListItem --local
+#       expect-regex: |
+#         ScalarToListTest:
+#         - ScalarValue
+#         - ListItem
+    
+#     # Verify conversion to list with both values
+#     - name: Verify conversion to list
+#       run: cycod config get ScalarToListTest --local
+#       expect-regex: |
+#         LOCATION: .*\\\.cycod\\config\.yaml \(local\)
+#         ScalarToListTest:
+#           - ScalarValue
+#           - ListItem
+    
+#     # Add another item to the list
+#     - name: Add another item to the list
+#       run: cycod config add ScalarToListTest AnotherItem --local
+#       expect-regex: |
+#         ScalarToListTest:
+#         - ScalarValue
+#         - ListItem
+#         - AnotherItem
+    
+#     # Clean up
+#     - name: Clean up test key
+#       run: cycod config clear ScalarToListTest --local
+#       expect-regex: |
+#         ScalarToListTest: \(cleared\)
+

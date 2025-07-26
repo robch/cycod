@@ -1,0 +1,69 @@
+class: script-shell
+tag: cycodt
+tests:
+
+- name: Use Bash Script
+  bash: |
+    echo "Hello from Bash"
+    ls -la | head -n 3
+  expect-regex: |
+    Hello from Bash
+    total +[\d,]+
+
+- name: Use CMD Script
+  optional: windows
+  cmd: |
+    echo Hello from CMD
+    dir
+  expect-regex: |
+    Hello from CMD
+    Directory of .*cycodt-yaml
+     +\d+ File\(s\) +[\d,]+ bytes
+
+- name: Use PowerShell Script (pwsh shortcut)
+  pwsh: |
+    Write-Host "Hello from PowerShell Core"
+    Get-ChildItem | Select-Object -First 3
+  expect-regex: |
+    Hello from PowerShell Core
+    Directory: .*cycodt-yaml
+
+- name: Use PowerShell Script (powershell shortcut)
+  powershell: |
+    Write-Host "Hello from Windows PowerShell"
+    Get-ChildItem | Select-Object -First 3
+  expect-regex: |
+    Hello from Windows PowerShell
+    Directory: .*cycodt-yaml
+
+- name: Use Script with Explicit Shell
+  script: |
+    Write-Host "Using explicit shell: pwsh"
+    Get-ChildItem | Select-Object -First 3
+  shell: pwsh
+  expect-regex: |
+    Using explicit shell: pwsh
+    Directory: .*cycodt-yaml
+
+- name: Use custom shell (python)
+  optional: python
+  shell: python {0} {1}
+  script: |
+    import sys
+    print("Hello from Python")
+    print("Arguments:", sys.argv)
+  arguments: 1 2 3
+  expect-regex: |
+    Hello from Python
+    Arguments: .*, '1', '2', '3'
+
+- name: Use custom shell (node)
+  optional: node
+  shell: node {0} {1}
+  script: |
+    console.log('Hello from JavaScript!');
+    console.log('Arguments:', process.argv.slice(2));
+  arguments: arg1 arg2 arg3
+  expect-regex: |
+    Hello from JavaScript!
+    Arguments: \[ 'arg1', 'arg2', 'arg3' \]

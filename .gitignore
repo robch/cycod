@@ -9,6 +9,8 @@ src/cycodmd/bin/
 src/cycodmd/obj/
 src/cycodt/obj/
 src/cycodt/bin/
+src/mcp/**/obj/
+src/mcp/**/bin/
 
 tests/**/bin/
 tests/**/obj/
@@ -17,5 +19,10 @@ website/venv/
 website/site/
 
 .cycod/scratch/
-
 .env
+
+test-results.trx
+tests/cycodt-yaml/testresults/
+tests/cycodt-yaml/inception-layer-1/test-results-simple-optional.trx
+tests/cycodt-yaml/inception-layer-1/test-results-simple.trx
+tests/cycodt-yaml/inception-layer-1/test-results-simple?.trx

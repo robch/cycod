@@ -79,15 +79,7 @@ public class ConsoleHelpers
 
         lock (_printLock)
         {
-            var prevForegroundColor = Console.ForegroundColor;
-            if (foregroundColor != null) Console.ForegroundColor = (ConsoleColor)foregroundColor;
-
-            var prevBackgroundColor = Console.BackgroundColor;
-            if (backgroundColor != null) Console.BackgroundColor = (ConsoleColor)backgroundColor;
-
-            Console.Write(message);
-            if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;
-            if (backgroundColor != null) Console.BackgroundColor = prevBackgroundColor;
+            WriteWithColorWithoutScrollSmear(message, foregroundColor, backgroundColor);
         }
     }
 
@@ -99,21 +91,7 @@ public class ConsoleHelpers
     public static void WriteLine(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor, bool overrideQuiet = false)
     {
         if (_quiet && !overrideQuiet) return;
-
-        lock (_printLock)
-        {
-            DisplayStatusErase();
-
-            var prevForegroundColor = Console.ForegroundColor;
-            if (foregroundColor != null) Console.ForegroundColor = (ConsoleColor)foregroundColor;
-
-            var prevBackgroundColor = Console.BackgroundColor;
-            if (backgroundColor != null) Console.BackgroundColor = (ConsoleColor)backgroundColor;
-
-            Console.WriteLine(message);
-            if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;
-            if (backgroundColor != null) Console.BackgroundColor = prevBackgroundColor;
-        }
+        Write(message + '\n', foregroundColor, backgroundColor, overrideQuiet);
     }
 
     public static void WriteLineIfNotEmpty(string message)
@@ -148,11 +126,37 @@ public class ConsoleHelpers
         Write(message, ConsoleColor.Cyan);
     }
 
-    public static void WriteDebugLine(string message)
+    public static void WriteDebugLine(string message = "")
     {
         if (!_debug) return;
         WriteLine(message, ConsoleColor.Cyan);
     }
+
+    public static void WriteDebugHexDump(string message, string? title = null)
+    {
+        var noMessage = string.IsNullOrEmpty(message);
+        if (noMessage)
+        {
+            WriteDebugLine($"{title}\n  0000: (empty)");
+            return;
+        }
+
+        var i = 0;
+        foreach (var ch in message)
+        {
+            if (i % 16 == 0)
+            {
+                title = title!.Replace("\r", "\\r").Replace("\n", "\\n");
+                WriteDebug(i == 0 ? $"{title}\n" : "\n");
+                WriteDebug(string.Format("  {0:x4}: ", i));
+            }
+
+            WriteDebug(string.Format("{0:X2} ", (int)ch));
+            i++;
+        }
+        WriteDebugLine();
+    }
+
 
     public static bool IsStandardInputReference(string fileName)
     {
@@ -164,6 +168,30 @@ public class ConsoleHelpers
         return _allLinesFromStdin == null
             ? ReadAllLinesFromStdin()
             : _allLinesFromStdin;
+    }
+
+    public static ConsoleKeyInfo? ReadKey(bool intercept = false)
+    {
+        if (Console.IsInputRedirected)
+        {
+            var line = Console.ReadLine()?.TrimEnd();
+            if (line == null) return null;
+
+            var treatAsEnter = line.Length == 0 || line == "\n" || line == "\r" || line == "\r\n";
+            if (treatAsEnter) return new ConsoleKeyInfo('\n', ConsoleKey.Enter, false, false, false);
+
+            var isAlphaNumeric = char.IsLetterOrDigit(line.ElementAt(0)) || char.IsPunctuation(line.ElementAt(0)) || char.IsSymbol(line.ElementAt(0));
+            if (isAlphaNumeric) return new ConsoleKeyInfo(line.ElementAt(0), (ConsoleKey)line.ElementAt(0), false, false, false);
+
+            return line.ElementAt(0) switch
+            {
+                '\t' => new ConsoleKeyInfo('\t', ConsoleKey.Tab, false, false, false),
+                ' ' => new ConsoleKeyInfo(' ', ConsoleKey.Spacebar, false, false, false),
+                _ => null
+            };
+        }
+
+        return Console.ReadKey(intercept);
     }
 
     private static List<string> ReadAllLinesFromStdin()
@@ -179,7 +207,33 @@ public class ConsoleHelpers
 
         return _allLinesFromStdin;
     }
-    
+
+    private static void WriteWithColorWithoutScrollSmear(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
+    {
+        var lines = message
+            .Split(new[] { '\n' }, StringSplitOptions.None)
+            .Select(line => line.TrimEnd('\r'))
+            .ToArray();
+        for (var i = 0; i < lines.Length; i++)
+        {
+            if (i > 0) Console.WriteLine();
+            WriteWithColor(lines[i], foregroundColor, backgroundColor);
+        }
+    }
+
+    private static void WriteWithColor(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
+    {
+        var prevForegroundColor = Console.ForegroundColor;
+        if (foregroundColor != null) Console.ForegroundColor = ColorHelpers.MapColor((ConsoleColor)foregroundColor);
+
+        var prevBackgroundColor = Console.BackgroundColor;
+        if (backgroundColor != null) Console.BackgroundColor = ColorHelpers.MapColor((ConsoleColor)backgroundColor);
+
+        Console.Write(message);
+        if (foregroundColor != null) Console.ForegroundColor = prevForegroundColor;
+        if (backgroundColor != null) Console.BackgroundColor = prevBackgroundColor;
+    }
+   
     private static bool _debug = false;
     private static bool _verbose = false;
     private static bool _quiet = false;

@@ -1,0 +1,35 @@
+USE GEMINI
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set Google Gemini credentials via config
+    
+      cycod config set Google.Gemini.ApiKey API_KEY
+      cycod config set Google.Gemini.ApiKey API_KEY --local
+      cycod config set Google.Gemini.ApiKey API_KEY --user
+      cycod config set Google.Gemini.ApiKey API_KEY --global
+
+    EXAMPLE 2: Set Google Gemini credentials via environment variables
+    
+      Set GOOGLE_GEMINI_API_KEY environment variable
+    
+    EXAMPLE 3: Supply Google Gemini credentials via command line
+    
+      cycod chat --google-gemini-api-key API_KEY
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Google Gemini model via config
+    
+      cycod config set Google.Gemini.ModelId MODEL_ID
+      cycod config set Google.Gemini.ModelId MODEL_ID --local
+      cycod config set Google.Gemini.ModelId MODEL_ID --user
+      cycod config set Google.Gemini.ModelId MODEL_ID --global
+    
+    EXAMPLE 2: Set Google Gemini model via environment variable
+    
+      Set GOOGLE_GEMINI_MODEL_ID environment variable (default: gemini-2.5-flash-preview-04-17)
+    
+    EXAMPLE 3: Supply Google Gemini model via command line
+    
+      cycod chat --google-gemini-model-id MODEL_ID

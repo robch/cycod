@@ -1,22 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Import shared version settings -->
+  <Import Project="../../BuildCommon.targets" />
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
     <AssemblyName>cycodt</AssemblyName>
     <OutputType>Exe</OutputType>
-    <Version>1.0.0</Version>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <FileVersion>1.0.0</FileVersion>
-    <InformationalVersion>1.0.0</InformationalVersion>
     
     <!-- Cross-platform support -->
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>CycoDevTest</PackageId>
+    <PackageId>CycoDt</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>AI-powered CLI Test Framework</Description>
     <PackageTags>cli;ai;chat;openai;azure;github-copilot</PackageTags>

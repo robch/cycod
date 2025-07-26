@@ -1,0 +1,26 @@
+﻿class: script-input
+tag: cycodt
+tests:
+
+- name: running cmd script w/ input
+  optional: windows
+  cmd: |
+    set name=
+    set /p name=Enter your name:
+    echo Hello, %name%!
+  input: |
+    John Doe
+  expect-regex: |
+    Hello, John Doe!
+  timeout: 2000
+
+- name: running bash script w/ input
+  bash: |
+    export name=
+    read -p "Enter your name: " name
+    echo "Hello, $name!"
+  input: |
+    John Doe
+  expect-regex: |
+    Hello, John Doe!
+  timeout: 2000

@@ -59,6 +59,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             "chat" => new ChatCommand(),
             "github login" => new GitHubLoginCommand(),
+            "github models" => new GitHubModelsCommand(),
             "config list" => new ConfigListCommand(),
             "config get" => new ConfigGetCommand(),
             "config set" => new ConfigSetCommand(),
@@ -67,6 +68,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             "config remove" => new ConfigRemoveCommand(),
             "alias list" => new AliasListCommand(),
             "alias get" => new AliasGetCommand(),
+            "alias add" => new AliasAddCommand(),
             "alias delete" => new AliasDeleteCommand(),
             "prompt list" => new PromptListCommand(),
             "prompt get" => new PromptGetCommand(),
@@ -147,6 +149,21 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             aliasGetCommand.AliasName = arg;
             parsedOption = true;
+        }
+        else if (command is AliasAddCommand aliasAddCommand)
+        {
+            if (string.IsNullOrEmpty(aliasAddCommand.AliasName))
+            {
+                aliasAddCommand.AliasName = arg;
+                parsedOption = true;
+            }
+            else if (string.IsNullOrEmpty(aliasAddCommand.Content))
+            {
+                // Just store the current argument as content
+                // The proper handling of all content will be done in ExecuteAsync
+                aliasAddCommand.Content = arg;
+                parsedOption = true;
+            }
         }
         else if (command is AliasDeleteCommand aliasDeleteCommand && string.IsNullOrEmpty(aliasDeleteCommand.AliasName))
         {
@@ -345,12 +362,22 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             urlAddCommand.Transport = "sse";
             i += max1Arg.Count();
         }
-        else if (command is McpAddCommand argsAddCommand && arg == "--arg")
+        else if (command is McpAddCommand argAddCommand && arg == "--arg")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var argValue = ValidateString(arg, max1Arg.FirstOrDefault(), "argument");
-            argsAddCommand.Args.Add(argValue!);
+            argAddCommand.Args.Add(argValue!);
             i += max1Arg.Count();
+        }
+        else if (command is McpAddCommand argsAddCommand && arg == "--args")
+        {
+            var argArgs = GetInputOptionArgs(i + 1, args);
+            var argValues = ValidateStrings(arg, argArgs, "argument");
+            var needSplit = argValues.Count() == 1 && argValues.First().Contains(' ');
+            argsAddCommand.Args.AddRange(needSplit
+                ? ProcessHelpers.SplitArguments(argValues.First())
+                : argValues);
+            i += argArgs.Count();
         }
         else if (command is McpAddCommand envAddCommand && (arg == "--env" || arg == "-e"))
         {
@@ -412,6 +439,33 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (arg == "--no-templates")
         {
             command.UseTemplates = false;
+        }
+        else if (arg == "--use-mcps" || arg == "--mcp")
+        {
+            var mcpArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += mcpArgs.Count();
+
+            var useAllMcps = mcpArgs.Count == 0;
+            if (useAllMcps) mcpArgs.Add("*");
+
+            command.UseMcps.AddRange(mcpArgs);
+        }
+        else if (arg == "--no-mcps")
+        {
+            command.UseMcps.Clear();
+        }
+        else if (arg == "--with-mcp")
+        {
+            var mcpCommandAndArgs = GetInputOptionArgs(i + 1, args);
+            var mcpCommand = ValidateString(arg, mcpCommandAndArgs.FirstOrDefault(), "command to execute with MCP");
+            var mcpName = $"mcp-{command.WithStdioMcps.Count + 1}";
+            command.WithStdioMcps[mcpName] = new StdioMcpServerConfig
+            {
+                Command = mcpCommand!,
+                Args = mcpCommandAndArgs.Skip(1).ToList(),
+                Env = new Dictionary<string, string?>()
+            };
+            i += mcpCommandAndArgs.Count();
         }
         else if (arg == "--system-prompt")
         {
@@ -487,7 +541,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                 inputArgs = ConsoleHelpers.GetAllLinesFromStdin();
             }
 
-            var inputs = ValidateStrings(arg, inputArgs, "input");
+            var inputs = ValidateStrings(arg, inputArgs, "input", allowEmptyStrings: true);
             command.InputInstructions.AddRange(inputs);
 
             i += inputArgs.Count();
@@ -521,13 +575,6 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.OutputChatHistory = outputChatHistory;
             i += max1Arg.Count();
         }
-        else if (arg == "--trim-token-target")
-        {
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var trimTokenTarget = ValidateInt(arg, max1Arg.FirstOrDefault(), "trim token target");
-            command.TrimTokenTarget = trimTokenTarget;
-            i += max1Arg.Count();
-        }
         else if (arg == "--output-trajectory")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -535,19 +582,31 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.OutputTrajectory = outputTrajectory;
             i += max1Arg.Count();
         }
-        else if (arg == "--use-openai")
+        else if (arg == "--use-anthropic")
         {
-            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
+        }
+        else if (arg == "--use-aws" || arg == "--use-bedrock" || arg == "--use-aws-bedrock")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "aws-bedrock");
         }
         else if (arg == "--use-azure-openai" || arg == "--use-azure")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");
         }
-        else if (arg == "--use-copilot") 
+        else if (arg == "--use-google" || arg == "--use-gemini" || arg == "--use-google-gemini")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "google-gemini");
+        }
+        else if (arg == "--use-openai")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+        }
+        else if (arg == "--use-copilot")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot");
         }
-        else if (arg == "--use-copilot-token") 
+        else if (arg == "--use-copilot-token")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
         }

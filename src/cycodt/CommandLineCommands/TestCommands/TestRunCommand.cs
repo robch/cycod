@@ -30,7 +30,7 @@ class TestRunCommand : TestBaseCommand
             Logger.Log(new CycoDtTestFrameworkLogger());
 
             var tests = FindAndFilterTests();
-            Console.WriteLine(tests.Count() == 1
+            ConsoleHelpers.WriteLine(tests.Count() == 1
                 ? $"Found {tests.Count()} test...\n"
                 : $"Found {tests.Count()} tests...\n");
 
@@ -38,15 +38,13 @@ class TestRunCommand : TestBaseCommand
             var resultsByTestCaseId = YamlTestFramework.RunTests(tests, consoleHost);
 
             GetOutputFileAndFormat(out var file, out var format);
-            consoleHost.Finish(resultsByTestCaseId, format, file);
+            var passed = consoleHost.Finish(resultsByTestCaseId, format, file);
 
-            return 0;
+            return passed ? 0 : 1;
         }
         catch (Exception ex)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
-            Console.ResetColor();
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}\n{ex.StackTrace}");
             return 1;
         }
     }

@@ -90,12 +90,12 @@ public class CommandLineOptions
     }
 
     virtual protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
-	{
-		return false;
+    {
+        return false;
     }
 
     virtual protected bool TryParseOtherCommandArg(Command? command, string arg)
-	{
+    {
         return false;
     }
 
@@ -103,7 +103,7 @@ public class CommandLineOptions
     {
         return args.SelectMany(arg => ExpandedInput(arg));
     }
-    
+
     protected IEnumerable<string> ExpandedInput(string input)
     {
         return input.StartsWith("@@")
@@ -118,7 +118,7 @@ public class CommandLineOptions
         if (!input.StartsWith("@@")) throw new ArgumentException("Not an @@ file input");
 
         var fileName = input.Substring(2);
-        var fileNameOk = fileName == "-" || File.Exists(fileName);
+        var fileNameOk = FileHelpers.FileExists(fileName);
         if (fileNameOk)
         {
             var lines = ConsoleHelpers.IsStandardInputReference(fileName)
@@ -146,11 +146,23 @@ public class CommandLineOptions
         Command? command = null;
 
         var args = this.AllOptions = allInputs.ToArray();
+
+        // Make a pass to deference all aliases.
+        for (int i = 0; i < args.Count(); i++)
+        {
+            if (args[i].StartsWith("--"))
+            {
+                ExpandAliasOptions(ref command, ref args, ref i, args[i].Substring(2));
+            }
+        }
+
         for (int i = 0; i < args.Count(); i++)
         {
             var parsed = TryParseInputOptions(ref command, args, ref i, args[i]);
             if (!parsed)
             {
+                for (var j = 0; j < i; j++) ConsoleHelpers.WriteDebugLine($"arg[{j}] = {args[j]}");
+                ConsoleHelpers.WriteDebugLine($"(INVALID) arg[{i}] = {args[i]}");
                 throw InvalidArgException(command, args[i]);
             }
         }
@@ -167,7 +179,7 @@ public class CommandLineOptions
 
         if (command != null && !command.IsEmpty())
         {
-            this.Commands.Add(command);
+            this.Commands.Add(command.Validate());
         }
     }
 
@@ -184,18 +196,37 @@ public class CommandLineOptions
                 ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {value}");
                 return true;
             }
-            
-            // Otherwise, the value should be the next argument
-            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
-            var settingValue = max1Arg.FirstOrDefault() ?? throw new CommandLineException($"Missing value for {arg}");
-            
-            // Add to configuration store
-            ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
-            ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");
-            i += max1Arg.Count();
+
+            // Otherwise, get one or more args
+            var allowMultipleArgs = KnownSettings.IsMultiValue(settingName!);
+            var arguments = allowMultipleArgs
+                ? GetInputOptionArgs(i + 1, args).ToList()
+                : GetInputOptionArgs(i + 1, args, max: 1).ToList();
+
+            if (arguments.Count == 0)
+            {
+                throw new CommandLineException($"Missing value for {arg}");
+            }
+            else if (arguments.Count == 1)
+            {
+                // If there's only one argument, use it directly as a string
+                var settingValue = arguments[0];
+
+                // Add to configuration store
+                ConfigStore.Instance.SetFromCommandLine(settingName!, settingValue);
+                ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = {settingValue}");
+            }
+            else
+            {
+                // If there are multiple arguments, use them as a list
+                ConfigStore.Instance.SetFromCommandLine(settingName!, arguments);
+                ConsoleHelpers.WriteDebugLine($"Set known setting from CLI: {settingName} = [{string.Join(", ", arguments)}]");
+            }
+
+            i += arguments.Count;
             return true;
         }
-        
+
         return false;
     }
 
@@ -212,12 +243,6 @@ public class CommandLineOptions
         var needNewCommand = command == null;
         if (needNewCommand)
         {
-            if (arg.StartsWith("--"))
-            {
-                var parsedAsAlias = TryParseAliasOptions(ref command, args, ref i, arg.Substring(2));
-                if (parsedAsAlias) return true;
-            }
-
             var commandName = PeekCommandName(args, i);
             var partialCommandNeedsHelp = CheckPartialCommandNeedsHelp(commandName);
             if (partialCommandNeedsHelp)
@@ -261,18 +286,15 @@ public class CommandLineOptions
             i = args.Count();
             parsedOption = true;
         }
-        else if (arg.StartsWith("--"))
-        {
-            parsedOption = TryParseAliasOptions(ref command, args, ref i, arg.Substring(2));
-        }
         else if (command is HelpCommand helpCommand)
         {
             this.HelpTopic = $"{this.HelpTopic} {arg}".Trim();
             parsedOption = true;
         }
-        else if (TryParseOtherCommandArg(command, arg))
+
+        if (!parsedOption && TryParseOtherCommandArg(command, arg))
         {
-		    parsedOption = true;
+            parsedOption = true;
         }
 
         if (!parsedOption)
@@ -283,27 +305,21 @@ public class CommandLineOptions
         return parsedOption;
     }
 
-    protected bool TryParseAliasOptions(ref Command? command, string[] args, ref int currentIndex, string alias)
+    protected void ExpandAliasOptions(ref Command? command, ref string[] args, ref int currentIndex, string alias)
     {
         var aliasFilePath = AliasFileHelpers.FindAliasFile(alias);
         if (aliasFilePath != null && File.Exists(aliasFilePath))
         {
-            var aliasArgs = File.ReadAllLines(aliasFilePath)
+            var aliasLines = File.ReadAllLines(aliasFilePath);
+
+            var aliasArgs = aliasLines
                 .Select(x => x.StartsWith('@')
                     ? AtFileHelpers.ExpandAtFileValue(x)
                     : x)
                 .ToArray();
-            for (var j = 0; j < aliasArgs.Length; j++)
-            {
-                var parsed = TryParseInputOptions(ref command, aliasArgs, ref j, aliasArgs[j]);
-                if (!parsed)
-                {
-                    throw new CommandLineException($"Invalid argument in alias file: {aliasArgs[j]}");
-                }
-            }
-            return true;
+
+            args = args.Take(currentIndex).Concat(aliasArgs).Concat(args.Skip(currentIndex + 1)).ToArray();
         }
-        return false;
     }
 
     protected bool TryParseGlobalCommandLineOptions(string[] args, ref int i, string arg)
@@ -334,7 +350,7 @@ public class CommandLineOptions
         {
             this.Quiet = true;
         }
-        else if (arg == "--save-alias" || arg == "--save-local-alias")
+        else if (arg == "--save-local-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-alias");
@@ -342,7 +358,7 @@ public class CommandLineOptions
             this.SaveAliasScope = ConfigFileScope.Local;
             i += max1Arg.Count();
         }
-        else if (arg == "--save-user-alias")
+        else if (arg == "--save-alias" || arg == "--save-user-alias")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
             var aliasName = max1Arg.FirstOrDefault() ?? throw new CommandLineException("Missing alias name for --save-user-alias");
@@ -468,7 +484,7 @@ public class CommandLineOptions
         return argStr;
     }
 
-    protected IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription)
+    protected IEnumerable<string> ValidateStrings(string arg, IEnumerable<string> argStrs, string argDescription, bool allowEmptyStrings = false)
     {
         var strings = argStrs.ToList();
         if (!strings.Any())
@@ -476,7 +492,7 @@ public class CommandLineOptions
             throw new CommandLineException($"Missing {argDescription} for {arg}");
         }
 
-        return strings.Select(x => ValidateString(arg, x, argDescription)!);
+        return strings.Select(x => allowEmptyStrings ? x : ValidateString(arg, x, argDescription)!);
     }
 
     protected static string ValidateJoinedString(string arg, string seed, IEnumerable<string> values, string separator, string argDescription)
@@ -493,7 +509,7 @@ public class CommandLineOptions
     protected (string, string) ValidateAssignment(string arg, string? assignment)
     {
         assignment = ValidateString(arg, assignment, "assignment")!;
-        
+
         var parts = assignment.Split('=', 2);
         if (parts.Length != 2)
         {
@@ -572,12 +588,29 @@ public class CommandLineOptions
     {
         try
         {
-            return new Regex(pattern);
+            return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
         catch (Exception)
         {
             throw new CommandLineException($"Invalid regular expression pattern for {arg}: {pattern}");
         }
+    }
+
+    protected void ValidateExcludeRegExAndGlobPatterns(string arg, IEnumerable<string> patterns, out List<Regex> asRegExs, out List<string> asGlobs)
+    {
+        if (patterns.Count() == 0)
+        {
+            throw new CommandLineException($"Missing patterns for {arg}");
+        }
+
+        var containsSlash = (string x) => x.Contains('/') || x.Contains('\\');
+        asRegExs = patterns
+            .Where(x => !containsSlash(x))
+            .Select(x => ValidateFilePatternToRegExPattern(arg, x))
+            .ToList();
+        asGlobs = patterns
+            .Where(x => containsSlash(x))
+            .ToList();
     }
 
     protected Regex ValidateFilePatternToRegExPattern(string arg, string pattern)
@@ -596,7 +629,7 @@ public class CommandLineOptions
 
         try
         {
-            return new Regex(regexPattern);
+            return new Regex(regexPattern, RegexOptions.CultureInvariant);
         }
         catch (Exception)
         {

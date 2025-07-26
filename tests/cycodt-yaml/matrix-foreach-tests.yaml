@@ -1,0 +1,37 @@
+﻿class: matrix-foreach
+tag: cycodt
+tests:
+
+- name: Multi-parameter matrix
+  matrix:
+    feeling: happy
+    color: [red, blue]
+    animal: [cat, dog, bird]
+  bash: echo "The ${{ matrix.color }} ${{ matrix.animal }} is ${{ matrix.feeling }}"
+  expect-regex: 
+    The (red|blue) (cat|dog|bird) is happy
+
+- name: Matrix with foreach objects
+  matrix:
+    foreach:
+      - name: Alice
+        age: 30
+      - name: Bob
+        age: 25
+      - name: Carol
+        age: 35
+  bash: "echo Name: ${{ matrix.name }}, Age: ${{ matrix.age }}"
+  expect-regex: "Name: ${{ matrix.name }}, Age: ${{ matrix.age }}"
+
+- name: Matrix with environment variables
+  matrix:
+    env_name: [dev, staging, prod]
+  env:
+    ENVAR: ${{ matrix.env_name }}
+  bash: echo "Running in $ENVAR environment"
+  expect-regex: Running in ${{ matrix.env_name }} environment
+
+- name: Empty matrix
+  matrix: {}
+  bash: echo "No matrix values"
+  expect-regex: No matrix values

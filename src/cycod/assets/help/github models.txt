@@ -1,0 +1,12 @@
+CYCOD GITHUB MODELS
+
+  This command helps you list available GitHub Copilot models.
+
+USAGE: cycod github models
+
+SEE ALSO
+
+  cycod help config
+  cycod help options
+  cycod help github login
+  

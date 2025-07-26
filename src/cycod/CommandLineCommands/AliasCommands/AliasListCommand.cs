@@ -48,13 +48,13 @@ class AliasListCommand : AliasBaseCommand
         if (isAnyScope || scope == ConfigFileScope.Global)
         {
             AliasDisplayHelpers.DisplayAliases(ConfigFileScope.Global);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.User)
         {
             AliasDisplayHelpers.DisplayAliases(ConfigFileScope.User);
-            if (isAnyScope) Console.WriteLine();
+            if (isAnyScope) ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
 
         if (isAnyScope || scope == ConfigFileScope.Local)

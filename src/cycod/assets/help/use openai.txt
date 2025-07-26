@@ -1,0 +1,35 @@
+USE OPENAI
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set OpenAI API key via config
+
+      cycod config set OpenAI.ApiKey KEY
+      cycod config set OpenAI.ApiKey KEY --local
+      cycod config set OpenAI.ApiKey KEY --user
+      cycod config set OpenAI.ApiKey KEY --global
+
+    EXAMPLE 2: Set OpenAI API key via environment variable
+
+      Set OPENAI_API_KEY environment variable
+
+    EXAMPLE 3: Supply OpenAI API key via command line
+
+      cycod chat --openai-api-key KEY
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set OpenAI model name via config
+
+      cycod config set OpenAI.ChatModelName MODEL_NAME
+      cycod config set OpenAI.ChatModelName MODEL_NAME --local
+      cycod config set OpenAI.ChatModelName MODEL_NAME --user
+      cycod config set OpenAI.ChatModelName MODEL_NAME --global
+
+    EXAMPLE 2: Set OpenAI model name via environment variable
+
+      Set OPENAI_CHAT_MODEL_NAME environment variable
+
+    EXAMPLE 3: Supply OpenAI model name via command line
+
+      cycod chat --openai-chat-model-name MODEL_NAME
