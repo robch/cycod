@@ -1,0 +1,52 @@
+USE GROK
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set Grok API key via config
+
+      cycod config set Grok.ApiKey KEY
+      cycod config set Grok.ApiKey KEY --local
+      cycod config set Grok.ApiKey KEY --user
+      cycod config set Grok.ApiKey KEY --global
+
+    EXAMPLE 2: Set Grok API key via environment variable
+
+      Set GROK_API_KEY environment variable
+
+    EXAMPLE 3: Supply Grok API key via command line
+
+      cycod chat --grok-api-key KEY
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Grok model name via config
+
+      cycod config set Grok.ModelName MODEL_NAME
+      cycod config set Grok.ModelName MODEL_NAME --local
+      cycod config set Grok.ModelName MODEL_NAME --user
+      cycod config set Grok.ModelName MODEL_NAME --global
+
+    EXAMPLE 2: Set Grok model name via environment variable
+
+      Set GROK_MODEL_NAME environment variable (default: grok-3)
+
+    EXAMPLE 3: Supply Grok model name via command line
+
+      cycod chat --grok-model-name MODEL_NAME
+
+  API ENDPOINT
+
+    EXAMPLE 1: Set Grok API endpoint via config
+
+      cycod config set Grok.Endpoint ENDPOINT
+      cycod config set Grok.Endpoint ENDPOINT --local
+      cycod config set Grok.Endpoint ENDPOINT --user
+      cycod config set Grok.Endpoint ENDPOINT --global
+
+    EXAMPLE 2: Set Grok API endpoint via environment variable
+
+      Set GROK_ENDPOINT environment variable (default: https://api.x.ai/v1)
+
+    EXAMPLE 3: Supply Grok API endpoint via command line
+
+      cycod chat --grok-endpoint ENDPOINT

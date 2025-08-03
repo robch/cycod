@@ -74,6 +74,18 @@ public static class ChatClientFactory
         return client;
     }
     
+    public static IChatClient CreateGrokChatClientWithApiKey()
+    {
+        var model = EnvironmentHelpers.FindEnvVar("GROK_MODEL_NAME") ?? "grok-3";
+        var apiKey = EnvironmentHelpers.FindEnvVar("GROK_API_KEY") ?? throw new EnvVarSettingException("GROK_API_KEY is not set.");
+        var endpoint = EnvironmentHelpers.FindEnvVar("GROK_ENDPOINT") ?? "https://api.x.ai/v1";
+
+        var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions(endpoint));
+
+        ConsoleHelpers.WriteDebugLine("Using Grok API key for authentication");
+        return chatClient.AsIChatClient();
+    }
+    
     public static IChatClient? CreateAWSBedrockChatClient(out ChatOptions? options)
     {
         var accessKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_ACCESS_KEY is not set.");
@@ -167,6 +179,11 @@ public static class ChatClientFactory
             {
                 return CreateGeminiChatClient(out options);
             }
+            else if ((preferredProvider == "grok" || preferredProvider == "x.ai") && 
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GROK_API_KEY")))
+            {
+                return CreateGrokChatClientWithApiKey();
+            }
             else if ((preferredProvider == "azure-openai" || preferredProvider == "azure") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
             {
                 return CreateAzureOpenAIChatClientWithApiKey();
@@ -202,6 +219,11 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
         {
             return CreateGeminiChatClient(out options);
+        }
+        
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GROK_API_KEY")))
+        {
+            return CreateGrokChatClientWithApiKey();
         }
         
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) && 
@@ -263,6 +285,11 @@ public static class ChatClientFactory
                     To use Google Gemini, please set:
                     - GOOGLE_GEMINI_API_KEY
                     - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
+
+                    To use Grok, please set:
+                    - GROK_API_KEY
+                    - GROK_ENDPOINT (optional, default: https://api.x.ai/v1)
+                    - GROK_MODEL_NAME (optional, default: grok-3)
 
                     To use OpenAI, please set:
                     - OPENAI_API_KEY

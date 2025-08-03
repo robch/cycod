@@ -598,6 +598,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "google-gemini");
         }
+        else if (arg == "--use-grok" || arg == "--use-x.ai")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "grok");
+        }
         else if (arg == "--use-openai")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
@@ -609,6 +613,30 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (arg == "--use-copilot-token")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
+        }
+        else if (arg == "--grok-api-key")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var apiKey = ValidateString(arg, max1Arg.FirstOrDefault(), "API key");
+            if (apiKey != null)
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.GrokApiKey, apiKey);
+            i += max1Arg.Count();
+        }
+        else if (arg == "--grok-model-name")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var modelName = ValidateString(arg, max1Arg.FirstOrDefault(), "model name");
+            if (modelName != null)
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.GrokModelName, modelName);
+            i += max1Arg.Count();
+        }
+        else if (arg == "--grok-endpoint")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var endpoint = ValidateString(arg, max1Arg.FirstOrDefault(), "endpoint");
+            if (endpoint != null)
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.GrokEndpoint, endpoint);
+            i += max1Arg.Count();
         }
         else
         {
