@@ -350,6 +350,28 @@ public static class KnownSettings
     }
     
     /// <summary>
+    /// Gets the canonical form of a known setting key.
+    /// </summary>
+    /// <param name="key">The key to normalize (in any format).</param>
+    /// <returns>The canonical form of the key, or the original key if not found.</returns>
+    public static string GetCanonicalForm(string key)
+    {
+        // First normalize to dot notation
+        var normalized = ToDotNotation(key);
+        
+        // Find the exact match in our known settings (case-insensitive)
+        foreach (var knownSetting in _dotToEnvVarMap.Keys)
+        {
+            if (string.Equals(knownSetting, normalized, StringComparison.OrdinalIgnoreCase))
+            {
+                return knownSetting;
+            }
+        }
+        
+        return normalized;
+    }
+    
+    /// <summary>
     /// Converts a setting name to environment variable format.
     /// </summary>
     /// <param name="key">The setting name in any format.</param>
