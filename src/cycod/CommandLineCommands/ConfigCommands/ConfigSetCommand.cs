@@ -32,11 +32,14 @@ class ConfigSetCommand : ConfigBaseCommand
         if (!KnownSettings.IsKnown(key))
         {
             var allKnownSettings = string.Join(", ", KnownSettings.GetAllKnownSettings().OrderBy(s => s));
-            throw new CommandLineException($"Error: Unknown setting '{key}'. Valid settings are: {allKnownSettings}");
+            Console.WriteLine($"Warning: Unknown setting '{key}'. Valid settings are: {allKnownSettings}");
+            // Continue with the original key without normalization
         }
-        
-        // Use the canonical form for storage
-        key = KnownSettings.GetCanonicalForm(key);
+        else
+        {
+            // Use the canonical form for storage of known settings
+            key = KnownSettings.GetCanonicalForm(key);
+        }
 
         // Try to parse as a list if the value is enclosed in brackets
         if (value.StartsWith("[") && value.EndsWith("]"))

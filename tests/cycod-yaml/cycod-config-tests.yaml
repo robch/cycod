@@ -76,3 +76,18 @@
     expect-regex: |
       NonexistentKey: \(not found or empty\)
 
+  - name: Config Set creates correct casing
+    run: cycod config set openai.apiKey 1234567890 --local
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]config(\.yaml){0,1} \(local\)
+      OpenAI.ApiKey: 12
+
+  - name: Config Get creates correct casing
+    run: cycod config get openai.apiKey --local
+    expect-regex: |
+      OpenAI.ApiKey: 12
+
+  - name: Config Clear creates correct casing
+    run: cycod config clear openai.apiKey --local
+    expect-regex: |
+      OpenAI.ApiKey: \(cleared\)
