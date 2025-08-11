@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button"
 import { ChevronDown } from "lucide-react"
 import StarfieldBackground from "./components/StarfieldBackground"
+import Header from "./components/Header"
 
 function App() {
   return (
     <StarfieldBackground>
+      <Header />
     <div className="min-h-screen text-white flex items-center justify-center">
       <div className="text-center space-y-8">
         <div className="space-y-4">
