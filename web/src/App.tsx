@@ -33,7 +33,7 @@ function App() {
       <Header />
 
       {/* Hero */}
-      <section className="min-h-screen flex flex-col justify-center items-center px-4 relative text-white">
+      <section className="min-h-[64vh] flex flex-col justify-center items-center px-4 relative text-white">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="flex items-center justify-center space-x-3 mb-8">
             <Terminal className="w-12 h-12 text-green-400" />
@@ -63,7 +63,7 @@ function App() {
       </section>
 
       {/* $ what_is_cycodev */}
-      <section className="py-20 px-4 border-t border-gray-800 text-white">
+      <section className="py-12 px-4 border-t border-gray-800 text-white">
         <div className="max-w-4xl mx-auto">
           <h3 className="text-3xl md:text-4xl font-mono mb-8 text-center">
             <span className="text-green-400">$</span> what_is_cycodev
