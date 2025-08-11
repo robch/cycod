@@ -22,7 +22,7 @@ public class StrReplaceEditorHelperFunctions
                             .Select(subEntry => Path.GetFullPath(Path.Combine(entry, subEntry)))))
                 .Select(entry => Directory.Exists(entry) ? $"{entry} (directory)" : $"{entry}")
                 .Select(entry => entry.StartsWith(path)
-                    ? entry.Substring(path.Length + 1)
+                    ? entry.Substring(path.Length + (path.EndsWith(Path.DirectorySeparatorChar.ToString()) ? 0 : 1))
                     : entry);
 
             var joined = string.Join(Environment.NewLine, entries);
