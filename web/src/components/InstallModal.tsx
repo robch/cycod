@@ -68,9 +68,72 @@ export default function InstallModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        {/* content placeholder */}
-        <div className="px-5 py-6 text-white/80">
-          {tab === "windows" && <p>Windows install steps coming soon.</p>}
+        {/* content */}
+        <div className="px-5 py-6 text-white/80 space-y-6">
+          {tab === "windows" && (
+            <div className="space-y-4">
+              <p>
+                Use <code className="font-mono text-white">winget</code> to install the .NET 9 SDK,
+                then use <code className="font-mono text-white">dotnet</code> to install the CycoD CLI (and CYCODMD CLI).
+              </p>
+              <pre className="bg-black/40 border border-white/10 rounded-lg p-4 overflow-x-auto text-sm text-white">
+<code>{`winget install --cask dotnet-sdk
+dotnet tool install --global CycoD --prerelease
+dotnet tool install --global cycodmd --prerelease`}</code>
+              </pre>
+
+              <details className="group rounded-lg border border-emerald-400/60 bg-emerald-500/10">
+                <summary className="list-none cursor-pointer select-none px-4 py-3 font-semibold text-emerald-300 flex items-center justify-between">
+                  <span>If you don't have winget …</span>
+                  <svg className="h-4 w-4 text-emerald-300 transition-transform -rotate-90 group-open:rotate-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+                <div className="px-4 pb-4 text-white/85 space-y-2">
+                  <a className="text-emerald-300 underline" href="https://learn.microsoft.com/windows/package-manager/winget/" target="_blank" rel="noreferrer">Install WinGet</a>
+                  <p>Walks you through installing the Windows Package Manager.</p>
+                </div>
+              </details>
+
+              <details className="group rounded-lg border border-emerald-400/60 bg-emerald-500/10">
+                <summary className="list-none cursor-pointer select-none px-4 py-3 font-semibold text-emerald-300 flex items-center justify-between">
+                  <span>Why do I need the <code className="font-mono">cycodmd</code> CLI?</span>
+                  <svg className="h-4 w-4 text-emerald-300 transition-transform -rotate-90 group-open:rotate-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </summary>
+                <div className="px-4 pb-4 text-white/85 space-y-3">
+                  <p>
+                    The <code className="font-mono">cycodmd</code> CLI is used to dynamically generate <code className="font-mono">.md</code> content for LLM context.
+                  </p>
+                  <div>
+                    <p className="mb-1">Slash commands powered by <span className="font-mono">cycodmd</span>:</p>
+                    <ul className="list-disc pl-6 space-y-1">
+                      <li><code className="font-mono">/file &lt;filename&gt;</code> - Include single file, or part of a file</li>
+                      <li><code className="font-mono">/files &lt;pattern&gt;</code> - Include multiple files, or parts of those files</li>
+                      <li><code className="font-mono">/search &lt;query&gt;</code> - Include web search results and page content</li>
+                      <li><code className="font-mono">/get &lt;url&gt;</code> - Include content from a URL, with or without HTML tags</li>
+                      <li><code className="font-mono">/run &lt;command&gt;</code> - Include the output of a command/script</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <p className="mb-1">Coming soon:</p>
+                    <ul className="list-disc pl-6 space-y-1">
+                      <li><code className="font-mono">cycod cycodmd files</code> - list/find files by glob + regex</li>
+                      <li><code className="font-mono">cycod cycodmd run</code> - run commands/scripts via Bash, Cmd, or Powershell</li>
+                      <li><code className="font-mono">cycod cycodmd web get</code> - retrieve content from URLs, with or w/o HTML tags</li>
+                      <li><code className="font-mono">cycod cycodmd web search</code> - search for content via Bing, DuckDuckGo, Google, Yahoo, etc.</li>
+                    </ul>
+                  </div>
+                  <p>
+                    You can read more about <span className="font-mono">cycodmd</span> at
+                    {" "}
+                    <a className="text-emerald-300 underline" href="https://github.com/robch/cycod" target="_blank" rel="noreferrer">https://github.com/robch/cycod</a>.
+                  </p>
+                </div>
+              </details>
+            </div>
+          )}
           {tab === "mac" && <p>MacOS install steps coming soon.</p>}
           {tab === "linux" && <p>Linux install steps coming soon.</p>}
           {tab === "source" && <p>Build from source steps coming soon.</p>}
