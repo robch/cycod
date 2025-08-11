@@ -14,9 +14,11 @@ function Logo() {
 
 import { useState } from "react"
 import InstallModal from "./InstallModal"
+import SignInModal from "./SignInModal"
 
 export default function Header() {
   const [showInstall, setShowInstall] = useState(false)
+  const [showSignIn, setShowSignIn] = useState(false)
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       {/* gradient hairline to blend into background */}
@@ -55,12 +57,13 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-3">
-              <a
-                href="#signin"
+              <button
+                type="button"
+                onClick={() => setShowSignIn(true)}
                 className="rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm text-white/90 shadow-sm backdrop-blur-md transition hover:bg-white/10 hover:text-white"
               >
                 Sign in
-              </a>
+              </button>
               <button
                 type="button"
                 onClick={() => setShowInstall(true)}
@@ -71,6 +74,7 @@ export default function Header() {
             </div>
           </nav>
           <InstallModal open={showInstall} onClose={() => setShowInstall(false)} />
+          <SignInModal open={showSignIn} onClose={() => setShowSignIn(false)} />
         </div>
       </div>
     </header>
