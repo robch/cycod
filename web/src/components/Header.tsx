@@ -12,13 +12,26 @@ function Logo() {
   );
 }
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import InstallModal from "./InstallModal"
 import SignInModal from "./SignInModal"
+import { getFirebaseApp } from "@/lib/firebase"
+import { getAuth, onAuthStateChanged, signOut, type User } from "firebase/auth"
 
 export default function Header() {
   const [showInstall, setShowInstall] = useState(false)
   const [showSignIn, setShowSignIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState<User | null>(null)
+  const [avatarFailed, setAvatarFailed] = useState(false)
+
+  useEffect(() => {
+    const auth = getAuth(getFirebaseApp())
+    const unsub = onAuthStateChanged(auth, (u) => {
+      setCurrentUser(u)
+      setAvatarFailed(false)
+    })
+    return () => unsub()
+  }, [])
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       {/* gradient hairline to blend into background */}
@@ -57,13 +70,47 @@ export default function Header() {
 
             {/* Right actions */}
             <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowSignIn(true)}
-                className="rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm text-white/90 shadow-sm backdrop-blur-md transition hover:bg-white/10 hover:text-white"
-              >
-                Sign in
-              </button>
+              {currentUser ? (
+                <>
+                  <div className="flex items-center gap-2 pr-1">
+                    {currentUser.photoURL && !avatarFailed ? (
+                      <img
+                        src={currentUser.photoURL}
+                        alt={currentUser.displayName ?? "User"}
+                        referrerPolicy="no-referrer"
+                        onError={() => setAvatarFailed(true)}
+                        className="h-8 w-8 rounded-full border border-white/20 object-cover"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full border border-white/20 bg-white/10 grid place-items-center text-white/80 text-sm">
+                        {(currentUser.displayName ?? currentUser.email ?? "U").slice(0,1).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-sm text-white/90 truncate max-w-[12rem]">{currentUser.displayName ?? currentUser.email ?? "User"}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await signOut(getAuth(getFirebaseApp()))
+                      } catch (err) {
+                        console.error("Sign out failed", err)
+                      }
+                    }}
+                    className="rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm text-white/90 shadow-sm backdrop-blur-md transition hover:bg-white/10 hover:text-white"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setShowSignIn(true)}
+                  className="rounded-lg border border-white/25 bg-white/5 px-4 py-2 text-sm text-white/90 shadow-sm backdrop-blur-md transition hover:bg-white/10 hover:text-white"
+                >
+                  Sign in
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setShowInstall(true)}
