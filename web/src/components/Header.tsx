@@ -12,7 +12,11 @@ function Logo() {
   );
 }
 
+import { useState } from "react"
+import InstallModal from "./InstallModal"
+
 export default function Header() {
+  const [showInstall, setShowInstall] = useState(false)
   return (
     <header className="pointer-events-none fixed inset-x-0 top-0 z-50">
       {/* gradient hairline to blend into background */}
@@ -34,7 +38,6 @@ export default function Header() {
               <ul className="flex items-center gap-8 text-sm text-white/90">
                 {[
                   { label: "Product", href: "#product" },
-                  { label: "Pricing", href: "#pricing" },
                   { label: "Docs", href: "#docs" },
                   { label: "Blog", href: "#blog" },
                 ].map((item) => (
@@ -58,14 +61,16 @@ export default function Header() {
               >
                 Sign in
               </a>
-              <a
-                href="#install"
+              <button
+                type="button"
+                onClick={() => setShowInstall(true)}
                 className="rounded-lg border border-white/50 bg-white/70 px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition hover:bg-white"
               >
                 Install
-              </a>
+              </button>
             </div>
           </nav>
+          <InstallModal open={showInstall} onClose={() => setShowInstall(false)} />
         </div>
       </div>
     </header>
