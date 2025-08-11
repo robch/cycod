@@ -1,0 +1,147 @@
+:root {
+  /* Tunable theme tokens */
+  --bg-base: hsl(258 70% 6%);
+  --ink-1: hsl(270 95% 55% / 0.8);
+  --ink-2: hsl(210 95% 55% / 0.8);
+  --ink-3: hsl(155 95% 55% / 0.8);
+  --ink-4: hsl(320 95% 55% / 0.8);
+
+  --blob-1: hsl(275 90% 60% / 0.55);
+  --blob-2: hsl(195 90% 60% / 0.55);
+  --blob-3: hsl(135 90% 60% / 0.55);
+
+  --blur: 80px;
+  --grain-opacity: 0.05;
+  --rotate-duration: 42s;
+  --blob-duration: 24s;
+}
+
+/* Container covering viewport */
+.aurora-root {
+  position: relative;
+  min-height: 100svh;
+  background:
+    radial-gradient(120% 100% at 50% 0%, hsl(258 70% 12%), var(--bg-base) 70%);
+  overflow: clip;
+  isolation: isolate;
+  /* keeps blend effects contained */
+}
+
+/* Rotating conic gradient “ink” */
+.aurora-ink {
+  position: absolute;
+  inset: -20%;
+  background:
+    conic-gradient(from 0turn at 50% 50%,
+      var(--ink-1),
+      var(--ink-2),
+      var(--ink-3),
+      var(--ink-4),
+      var(--ink-1));
+  filter: blur(var(--blur));
+  opacity: 0.65;
+  animation: aurora-rotate var(--rotate-duration) linear infinite;
+  /* Softer edges toward the sides/top */
+  -webkit-mask-image: radial-gradient(90% 70% at 50% 40%, #000 40%, transparent 100%);
+  mask-image: radial-gradient(90% 70% at 50% 40%, #000 40%, transparent 100%);
+}
+
+/* Floating glow blobs to add depth/parallax */
+.aurora-blob {
+  position: absolute;
+  width: 60vmax;
+  height: 60vmax;
+  filter: blur(calc(var(--blur) * 0.9));
+  mix-blend-mode: screen;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.aurora-blob.a {
+  top: -10vmax;
+  left: -10vmax;
+  background: radial-gradient(circle at 50% 50%, var(--blob-1) 0%, transparent 60%);
+  animation: aurora-float-a var(--blob-duration) ease-in-out infinite alternate;
+}
+
+.aurora-blob.b {
+  bottom: -8vmax;
+  right: -6vmax;
+  background: radial-gradient(circle at 50% 50%, var(--blob-2) 0%, transparent 60%);
+  animation: aurora-float-b calc(var(--blob-duration) * 1.2) ease-in-out infinite alternate;
+}
+
+.aurora-blob.c {
+  top: 10vmax;
+  right: -12vmax;
+  background: radial-gradient(circle at 50% 50%, var(--blob-3) 0%, transparent 60%);
+  animation: aurora-float-c calc(var(--blob-duration) * 0.9) ease-in-out infinite alternate;
+}
+
+/* Subtle grain/texture — CSS-only, no image */
+.aurora-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, var(--grain-opacity)) 1px, transparent 1px);
+  background-size: 3px 3px;
+  /* grain density */
+  mix-blend-mode: soft-light;
+  opacity: 0.8;
+}
+
+/* Your content sits above the art layers */
+.aurora-content {
+  position: relative;
+  z-index: 1;
+  color: white;
+}
+
+/* Animations */
+@keyframes aurora-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes aurora-float-a {
+  0% {
+    transform: translate(-2vmax, 0) scale(1.05);
+  }
+
+  100% {
+    transform: translate(2vmax, 1.5vmax) scale(0.98);
+  }
+}
+
+@keyframes aurora-float-b {
+  0% {
+    transform: translate(0, 0) scale(1.03);
+  }
+
+  100% {
+    transform: translate(-2vmax, -2vmax) scale(1);
+  }
+}
+
+@keyframes aurora-float-c {
+  0% {
+    transform: translate(1vmax, -1vmax) scale(1);
+  }
+
+  100% {
+    transform: translate(-1vmax, 1vmax) scale(1.04);
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+  .aurora-ink,
+  .aurora-blob.a,
+  .aurora-blob.b,
+  .aurora-blob.c {
+    animation: none;
+  }
+}
