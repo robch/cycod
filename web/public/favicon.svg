@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+  <!-- Transparent background. Neon green ">_" mark with soft glow. -->
+  <defs>
+    <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9AFFC4"/>
+      <stop offset="100%" stop-color="#39FF88"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%" color-interpolation-filters="sRGB">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <g stroke="url(#neon)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Glow strokes -->
+    <g opacity="0.85" filter="url(#glow)">
+      <polyline points="14,18 30,32 14,46" stroke-width="8"/>
+      <!-- underscore glow thicker and slightly longer -->
+      <line x1="34" y1="49" x2="56" y2="49" stroke-width="10"/>
+    </g>
+    <!-- Crisp strokes on top -->
+    <polyline points="14,18 30,32 14,46" stroke="#CEFFE6" stroke-width="5"/>
+    <!-- underscore crisp stroke thicker to match logo ratio -->
+    <line x1="34" y1="49" x2="56" y2="49" stroke="#CEFFE6" stroke-width="7"/>
+  </g>
+</svg>
+
+
