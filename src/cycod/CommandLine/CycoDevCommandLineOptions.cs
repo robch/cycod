@@ -14,7 +14,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         if (parsed && options.Commands.Count == 1)
         {
             var command = options.Commands.FirstOrDefault();
-            var oneChatCommandWithNoInput =  command is ChatCommand chatCommand && chatCommand.InputInstructions.Count == 0;
+            var oneChatCommandWithNoInput = command is ChatCommand chatCommand && chatCommand.InputInstructions.Count == 0;
             var inOrOutRedirected = Console.IsInputRedirected || Console.IsOutputRedirected;
             var implictlyUseStdIn = oneChatCommandWithNoInput && inOrOutRedirected;
             if (implictlyUseStdIn)
@@ -41,7 +41,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
 
     override protected bool CheckPartialCommandNeedsHelp(string commandName)
     {
-	    return commandName == "alias" ||
+        return commandName == "alias" ||
                commandName == "config" ||
                commandName == "github" ||
                commandName == "mcp" ||
@@ -83,16 +83,16 @@ public class CycoDevCommandLineOptions : CommandLineOptions
     }
 
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
-	{
-		return TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
+    {
+        return TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
                TryParseGitHubLoginCommandOptions(command as GitHubLoginCommand, args, ref i, arg) ||
                TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
                TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
                TryParsePromptCommandOptions(command as PromptBaseCommand, args, ref i, arg) ||
                TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg);
     }
-	
-	override protected bool TryParseOtherCommandArg(Command? command, string arg)
+
+    override protected bool TryParseOtherCommandArg(Command? command, string arg)
     {
         var parsedOption = false;
 
@@ -605,6 +605,26 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (arg == "--use-openai")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+        }
+        else if (arg == "--use-ollama")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "ollama");
+        }
+        else if (arg == "--ollama-base-url")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var url = ValidateString(arg, max1Arg.FirstOrDefault(), "Ollama base URL");
+            if (url != null)
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.OllamaBaseUrl, url);
+            i += max1Arg.Count();
+        }
+        else if (arg == "--ollama-model-id")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var modelId = ValidateString(arg, max1Arg.FirstOrDefault(), "Ollama model id");
+            if (modelId != null)
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.OllamaModelId, modelId);
+            i += max1Arg.Count();
         }
         else if (arg == "--use-copilot")
         {
