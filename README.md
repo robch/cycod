@@ -5,6 +5,7 @@ CycoD is a command-line interface (CLI) application that provides a chat-based i
 ## Features
 
 - **Interactive AI Chat**: Have conversations with an AI assistant directly in your terminal
+- **Image Input Support**: Include images in conversations for AI analysis and vision tasks
 - **Multiple AI Providers**: Support for OpenAI, Azure OpenAI, and GitHub Copilot APIs
 - **Provider Selection**: Easily switch between different AI providers or use profiles
 - **Function Calling**: Allow the AI assistant to execute various operations:
@@ -21,6 +22,7 @@ CycoD is a command-line interface (CLI) application that provides a chat-based i
 - **Token Management**: Automatically manages token usage for long conversations
 - **Chat Commands**: Special commands like `/clear`, `/save`, `/cost` during chat sessions
   - CYCODMD integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
+  - Image commands: `/image` to add images to conversations
 
 ## Installation
 
@@ -103,6 +105,12 @@ cycod --input "How do I find the largest files in a directory using bash?"
 Use a custom system prompt:
 ```
 cycod --system-prompt "You are an expert Linux system administrator who gives concise answers."
+```
+
+Analyze images with AI:
+```
+cycod --image screenshot.png --input "What's shown in this screenshot?"
+cycod --image "*.jpg" "diagrams/*.png" --input "Analyze these images"
 ```
 
 Save and load chat history:
@@ -203,3 +211,15 @@ CycoD supports several slash commands that can be used during interactive chat s
 - `/run <command>` - Run a command and display the result
 
 These CYCODMD integration commands require the [CYCODMD](https://github.com/robch/cycodmd) tool to be installed and available on your system.
+
+### Image Commands
+- `/image <pattern>` - Add image files matching the pattern to the conversation
+
+Examples:
+```
+/image screenshot.png
+/image *.jpg
+/image photos/*.png docs/diagram.svg
+```
+
+Supported image formats: JPEG, PNG, GIF, BMP, WebP, SVG, TIFF. The image command supports glob patterns for selecting multiple files.
