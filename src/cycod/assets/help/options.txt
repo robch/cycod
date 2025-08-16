@@ -14,6 +14,8 @@ USAGE: cycod [...]
     --questions ...                       Alias for --interactive false --quiet --inputs
     --instructions ...                    Alias for --inputs
 
+    --image "PATTERN1" "PATTERN2" ...     Add image files matching glob patterns to the conversation
+
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates false
 
