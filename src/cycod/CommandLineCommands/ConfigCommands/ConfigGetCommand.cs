@@ -30,6 +30,12 @@ class ConfigGetCommand : ConfigBaseCommand
             throw new CommandLineException("Error: No key specified.");
         }
 
+        // Normalize the key if it's a known setting
+        if (KnownSettings.IsKnown(key))
+        {
+            key = KnownSettings.GetCanonicalForm(key);
+        }
+
         var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
         var value = isFileNameScope
             ? _configStore.GetFromFileName(key, configFileName!)
