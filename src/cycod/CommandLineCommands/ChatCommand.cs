@@ -35,6 +35,7 @@ public class ChatCommand : CommandWithVariables
         clone.OutputChatHistory = this.OutputChatHistory;
         clone.OutputTrajectory = this.OutputTrajectory;
         clone.InputInstructions = new List<string>(this.InputInstructions);
+        clone.ImagePatterns = new List<string>(this.ImagePatterns);
         clone.UseTemplates = this.UseTemplates;
         
         // Deep copy variables dictionary
@@ -89,6 +90,16 @@ public class ChatCommand : CommandWithVariables
                 UserPromptAdds,
                 maxPromptTokenTarget: MaxPromptTokenTarget,
                 maxChatTokenTarget: MaxChatTokenTarget);
+
+            // If images are provided via --image, add them with the first instruction if available
+            var hasImagesFromCommandLine = ImagePatterns.Count > 0;
+            var hasInputInstructions = InputInstructions.Count > 0;
+            if (hasImagesFromCommandLine && hasInputInstructions)
+            {
+                var firstInstruction = InputInstructions[0];
+                chat.AddUserMessage(firstInstruction, ImagePatterns, MaxPromptTokenTarget, MaxChatTokenTarget);
+                InputInstructions.RemoveAt(0);
+            }
 
             // Load the chat history from the file.
             var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
@@ -237,6 +248,10 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
         }
+        else if (_imageCommandHandler.IsCommand(userPrompt))
+        {
+            skipAssistant = HandleImageCommand(chat, userPrompt);
+        }
         else if (_promptCommandHandler.IsCommand(userPrompt))
         {
             var handled = HandlePromptCommand(chat, userPrompt, out giveAssistant);
@@ -266,6 +281,24 @@ public class ChatCommand : CommandWithVariables
         if (result != null) chat.AddUserMessage(result);
 
         DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
+        return true;
+    }
+
+    private bool HandleImageCommand(FunctionCallingChat chat, string userPrompt)
+    {
+        var userFunctionName = _imageCommandHandler.GetCommandName(userPrompt);
+        DisplayUserFunctionCall(userFunctionName, null);
+
+        var imagePatterns = _imageCommandHandler.HandleCommand(userPrompt);
+        var result = _imageCommandHandler.GetImageAddedMessage(imagePatterns);
+        
+        // Add the images to the chat if any patterns were provided
+        if (imagePatterns.Count > 0)
+        {
+            chat.AddUserMessage("", imagePatterns);
+        }
+
+        DisplayUserFunctionCall(userFunctionName, result);
         return true;
     }
 
@@ -320,6 +353,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /get      Get content from URL");
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /run      Run a command");
+        helpBuilder.AppendLine("  /image    Add image(s) to the conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
@@ -394,11 +428,18 @@ public class ChatCommand : CommandWithVariables
 
         try
         {
-            var response = await chat.CompleteChatStreamingAsync(userPrompt,
-                (messages) => messageCallback?.Invoke(messages),
-                (update) => streamingCallback?.Invoke(update),
-                (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
-                (name, args, result) => functionCallCallback?.Invoke(name, args, result));
+            var hasImages = ImagePatterns.Count > 0;
+            var response = hasImages
+                ? await chat.CompleteChatStreamingAsync(userPrompt, ImagePatterns,
+                    (messages) => messageCallback?.Invoke(messages),
+                    (update) => streamingCallback?.Invoke(update),
+                    (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
+                    (name, args, result) => functionCallCallback?.Invoke(name, args, result))
+                : await chat.CompleteChatStreamingAsync(userPrompt,
+                    (messages) => messageCallback?.Invoke(messages),
+                    (update) => streamingCallback?.Invoke(update),
+                    (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
+                    (name, args, result) => functionCallCallback?.Invoke(name, args, result));
 
             return response;
         }
@@ -862,6 +903,7 @@ public class ChatCommand : CommandWithVariables
     public string? OutputTrajectory;
 
     public List<string> InputInstructions = new();
+    public List<string> ImagePatterns = new();
     public bool UseTemplates = true;
 
     public List<string> UseMcps = new();
@@ -874,6 +916,7 @@ public class ChatCommand : CommandWithVariables
     private TrajectoryFile? _trajectoryFile;
     private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
     private SlashPromptCommandHandler _promptCommandHandler = new();
+    private SlashImageCommandHandler _imageCommandHandler = new();
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;

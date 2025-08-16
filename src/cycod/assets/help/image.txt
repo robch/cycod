@@ -1,0 +1,65 @@
+IMAGE INPUT
+
+  CycoD supports adding images to conversations through both command-line options
+  and interactive slash commands. Images are included in the chat messages and
+  can be analyzed by AI models that support vision capabilities.
+
+COMMAND LINE OPTION
+
+  --image <pattern> [pattern2] ...
+
+    Adds image files matching the specified glob patterns to the conversation.
+    Multiple patterns can be provided to include multiple images.
+
+    Examples:
+      cycod --image screenshot.png --input "What's in this image?"
+      cycod --image "*.jpg" "diagrams/*.png" --input "Analyze these images"
+      cycod --image photo1.jpg photo2.png --input "Compare these images"
+
+INTERACTIVE SLASH COMMAND
+
+  /image <pattern> [pattern2] ...
+
+    During an interactive chat session, adds image files matching the specified
+    glob patterns to the conversation.
+
+    Examples:
+      /image screenshot.png
+      /image *.jpg
+      /image photos/*.png docs/diagram.svg
+
+SUPPORTED IMAGE FORMATS
+
+  - JPEG (.jpg, .jpeg)
+  - PNG (.png)  
+  - GIF (.gif)
+  - BMP (.bmp)
+  - WebP (.webp)
+  - SVG (.svg)
+  - TIFF (.tiff, .tif)
+
+GLOB PATTERNS
+
+  Image patterns support standard file globbing:
+  - * matches any characters
+  - ? matches a single character
+  - [abc] matches any character in brackets
+  - **/ matches directories recursively
+
+  Examples:
+    *.png           All PNG files in current directory
+    images/**/*.jpg All JPEG files in images directory and subdirectories
+    photo?.png      Files like photo1.png, photo2.png, etc.
+
+NOTES
+
+  - Images are processed when the command is executed
+  - Large images may affect token usage
+  - Not all AI models support image input
+  - Images are referenced by file path, so files must be accessible
+
+SEE ALSO
+
+  cycod help examples
+  cycod help options  
+  cycod help slash commands

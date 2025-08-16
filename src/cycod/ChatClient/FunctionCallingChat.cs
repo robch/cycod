@@ -62,6 +62,43 @@ public class FunctionCallingChat : IAsyncDisposable
 
         _messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
     }
+    
+    public void AddUserMessage(string userMessage, IEnumerable<string> imagePatterns, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
+    {
+        var contents = new List<AIContent>();
+        
+        // Add text content
+        if (!string.IsNullOrEmpty(userMessage))
+        {
+            contents.Add(new TextContent(userMessage));
+        }
+        
+        // Add image contents
+        foreach (var pattern in imagePatterns)
+        {
+            var imageFiles = FileHelpers.FilesFromGlob(pattern);
+            foreach (var imageFile in imageFiles)
+            {
+                if (IsImageFile(imageFile))
+                {
+                    contents.Add(new UriContent(new Uri(Path.GetFullPath(imageFile)), GetImageMediaType(imageFile)));
+                }
+            }
+        }
+        
+        // Create message with mixed content
+        var message = new ChatMessage(ChatRole.User, contents);
+        
+        _userMessageAdds.Add(message);
+        _userMessageAdds.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
+
+        _messages.Add(message);
+        _messages.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
+    }
 
     public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
@@ -90,6 +127,50 @@ public class FunctionCallingChat : IAsyncDisposable
         _messages.Add(new ChatMessage(ChatRole.User, userPrompt));
         messageCallback?.Invoke(_messages);
 
+        return await CompleteChatStreamingInternalAsync(messageCallback, streamingCallback, approveFunctionCall, functionCallCallback);
+    }
+    
+    public async Task<string> CompleteChatStreamingAsync(
+        string userPrompt,
+        IEnumerable<string> imagePatterns,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, string?>? functionCallCallback = null)
+    {
+        var contents = new List<AIContent>();
+        
+        // Add text content
+        if (!string.IsNullOrEmpty(userPrompt))
+        {
+            contents.Add(new TextContent(userPrompt));
+        }
+        
+        // Add image contents
+        foreach (var pattern in imagePatterns)
+        {
+            var imageFiles = FileHelpers.FilesFromGlob(pattern);
+            foreach (var imageFile in imageFiles)
+            {
+                if (IsImageFile(imageFile))
+                {
+                    contents.Add(new UriContent(new Uri(Path.GetFullPath(imageFile)), GetImageMediaType(imageFile)));
+                }
+            }
+        }
+        
+        _messages.Add(new ChatMessage(ChatRole.User, contents));
+        messageCallback?.Invoke(_messages);
+
+        return await CompleteChatStreamingInternalAsync(messageCallback, streamingCallback, approveFunctionCall, functionCallCallback);
+    }
+    
+    private async Task<string> CompleteChatStreamingInternalAsync(
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, string?>? functionCallCallback = null)
+    {
         var contentToReturn = string.Empty;
         while (true)
         {
@@ -194,6 +275,32 @@ public class FunctionCallingChat : IAsyncDisposable
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
 
         return functionResult;
+    }
+
+    private static bool IsImageFile(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" or ".png" or ".gif" or ".bmp" or ".webp" or ".svg" or ".tiff" or ".tif" => true,
+            _ => false
+        };
+    }
+
+    private static string GetImageMediaType(string filePath)
+    {
+        var extension = Path.GetExtension(filePath).ToLowerInvariant();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".bmp" => "image/bmp",
+            ".webp" => "image/webp",
+            ".svg" => "image/svg+xml",
+            ".tiff" or ".tif" => "image/tiff",
+            _ => "image/*"
+        };
     }
 
     public async ValueTask DisposeAsync()

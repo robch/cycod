@@ -30,31 +30,39 @@ EXAMPLES
   
     cycod --question "What time is it?" --output-trajectory trajectory.md
 
-  EXAMPLE 8: Use additional system prompt with the base system prompt
+  EXAMPLE 8: Use image input with a question
+  
+    cycod --image screenshot.png --input "What's in this image?"
+
+  EXAMPLE 9: Use multiple images with glob patterns
+  
+    cycod --image "*.jpg" "diagrams/*.png" --input "Analyze these images"
+
+  EXAMPLE 10: Use additional system prompt with the base system prompt
   
     cycod --add-system-prompt "Never access files outside the current directory."
 
-  EXAMPLE 9: Add a user prompt that will be included when starting a new chat
+  EXAMPLE 11: Add a user prompt that will be included when starting a new chat
   
     cycod --add-user-prompt "Always answer in french."
     
-  EXAMPLE 10: Use foreach variables to run multiple versions of a command
+  EXAMPLE 12: Use foreach variables to run multiple versions of a command
   
     cycod --foreach var name in Alice Bob Charlie --input "Hello, {name}!"
     
-  EXAMPLE 11: Combine multiple foreach variables (creates all combinations)
+  EXAMPLE 13: Combine multiple foreach variables (creates all combinations)
   
     cycod --foreach var language in Python JavaScript Go --foreach var topic in "functions" "loops" --input "Show me how to use {topic} in {language}"
 
-  EXAMPLE 12: Use numeric range with foreach
+  EXAMPLE 14: Use numeric range with foreach
   
     cycod --foreach var day in 1..7 --input "What day of the week is day {day}?"
 
-  EXAMPLE 13: Process multiple commands in parallel with threads
+  EXAMPLE 15: Process multiple commands in parallel with threads
   
     cycod --threads 4 --foreach var topic in "sorting algorithms" "data structures" "design patterns" "algorithms" --question "Explain {topic} concisely"
 
-  EXAMPLE 14: Using slash commands in interactive mode
+  EXAMPLE 16: Using slash commands in interactive mode
   
     cycod
     > What are the largest files in this directory?
@@ -62,12 +70,14 @@ EXAMPLES
     > /files *.cs
     > /find "class Program"
     > /search Python best practices
+    > /image screenshot.png
+    > Analyze this screenshot
     
-  EXAMPLE 15: Using an external MCP server without registration
+  EXAMPLE 17: Using an external MCP server without registration
   
     cycod --with-mcp cycod-mcp-weather
     
-  EXAMPLE 16: Using both registered MCP servers and an external MCP command
+  EXAMPLE 18: Using both registered MCP servers and an external MCP command
   
     cycod mcp add osm --command cycod-mcp-osm
     cycod --use-mcps --with-mcp cycod-mcp-weather

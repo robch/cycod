@@ -638,6 +638,13 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                 ConfigStore.Instance.SetFromCommandLine(KnownSettings.GrokEndpoint, endpoint);
             i += max1Arg.Count();
         }
+        else if (arg == "--image")
+        {
+            var imageArgs = GetInputOptionArgs(i + 1, args);
+            var imagePatterns = ValidateStrings(arg, imageArgs, "image pattern");
+            command.ImagePatterns.AddRange(imagePatterns);
+            i += imageArgs.Count();
+        }
         else
         {
             parsed = false;
