@@ -42,9 +42,12 @@ USAGE: cycod [...]
 
   MODEL PROVIDERS
     --use-copilot                         Prefer use of GitHub Copilot
-    --use-openai                          Prefer use of OpenAI API as the chat provider
     --use-azure-openai                    Prefer use of Azure OpenAI API as the chat provider
-    --use-azure                           Alias for --use-azure-open
+    --use-anthropic                       Prefer use of Anthropic Claude
+    --use-bedrock                         Prefer use of AWS Bedrock
+    --use-gemini                          Prefer use of Google Gemini
+    --use-grok                            Prefer use of Grok (x.ai)
+    --use-openai                          Prefer use of OpenAI API as the chat provider
 
   ANTHROPIC OPTIONS                       (see: cycod help use anthropic)
     --anthropic-api-key KEY               Use a specific API key for Anthropic
@@ -64,6 +67,11 @@ USAGE: cycod [...]
   GOOGLE GEMINI                           (see: cycod help use gemini)
     --google-gemini-api-key KEY           Use a specific API key
     --google-gemini-model-id ID           Use a specific Gemini model ID
+
+  GROK OPTIONS                            (see: cycod help use grok)
+    --grok-api-key KEY                    Use a specific API key
+    --grok-endpoint URL                   Use a specific API endpoint (default: https://api.x.ai/v1)
+    --grok-model-name NAME                Use a specific model (default: grok-3)
 
   OPENAI OPTIONS                          (see: cycod help use openai)
     --openai-api-key KEY                  Use a specific API key

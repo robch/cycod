@@ -2,19 +2,26 @@
 
 CycoD supports multiple AI providers for chat functionality:
 
-- OpenAI API
-- Azure OpenAI API
 - GitHub Copilot
+- Anthropic Claude
+- AWS Bedrock
+- Azure OpenAI API
+- Google Gemini
+- Grok (x.ai)
+- OpenAI API
 
 ## Provider Selection Flags
 
 Use these flags to explicitly select which provider to use:
 
 ```
---use-openai           Use OpenAI API
---use-azure-openai     Use Azure OpenAI API  
---use-azure            Same as --use-azure-openai
 --use-copilot          Use GitHub Copilot
+--use-azure-openai     Use Azure OpenAI API  
+--use-anthropic        Use Anthropic Claude
+--use-bedrock          Use AWS Bedrock
+--use-gemini           Use Google Gemini
+--use-grok             Use Grok (x.ai)
+--use-openai           Use OpenAI API
 ```
 
 ## Named Profiles
@@ -56,7 +63,10 @@ CYCOD_PREFERRED_PROVIDER=azure-openai
 
   cycod help options
   cycod help settings
-  cycod help use openai
-  cycod help use azure openai
   cycod help use github copilot
   cycod help use anthropic
+  cycod help use azure openai
+  cycod help use bedrock
+  cycod help use gemini
+  cycod help use grok
+  cycod help use openai

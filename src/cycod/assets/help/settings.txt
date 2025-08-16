@@ -170,10 +170,13 @@ USE APP SETTINGS
 
     EXAMPLE 1: Set preferred AI provider via config
 
-      cycod config set App.PreferredProvider openai
-      cycod config set App.PreferredProvider azure-openai --local
       cycod config set App.PreferredProvider copilot --user
       cycod config set App.PreferredProvider anthropic --global
+      cycod config set App.PreferredProvider azure-openai --local
+      cycod config set App.PreferredProvider bedrock
+      cycod config set App.PreferredProvider gemini
+      cycod config set App.PreferredProvider grok
+      cycod config set App.PreferredProvider openai
 
     EXAMPLE 2: Set preferred AI provider via environment variable
 
@@ -181,10 +184,13 @@ USE APP SETTINGS
 
     EXAMPLE 3: Use specific provider via command line flags
 
-      cycod chat --use-openai
-      cycod chat --use-azure-openai
       cycod chat --use-copilot
       cycod chat --use-anthropic
+      cycod chat --use-azure-openai
+      cycod chat --use-bedrock
+      cycod chat --use-google
+      cycod chat --use-grok
+      cycod chat --use-openai
 
 SEE ALSO
 
