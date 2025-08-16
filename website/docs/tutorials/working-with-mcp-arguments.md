@@ -1,6 +1,7 @@
 ---
 hide:
 - toc
+icon: material/dots-triangle
 ---
 
 --8<-- "snippets/ai-generated.md"

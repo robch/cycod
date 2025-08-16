@@ -1,4 +1,4 @@
-site_name: CYCOD Documentation
+site_name: CYCODEV Documentation
 repo_url: https://github.com/robch/cycod
 
 theme:
@@ -92,7 +92,7 @@ nav:
       - Setup Azure OpenAI: providers/azure-openai.md
       - Setup Google Gemini: providers/gemini.md
       - Setup OpenAI: providers/openai.md
-  - CHAT:
+  - CYCOD:
       - The Basics: basics/chat.md
       - Chat History: basics/chat-history.md
       - System Prompts: basics/system-prompts.md
@@ -102,31 +102,34 @@ nav:
       - Parallel Processing: basics/parallel-processing.md
       - Configuration: basics/configuration.md
       - TL;DR/Overview: basics/overview.md
-  - MEMORY:
-    - Concepts:
-      - Memory Overview: memory/overview.md
-      - Memory Organization: memory/organization.md
-    - Implementation:
-      - Basic Setup: memory/setup.md
-      - Tiered Memories: memory/tiered-memories.md
-      - Targeted Access: memory/targeted-access.md
-    - Advanced Techniques:
-      - Self-Updating Memories: memory/self-updating.md
-      - Memory Patterns & Examples: memory/patterns.md
-  - TOOLS & EXTENSIONS:
-    - Slash Commands:
-      - Using Slash Commands: tools/slash-commands.md
-      - File Operations: tools/file-operations.md
-      - Search Commands: tools/search-commands.md
-      - Run Commands: tools/run-commands.md
-    - MCP Integration:
-      - MCP Overview: advanced/mcp.md
-      - Managing MCP Servers: tutorials/managing-mcp-servers.md
-      - Working with MCP Arguments: tutorials/working-with-mcp-arguments.md
-      - Environment Variables in MCP: tutorials/env-variables-mcp.md
-    - Templates & Variables:
-      - Templates and Variables: usage/templates-and-variables.md
-      - Variable Substitution: tools/variable-substitution.md
+      - Model Context Protocol (MCP):
+        - Overview: advanced/mcp.md
+        - Managing Servers: tutorials/managing-mcp-servers.md
+        - Working with Arguments: tutorials/working-with-mcp-arguments.md
+        - Environment Variables: tutorials/env-variables-mcp.md
+  - CYCODMD:
+      - Overview: cycodmd/index.md
+      - The Basics: cycodmd/basics/getting-started.md
+      - File Conversion: cycodmd/basics/file-conversion.md
+      - Running Commands: cycodmd/basics/run-commands.md
+      - Web Features: cycodmd/basics/web-features.md
+      - AI Processing: cycodmd/basics/ai-processing.md
+      - Image Processing: cycodmd/basics/image-processing.md
+      - Advanced Usage:
+        - Command Options: cycodmd/advanced/options.md
+        - API Integration: cycodmd/advanced/api-integration.md
+        - Performance Tips: cycodmd/advanced/performance.md
+  # - MEMORY:
+  #   - Concepts:
+  #     - Memory Overview: memory/overview.md
+  #     - Memory Organization: memory/organization.md
+  #   - Implementation:
+  #     - Basic Setup: memory/setup.md
+  #     - Tiered Memories: memory/tiered-memories.md
+  #     - Targeted Access: memory/targeted-access.md
+  #   - Advanced Techniques:
+  #     - Self-Updating Memories: memory/self-updating.md
+  #     - Memory Patterns & Examples: memory/patterns.md
   - WORKFLOWS:
     - Use Cases:
       - Expert Roles: tutorials/expert-roles.md
@@ -152,6 +155,7 @@ nav:
       - Input Options: usage/input-options.md
       - Chat History: usage/chat-history.md
       - Configuration: usage/configuration.md
+      - Templates and Variables: usage/templates-and-variables.md
     - Built-in Capabilities:
       - File Operations: basics/file-operations.md
       - Shell Commands: basics/shell-commands.md
@@ -258,3 +262,14 @@ nav:
       - github:
         - reference/cycod/github/index.md
         - Login: reference/cycod/github/login.md
+    - cycodmd:
+      - reference/cycodmd/index.md
+      - run: reference/cycodmd/commands/run.md
+      - web search: reference/cycodmd/commands/web-search.md
+      - web get: reference/cycodmd/commands/web-get.md
+      - Options:
+        - Overview: reference/cycodmd/options/index.md
+        - File Options: reference/cycodmd/options/file-options.md
+        - Line Options: reference/cycodmd/options/line-options.md
+        - AI Options: reference/cycodmd/options/ai-options.md
+        - Output Options: reference/cycodmd/options/output-options.md

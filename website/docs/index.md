@@ -3,15 +3,15 @@ hide:
 - navigation
 - toc
 ---
-# WELCOME TO CYCOD
+# WELCOME TO CYCODEV
 
-CYCOD is an AI-powered CLI tool that brings the power of large language models to your command line interface. With CYCOD, you can chat with AI models, create and manage custom prompts, save conversation history, and much more.
+CYCODEV is an AI-powered CLI toolset that brings the power of large language models to your command line interface. With CYCODEV, you can chat with AI models, create and manage custom prompts, save conversation history, and much more.
 
-??? abstract "Why use CYCOD ..."
+??? abstract "Why use CYCODEV ..."
 
     <div class="grid cards" markdown>
 
-    -   **CYCOD FEATURES**  
+    -   **CYCODEV FEATURES**  
 
         :octicons-terminal-16: Chat with AI directly from your terminal.  
         :material-chat-processing: Save and resume conversations with ease.  
@@ -43,11 +43,11 @@ CYCOD is an AI-powered CLI tool that brings the power of large language models t
     ---
 
     **Installation and Setup**  
-    [:material-download: CYCOD Installation](/install-cycod-cli.md)  
+    [:material-download: CYCODEV Installation](/install-cycod-cli.md)  
     [:material-github:{ .med } GitHub Copilot](/providers/github-copilot.md)  
+    [:material-aws:{ .med } Amazon Bedrock Setup](/providers/bedrock.md)  
     [:material-robot:{ .med } Anthropic Setup](/providers/anthropic.md)  
     [:material-microsoft-azure:{ .med } Azure OpenAI Setup](/providers/azure-openai.md)  
-    [:material-aws:{ .med } Amazon Bedrock Setup](/providers/bedrock.md)  
     [:material-google:{ .med } Google Gemini Setup](/providers/gemini.md)  
     [:material-brain:{ .med } OpenAI Setup](/providers/openai.md)  
 
@@ -56,7 +56,7 @@ CYCOD is an AI-powered CLI tool that brings the power of large language models t
     ---
 
     **Learn the Basics**  
-    [:material-message-text: Chat Basics](/basics/chat.md)  
+    [:material-message-text: The Basics](/basics/chat.md)  
     [:material-history: Chat History](/basics/chat-history.md)  
     [:material-slash-forward: Slash Commands](/basics/slash-commands.md)  
     [:material-form-textbox: Custom Prompts](/basics/custom-prompts.md)  
