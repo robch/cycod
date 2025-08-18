@@ -273,3 +273,12 @@ nav:
         - Line Options: reference/cycodmd/options/line-options.md
         - AI Options: reference/cycodmd/options/ai-options.md
         - Output Options: reference/cycodmd/options/output-options.md
+  - CONTRIBUTOR GUIDE:
+    - Overview: contributor-guide/index.md
+    - Getting Started: contributor-guide/getting-started.md
+    - MkDocs Overview: contributor-guide/mkdocs-overview.md
+    - Styling: contributor-guide/styling.md
+    - Content Authoring: contributor-guide/content-authoring.md
+    - Site Structure: contributor-guide/site-structure.md
+    - Deployment: contributor-guide/deployment.md
+    - Resources: contributor-guide/resources.md
