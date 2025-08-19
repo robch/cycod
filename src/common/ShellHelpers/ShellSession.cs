@@ -39,7 +39,7 @@ public abstract class ShellSession
     }
 
     // Executes a command and waits for completion.
-    public async Task<(string stdout, string stderr, string merged, int exitCode)> ExecuteCommandAsync(string command, int timeoutMs = 10000)
+    public async Task<PersistentShellCommandResult> ExecuteCommandAsync(string command, int timeoutMs = 10000)
     {
         var isExit = command.Trim().ToLower() == "exit";
         if (isExit) return ResetShell(allShells: true);
@@ -53,19 +53,43 @@ public abstract class ShellSession
                 .WithTimeout(timeoutMs);
 
             ConsoleHelpers.WriteDebugLine($"Executing command: {command}");
-            var result = await commandBuilder.RunAsync();
-
-            return (result.StandardOutput, result.StandardError, result.MergedOutput, result.ExitCode);
+            return await commandBuilder.RunAsync();
         }
         catch (TimeoutException)
         {
-            string errorMsg = $"<Command timed out after {timeoutMs}ms>";
-            return ("", errorMsg, errorMsg, -1);
+            ForceShutdown();
+            var errorMsg = $"<Command timed out after {timeoutMs}ms>";
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
+                    "",
+                    errorMsg,
+                    errorMsg,
+                    -1,
+                    ProcessCompletionState.TimedOut,
+                    TimeSpan.FromMilliseconds(timeoutMs),
+                    ProcessErrorType.Timeout,
+                    errorMsg
+                ),
+                command
+            );
         }
         catch (Exception ex)
         {
-            string errorMsg = $"<Error executing command: {ex.Message}>";
-            return ("", errorMsg, errorMsg, -1);
+            var errorMsg = $"<Error executing command: {ex.Message}>";
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
+                    "",
+                    errorMsg,
+                    errorMsg,
+                    -1,
+                    ProcessCompletionState.Error,
+                    TimeSpan.Zero,
+                    ProcessErrorType.Other,
+                    errorMsg,
+                    ex
+                ),
+                command
+            );
         }
     }
 
@@ -87,17 +111,35 @@ public abstract class ShellSession
         }
     }
 
-    private static (string stdout, string stderr, string merged, int exitCode) ResetShell(bool allShells = false)
+    private static PersistentShellCommandResult ResetShell(bool allShells = false)
     {
         if (allShells)
         {
             ShutdownAll();
             var shutdownAllShellsMessage = $"<All persistent shells have been closed... current working directory is now: {Environment.CurrentDirectory}>";
-            return (shutdownAllShellsMessage, "", shutdownAllShellsMessage, 0);
+            return PersistentShellCommandResult.FromProcessResult(
+                new RunnableProcessResult(
+                    shutdownAllShellsMessage,
+                    "",
+                    shutdownAllShellsMessage,
+                    0,
+                    ProcessCompletionState.Completed
+                ),
+                "exit"
+            );
         }
 
         var shutdownThisShellMessage = $"<Persistent shell has been closed... current working directory is now: {Environment.CurrentDirectory}>";
-        return (shutdownThisShellMessage, "", shutdownThisShellMessage, 0);
+        return PersistentShellCommandResult.FromProcessResult(
+            new RunnableProcessResult(
+                shutdownThisShellMessage,
+                "",
+                shutdownThisShellMessage,
+                0,
+                ProcessCompletionState.Completed
+            ),
+            "exit"
+        );
     }
 
     protected PersistentShellProcess? _shellProcess;

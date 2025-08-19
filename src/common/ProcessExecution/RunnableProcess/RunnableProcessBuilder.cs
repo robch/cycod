@@ -23,7 +23,7 @@ public class RunnableProcessBuilder
     /// <returns>This builder instance for method chaining.</returns>
     public RunnableProcessBuilder WithFileName(string fileName)
     {
-        _fileName = fileName;
+        _fileName = ResolveExecutablePath(fileName);
         return this;
     }
 
@@ -102,7 +102,7 @@ public class RunnableProcessBuilder
         }
 
         ProcessHelpers.SplitCommand(commandLine, out string fileName, out string arguments);
-        _fileName = fileName;
+        _fileName = ResolveExecutablePath(fileName);
         _arguments = arguments;
         return this;
     }
@@ -388,4 +388,26 @@ public class RunnableProcessBuilder
     private Action<int>? _startedCallback;
     private Action? _timeoutCallback;
     private Action<int>? _exitCallback;
+
+    /// <summary>
+    /// Resolves an executable path on Windows by checking for common extensions.
+    /// </summary>
+    /// <param name="path">The original executable path.</param>
+    /// <returns>The resolved path, or the original if not resolved.</returns>
+    private string ResolveExecutablePath(string path)
+    {
+        if (!OS.IsWindows() || string.IsNullOrEmpty(path))
+        {
+            return path;
+        }
+
+        var resolvedPath = ProcessHelpers.FindExecutableInPath(path);
+        if (resolvedPath != path)
+        {
+            ConsoleHelpers.WriteDebugLine($"RunnableProcessBuilder: Resolved '{path}' to '{resolvedPath}'");
+            return resolvedPath;
+        }
+        
+        return path;
+    }
 }

@@ -150,7 +150,7 @@ USE APP SETTINGS
     EXAMPLE 1: Set function auto-denial via config
 
       cycod config set App.AutoDeny run
-      cycod config set App.AutoDeny "DeleteFile RunBashCommandAsync" --local
+      cycod config set App.AutoDeny "DeleteFile RunBashCommand" --local
       cycod config set App.AutoDeny write --user
       cycod config set App.AutoDeny "CreateFile StrReplace" --global
 
@@ -162,7 +162,7 @@ USE APP SETTINGS
     EXAMPLE 3: Supply function auto-denial via command line
 
       cycod chat --auto-deny run
-      cycod chat --auto-deny DeleteFile RunBashCommandAsync
+      cycod chat --auto-deny DeleteFile RunBashCommand
       cycod chat --auto-deny write
       cycod chat --auto-deny "CreateFile StrReplace"
 

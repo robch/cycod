@@ -270,16 +270,19 @@ public abstract class PersistentShellProcess
         }
         catch (OperationCanceledException)
         {
+            var duration = DateTime.Now - startTime;
+            var looksLikeTimeout = timeoutMs.HasValue && Math.Abs(duration.TotalMilliseconds - timeoutMs.Value) < 100;
+            
             return PersistentShellCommandResult.FromProcessResult(
                 new RunnableProcessResult(
                     "",
                     "",
                     "",
                     -1,
-                    ProcessCompletionState.Canceled,
-                    DateTime.Now - startTime,
-                    ProcessErrorType.Other,
-                    "Command execution was canceled"
+                    looksLikeTimeout ? ProcessCompletionState.TimedOut : ProcessCompletionState.Canceled,
+                    duration,
+                    looksLikeTimeout ? ProcessErrorType.Timeout : ProcessErrorType.Other,
+                    looksLikeTimeout ? $"Command timed out after {duration.TotalMilliseconds:0}ms (timeout: {timeoutMs}ms)" : "Command execution was canceled"
                 ),
                 command
             );

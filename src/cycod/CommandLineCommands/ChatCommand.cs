@@ -71,6 +71,7 @@ public class ChatCommand : CommandWithVariables
         var factory = new McpFunctionFactory();
         factory.AddFunctions(new DateAndTimeHelperFunctions());
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
+        factory.AddFunctions(new BackgroundProcessHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());

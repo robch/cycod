@@ -10,7 +10,7 @@ FUNCTION CALL TYPES
 
   * read - Functions that read content (ViewFile, ListFiles, etc.)
   * write - Functions that modify content (CreateFile, StrReplace, etc.)
-  * run - Functions that execute commands (RunBashCommandAsync, RunCmdCommandAsync, etc.)
+  * run - Functions that execute commands (RunBashCommand, RunCmdCommand, etc.)
 
 CONTROLLING FUNCTION PERMISSIONS
 
@@ -54,7 +54,7 @@ CONTROLLING FUNCTION PERMISSIONS
     USAGE: cycod --auto-deny PATTERN1 [PATTERN2 [...]]
 
     PATTERNS:
-      * function name - Deny a specific function by name (e.g., "RunBashCommandAsync")
+      * function name - Deny a specific function by name (e.g., "RunBashCommand")
       * read - Deny all read-only functions
       * write - Deny all write functions
       * run - Deny all command execution functions
