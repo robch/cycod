@@ -61,7 +61,7 @@ public class McpFunctionFactory : FunctionFactory
     /// <param name="functionArguments">The arguments for the function call as a JSON string.</param>
     /// <param name="result">The result of the function call, if successful.</param>
     /// <returns>True if the function was found and called successfully, false otherwise.</returns>
-    public override bool TryCallFunction(string functionName, string functionArguments, out string? result)
+    public override bool TryCallFunction(string functionName, string functionArguments, out object? result)
     {
         result = null;
 

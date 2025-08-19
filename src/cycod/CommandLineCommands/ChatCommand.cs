@@ -40,6 +40,11 @@ public class ChatCommand : CommandWithVariables
         // Deep copy variables dictionary
         clone.Variables = new Dictionary<string, string>(this.Variables);
         
+        // Deep copy UseMcps and ImagePatterns
+        clone.UseMcps = new List<string>(this.UseMcps);
+        clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
+        clone.ImagePatterns = new List<string>(this.ImagePatterns);
+        
         return clone;
     }
 
@@ -47,6 +52,9 @@ public class ChatCommand : CommandWithVariables
     {
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
+        
+        // Initialize slash command handlers
+        _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -75,6 +83,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
+        factory.AddFunctions(new ImageHelperFunctions(this));
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -126,7 +135,11 @@ public class ChatCommand : CommandWithVariables
                 var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
                 DisplayAssistantLabel();
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant,
+                
+                var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+                ImagePatterns.Clear();
+                
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
@@ -234,7 +247,7 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = HandleHelpCommand();
         }
-        else if (_cycoDmdCommandHandler.IsCommand(userPrompt))
+        else if (_cycoDmdCommandHandler?.IsCommand(userPrompt) == true)
         {
             skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
         }
@@ -260,10 +273,10 @@ public class ChatCommand : CommandWithVariables
 
     private async Task<bool> HandleCycoDmdCommand(FunctionCallingChat chat, string userPrompt)
     {
-        var userFunctionName = _cycoDmdCommandHandler.GetCommandName(userPrompt);
+        var userFunctionName = _cycoDmdCommandHandler?.GetCommandName(userPrompt) ?? "";
         DisplayUserFunctionCall(userFunctionName, null);
 
-        var result = await _cycoDmdCommandHandler.HandleCommand(userPrompt);
+        var result = await _cycoDmdCommandHandler?.HandleCommand(userPrompt)!;
         if (result != null) chat.AddUserMessage(result);
 
         DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
@@ -321,6 +334,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /get      Get content from URL");
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /run      Run a command");
+        helpBuilder.AppendLine("  /image    Add image file(s) to conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
@@ -384,10 +398,11 @@ public class ChatCommand : CommandWithVariables
     private async Task<string> CompleteChatStreamingAsync(
         FunctionCallingChat chat,
         string userPrompt,
+        IEnumerable<string> imageFiles,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, string?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
@@ -395,7 +410,7 @@ public class ChatCommand : CommandWithVariables
 
         try
         {
-            var response = await chat.CompleteChatStreamingAsync(userPrompt,
+            var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
@@ -542,7 +557,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void HandleFunctionCallCompleted(string name, string args, string? result)
+    private void HandleFunctionCallCompleted(string name, string args, object? result)
     {
         DisplayAssistantFunctionCall(name, args, result);
     }
@@ -594,7 +609,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void DisplayAssistantFunctionCall(string name, string args, string? result)
+    private void DisplayAssistantFunctionCall(string name, string args, object? result)
     {
         EnsureLineFeeds();
         switch (name)
@@ -608,29 +623,31 @@ public class ChatCommand : CommandWithVariables
                 break;
         }
     }
-    
-    private void DisplayAssistantThinkFunctionCall(string args, string? result)
+
+    private void DisplayAssistantThinkFunctionCall(string args, object? result)
     {
         var thought = JsonHelpers.GetJsonPropertyValue(args, "thought", args);
         var hasThought = !string.IsNullOrEmpty(thought);
-        var hasResult = !string.IsNullOrEmpty(result);
+        var resultText = result is TextContent textContent ? textContent.Text : result?.ToString();
+        var hasResult = !string.IsNullOrEmpty(resultText);
 
         if (hasThought && !hasResult) ConsoleHelpers.WriteLine($"\n[THINKING]\n{thought}", ConsoleColor.DarkCyan);
         if (hasResult)
         {
-            ConsoleHelpers.WriteLine($"\n{result}", ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine($"\n{resultText}", ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
-    
-    private void DisplayGenericAssistantFunctionCall(string name, string args, string? result)
+
+    private void DisplayGenericAssistantFunctionCall(string name, string args, object? result)
     {
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
         if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
         if (result != null)
         {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            var text = result as String ?? "non-string result";
+            ConsoleHelpers.WriteLine(text, ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
@@ -867,13 +884,15 @@ public class ChatCommand : CommandWithVariables
 
     public List<string> UseMcps = new();
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
+    
+    public List<string> ImagePatterns = new();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 
     private INamedValues? _namedValues;
     private TrajectoryFile? _trajectoryFile;
-    private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
+    private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
 
     private long _totalTokensIn = 0;

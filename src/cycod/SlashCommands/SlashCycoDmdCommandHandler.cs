@@ -10,8 +10,9 @@ using System.Threading.Tasks;
 /// </summary>
 public class SlashCycoDmdCommandHandler
 {
-    public SlashCycoDmdCommandHandler()
+    public SlashCycoDmdCommandHandler(ChatCommand chatCommand)
     {
+        _chatCommand = chatCommand;
         _cycoDmdWrapper = new CycoDmdCliWrapper();
         
         // Initialize command handlers
@@ -27,7 +28,10 @@ public class SlashCycoDmdCommandHandler
             { "/get", HandleWebGetCommand },
             
             // Run command
-            { "/run", HandleRunCommand }
+            { "/run", HandleRunCommand },
+            
+            // Image command
+            { "/image", HandleImageCommand }
         };
     }
 
@@ -162,7 +166,20 @@ public class SlashCycoDmdCommandHandler
 
         return await _cycoDmdWrapper.ExecuteCycoDmdCommandAsync($"run {prefixArgsWithShell}{arguments}");
     }
+    
+    /// <summary>
+    /// Handles the /image command by adding the image pattern to the current chat context
+    /// </summary>
+    private Task<string> HandleImageCommand(string arguments)
+    {
+        if (string.IsNullOrWhiteSpace(arguments))
+            return Task.FromResult("/image requires an image file path or pattern.");
 
+        _chatCommand.ImagePatterns.Add(arguments.Trim());
+        return Task.FromResult($"Added image pattern: {arguments.Trim()}");
+    }
+    
     private readonly CycoDmdCliWrapper _cycoDmdWrapper;
     private readonly Dictionary<string, Func<string, Task<string>>> _commandHandlers;
+    private readonly ChatCommand _chatCommand;
 }

@@ -13,6 +13,8 @@ USAGE: cycod [...]
     --inputs "INPUT1" "INPUT2" ...        Provide one or more inputs, sequentially, to the AI model.
     --questions ...                       Alias for --interactive false --quiet --inputs
     --instructions ...                    Alias for --inputs
+    
+    --image FILE [FILE2 ...]              Include image files in the conversation (supports glob patterns)
 
     --use-templates TRUE/FALSE            Use template processing in model inputs above (default: true)
     --no-templates                        Alias for --use-templates false
