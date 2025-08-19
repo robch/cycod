@@ -1,5 +1,4 @@
 using Microsoft.Extensions.AI;
-using System.Text.Json;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -87,7 +86,26 @@ public class FunctionCallingChat : IAsyncDisposable
         Func<string, string?, bool>? approveFunctionCall = null,
         Action<string, string, string?>? functionCallCallback = null)
     {
-        _messages.Add(new ChatMessage(ChatRole.User, userPrompt));
+        return await CompleteChatStreamingAsync(
+            userPrompt, 
+            new List<string>(), 
+            messageCallback, 
+            streamingCallback, 
+            approveFunctionCall, 
+            functionCallCallback);
+    }
+
+    public async Task<string> CompleteChatStreamingAsync(
+        string userPrompt,
+        IEnumerable<string> imageFiles,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, string?>? functionCallCallback = null)
+    {
+        var message = CreateUserMessageWithImages(userPrompt, imageFiles);
+        
+        _messages.Add(message);
         messageCallback?.Invoke(_messages);
 
         var contentToReturn = string.Empty;
@@ -202,6 +220,30 @@ public class FunctionCallingChat : IAsyncDisposable
         {
             await mcpFactory.DisposeAsync();
         }
+    }
+
+    private ChatMessage CreateUserMessageWithImages(string userPrompt, IEnumerable<string> imageFiles)
+    {
+        var message = new ChatMessage(ChatRole.User, userPrompt);
+        
+        foreach (var imageFile in imageFiles)
+        {
+            if (File.Exists(imageFile))
+            {
+                try
+                {
+                    var imageBytes = File.ReadAllBytes(imageFile);
+                    var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
+                    message.Contents.Add(new DataContent(imageBytes, mediaType));
+                }
+                catch (Exception ex)
+                {
+                    ConsoleHelpers.WriteWarning($"Failed to load image {imageFile}: {ex.Message}");
+                }
+            }
+        }
+        
+        return message;
     }
 
     private readonly string _systemPrompt;
