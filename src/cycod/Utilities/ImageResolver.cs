@@ -25,38 +25,21 @@ public static class ImageResolver
         
         foreach (var pattern in imagePatterns)
         {
-            if (string.IsNullOrWhiteSpace(pattern))
-                continue;
+            var noPattern = string.IsNullOrWhiteSpace(pattern);
+            if (noPattern) continue;
                 
-            var trimmedPattern = pattern.Trim();
-            
-            if (IsGlobPattern(trimmedPattern))
+            var trimmed = pattern.Trim();
+            if (IsGlobPattern(trimmed))
             {
-                var matchedFiles = FileHelpers.FilesFromGlob(trimmedPattern)
+                var matchedFiles = FileHelpers.FilesFromGlob(trimmed)
                     .Where(IsImageFile)
                     .ToList();
-                
-                if (matchedFiles.Count == 0)
-                {
-                    throw new InvalidOperationException($"No image files found matching pattern: {trimmedPattern}");
-                }
-                
                 resolvedImages.AddRange(matchedFiles);
             }
             else
             {
-                // Handle single file
-                if (!File.Exists(trimmedPattern))
-                {
-                    throw new InvalidOperationException($"Image file not found: {trimmedPattern}");
-                }
-                
-                if (!IsImageFile(trimmedPattern))
-                {
-                    throw new InvalidOperationException($"File is not a supported image type: {trimmedPattern}");
-                }
-                
-                resolvedImages.Add(trimmedPattern);
+                var okToAdd = File.Exists(trimmed) && IsImageFile(trimmed);
+                if (okToAdd) resolvedImages.Add(trimmed);
             }
         }
         

@@ -83,6 +83,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
+        factory.AddFunctions(new ImageHelperFunctions(this));
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -136,6 +137,8 @@ public class ChatCommand : CommandWithVariables
                 DisplayAssistantLabel();
                 
                 var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+                ImagePatterns.Clear();
+                
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
@@ -399,7 +402,7 @@ public class ChatCommand : CommandWithVariables
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, string?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
@@ -554,7 +557,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void HandleFunctionCallCompleted(string name, string args, string? result)
+    private void HandleFunctionCallCompleted(string name, string args, object? result)
     {
         DisplayAssistantFunctionCall(name, args, result);
     }
@@ -606,7 +609,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void DisplayAssistantFunctionCall(string name, string args, string? result)
+    private void DisplayAssistantFunctionCall(string name, string args, object? result)
     {
         EnsureLineFeeds();
         switch (name)
@@ -620,29 +623,31 @@ public class ChatCommand : CommandWithVariables
                 break;
         }
     }
-    
-    private void DisplayAssistantThinkFunctionCall(string args, string? result)
+
+    private void DisplayAssistantThinkFunctionCall(string args, object? result)
     {
         var thought = JsonHelpers.GetJsonPropertyValue(args, "thought", args);
         var hasThought = !string.IsNullOrEmpty(thought);
-        var hasResult = !string.IsNullOrEmpty(result);
+        var resultText = result is TextContent textContent ? textContent.Text : result?.ToString();
+        var hasResult = !string.IsNullOrEmpty(resultText);
 
         if (hasThought && !hasResult) ConsoleHelpers.WriteLine($"\n[THINKING]\n{thought}", ConsoleColor.DarkCyan);
         if (hasResult)
         {
-            ConsoleHelpers.WriteLine($"\n{result}", ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine($"\n{resultText}", ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
-    
-    private void DisplayGenericAssistantFunctionCall(string name, string args, string? result)
+
+    private void DisplayGenericAssistantFunctionCall(string name, string args, object? result)
     {
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
         if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
         if (result != null)
         {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            var text = result as String ?? "non-string result";
+            ConsoleHelpers.WriteLine(text, ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
