@@ -161,7 +161,7 @@ The AI can execute shell commands to help with tasks:
 cycod --input "How much disk space do I have left?"
 ```
 
-The AI might use `RunBashCommandAsync` to execute `df -h` and explain the results.
+The AI might use `RunBashCommand` to execute `df -h` and explain the results.
 
 ## Managing Chat History
 

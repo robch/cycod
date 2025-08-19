@@ -12,9 +12,9 @@ These functions allow the AI to execute commands in different shell environments
 
 | Function | Description |
 |----------|-------------|
-| `RunBashCommandAsync` | Run commands in a bash shell with persistent session |
-| `RunCmdCommandAsync` | Run commands in a cmd shell (Windows) with persistent session |
-| `RunPowershellCommandAsync` | Run commands in a PowerShell shell with persistent session |
+| `RunBashCommand` | Run commands in a bash shell with persistent session |
+| `RunCmdCommand` | Run commands in a cmd shell (Windows) with persistent session |
+| `RunPowershellCommand` | Run commands in a PowerShell shell with persistent session |
 
 Key features of shell command functions:
 
@@ -26,7 +26,7 @@ Key features of shell command functions:
 
 Example usage with timeout:
 ```
-RunBashCommandAsync("find / -name '*.log'", 120000)  // 2 minute timeout
+RunBashCommand("find / -name '*.log'", 120000)  // 2 minute timeout
 ```
 
 ### File Operation Functions
@@ -80,7 +80,7 @@ User:
 Can you show me the current directory structure and then create a Python script that lists all files in the current directory?
 ```
 
-The AI might use `RunBashCommandAsync` to run `ls -la` and then use `CreateFile` to create a Python script.
+The AI might use `RunBashCommand` to run `ls -la` and then use `CreateFile` to create a Python script.
 
 ### File Operation Example
 
@@ -112,7 +112,7 @@ Functions in CycoD are categorized into three main types:
 
 - **read**: Functions that read content (ViewFile, ListFiles, etc.)
 - **write**: Functions that modify content (CreateFile, StrReplace, Insert, etc.)
-- **run**: Functions that execute commands (RunBashCommandAsync, RunCmdCommandAsync, RunPowershellCommandAsync)
+- **run**: Functions that execute commands (RunBashCommand, RunCmdCommand, RunPowershellCommand)
 
 ### Auto-Approve Options
 
@@ -211,7 +211,7 @@ cycod config add App.AutoApprove write
 
 # Add specific functions to auto-deny
 cycod config add App.AutoDeny DeleteFile
-cycod config add App.AutoDeny RunBashCommandAsync
+cycod config add App.AutoDeny RunBashCommand
 ```
 
 #### Removing Values

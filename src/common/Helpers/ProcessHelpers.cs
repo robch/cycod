@@ -500,6 +500,84 @@ public static class ProcessHelpers
 
     private static Dictionary<string, string> _cliCache = new Dictionary<string, string>();
 
+    // Common executable and script extensions on Windows
+    private static readonly string[] WindowsExecutableExtensions = { ".exe", ".cmd", ".bat", ".ps1" };
+
+    /// <summary>
+    /// Finds an executable in the PATH with common Windows extensions.
+    /// </summary>
+    /// <param name="baseName">The base name of the executable without extension (e.g., "npm")</param>
+    /// <returns>The full path of the executable if found, or the original name if not found</returns>
+    public static string FindExecutableInPath(string baseName)
+    {
+        if (string.IsNullOrEmpty(baseName))
+        {
+            return baseName;
+        }
+
+        // If we're not on Windows or the file already has an extension or exists, return it
+        if (!OS.IsWindows() || Path.HasExtension(baseName) || File.Exists(baseName))
+        {
+            return baseName;
+        }
+
+        // Check for name in cache
+        if (_cliCache.TryGetValue(baseName, out var cachedPath))
+        {
+            return cachedPath;
+        }
+
+        // Try to find with various extensions
+        foreach (string ext in WindowsExecutableExtensions)
+        {
+            // Skip if already has this extension
+            if (baseName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string nameWithExt = baseName + ext;
+            
+            // First check local path
+            if (File.Exists(nameWithExt))
+            {
+                _cliCache[baseName] = nameWithExt;
+                return nameWithExt;
+            }
+
+            // Then check in PATH
+            var foundInPath = FileHelpers.FindFilesInOsPath(nameWithExt).FirstOrDefault();
+            if (!string.IsNullOrEmpty(foundInPath))
+            {
+                _cliCache[baseName] = foundInPath;
+                return foundInPath;
+            }
+        }
+
+        // Special handling for common npm and node tools in predictable locations
+        if (baseName.Equals("npm", StringComparison.OrdinalIgnoreCase) || 
+            baseName.Equals("npx", StringComparison.OrdinalIgnoreCase) || 
+            baseName.Equals("node", StringComparison.OrdinalIgnoreCase))
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string nodejsPath = Path.Combine(programFiles, "nodejs");
+            
+            foreach (string ext in WindowsExecutableExtensions)
+            {
+                string fullPath = Path.Combine(nodejsPath, baseName + ext);
+                if (File.Exists(fullPath))
+                {
+                    _cliCache[baseName] = fullPath;
+                    return fullPath;
+                }
+            }
+        }
+
+        // If not found, cache the original name to avoid repeated searches
+        _cliCache[baseName] = baseName;
+        return baseName;
+    }
+
     private static readonly Dictionary<string, string> _argsFormat = new(StringComparer.OrdinalIgnoreCase)
     {
         ["cmd"] = "/D /E:ON /V:OFF /S /C \"CALL \"{0}\" {1}\"",
