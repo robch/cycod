@@ -1,0 +1,161 @@
+diff --git a/src/cycod/CommandLineCommands/ChatCommand.cs b/src/cycod/CommandLineCommands/ChatCommand.cs
+index 2688ec8..5a3b829 100644
+--- a/src/cycod/CommandLineCommands/ChatCommand.cs
++++ b/src/cycod/CommandLineCommands/ChatCommand.cs
+@@ -34,6 +34,8 @@ public class ChatCommand : CommandWithVariables
+         clone.InputChatHistory = this.InputChatHistory;
+         clone.OutputChatHistory = this.OutputChatHistory;
+         clone.OutputTrajectory = this.OutputTrajectory;
++        clone.AutoSaveOutputChatHistory = this.AutoSaveOutputChatHistory;
++        clone.AutoSaveOutputTrajectory = this.AutoSaveOutputTrajectory;
+         clone.InputInstructions = new List<string>(this.InputInstructions);
+         clone.UseTemplates = this.UseTemplates;
+         
+@@ -66,9 +68,17 @@ public class ChatCommand : CommandWithVariables
+ 
+         // Ground the filenames (in case they're templatized, or auto-save is enabled).
+         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
+-        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory)?.ReplaceValues(_namedValues);
+-        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory)?.ReplaceValues(_namedValues);
++        
++        // Ground auto-save and user-specified locations independently
++        AutoSaveOutputChatHistory = ChatHistoryFileHelpers.GroundAutoSaveChatHistoryFileName()?.ReplaceValues(_namedValues);
++        AutoSaveOutputTrajectory = ChatHistoryFileHelpers.GroundAutoSaveTrajectoryFileName()?.ReplaceValues(_namedValues);
++        
++        OutputChatHistory = ChatHistoryFileHelpers.GroundUserSpecifiedChatHistoryFileName(OutputChatHistory)?.ReplaceValues(_namedValues);
++        OutputTrajectory = ChatHistoryFileHelpers.GroundUserSpecifiedTrajectoryFileName(OutputTrajectory)?.ReplaceValues(_namedValues);
++        
++        // Initialize trajectory files
+         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
++        _autoSaveTrajectoryFile = new TrajectoryFile(AutoSaveOutputTrajectory);
+ 
+         // Ground the system prompt, added user messages, and InputInstructions.
+         SystemPrompt = GroundSystemPrompt();
+@@ -463,11 +473,20 @@ public class ChatCommand : CommandWithVariables
+     {
+         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
+ 
++        // Save to auto-save location if configured
++        if (AutoSaveOutputChatHistory != null)
++        {
++            messages.SaveChatHistoryToFile(AutoSaveOutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
++        }
++        
++        // Save to CLI-specified location if configured
+         if (OutputChatHistory != null)
+         {
+             messages.SaveChatHistoryToFile(OutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+         }
+         
++        // Handle trajectory files - both auto-save and CLI-specified
++        _autoSaveTrajectoryFile?.AppendMessage(messages.LastOrDefault());
+         _trajectoryFile?.AppendMessage(messages.LastOrDefault());
+     }
+ 
+@@ -878,6 +897,10 @@ public class ChatCommand : CommandWithVariables
+     public string? InputChatHistory;
+     public string? OutputChatHistory;
+     public string? OutputTrajectory;
++    
++    // Auto-save locations (independent of CLI-specified locations)
++    public string? AutoSaveOutputChatHistory;
++    public string? AutoSaveOutputTrajectory;
+ 
+     public List<string> InputInstructions = new();
+     public bool UseTemplates = true;
+@@ -892,6 +915,7 @@ public class ChatCommand : CommandWithVariables
+ 
+     private INamedValues? _namedValues;
+     private TrajectoryFile? _trajectoryFile;
++    private TrajectoryFile? _autoSaveTrajectoryFile;
+     private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
+     private SlashPromptCommandHandler _promptCommandHandler = new();
+ 
+diff --git a/src/cycod/Helpers/ChatHistoryFileHelpers.cs b/src/cycod/Helpers/ChatHistoryFileHelpers.cs
+index 4b3aa5d..8f22735 100644
+--- a/src/cycod/Helpers/ChatHistoryFileHelpers.cs
++++ b/src/cycod/Helpers/ChatHistoryFileHelpers.cs
+@@ -77,12 +77,65 @@ public static class ChatHistoryFileHelpers
+     }
+ 
+     /// <summary>
+-    /// Grounds an output chat history filename.
++    /// Grounds an auto-save chat history filename if auto-save is enabled.
++    /// </summary>
++    /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
++    public static string? GroundAutoSaveChatHistoryFileName()
++    {
++        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
++        if (shouldAutoSave)
++        {
++            var historyDir = EnsureHistoryDirectory();
++            var fileName = Path.Combine(historyDir, "chat-history-{time}.jsonl");
++            return FileHelpers.GetFileNameFromTemplate(fileName, fileName);
++        }
++        return null;
++    }
++
++    /// <summary>
++    /// Grounds a user-specified chat history filename.
++    /// </summary>
++    /// <param name="outputFileName">The user-specified output filename</param>
++    /// <returns>The grounded filename, or null if no filename specified</returns>
++    public static string? GroundUserSpecifiedChatHistoryFileName(string? outputFileName)
++    {
++        if (string.IsNullOrEmpty(outputFileName)) return null;
++        return FileHelpers.GetFileNameFromTemplate(outputFileName, outputFileName);
++    }
++
++    /// <summary>
++    /// Grounds an auto-save trajectory filename if auto-save is enabled.
++    /// </summary>
++    /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
++    public static string? GroundAutoSaveTrajectoryFileName()
++    {
++        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
++        if (shouldAutoSave)
++        {
++            var historyDir = EnsureHistoryDirectory();
++            var fileName = Path.Combine(historyDir, "trajectory-{time}.md");
++            return FileHelpers.GetFileNameFromTemplate(fileName, fileName);
++        }
++        return null;
++    }
++
++    /// <summary>
++    /// Grounds a user-specified trajectory filename.
++    /// </summary>
++    /// <param name="outputFileName">The user-specified output filename</param>
++    /// <returns>The grounded filename, or null if no filename specified</returns>
++    public static string? GroundUserSpecifiedTrajectoryFileName(string? outputFileName)
++    {
++        if (string.IsNullOrEmpty(outputFileName)) return null;
++        return FileHelpers.GetFileNameFromTemplate(outputFileName, outputFileName);
++    }
++
++    /// <summary>
++    /// Grounds an output chat history filename (legacy method for backward compatibility).
+     /// </summary>
+     /// <param name="outputFileName">The output filename</param>
+-    /// <param name="autoSave">Whether to auto-save the chat history</param>
+-    /// <param name="scope">The scope to save to</param>
+     /// <returns>The grounded filename</returns>
++    [Obsolete("Use GroundAutoSaveChatHistoryFileName() and GroundUserSpecifiedChatHistoryFileName() instead")]
+     public static string? GroundOutputChatHistoryFileName(string? outputFileName)
+     {
+         var userSpecified = !string.IsNullOrEmpty(outputFileName);
+@@ -97,12 +150,11 @@ public static class ChatHistoryFileHelpers
+     }
+ 
+     /// <summary>
+-    /// Grounds an output trajectory filename.
++    /// Grounds an output trajectory filename (legacy method for backward compatibility).
+     /// </summary>
+     /// <param name="outputFileName">The output filename</param>
+-    /// <param name="autoSave">Whether to auto-save the trajectory</param>
+-    /// <param name="scope">The scope to save to</param>
+     /// <returns>The grounded filename</returns>
++    [Obsolete("Use GroundAutoSaveTrajectoryFileName() and GroundUserSpecifiedTrajectoryFileName() instead")]
+     public static string? GroundOutputTrajectoryFileName(string? outputFileName)
+     {
+         var userSpecified = !string.IsNullOrEmpty(outputFileName);
