@@ -16,15 +16,15 @@ public class ImageHelperFunctions
         _chatCommand = chatCommand;
     }
 
-    [Description("Add one or more image files to the current conversation. The images will be included in the next message exchange. Supports individual files or glob patterns like '*.png' to include multiple images at once.")]
-    public object AddImageToConversation([Description("Absolute file path or glob pattern to one or more existing image files")] string imageFileNameOrGlobPattern)
+    [Description("Add one image file to the current conversation. The image will be included in the next message exchange.")]
+    public object AddImageToConversation([Description("Absolute file path to one image file; width and height must be less than 8000px")] string imageFileName)
     {
         try
         {
-            var resolvedImages = ImageResolver.ResolveImagePatterns(new[] { imageFileNameOrGlobPattern.Trim() });
+            var resolvedImages = ImageResolver.ResolveImagePatterns(new[] { imageFileName.Trim() });
             if (resolvedImages.Count == 0)
             {
-                return $"No image files found matching pattern: {imageFileNameOrGlobPattern}";
+                return $"No image files found matching pattern: {imageFileName}";
             }
 
             // If there's exactly one image, return it as DataContent
@@ -46,7 +46,7 @@ public class ImageHelperFunctions
                 }
             }
 
-            return $"More than one image found matching pattern: {imageFileNameOrGlobPattern}";
+            return $"More than one image found matching pattern: {imageFileName}";
         }
         catch (InvalidOperationException ex)
         {

@@ -135,7 +135,7 @@ CycoD supports a flexible configuration system with multiple scopes (global, use
 #### GitHub Copilot API
 - `GITHUB_TOKEN`: Your GitHub personal access token for Copilot API (preferred method)
 - `COPILOT_API_ENDPOINT`: Copilot API endpoint (default: https://api.githubcopilot.com)
-- `COPILOT_MODEL_NAME`: Model name to use (default: claude-3.7-sonnet)
+- `COPILOT_MODEL_NAME`: Model name to use (default: claude-sonnet-4)
 - `COPILOT_INTEGRATION_ID`: Your Copilot integration ID (required for both auth methods)
 
 #### App Configuration

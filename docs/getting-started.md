@@ -107,13 +107,13 @@ Alternatively, you can manually set the following environment variables:
 set GITHUB_TOKEN=your_github_token_here
 set COPILOT_INTEGRATION_ID=your_integration_id_here
 set COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-set COPILOT_MODEL_NAME=claude-3.7-sonnet
+set COPILOT_MODEL_NAME=claude-sonnet-4
 
 # Linux/macOS
 export GITHUB_TOKEN=your_github_token_here
 export COPILOT_INTEGRATION_ID=your_integration_id_here
 export COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-export COPILOT_MODEL_NAME=claude-3.7-sonnet
+export COPILOT_MODEL_NAME=claude-sonnet-4
 ```
 
 
