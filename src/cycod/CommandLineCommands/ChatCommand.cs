@@ -463,7 +463,30 @@ public class ChatCommand : CommandWithVariables
         var input = ReadLineOrSimulateInput(inputInstructions, null);
         if (input != null) return input;
 
+        var readLineNormally = OS.IsWindows();
+        return readLineNormally ?
+            InteractivelyReadLineNormally(defaultOnEndOfInput) :
+            InteractivelyReadLineWithReadLineLibrary(defaultOnEndOfInput);
+    }
+
+    private string? InteractivelyReadLineNormally(string? defaultOnEndOfInput)
+    {
         return Console.ReadLine() ?? defaultOnEndOfInput;
+    }
+
+    private string? InteractivelyReadLineWithReadLineLibrary(string? defaultOnEndOfInput)
+    {
+        var input = ReadLine.Read("", defaultOnEndOfInput);
+
+        var checkAddToHistory = !string.IsNullOrWhiteSpace(input);
+        if (checkAddToHistory)
+        {
+            var history = ReadLine.GetHistory();
+            var addToHistory = history.Count == 0 || history[history.Count - 1] != input;
+            if (addToHistory) ReadLine.AddHistory(input);
+        }
+
+        return input;
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
