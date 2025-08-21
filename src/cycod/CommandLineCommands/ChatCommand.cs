@@ -34,6 +34,8 @@ public class ChatCommand : CommandWithVariables
         clone.InputChatHistory = this.InputChatHistory;
         clone.OutputChatHistory = this.OutputChatHistory;
         clone.OutputTrajectory = this.OutputTrajectory;
+        clone.AutoSaveOutputChatHistory = this.AutoSaveOutputChatHistory;
+        clone.AutoSaveOutputTrajectory = this.AutoSaveOutputTrajectory;
         clone.InputInstructions = new List<string>(this.InputInstructions);
         clone.UseTemplates = this.UseTemplates;
         
@@ -66,9 +68,14 @@ public class ChatCommand : CommandWithVariables
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
-        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory)?.ReplaceValues(_namedValues);
-        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory)?.ReplaceValues(_namedValues);
+        AutoSaveOutputChatHistory = ChatHistoryFileHelpers.GroundAutoSaveChatHistoryFileName()?.ReplaceValues(_namedValues);
+        AutoSaveOutputTrajectory = ChatHistoryFileHelpers.GroundAutoSaveTrajectoryFileName()?.ReplaceValues(_namedValues);
+        OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
+        OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
+        
+        // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
+        _autoSaveTrajectoryFile = new TrajectoryFile(AutoSaveOutputTrajectory);
 
         // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt = GroundSystemPrompt();
@@ -463,12 +470,29 @@ public class ChatCommand : CommandWithVariables
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
-        if (OutputChatHistory != null)
+        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
+        if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            messages.SaveChatHistoryToFile(OutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            TrySaveChatHistoryToFile(messages, OutputChatHistory);
         }
         
-        _trajectoryFile?.AppendMessage(messages.LastOrDefault());
+        var lastMessage = messages.LastOrDefault();
+        _autoSaveTrajectoryFile.AppendMessage(lastMessage);
+        _trajectoryFile.AppendMessage(lastMessage);
+    }
+
+    private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath)
+    {
+        if (filePath == null) return;
+        
+        try
+        {
+            messages.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Warning: Failed to save chat history to '{filePath}': {ex.Message}");
+        }
     }
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
@@ -878,6 +902,9 @@ public class ChatCommand : CommandWithVariables
     public string? InputChatHistory;
     public string? OutputChatHistory;
     public string? OutputTrajectory;
+    
+    public string? AutoSaveOutputChatHistory;
+    public string? AutoSaveOutputTrajectory;
 
     public List<string> InputInstructions = new();
     public bool UseTemplates = true;
@@ -891,7 +918,8 @@ public class ChatCommand : CommandWithVariables
     private bool _asssistantResponseNeedsLF = false;
 
     private INamedValues? _namedValues;
-    private TrajectoryFile? _trajectoryFile;
+    private TrajectoryFile _trajectoryFile = null!;
+    private TrajectoryFile _autoSaveTrajectoryFile = null!;
     private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
 
