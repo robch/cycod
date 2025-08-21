@@ -49,7 +49,7 @@ public class MultilineInputHelperTests
         string? input = null;
         
         // Act
-        bool result = MultilineInputHelper.StartsWithBackticks(input!);
+        bool result = MultilineInputHelper.StartsWithBackticks(input);
         
         // Assert
         Assert.IsFalse(result);
