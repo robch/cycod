@@ -77,42 +77,34 @@ public static class ChatHistoryFileHelpers
     }
 
     /// <summary>
-    /// Grounds an output chat history filename.
+    /// Grounds an auto-save chat history filename if auto-save is enabled.
     /// </summary>
-    /// <param name="outputFileName">The output filename</param>
-    /// <param name="autoSave">Whether to auto-save the chat history</param>
-    /// <param name="scope">The scope to save to</param>
-    /// <returns>The grounded filename</returns>
-    public static string? GroundOutputChatHistoryFileName(string? outputFileName)
+    /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
+    public static string? GroundAutoSaveChatHistoryFileName()
     {
-        var userSpecified = !string.IsNullOrEmpty(outputFileName);
-        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
+        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveChatHistory).AsBool(true);
         if (shouldAutoSave)
         {
             var historyDir = EnsureHistoryDirectory();
-            outputFileName = Path.Combine(historyDir, "chat-history-{time}.jsonl");
+            var fileName = Path.Combine(historyDir, "chat-history-{time}.jsonl");
+            return FileHelpers.GetFileNameFromTemplate(fileName, fileName);
         }
-
-        return FileHelpers.GetFileNameFromTemplate(outputFileName ?? "chat-history.jsonl", outputFileName);
+        return null;
     }
 
     /// <summary>
-    /// Grounds an output trajectory filename.
+    /// Grounds an auto-save trajectory filename if auto-save is enabled.
     /// </summary>
-    /// <param name="outputFileName">The output filename</param>
-    /// <param name="autoSave">Whether to auto-save the trajectory</param>
-    /// <param name="scope">The scope to save to</param>
-    /// <returns>The grounded filename</returns>
-    public static string? GroundOutputTrajectoryFileName(string? outputFileName)
+    /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
+    public static string? GroundAutoSaveTrajectoryFileName()
     {
-        var userSpecified = !string.IsNullOrEmpty(outputFileName);
-        var shouldAutoSave = !userSpecified && ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
+        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveTrajectory).AsBool(true);
         if (shouldAutoSave)
         {
             var historyDir = EnsureHistoryDirectory();
-            outputFileName = Path.Combine(historyDir, "trajectory-{time}.md");
+            var fileName = Path.Combine(historyDir, "trajectory-{time}.md");
+            return FileHelpers.GetFileNameFromTemplate(fileName, fileName);
         }
-
-        return FileHelpers.GetFileNameFromTemplate(outputFileName ?? "trajectory.md", outputFileName);
+        return null;
     }
 }
