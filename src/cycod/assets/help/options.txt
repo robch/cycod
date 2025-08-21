@@ -20,7 +20,9 @@ USAGE: cycod [...]
     --no-templates                        Alias for --use-templates false
 
     --use-mcps [NAME1 [...]]              Use pre-registered Model Context Protocol servers (default name: *)
-    --with-mcp "COMMAND [ARGS...]"        Use an external Model Context Protocol server wo/ registration
+                                      Example: --use-mcps playwright filesystem
+    --with-mcp "COMMAND [ARGS...]"        Use an external Model Context Protocol server wo/ registration  
+                                      Example: --with-mcp "npx @playwright/mcp@latest"
     --no-mcps                             Do not use Model Context Protocol servers
 
   CHAT HISTORY                            (see: cycod help chat history)
@@ -82,7 +84,7 @@ USAGE: cycod [...]
   COPILOT OPTIONS                         (see: cycod help use github copilot)
     --copilot-model-name NAME             Use a specific model by name (default: claude-sonnet-4)
     --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
-    --github-token TOKEN                  Use a specific GitHub authentication tok
+    --github-token TOKEN                  Use a specific GitHub authentication token
 
   CONFIGURATION
     --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
@@ -99,6 +101,7 @@ USAGE: cycod [...]
     --var NAME=VALUE                      Set a variable for template substitution
     --vars NAME1=VALUE1 NAME2=VALUE2 ...  Set multiple variables for template substitution
     --foreach var NAME in VALUE1 [...]    Define a loop variable with multiple values (expands to multiple commands)
+                                      Example: --foreach var lang in Python JavaScript Go
     --foreach var NAME in @FILE           Define a loop variable with values from a file (one per line)
     --foreach var NAME in #..#            Define a loop variable with a numeric range (e.g., 1..5)
 
@@ -121,4 +124,4 @@ SEE ALSO
   cycod help function calls
   cycod help timeouts
   cycod help config
-  cycod help alias
+  cycod help aliases

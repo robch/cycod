@@ -17,19 +17,26 @@ OPTIONS
 
 EXAMPLES
 
-  EXAMPLE 1: Create a simple prompt in local scope
+  EXAMPLE 1: Create a specialized code review prompt
 
-    cycod prompt create summarize "Please summarize the following text in three bullet points:"
+    cycod prompt create code-review "Analyze this code and provide:
+    1. Security vulnerabilities and fixes
+    2. Performance optimization opportunities  
+    3. Code quality improvements with specific examples"
 
-  EXAMPLE 2: Create a prompt in user scope (available in all directories)
+  EXAMPLE 2: Create a technical documentation prompt
 
-    cycod prompt create explain "Explain the following like I'm five:" --user
+    cycod prompt create doc-gen "Generate comprehensive API documentation including:
+    - Usage examples with real data
+    - Error handling scenarios
+    - Performance considerations" --user
 
-  EXAMPLE 3: Create a prompt with multiline text
+  EXAMPLE 3: Create a database optimization prompt
 
-    cycod prompt create translate "Translate the following text to Spanish:
-    Then format the translation with bullet points for each sentence.
-    Finally, provide pronunciation tips."
+    cycod prompt create db-optimize "Review this database schema/query and suggest:
+    - Index optimizations
+    - Query performance improvements
+    - Schema design best practices"
 
 NOTES
 

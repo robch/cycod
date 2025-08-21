@@ -11,7 +11,14 @@ USE GROK
 
     EXAMPLE 2: Set Grok API key via environment variable
 
-      Set GROK_API_KEY environment variable
+      # Bash (Linux/macOS)
+      export GROK_API_KEY="YOUR_API_KEY"
+
+      # CMD (Windows)
+      set GROK_API_KEY=YOUR_API_KEY
+
+      # PowerShell (Windows)
+      $env:GROK_API_KEY = "YOUR_API_KEY"
 
     EXAMPLE 3: Supply Grok API key via command line
 
@@ -28,7 +35,14 @@ USE GROK
 
     EXAMPLE 2: Set Grok model name via environment variable
 
-      Set GROK_MODEL_NAME environment variable (default: grok-3)
+      # Bash (Linux/macOS)
+      export GROK_MODEL_NAME="grok-3"
+
+      # CMD (Windows)
+      set GROK_MODEL_NAME=grok-3
+
+      # PowerShell (Windows)
+      $env:GROK_MODEL_NAME = "grok-3"
 
     EXAMPLE 3: Supply Grok model name via command line
 
@@ -45,7 +59,14 @@ USE GROK
 
     EXAMPLE 2: Set Grok API endpoint via environment variable
 
-      Set GROK_ENDPOINT environment variable (default: https://api.x.ai/v1)
+      # Bash (Linux/macOS)
+      export GROK_ENDPOINT="https://api.x.ai/v1"
+
+      # CMD (Windows)
+      set GROK_ENDPOINT=https://api.x.ai/v1
+
+      # PowerShell (Windows)
+      $env:GROK_ENDPOINT = "https://api.x.ai/v1"
 
     EXAMPLE 3: Supply Grok API endpoint via command line
 

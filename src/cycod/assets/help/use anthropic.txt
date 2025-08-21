@@ -11,7 +11,14 @@ USE ANTHROPIC
 
     EXAMPLE 2: Set Anthropic API key via environment variable
 
-      Set ANTHROPIC_API_KEY environment variable
+      # Bash (Linux/macOS)
+      export ANTHROPIC_API_KEY="YOUR_API_KEY"
+
+      # CMD (Windows)
+      set ANTHROPIC_API_KEY=YOUR_API_KEY
+
+      # PowerShell (Windows)
+      $env:ANTHROPIC_API_KEY = "YOUR_API_KEY"
 
     EXAMPLE 3: Supply Anthropic API key via command line
 
@@ -21,15 +28,22 @@ USE ANTHROPIC
 
     EXAMPLE 1: Set Anthropic model name via config
 
-      cycod config set Anthropic.ModelName MODEL_NAME
-      cycod config set Anthropic.ModelName MODEL_NAME --local
-      cycod config set Anthropic.ModelName MODEL_NAME --user
-      cycod config set Anthropic.ModelName MODEL_NAME --global
+      cycod config set Anthropic.ModelName claude-sonnet-4
+      cycod config set Anthropic.ModelName claude-sonnet-4 --local
+      cycod config set Anthropic.ModelName claude-sonnet-4 --user
+      cycod config set Anthropic.ModelName claude-sonnet-4 --global
 
     EXAMPLE 2: Set Anthropic model name via environment variable
 
-      Set ANTHROPIC_MODEL_NAME environment variable
+      # Bash (Linux/macOS)
+      export ANTHROPIC_MODEL_NAME="claude-sonnet-4"
 
-    EXAMPLE 3: Supply Anthropic model name via command line
+      # CMD (Windows)
+      set ANTHROPIC_MODEL_NAME=claude-sonnet-4
 
-      cycod chat --anthropic-model-name MODEL_NAME
+      # PowerShell (Windows)
+      $env:ANTHROPIC_MODEL_NAME = "claude-sonnet-4"
+
+    EXAMPLE 3: Use Claude Sonnet 4 for advanced reasoning tasks
+
+      cycod chat --anthropic-model-name claude-sonnet-4

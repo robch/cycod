@@ -11,7 +11,14 @@ USE GEMINI
 
     EXAMPLE 2: Set Google Gemini credentials via environment variables
     
-      Set GOOGLE_GEMINI_API_KEY environment variable
+      # Bash (Linux/macOS)
+      export GOOGLE_GEMINI_API_KEY="YOUR_API_KEY"
+
+      # CMD (Windows)
+      set GOOGLE_GEMINI_API_KEY=YOUR_API_KEY
+
+      # PowerShell (Windows)
+      $env:GOOGLE_GEMINI_API_KEY = "YOUR_API_KEY"
     
     EXAMPLE 3: Supply Google Gemini credentials via command line
     
@@ -21,15 +28,22 @@ USE GEMINI
 
     EXAMPLE 1: Set Google Gemini model via config
     
-      cycod config set Google.Gemini.ModelId MODEL_ID
-      cycod config set Google.Gemini.ModelId MODEL_ID --local
-      cycod config set Google.Gemini.ModelId MODEL_ID --user
-      cycod config set Google.Gemini.ModelId MODEL_ID --global
+      cycod config set Google.Gemini.ModelId gemini-2.5-pro
+      cycod config set Google.Gemini.ModelId gemini-2.5-pro --local
+      cycod config set Google.Gemini.ModelId gemini-2.5-pro --user
+      cycod config set Google.Gemini.ModelId gemini-2.5-pro --global
     
     EXAMPLE 2: Set Google Gemini model via environment variable
     
-      Set GOOGLE_GEMINI_MODEL_ID environment variable (default: gemini-2.5-flash-preview-04-17)
+      # Bash (Linux/macOS)
+      export GOOGLE_GEMINI_MODEL_ID="gemini-2.5-pro"
+
+      # CMD (Windows)
+      set GOOGLE_GEMINI_MODEL_ID=gemini-2.5-pro
+
+      # PowerShell (Windows)
+      $env:GOOGLE_GEMINI_MODEL_ID = "gemini-2.5-pro"
     
-    EXAMPLE 3: Supply Google Gemini model via command line
-    
-      cycod chat --google-gemini-model-id MODEL_ID
+    EXAMPLE 3: Use the latest Gemini model for development tasks
+
+      cycod chat --google-gemini-model-id gemini-2.5-pro

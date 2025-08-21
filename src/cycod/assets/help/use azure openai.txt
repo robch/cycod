@@ -11,7 +11,14 @@ USE AZURE OPENAI
 
     EXAMPLE 2: Set Azure OpenAI API key via environment variable
 
-      Set AZURE_OPENAI_API_KEY environment variable
+      # Bash (Linux/macOS)
+      export AZURE_OPENAI_API_KEY="YOUR_API_KEY"
+
+      # CMD (Windows)
+      set AZURE_OPENAI_API_KEY=YOUR_API_KEY
+
+      # PowerShell (Windows)
+      $env:AZURE_OPENAI_API_KEY = "YOUR_API_KEY"
 
     EXAMPLE 3: Supply Azure OpenAI API key via command line
 
@@ -28,7 +35,14 @@ USE AZURE OPENAI
 
     EXAMPLE 2: Set Azure OpenAI API endpoint via environment variable
 
-      Set AZURE_OPENAI_ENDPOINT environment variable
+      # Bash (Linux/macOS)
+      export AZURE_OPENAI_ENDPOINT="https://your-resource.openai.azure.com"
+
+      # CMD (Windows)
+      set AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com
+
+      # PowerShell (Windows)
+      $env:AZURE_OPENAI_ENDPOINT = "https://your-resource.openai.azure.com"
 
     EXAMPLE 3: Supply Azure OpenAI API endpoint via command line
 
@@ -45,7 +59,14 @@ USE AZURE OPENAI
 
     EXAMPLE 2: Set Azure OpenAI deployment name via environment variable
 
-      Set AZURE_OPENAI_CHAT_DEPLOYMENT environment variable
+      # Bash (Linux/macOS)
+      export AZURE_OPENAI_CHAT_DEPLOYMENT="gpt-4"
+
+      # CMD (Windows)
+      set AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-4
+
+      # PowerShell (Windows)
+      $env:AZURE_OPENAI_CHAT_DEPLOYMENT = "gpt-4"
 
     EXAMPLE 3: Supply Azure OpenAI deployment name via command line
 
