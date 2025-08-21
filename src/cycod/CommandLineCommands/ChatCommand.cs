@@ -463,7 +463,17 @@ public class ChatCommand : CommandWithVariables
         var input = ReadLineOrSimulateInput(inputInstructions, null);
         if (input != null) return input;
 
-        return Console.ReadLine() ?? defaultOnEndOfInput;
+        string? line = Console.ReadLine();
+        if (line == null) return defaultOnEndOfInput;
+
+        var isMultiLine = MultilineInputHelper.StartsWithBackticks(line);
+        return isMultiLine ? InteractivelyReadMultiLineInput(line) : line;
+    }
+
+    private string? InteractivelyReadMultiLineInput(string firstLine)    
+    {
+        ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
+        return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
