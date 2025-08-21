@@ -1,0 +1,140 @@
+CYCOD PROMPT EXAMPLES
+
+  Custom prompts create reusable text templates for specialized analysis tasks.
+  Use prompts for consistent formatting, specialized expertise, and workflow automation.
+
+CODE ANALYSIS PROMPTS
+
+  EXAMPLE 1: Create a comprehensive code review prompt
+
+    cycod prompt create code-review "Analyze this code and provide: security vulnerabilities with fixes, performance bottlenecks with optimizations, code quality improvements with examples, and best practices violations with corrections"
+
+  EXAMPLE 2: Create a security audit prompt
+
+    cycod prompt create security-audit "Perform a security analysis focusing on authentication/authorization flaws, input validation issues, cryptographic problems, and common vulnerability patterns (OWASP Top 10)"
+
+  EXAMPLE 3: Create a performance analysis prompt
+
+    cycod prompt create perf-analysis "Analyze this code for performance issues: identify bottlenecks and inefficient algorithms, suggest optimization strategies with examples, recommend profiling approaches, and estimate performance impact of changes" --user
+
+DOCUMENTATION PROMPTS
+
+  EXAMPLE 4: Create an API documentation prompt
+
+    cycod prompt create api-docs "Generate comprehensive API documentation including endpoint descriptions with examples, authentication requirements, error codes and handling, rate limiting guidelines, and SDK examples" --user
+
+  EXAMPLE 5: Create a README generation prompt
+
+    cycod prompt create readme-gen "Create a comprehensive README.md including project description and purpose, installation and setup instructions, usage examples and code samples, API reference and configuration options, and contributing guidelines"
+
+  EXAMPLE 6: Create a changelog prompt
+
+    cycod prompt create changelog "Generate a changelog entry with categorized changes (Added, Changed, Fixed, Removed), impact assessment and migration notes, breaking changes highlighted clearly, and links to relevant issues"
+
+DATABASE AND QUERY PROMPTS
+
+  EXAMPLE 7: Create a database optimization prompt
+
+    cycod prompt create db-optimize "Review this database schema/query and suggest index optimizations for better performance, query restructuring for efficiency, schema design improvements, specific SQL examples for each recommendation, and performance measurement strategies"
+
+  EXAMPLE 8: Create a data analysis prompt
+
+    cycod prompt create data-analyze "Analyze this dataset and provide statistical summaries and key insights, data quality issues and cleaning suggestions, visualization recommendations, potential correlations and patterns, and actionable business insights"
+
+ARCHITECTURE AND DESIGN PROMPTS
+
+  EXAMPLE 9: Create a system architecture review prompt
+
+    cycod prompt create arch-review "Evaluate this system architecture for scalability and performance considerations, security architecture and threat modeling, maintainability and technical debt, integration patterns and dependencies, and deployment and operational concerns" --user
+
+  EXAMPLE 10: Create a design pattern analysis prompt
+
+    cycod prompt create design-patterns "Analyze the design patterns in this code: identify current patterns and their appropriateness, suggest alternative patterns where beneficial, highlight anti-patterns and refactoring opportunities, and provide concrete implementation examples"
+
+TESTING AND QUALITY PROMPTS
+
+  EXAMPLE 11: Create a test generation prompt
+
+    cycod prompt create test-gen "Generate comprehensive tests including unit tests with edge cases and error conditions, integration tests for system interactions, performance and load testing scenarios, test data setup and teardown procedures, and mocking strategies for external dependencies"
+
+  EXAMPLE 12: Create a bug analysis prompt
+
+    cycod prompt create bug-analysis "Analyze this bug report and code: identify root cause with evidence, provide step-by-step reproduction instructions, assess impact and risk evaluation, suggest multiple solution approaches with trade-offs, and recommend prevention strategies for similar issues"
+
+USING PROMPTS IN CHAT
+
+  EXAMPLE 13: Use code review prompt during development
+
+    cycod
+    > /code-review
+    [paste your code here for comprehensive review]
+
+  EXAMPLE 14: Use API documentation prompt for new endpoints
+
+    cycod
+    > /api-docs
+    [paste API code here for documentation generation]
+
+  EXAMPLE 15: Chain prompts for comprehensive analysis
+
+    cycod
+    > /security-audit
+    [paste code for security review]
+    > /perf-analysis
+    [paste same code for performance analysis]
+
+PROMPT MANAGEMENT
+
+  EXAMPLE 16: List all available prompts
+
+    cycod prompt list
+
+  EXAMPLE 17: View specific prompt content
+
+    cycod prompt get code-review
+
+  EXAMPLE 18: Update existing prompt
+
+    cycod prompt delete code-review
+    cycod prompt create code-review "Updated comprehensive code review template..."
+
+  EXAMPLE 19: Remove unused prompts
+
+    cycod prompt delete old-prompt
+
+SCOPE AND SHARING
+
+  EXAMPLE 20: Create user-wide prompts for personal workflows
+
+    cycod prompt create personal-review "Custom review template with my preferences" --user
+
+  EXAMPLE 21: Create team-standard prompts
+
+    cycod prompt create team-standards "Follow company coding standards and practices" --global
+
+  EXAMPLE 22: View prompts from different scopes
+
+    cycod prompt list --user
+    cycod prompt list --global
+
+ADVANCED PROMPT TECHNIQUES
+
+  EXAMPLE 23: Create multi-step analysis prompt
+
+    cycod prompt create deep-analysis "Perform this analysis in three phases: Phase 1 - Initial code structure and architecture review, Phase 2 - Detailed security and performance analysis, Phase 3 - Recommendations with implementation priorities. For each phase, provide specific actionable insights."
+
+  EXAMPLE 24: Create context-aware prompt
+
+    cycod prompt create context-review "Before analyzing the code, first understand the project's business domain and requirements, the technology stack and architectural constraints, and the team's experience level and preferences. Then provide tailored recommendations based on this context."
+
+  EXAMPLE 25: Create prompt with structured output format
+
+    cycod prompt create structured-report "Provide analysis in this format: Summary (brief overview), Critical Issues (high-priority problems), Recommendations (specific actionable improvements), and Next Steps (prioritized implementation plan)"
+
+SEE ALSO
+
+  cycod help prompt
+  cycod help prompt create
+  cycod help prompt list
+  cycod help prompts
+  cycod help slash commands

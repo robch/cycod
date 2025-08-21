@@ -38,24 +38,29 @@ MANAGING PROMPTS
 
 EXAMPLES
 
-  EXAMPLE 1: Creating and using a code review prompt
+  EXAMPLE 1: Creating and using a comprehensive code review prompt
 
-    cycod prompt create review "Please review this code and suggest improvements:
-    1. Identify any bugs or edge cases
-    2. Suggest performance optimizations
-    3. Comment on style and readability"
+    cycod prompt create code-review "Review this code and provide:
+    1. Security vulnerabilities and specific fixes
+    2. Performance bottlenecks and optimizations
+    3. Code quality improvements with examples
+    4. Best practices violations and corrections" --user
 
-    Then in chat, you can use:
-    /review
-    [paste code here]
+    Then in chat, use for thorough code analysis:
+    /code-review
+    [paste your code here for detailed review]
 
-  EXAMPLE 2: Creating a translate prompt for quick translations
+  EXAMPLE 2: Creating a specialized API documentation prompt
 
-    cycod prompt create translate "Translate the following text to Spanish:" --user
+    cycod prompt create api-docs "Generate comprehensive API documentation including:
+    - Endpoint descriptions with example requests/responses
+    - Authentication requirements
+    - Error codes and handling
+    - Rate limiting information" --user
 
-    Then in any chat from any directory:
-    /translate
-    [paste text to translate]
+    Then use it to document your APIs:
+    /api-docs
+    [paste your API code here]
 
 SEE ALSO
 
