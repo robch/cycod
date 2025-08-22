@@ -1,6 +1,7 @@
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using System.Text;
+using CycoDev.CustomTools;
 
 public class ChatCommand : CommandWithVariables
 {
@@ -95,9 +96,12 @@ public class ChatCommand : CommandWithVariables
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
 
+        // Add custom tool functions
+        var customToolFactory = await factory.AddCustomToolFunctionsAsync();
+
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient(out var options);
-        var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
+        var chat = new FunctionCallingChat(chatClient, SystemPrompt, customToolFactory, options, MaxOutputTokens);
 
         try
         {

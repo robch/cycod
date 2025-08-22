@@ -1,0 +1,733 @@
+using CycoDev.CustomTools.Models;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
+
+namespace CycoDev.CustomTools
+{
+    /// <summary>
+    /// Executes custom tools.
+    /// </summary>
+    public class CustomToolExecutor
+    {
+        /// <summary>
+        /// Executes a custom tool.
+        /// </summary>
+        /// <param name="tool">The tool to execute.</param>
+        /// <param name="parameters">The parameters to pass to the tool.</param>
+        /// <returns>The result of the tool execution.</returns>
+        public async Task<CustomToolExecutionResult> ExecuteToolAsync(CustomToolDefinition tool, Dictionary<string, object?> parameters)
+        {
+            // Handle aliases
+            if (tool.Type == "alias" && !string.IsNullOrEmpty(tool.BaseTool))
+            {
+                return await ExecuteAliasToolAsync(tool, parameters);
+            }
+
+            // Apply default values for missing parameters
+            foreach (var param in tool.Parameters)
+            {
+                if (!parameters.ContainsKey(param.Key) && param.Value.Default != null)
+                {
+                    parameters[param.Key] = param.Value.Default;
+                }
+            }
+
+            // Validate required parameters
+            foreach (var param in tool.Parameters)
+            {
+                if (param.Value.Required && (!parameters.ContainsKey(param.Key) || parameters[param.Key] == null))
+                {
+                    return new CustomToolExecutionResult
+                    {
+                        ExitCode = 1,
+                        Output = $"Error: Required parameter '{param.Key}' is missing.",
+                        Error = $"Required parameter '{param.Key}' is missing.",
+                        IsError = true
+                    };
+                }
+            }
+
+            // Handle multi-step tools
+            if (tool.Steps != null && tool.Steps.Count > 0)
+            {
+                return await ExecuteMultiStepToolAsync(tool, parameters);
+            }
+
+            // Handle single-step tools
+            return await ExecuteSingleStepToolAsync(tool, parameters);
+        }
+
+        /// <summary>
+        /// Executes an alias tool.
+        /// </summary>
+        /// <param name="tool">The alias tool to execute.</param>
+        /// <param name="parameters">The parameters to pass to the tool.</param>
+        /// <returns>The result of the tool execution.</returns>
+        private async Task<CustomToolExecutionResult> ExecuteAliasToolAsync(CustomToolDefinition tool, Dictionary<string, object?> parameters)
+        {
+            // Find the base tool
+            var factory = new CustomToolFactory();
+            var baseTool = await factory.GetToolAsync(tool.BaseTool!, tool.Scope);
+            
+            if (baseTool == null)
+            {
+                return new CustomToolExecutionResult
+                {
+                    ExitCode = 1,
+                    Output = $"Error: Base tool '{tool.BaseTool}' not found.",
+                    Error = $"Base tool '{tool.BaseTool}' not found.",
+                    IsError = true
+                };
+            }
+            
+            // Merge parameters with default parameters from the alias
+            var mergedParameters = new Dictionary<string, object?>(parameters);
+            
+            if (tool.DefaultParameters != null)
+            {
+                foreach (var param in tool.DefaultParameters)
+                {
+                    // Only use default if not explicitly provided
+                    if (!mergedParameters.ContainsKey(param.Key))
+                    {
+                        mergedParameters[param.Key] = param.Value;
+                    }
+                }
+            }
+            
+            // Execute the base tool with merged parameters
+            return await ExecuteToolAsync(baseTool, mergedParameters);
+        }
+
+        /// <summary>
+        /// Executes a multi-step tool.
+        /// </summary>
+        /// <param name="tool">The multi-step tool to execute.</param>
+        /// <param name="parameters">The parameters to pass to the tool.</param>
+        /// <returns>The result of the tool execution.</returns>
+        private async Task<CustomToolExecutionResult> ExecuteMultiStepToolAsync(CustomToolDefinition tool, Dictionary<string, object?> parameters)
+        {
+            var stepResults = new Dictionary<string, CustomToolExecutionResult>();
+            var finalOutput = new StringBuilder();
+            var finalError = new StringBuilder();
+            var finalExitCode = 0;
+            
+            // Track running tasks for parallel execution
+            var runningTasks = new Dictionary<string, Task<CustomToolExecutionResult>>();
+            var completedSteps = new HashSet<string>();
+            
+            // Process steps in order, but allow parallel execution
+            foreach (var step in tool.Steps!)
+            {
+                // Check if we should wait for any dependencies
+                if (step.WaitFor != null && step.WaitFor.Count > 0)
+                {
+                    // Wait for all dependencies to complete
+                    foreach (var dependencyName in step.WaitFor)
+                    {
+                        if (runningTasks.ContainsKey(dependencyName))
+                        {
+                            var dependencyResult = await runningTasks[dependencyName];
+                            stepResults[dependencyName] = dependencyResult;
+                            runningTasks.Remove(dependencyName);
+                            completedSteps.Add(dependencyName);
+                            
+                            // Append dependency output
+                            AppendStepOutput(finalOutput, finalError, dependencyName, dependencyResult);
+                            
+                            // Set final exit code
+                            if (finalExitCode == 0 && dependencyResult.ExitCode != 0)
+                            {
+                                finalExitCode = dependencyResult.ExitCode;
+                            }
+                        }
+                        else if (!completedSteps.Contains(dependencyName))
+                        {
+                            // If dependency doesn't exist, report error
+                            var errorMessage = $"Step '{step.Name}' depends on unknown step '{dependencyName}'";
+                            ConsoleHelpers.WriteDebugLine(errorMessage);
+                            return new CustomToolExecutionResult
+                            {
+                                ExitCode = 1,
+                                Output = errorMessage,
+                                Error = errorMessage,
+                                IsError = true
+                            };
+                        }
+                    }
+                }
+                
+                // Check if we should run this step based on run-condition
+                if (!string.IsNullOrEmpty(step.RunCondition))
+                {
+                    bool shouldRun = EvaluateRunCondition(step.RunCondition, stepResults);
+                    if (!shouldRun)
+                    {
+                        ConsoleHelpers.WriteDebugLine($"Skipping step '{step.Name}' because run condition evaluated to false");
+                        continue;
+                    }
+                }
+                
+                // Start the step execution (either in parallel or sequentially)
+                if (step.Parallel)
+                {
+                    // Start the step execution in parallel
+                    runningTasks[step.Name] = ExecuteStepAsync(step, parameters, stepResults);
+                }
+                else
+                {
+                    // Wait for all running tasks to complete first
+                    foreach (var taskEntry in runningTasks)
+                    {
+                        var stepName = taskEntry.Key;
+                        var stepTask = taskEntry.Value;
+                        
+                        var stepResult = await stepTask;
+                        stepResults[stepName] = stepResult;
+                        completedSteps.Add(stepName);
+                        
+                        // Append step output to final output
+                        AppendStepOutput(finalOutput, finalError, stepName, stepResult);
+                        
+                        // Set final exit code
+                        if (finalExitCode == 0 && stepResult.ExitCode != 0)
+                        {
+                            finalExitCode = stepResult.ExitCode;
+                        }
+                    }
+                    
+                    // Clear running tasks
+                    runningTasks.Clear();
+                    
+                    // Execute the step synchronously
+                    var result = await ExecuteStepAsync(step, parameters, stepResults);
+                    stepResults[step.Name] = result;
+                    completedSteps.Add(step.Name);
+                    
+                    // Append step output to final output
+                    AppendStepOutput(finalOutput, finalError, step.Name, result);
+                    
+                    // Set final exit code
+                    if (finalExitCode == 0 && result.ExitCode != 0)
+                    {
+                        finalExitCode = result.ExitCode;
+                    }
+                    
+                    // Check if we should continue after an error
+                    bool continueOnError = step.ContinueOnError || tool.IgnoreErrors;
+                    if (result.ExitCode != 0 && !continueOnError)
+                    {
+                        break; // Stop execution if step failed and we're not ignoring errors
+                    }
+                }
+            }
+            
+            // Wait for any remaining parallel tasks to complete
+            foreach (var taskEntry in runningTasks)
+            {
+                var stepName = taskEntry.Key;
+                var stepTask = taskEntry.Value;
+                
+                var stepResult = await stepTask;
+                stepResults[stepName] = stepResult;
+                
+                // Append step output to final output
+                AppendStepOutput(finalOutput, finalError, stepName, stepResult);
+                
+                // Set final exit code
+                if (finalExitCode == 0 && stepResult.ExitCode != 0)
+                {
+                    finalExitCode = stepResult.ExitCode;
+                }
+            }
+            
+            return new CustomToolExecutionResult
+            {
+                ExitCode = finalExitCode,
+                Output = finalOutput.ToString().TrimEnd(),
+                Error = finalError.ToString().TrimEnd(),
+                IsError = finalExitCode != 0,
+                StepResults = stepResults
+            };
+        }
+        
+        private void AppendStepOutput(StringBuilder output, StringBuilder error, string stepName, CustomToolExecutionResult result)
+        {
+            output.AppendLine($"--- Step: {stepName} ---");
+            output.AppendLine(result.Output);
+            output.AppendLine();
+            
+            if (!string.IsNullOrEmpty(result.Error))
+            {
+                error.AppendLine($"--- Step: {stepName} ---");
+                error.AppendLine(result.Error);
+                error.AppendLine();
+            }
+        }
+
+        /// <summary>
+        /// Executes a single step.
+        /// </summary>
+        /// <param name="step">The step to execute.</param>
+        /// <param name="parameters">The parameters to pass to the step.</param>
+        /// <param name="previousStepResults">Results from previous steps.</param>
+        /// <returns>The result of the step execution.</returns>
+        private async Task<CustomToolExecutionResult> ExecuteStepAsync(
+            CustomToolStep step, 
+            Dictionary<string, object?> parameters, 
+            Dictionary<string, CustomToolExecutionResult> previousStepResults)
+        {
+            // TODO: Implement parallel execution
+            // TODO: Implement waiting for other steps
+
+            // Handle use-tool step
+            if (!string.IsNullOrEmpty(step.UseTool))
+            {
+                // TODO: Implement use-tool step
+                return new CustomToolExecutionResult
+                {
+                    ExitCode = 1,
+                    Output = "Using other tools in steps is not yet implemented.",
+                    Error = "Using other tools in steps is not yet implemented.",
+                    IsError = true
+                };
+            }
+
+            // Execute command
+            string? command = null;
+            ShellType shellType = ShellType.Bash;
+
+            if (!string.IsNullOrEmpty(step.BashCommand))
+            {
+                command = step.BashCommand;
+                shellType = ShellType.Bash;
+            }
+            else if (!string.IsNullOrEmpty(step.CmdCommand))
+            {
+                command = step.CmdCommand;
+                shellType = ShellType.Cmd;
+            }
+            else if (!string.IsNullOrEmpty(step.PowerShellCommand))
+            {
+                command = step.PowerShellCommand;
+                shellType = ShellType.PowerShell;
+            }
+            else if (!string.IsNullOrEmpty(step.RunCommand))
+            {
+                command = step.RunCommand;
+                shellType = ShellType.Run;
+            }
+
+            if (string.IsNullOrEmpty(command))
+            {
+                return new CustomToolExecutionResult
+                {
+                    ExitCode = 1,
+                    Output = "Error: No command specified for step.",
+                    Error = "No command specified for step.",
+                    IsError = true
+                };
+            }
+
+            // Substitute parameters and previous step outputs
+            command = SubstituteParameters(command, parameters, previousStepResults);
+
+            // Execute the command with error handling
+            CustomToolExecutionResult result;
+            
+            if (step.ErrorHandling?.Retry != null && step.ErrorHandling.Retry.Attempts > 0)
+            {
+                // Retry logic
+                int attemptCount = 0;
+                int maxAttempts = step.ErrorHandling.Retry.Attempts;
+                int delayMs = step.ErrorHandling.Retry.Delay;
+                
+                do
+                {
+                    attemptCount++;
+                    
+                    if (attemptCount > 1)
+                    {
+                        ConsoleHelpers.WriteDebugLine($"Retrying step '{step.Name}' (attempt {attemptCount}/{maxAttempts})");
+                        if (delayMs > 0)
+                        {
+                            await Task.Delay(delayMs);
+                        }
+                    }
+                    
+                    result = await ExecuteCommandAsync(command, shellType);
+                    
+                    if (result.ExitCode == 0)
+                    {
+                        break; // Success, no need to retry
+                    }
+                    
+                } while (attemptCount < maxAttempts);
+                
+                // If still failed and there's a fallback, use it
+                if (result.ExitCode != 0 && !string.IsNullOrEmpty(step.ErrorHandling.Fallback))
+                {
+                    ConsoleHelpers.WriteDebugLine($"Step '{step.Name}' failed after {attemptCount} attempts, using fallback");
+                    string fallbackCommand = SubstituteParameters(step.ErrorHandling.Fallback, parameters, previousStepResults);
+                    result = await ExecuteCommandAsync(fallbackCommand, shellType);
+                }
+            }
+            else
+            {
+                // No retry, just execute
+                result = await ExecuteCommandAsync(command, shellType);
+            }
+            
+            // Handle output streaming if configured
+            if (step.Output != null)
+            {
+                if (step.Output.Mode == "stream")
+                {
+                    ConsoleHelpers.WriteDebugLine($"Streaming output for step '{step.Name}'");
+                    // TODO: Implement actual streaming
+                }
+                else if (result.Output.Length > step.Output.MaxSize)
+                {
+                    // Truncate output if it exceeds max size
+                    if (step.Output.Truncation)
+                    {
+                        ConsoleHelpers.WriteDebugLine($"Truncating output for step '{step.Name}' (exceeded {step.Output.MaxSize} characters)");
+                        result.Output = result.Output.Substring(0, step.Output.MaxSize) + "\n... [output truncated]";
+                    }
+                    else
+                    {
+                        ConsoleHelpers.WriteDebugLine($"Output for step '{step.Name}' exceeds max size ({step.Output.MaxSize} characters)");
+                    }
+                }
+            }
+            
+            return result;
+        }
+
+        /// <summary>
+        /// Executes a single-step tool.
+        /// </summary>
+        /// <param name="tool">The single-step tool to execute.</param>
+        /// <param name="parameters">The parameters to pass to the tool.</param>
+        /// <returns>The result of the tool execution.</returns>
+        private async Task<CustomToolExecutionResult> ExecuteSingleStepToolAsync(CustomToolDefinition tool, Dictionary<string, object?> parameters)
+        {
+            string? command = null;
+            ShellType shellType = ShellType.Bash;
+        /// <summary>
+        /// Handles streaming output for a step.
+        /// </summary>
+        /// <param name="step">The step being executed.</param>
+        /// <param name="output">The output to stream.</param>
+        private void HandleStreamingOutput(CustomToolStep step, string output)
+        {
+            if (step.Output == null || step.Output.Mode != "stream")
+            {
+                return;
+            }
+            
+            // Check streaming destination
+            string destination = step.Output.StreamCallback ?? "console";
+            
+            switch (destination.ToLowerInvariant())
+            {
+                case "console":
+                    ConsoleHelpers.WriteDebugLine($"[{step.Name}] {output}");
+                    break;
+                case "file":
+                    if (!string.IsNullOrEmpty(step.Output.StreamFile))
+                    {
+                        try
+                        {
+                            File.AppendAllText(step.Output.StreamFile, output + Environment.NewLine);
+                        }
+                        catch (Exception ex)
+                        {
+                            ConsoleHelpers.WriteDebugLine($"Error writing to stream file: {ex.Message}");
+                        }
+                    }
+                    break;
+                default:
+                    // Other streaming destinations could be implemented here
+                    ConsoleHelpers.WriteDebugLine($"Unknown streaming destination: {destination}");
+                    break;
+            }
+        }
+
+            if (!string.IsNullOrEmpty(tool.BashCommand))
+            {
+                command = tool.BashCommand;
+                shellType = ShellType.Bash;
+            }
+            else if (!string.IsNullOrEmpty(tool.CmdCommand))
+            {
+                command = tool.CmdCommand;
+                shellType = ShellType.Cmd;
+            }
+            else if (!string.IsNullOrEmpty(tool.PowerShellCommand))
+            {
+                command = tool.PowerShellCommand;
+                shellType = ShellType.PowerShell;
+            }
+            else if (!string.IsNullOrEmpty(tool.RunCommand))
+            {
+                command = tool.RunCommand;
+                shellType = ShellType.Run;
+            }
+            else if (!string.IsNullOrEmpty(tool.Script))
+            {
+                command = tool.Script;
+                shellType = !string.IsNullOrEmpty(tool.Shell) 
+                    ? ParseShellType(tool.Shell) 
+                    : ShellType.Bash;
+            }
+
+            if (string.IsNullOrEmpty(command))
+            {
+                return new CustomToolExecutionResult
+                {
+                    ExitCode = 1,
+                    Output = "Error: No command specified for tool.",
+                    Error = "No command specified for tool.",
+                    IsError = true
+                };
+            }
+
+            // Substitute parameters
+            command = SubstituteParameters(command, parameters);
+
+            // Execute the command with security settings
+            return await ExecuteCommandAsync(command, shellType, tool.Security);
+        }
+
+        /// <summary>
+        /// Executes a command using the specified shell.
+        /// </summary>
+        /// <param name="command">The command to execute.</param>
+        /// <param name="shellType">The type of shell to use.</param>
+        /// <returns>The result of the command execution.</returns>
+        private async Task<CustomToolExecutionResult> ExecuteCommandAsync(string command, ShellType shellType, CustomToolSecurity? security = null)
+        {
+            // Apply security settings if specified
+            if (security != null)
+            {
+                // Check execution privilege
+                switch (security.ExecutionPrivilege.ToLowerInvariant())
+                {
+                    case "same-as-user":
+                        // Default behavior, no change needed
+                        break;
+                    case "reduced":
+                        // Apply reduced privileges
+                        ConsoleHelpers.WriteDebugLine("Running with reduced privileges");
+                        // TODO: Implement reduced privilege execution
+                        break;
+                    case "elevated":
+                        // Check if elevation is allowed
+                        ConsoleHelpers.WriteDebugLine("Running with elevated privileges");
+                        // TODO: Implement elevation check and prompt
+                        break;
+                    default:
+                        return new CustomToolExecutionResult
+                        {
+                            ExitCode = 1,
+                            Output = $"Error: Invalid execution privilege: {security.ExecutionPrivilege}",
+                            Error = $"Invalid execution privilege: {security.ExecutionPrivilege}",
+                            IsError = true
+                        };
+                }
+                
+                // Apply isolation if specified
+                switch (security.Isolation.ToLowerInvariant())
+                {
+                    case "none":
+                        // No isolation, run directly
+                        break;
+                    case "process":
+                        // Default process isolation, no change needed
+                        break;
+                    case "container":
+                        // Run in container
+                        ConsoleHelpers.WriteDebugLine("Running in container isolation");
+                        // TODO: Implement container isolation
+                        break;
+                    default:
+                        return new CustomToolExecutionResult
+                        {
+                            ExitCode = 1,
+                            Output = $"Error: Invalid isolation mode: {security.Isolation}",
+                            Error = $"Invalid isolation mode: {security.Isolation}",
+                            IsError = true
+                        };
+                }
+            }
+            
+            // TODO: Implement actual command execution
+            // For now, we'll just return a mock result
+            return new CustomToolExecutionResult
+            {
+                ExitCode = 0,
+                Output = $"Mock execution of command using {shellType}: {command}",
+                Error = string.Empty,
+                IsError = false
+            };
+        }
+
+        /// <summary>
+        /// Substitutes parameters in a command string.
+        /// </summary>
+        /// <param name="command">The command string.</param>
+        /// <param name="parameters">The parameter values.</param>
+        /// <param name="stepResults">Results from previous steps.</param>
+        /// <returns>The command string with parameters substituted.</returns>
+        private string SubstituteParameters(
+            string command, 
+            Dictionary<string, object?> parameters, 
+            Dictionary<string, CustomToolExecutionResult>? stepResults = null)
+        {
+            // Replace {PARAM} with parameter values
+            foreach (var param in parameters)
+            {
+                string replacement = param.Value?.ToString() ?? string.Empty;
+                command = command.Replace($"{{{param.Key}}}", replacement);
+            }
+
+            // Replace {step.output}, {step.error}, {step.exit-code} with step results
+            if (stepResults != null)
+            {
+                // Use regex to match patterns like {step1.output}, {step2.error}, {step3.exit-code}
+                var regex = new Regex(@"\{(?<step>[^.}]+)\.(?<property>output|error|exit-code)\}");
+                command = regex.Replace(command, match =>
+                {
+                    var stepName = match.Groups["step"].Value;
+                    var property = match.Groups["property"].Value;
+
+                    if (stepResults.TryGetValue(stepName, out var result))
+                    {
+                        return property switch
+                        {
+                            "output" => result.Output,
+                            "error" => result.Error,
+                            "exit-code" => result.ExitCode.ToString(),
+                            _ => match.Value
+                        };
+                    }
+
+                    return match.Value;
+                });
+            }
+
+            return command;
+        }
+
+        /// <summary>
+        /// Evaluates a run condition.
+        /// </summary>
+        /// <param name="condition">The condition to evaluate.</param>
+        /// <param name="stepResults">Results from previous steps.</param>
+        /// <returns>True if the condition evaluates to true, false otherwise.</returns>
+        private bool EvaluateRunCondition(string condition, Dictionary<string, CustomToolExecutionResult> stepResults)
+        {
+            // TODO: Implement more sophisticated condition evaluation
+            // For now, just handle basic exit code checks
+
+            // Match patterns like {step1.exit-code} == 0 or {step2.exit-code} != 0
+            var regex = new Regex(@"\{(?<step>[^.}]+)\.(?<property>exit-code)\}\s*(?<operator>==|!=)\s*(?<value>\d+)");
+            var match = regex.Match(condition);
+
+            if (match.Success)
+            {
+                var stepName = match.Groups["step"].Value;
+                var op = match.Groups["operator"].Value;
+                var value = int.Parse(match.Groups["value"].Value);
+
+                if (stepResults.TryGetValue(stepName, out var result))
+                {
+                    return op switch
+                    {
+                        "==" => result.ExitCode == value,
+                        "!=" => result.ExitCode != value,
+                        _ => false
+                    };
+                }
+            }
+
+            // Default to true if we can't evaluate the condition
+            return true;
+        }
+
+        /// <summary>
+        /// Parses a shell type from a string.
+        /// </summary>
+        /// <param name="shell">The shell string.</param>
+        /// <returns>The shell type.</returns>
+        private ShellType ParseShellType(string shell)
+        {
+            return shell.ToLowerInvariant() switch
+            {
+                "bash" => ShellType.Bash,
+                "cmd" => ShellType.Cmd,
+                "powershell" or "pwsh" => ShellType.PowerShell,
+                _ => ShellType.Bash
+            };
+        }
+    }
+
+    /// <summary>
+    /// Result of executing a custom tool.
+    /// </summary>
+    public class CustomToolExecutionResult
+    {
+        /// <summary>
+        /// Gets or sets the exit code of the tool execution.
+        /// </summary>
+        public int ExitCode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the standard output of the tool execution.
+        /// </summary>
+        public string Output { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets the standard error of the tool execution.
+        /// </summary>
+        public string Error { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Gets or sets whether the execution resulted in an error.
+        /// </summary>
+        public bool IsError { get; set; }
+
+        /// <summary>
+        /// Gets or sets the results of individual steps for multi-step tools.
+        /// </summary>
+        public Dictionary<string, CustomToolExecutionResult>? StepResults { get; set; }
+    }
+
+    /// <summary>
+    /// Type of shell to use for executing commands.
+    /// </summary>
+    public enum ShellType
+    {
+        /// <summary>
+        /// Bash shell.
+        /// </summary>
+        Bash,
+
+        /// <summary>
+        /// Windows CMD shell.
+        /// </summary>
+        Cmd,
+
+        /// <summary>
+        /// PowerShell shell.
+        /// </summary>
+        PowerShell,
+
+        /// <summary>
+        /// Direct command execution.
+        /// </summary>
+        Run
+    }
+}

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using CycoDev.CommandLine;
+using CycoDev.CommandLineCommands;
 
 public class CycoDevCommandLineOptions : CommandLineOptions
 {
@@ -45,7 +47,8 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                commandName == "config" ||
                commandName == "github" ||
                commandName == "mcp" ||
-               commandName == "prompt";
+               commandName == "prompt" ||
+               commandName == "tool";
     }
 
     override protected Command? NewDefaultCommand()
@@ -78,6 +81,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             "mcp get" => new McpGetCommand(),
             "mcp add" => new McpAddCommand(),
             "mcp remove" => new McpRemoveCommand(),
+            "tool list" => new ToolListCommand(),
+            "tool get" => new ToolGetCommand(),
+            "tool add" => new ToolAddCommand(),
+            "tool remove" => new ToolRemoveCommand(),
             _ => base.NewCommandFromName(commandName)
         };
     }
@@ -89,7 +96,8 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
                TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
                TryParsePromptCommandOptions(command as PromptBaseCommand, args, ref i, arg) ||
-               TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg);
+               TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg) ||
+               TryParseToolCommandOptions(command as ToolBaseCommand, args, ref i, arg);
     }
 	
 	override protected bool TryParseOtherCommandArg(Command? command, string arg)
@@ -203,6 +211,21 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (command is McpRemoveCommand mcpRemoveCommand && string.IsNullOrEmpty(mcpRemoveCommand.Name))
         {
             mcpRemoveCommand.Name = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolGetCommand toolGetCommand && string.IsNullOrEmpty(toolGetCommand.ToolName))
+        {
+            toolGetCommand.ToolName = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolRemoveCommand toolRemoveCommand && string.IsNullOrEmpty(toolRemoveCommand.ToolName))
+        {
+            toolRemoveCommand.ToolName = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolAddCommand toolAddCommand && string.IsNullOrEmpty(toolAddCommand.ToolName))
+        {
+            toolAddCommand.ToolName = arg;
             parsedOption = true;
         }
 
@@ -385,6 +408,39 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             var env = ValidateString(arg, max1Arg.FirstOrDefault(), "environment variable");
             envAddCommand.EnvironmentVars.Add(env!);
             i += max1Arg.Count();
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private bool TryParseToolCommandOptions(ToolBaseCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--global" || arg == "-g")
+        {
+            command.Global = true;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.User = true;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Local = true;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Any = true;
         }
         else
         {
