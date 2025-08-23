@@ -2,6 +2,8 @@ import { EventEmitter } from 'events';
 import * as readline from 'readline';
 import chalk from 'chalk';
 import ora from 'ora';
+import { marked } from 'marked';
+import TerminalRenderer from 'marked-terminal';
 
 export class InteractiveUI extends EventEmitter {
   private rl: readline.Interface | null = null;
@@ -10,6 +12,41 @@ export class InteractiveUI extends EventEmitter {
   private isReadyForInput = false;
   
   async start(): Promise<void> {
+    // Configure marked for terminal output
+    marked.setOptions({
+      renderer: new TerminalRenderer({
+        // Colors and styling
+        code: chalk.yellow,
+        blockquote: chalk.gray.italic,
+        html: chalk.gray,
+        heading: chalk.green.bold,
+        firstHeading: chalk.magenta.bold.underline,
+        hr: chalk.gray,
+        listitem: chalk.white,
+        paragraph: chalk.white,
+        table: chalk.gray,
+        strong: chalk.bold.white,
+        em: chalk.italic,
+        codespan: chalk.cyan,
+        del: chalk.strikethrough.gray,
+        link: chalk.blue.underline,
+        href: chalk.blue.underline,
+        
+        // Layout settings
+        width: process.stdout.columns - 4, // Leave some margin
+        reflowText: true,
+        showSectionPrefix: false,
+        tableOptions: {
+          chars: {
+            'top': '─', 'top-mid': '┬', 'top-left': '┌', 'top-right': '┐',
+            'bottom': '─', 'bottom-mid': '┴', 'bottom-left': '└', 'bottom-right': '┘',
+            'left': '│', 'left-mid': '├', 'mid': '─', 'mid-mid': '┼',
+            'right': '│', 'right-mid': '┤', 'middle': '│'
+          }
+        }
+      }) as any
+    } as any);
+
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
@@ -108,6 +145,20 @@ export class InteractiveUI extends EventEmitter {
     
     console.log(highlighted);
     console.log(chalk.gray('─'.repeat(40)));
+  }
+
+  displayMarkdown(content: string): void {
+    if (this.spinner.isSpinning) {
+      this.spinner.stop();
+    }
+    
+    try {
+      const rendered = marked(content);
+      console.log(rendered);
+    } catch (error) {
+      // Fallback to plain text if markdown parsing fails
+      console.log(chalk.white(content));
+    }
   }
   
   private highlightJS(code: string): string {

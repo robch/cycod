@@ -17,6 +17,8 @@ export class CSharpChatInterface extends EventEmitter {
   private lastSentMessage = '';
   private receivedBuffer = '';
   private userRequestedExit = false;
+  private responseBuffer = '';
+  private isCollectingResponse = false;
   
   constructor(execPath?: string) {
     super();
@@ -123,11 +125,26 @@ export class CSharpChatInterface extends EventEmitter {
       // Find where User: starts (in the actual text, not ANSI codes)
       const userIndex = data.indexOf('User:');
       
-      // Display everything before User: (which may include ANSI codes and newlines)
+      // Add content before User: to response buffer
       const beforeUser = data.substring(0, userIndex);
       if (beforeUser) {
-        // This might include the response and formatting
-        process.stdout.write(beforeUser);
+        this.responseBuffer += beforeUser;
+      }
+      
+      // Process the complete response buffer
+      if (this.responseBuffer.trim()) {
+        const cleanContent = stripAnsi(this.responseBuffer);
+        const isMarkdown = this.detectMarkdown(cleanContent);
+        
+        if (isMarkdown) {
+          this.emit('markdown', cleanContent);
+        } else {
+          // Display the complete response as is
+          process.stdout.write(this.responseBuffer);
+        }
+        
+        // Clear the response buffer
+        this.responseBuffer = '';
       }
       
       // Hard-code the green color for the prompt to match cycod's Assistant color
@@ -159,9 +176,9 @@ export class CSharpChatInterface extends EventEmitter {
         process.stdout.write(afterPrompt);
       }
     } else {
-      // Display all other output immediately
+      // Accumulate response data until we see User: prompt
       if (data) {
-        process.stdout.write(data);
+        this.responseBuffer += data;
       }
     }
     
@@ -225,6 +242,30 @@ export class CSharpChatInterface extends EventEmitter {
   }
   
   
+  private detectMarkdown(text: string): boolean {
+    // Quick checks for common markdown patterns
+    const indicators = [
+      text.includes('**') || text.includes('__'),  // Bold
+      /^#{1,6}\s/m.test(text),                     // Headers
+      /^\s*[\*\-\+]\s/m.test(text),                // Unordered lists
+      /^\s*\d+\.\s/m.test(text),                   // Numbered lists
+      /\[.*\]\(.*\)/.test(text),                   // Links
+      /^```/m.test(text),                          // Code blocks
+      /^\|.*\|$/m.test(text),                      // Tables
+      /^>\s/m.test(text)                           // Blockquotes
+    ];
+    
+    // Check for strong indicators that should trigger markdown rendering alone
+    const strongIndicators = [
+      /^#{1,6}\s/m.test(text),                     // Headers
+      /^```/m.test(text),                          // Code blocks  
+      /^\|.*\|$/m.test(text) && /^\|[-\s\|:]+\|$/m.test(text), // Tables with separator row
+    ];
+    
+    // Trigger if we have strong indicators OR 2+ regular indicators
+    return strongIndicators.some(Boolean) || indicators.filter(Boolean).length >= 2;
+  }
+
   private cleanup(): void {
     this.pty = null;
   }

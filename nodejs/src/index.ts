@@ -54,6 +54,10 @@ program
     session.on('code', (code: string, language: string) => {
       ui.displayCode(code, language);
     });
+
+    session.on('markdown', (content: string) => {
+      ui.displayMarkdown(content);
+    });
     
     ui.on('input', (message: string) => {
       session.sendMessage(message);
