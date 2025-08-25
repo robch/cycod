@@ -1,2 +1,2 @@
-**/chat-history*.jsonl
-**/trajectory*.md
+**/*chat-history*.jsonl
+**/*trajectory*.md

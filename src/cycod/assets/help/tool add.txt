@@ -1,0 +1,38 @@
+CYCOD TOOL ADD
+
+  Create a new custom tool.
+
+USAGE: cycod tool add TOOL_NAME [options]
+
+ARGUMENTS
+
+  TOOL_NAME         Name for the new tool (alphanumeric with hyphens)
+
+OPTIONS
+
+  BASIC OPTIONS
+
+    --description DESCRIPTION   Short description of what the tool does
+
+  SCOPE OPTIONS
+
+    --global, -g         Create tool in global scope (all users)
+    --user, -u           Create tool in user scope (current user)
+    --local, -l          Create tool in local scope (current project, default)
+    --any, -a            Create tool in the first scope where possible
+
+EXAMPLES
+
+  EXAMPLE 1: Create a simple tool
+    cycod tool add weather-lookup --description "Get weather for a location"
+
+  EXAMPLE 2: Create a tool in the user scope
+    cycod tool add search-code --description "Search for code patterns" --user
+
+SEE ALSO
+
+  cycod help tool
+  cycod help tool list
+  cycod help tool get
+  cycod help tool remove
+  cycod help tool run

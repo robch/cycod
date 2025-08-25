@@ -1,0 +1,66 @@
+CYCOD TOOLS
+
+  Custom tools allow you to define, share, and execute shell commands as named tools with parameters.
+  These tools can be used both by LLMs through function calling and by humans on the command line.
+
+FEATURES
+
+  - Define shell commands with a consistent interface
+  - Add parameters with descriptions and default values
+  - Create multi-step tools for complex operations
+  - Share tools across multiple scopes (local, user, global)
+  - Categorize tools with tags for organization and security
+
+USAGE
+
+  ENABLING TOOLS
+    cycod --use-tool NAME            Enable a specific tool
+    cycod --use-tools "NAME1 NAME2"  Enable multiple tools
+    cycod --use-tools "*"            Enable all available tools
+    cycod --no-tools                 Disable all tools
+
+  TOOL APPROVAL
+    cycod --auto-approve-tool NAME   Auto-approve a specific tool
+    cycod --auto-approve-tool read   Auto-approve all read-only tools
+    cycod --auto-approve-tool tag:category  Auto-approve tools with specific tag
+
+  MANAGING TOOLS
+    cycod tool add NAME [options]       Add a new tool
+    cycod tool get NAME [options]       View a tool's definition
+    cycod tool list [options]           List available tools
+    cycod tool remove NAME [options]    Remove a tool
+    cycod tool run NAME [options]       Execute a tool
+
+SCOPE OPTIONS
+    
+    --global, -g                        Use the global scope (all users)
+    --user, -u                          Use the user scope (current user)
+    --local, -l                         Use the local scope (current project)
+    --any, -a                           Use all scopes (default for most commands)
+
+EXAMPLES
+
+  EXAMPLE 1: Create a simple weather lookup tool
+
+    cycod tool add weather-lookup --description "Get weather for a location"
+
+  EXAMPLE 2: Enable and use a tool in a conversation
+
+    cycod --use-tool weather-lookup --question "What's the weather like in London?"
+
+  EXAMPLE 3: Auto-approve a tool for secure operation
+
+    cycod --auto-approve-tool weather-lookup --use-tool weather-lookup --question "Check the weather"
+
+  EXAMPLE 4: Run a tool directly with parameters
+
+    cycod tool run weather-lookup --param LOCATION=London
+
+SEE ALSO
+
+  cycod help tool
+  cycod help tool add
+  cycod help tool get
+  cycod help tool list
+  cycod help tool remove
+  cycod help tool run
