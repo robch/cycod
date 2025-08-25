@@ -1,0 +1,33 @@
+CYCOD TOOL LIST
+
+  List all available tools across scopes.
+
+USAGE: cycod tool list [options]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    List tools from global scope (all users)
+    --user, -u      List tools from user scope (current user)
+    --local, -l     List tools from local scope (current project)
+    --any, -a       List tools from all scopes (default)
+
+EXAMPLES
+
+  EXAMPLE 1: List all available tools
+    cycod tool list
+
+  EXAMPLE 2: List only user tools
+    cycod tool list --user
+
+  EXAMPLE 3: List only global tools
+    cycod tool list --global
+
+SEE ALSO
+
+  cycod help tool
+  cycod help tool get
+  cycod help tool add
+  cycod help tool remove
+  cycod help tool run

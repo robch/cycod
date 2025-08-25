@@ -108,7 +108,7 @@ public class FunctionFactory
         ConsoleHelpers.WriteDebugLine($"Count of functions in factory: {_functions.Count}");
     }
 
-    public IEnumerable<AITool> GetAITools()
+    public virtual IEnumerable<AITool> GetAITools()
     {
         return _functions.Select(x => x.Value.Function);
     }

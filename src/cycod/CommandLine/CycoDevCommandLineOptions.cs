@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -45,7 +44,8 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                commandName == "config" ||
                commandName == "github" ||
                commandName == "mcp" ||
-               commandName == "prompt";
+               commandName == "prompt" ||
+               commandName == "tool";
     }
 
     override protected Command? NewDefaultCommand()
@@ -74,6 +74,11 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             "prompt get" => new PromptGetCommand(),
             "prompt create" => new PromptCreateCommand(),
             "prompt delete" => new PromptDeleteCommand(),
+            "tool list" => new ToolListCommand(),
+            "tool get" => new ToolGetCommand(),
+            "tool add" => new ToolAddCommand(),
+            "tool remove" => new ToolRemoveCommand(),
+            "tool run" => new ToolRunCommand(),
             "mcp list" => new McpListCommand(),
             "mcp get" => new McpGetCommand(),
             "mcp add" => new McpAddCommand(),
@@ -89,7 +94,8 @@ public class CycoDevCommandLineOptions : CommandLineOptions
                TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
                TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
                TryParsePromptCommandOptions(command as PromptBaseCommand, args, ref i, arg) ||
-               TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg);
+               TryParseMcpCommandOptions(command as McpBaseCommand, args, ref i, arg) ||
+               TryParseToolCommandOptions(command as ToolBaseCommand, args, ref i, arg);
     }
 	
 	override protected bool TryParseOtherCommandArg(Command? command, string arg)
@@ -205,6 +211,26 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             mcpRemoveCommand.Name = arg;
             parsedOption = true;
         }
+        else if (command is ToolGetCommand toolGetCommand && string.IsNullOrEmpty(toolGetCommand.ToolName))
+        {
+            toolGetCommand.ToolName = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolAddCommand toolAddCommand && string.IsNullOrEmpty(toolAddCommand.ToolName))
+        {
+            toolAddCommand.ToolName = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolRemoveCommand toolRemoveCommand && string.IsNullOrEmpty(toolRemoveCommand.ToolName))
+        {
+            toolRemoveCommand.ToolName = arg;
+            parsedOption = true;
+        }
+        else if (command is ToolRunCommand toolRunCommand && string.IsNullOrEmpty(toolRunCommand.ToolName))
+        {
+            toolRunCommand.ToolName = arg;
+            parsedOption = true;
+        }
 
         return parsedOption;
     }
@@ -312,6 +338,217 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (arg == "--any" || arg == "-a")
         {
             command.Scope = ConfigFileScope.Any;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private bool TryParseToolCommandOptions(ToolBaseCommand? command, string[] args, ref int i, string arg)
+    {
+        if (command == null)
+        {
+            return false;
+        }
+
+        bool parsed = true;
+
+        if (arg == "--global" || arg == "-g")
+        {
+            command.Scope = ConfigFileScope.Global;
+        }
+        else if (arg == "--user" || arg == "-u")
+        {
+            command.Scope = ConfigFileScope.User;
+        }
+        else if (arg == "--local" || arg == "-l")
+        {
+            command.Scope = ConfigFileScope.Local;
+        }
+        else if (arg == "--any" || arg == "-a")
+        {
+            command.Scope = ConfigFileScope.Any;
+        }
+        else if (command is ToolRunCommand runCommand)
+        {
+            if (arg == "--show-command")
+            {
+                runCommand.ShowCommand = true;
+            }
+            else if (arg == "--dry-run")
+            {
+                runCommand.DryRun = true;
+            }
+            else if (arg == "--timeout")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var timeoutStr = ValidateString(arg, max1Arg.FirstOrDefault(), "timeout");
+                if (timeoutStr != null && int.TryParse(timeoutStr, out var timeout))
+                {
+                    runCommand.Timeout = timeout;
+                }
+                i += max1Arg.Count();
+            }
+            else if (arg == "--param")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var paramArg = ValidateString(arg, max1Arg.FirstOrDefault(), "parameter");
+                if (paramArg != null)
+                {
+                    var parts = paramArg.Split(new[] { '=' }, 2);
+                    if (parts.Length == 2)
+                    {
+                        var paramName = parts[0];
+                        var paramValue = parts[1];
+                        runCommand.ParameterValues[paramName] = paramValue;
+                    }
+                    else
+                    {
+                        ConsoleHelpers.WriteErrorLine($"Invalid parameter format: {paramArg}. Use --param NAME=VALUE");
+                    }
+                }
+                i += max1Arg.Count();
+            }
+            else
+            {
+                parsed = false;
+            }
+        }
+        else if (command is ToolAddCommand addCommand)
+        {
+            if (arg == "--description")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Description = ValidateString(arg, max1Arg.FirstOrDefault(), "description") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--bash")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Bash = ValidateString(arg, max1Arg.FirstOrDefault(), "bash command") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--cmd")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Cmd = ValidateString(arg, max1Arg.FirstOrDefault(), "cmd command") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--pwsh")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Pwsh = ValidateString(arg, max1Arg.FirstOrDefault(), "powershell command") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--python")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Python = ValidateString(arg, max1Arg.FirstOrDefault(), "python command") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--run")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Run = ValidateString(arg, max1Arg.FirstOrDefault(), "run command") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--script")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Script = ValidateString(arg, max1Arg.FirstOrDefault(), "script") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--shell")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Shell = ValidateString(arg, max1Arg.FirstOrDefault(), "shell") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--working-directory")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.WorkingDirectory = ValidateString(arg, max1Arg.FirstOrDefault(), "working directory") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--timeout")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var timeoutStr = ValidateString(arg, max1Arg.FirstOrDefault(), "timeout");
+                if (timeoutStr != null && int.TryParse(timeoutStr, out var timeout))
+                {
+                    addCommand.Timeout = timeout;
+                }
+                i += max1Arg.Count();
+            }
+            else if (arg == "--input")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                addCommand.Input = ValidateString(arg, max1Arg.FirstOrDefault(), "input") ?? string.Empty;
+                i += max1Arg.Count();
+            }
+            else if (arg == "--parameter")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var paramArg = ValidateString(arg, max1Arg.FirstOrDefault(), "parameter");
+                if (paramArg != null)
+                {
+                    var parts = paramArg.Split(new[] { '=' }, 2);
+                    if (parts.Length == 2)
+                    {
+                        addCommand.AddParameter(parts[0], parts[1]);
+                    }
+                    else
+                    {
+                        ConsoleHelpers.WriteErrorLine($"Invalid parameter format: {paramArg}. Use --parameter NAME=DESCRIPTION");
+                    }
+                }
+                i += max1Arg.Count();
+            }
+            else if (arg == "--tag")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var tag = ValidateString(arg, max1Arg.FirstOrDefault(), "tag");
+                if (tag != null)
+                {
+                    addCommand.AddTag(tag);
+                }
+                i += max1Arg.Count();
+            }
+            else if (arg == "--platform")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var platform = ValidateString(arg, max1Arg.FirstOrDefault(), "platform");
+                if (platform != null)
+                {
+                    addCommand.AddPlatform(platform);
+                }
+                i += max1Arg.Count();
+            }
+            else if (arg == "--env")
+            {
+                var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+                var envArg = ValidateString(arg, max1Arg.FirstOrDefault(), "environment variable");
+                if (envArg != null)
+                {
+                    var parts = envArg.Split(new[] { '=' }, 2);
+                    if (parts.Length == 2)
+                    {
+                        addCommand.AddEnvironmentVariable(parts[0], parts[1]);
+                    }
+                    else
+                    {
+                        ConsoleHelpers.WriteErrorLine($"Invalid environment variable format: {envArg}. Use --env NAME=VALUE");
+                    }
+                }
+                i += max1Arg.Count();
+            }
+            else
+            {
+                parsed = false;
+            }
         }
         else
         {
@@ -449,6 +686,24 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             if (useAllMcps) mcpArgs.Add("*");
 
             command.UseMcps.AddRange(mcpArgs);
+        }
+        else if (arg == "--use-tool" || arg == "--use-tools")
+        {
+            var toolArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += toolArgs.Count();
+
+            var useAllTools = toolArgs.Count == 0;
+            if (useAllTools) toolArgs.Add("*");
+
+            foreach (var tool in toolArgs)
+            {
+                command.UseTools.Add(tool);
+                ConfigStore.Instance.AddToList(KnownSettings.AppUseTools, tool);
+            }
+        }
+        else if (arg == "--no-tools")
+        {
+            command.UseTools.Clear();
         }
         else if (arg == "--no-mcps")
         {
@@ -644,6 +899,43 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             var imagePatterns = ValidateStrings(arg, imageArgs, "image pattern");
             command.ImagePatterns.AddRange(imagePatterns);
             i += imageArgs.Count();
+        }
+        else if (arg == "--auto-approve")
+        {
+            var approveArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += approveArgs.Count();
+            
+            foreach (var item in approveArgs)
+            {
+                command.AutoApprove.Add(item);
+                ConfigStore.Instance.AddToList(KnownSettings.AppAutoApprove, item);
+            }
+        }
+        else if (arg == "--auto-approve-tool" || arg == "--auto-approve-tools")
+        {
+            var approveArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += approveArgs.Count();
+            
+            foreach (var item in approveArgs)
+            {
+                command.AutoApproveTools.Add(item);
+                command.AutoApprove.Add(item); // Add to general auto-approve for compatibility
+                ConfigStore.Instance.AddToList(KnownSettings.AppAutoApproveTools, item);
+                ConfigStore.Instance.AddToList(KnownSettings.AppAutoApprove, item); // For compatibility
+            }
+        }
+        else if (arg == "--auto-approve-mcp" || arg == "--auto-approve-mcps")
+        {
+            var approveArgs = GetInputOptionArgs(i + 1, args).ToList();
+            i += approveArgs.Count();
+            
+            foreach (var item in approveArgs)
+            {
+                command.AutoApproveMcps.Add(item);
+                command.AutoApprove.Add(item); // Add to general auto-approve for compatibility
+                ConfigStore.Instance.AddToList(KnownSettings.AppAutoApproveMcps, item);
+                ConfigStore.Instance.AddToList(KnownSettings.AppAutoApprove, item); // For compatibility
+            }
         }
         else
         {

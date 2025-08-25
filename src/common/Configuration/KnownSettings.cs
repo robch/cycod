@@ -59,7 +59,10 @@ public static class KnownSettings
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
-    
+    public const string AppAutoApproveTools = "App.AutoApproveTools";
+    public const string AppAutoApproveMcps = "App.AutoApproveMcps";
+    public const string AppUseTools = "App.UseTools";
+        
     #endregion
     
     #region Secret Settings
@@ -149,7 +152,10 @@ public static class KnownSettings
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
         { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
-        { AppAutoDeny, "CYCOD_AUTO_DENY" }
+        { AppAutoDeny, "CYCOD_AUTO_DENY" },
+        { AppAutoApproveTools, "CYCOD_AUTO_APPROVE_TOOLS" },
+        { AppAutoApproveMcps, "CYCOD_AUTO_APPROVE_MCPS" },
+        { AppUseTools, "CYCOD_USE_TOOLS" }
     };
     
     /// <summary>
@@ -204,7 +210,10 @@ public static class KnownSettings
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
         { AppChatCompletionTimeout, "--chat-completion-timeout" },
         { AppAutoApprove, "--auto-approve" },
-        { AppAutoDeny, "--auto-deny" }
+        { AppAutoDeny, "--auto-deny" },
+        { AppAutoApproveTools, "--auto-approve-tool" },
+        { AppAutoApproveMcps, "--auto-approve-mcp" },
+        { AppUseTools, "--use-tool" }
     };
     
     /// <summary>
@@ -222,7 +231,7 @@ public static class KnownSettings
     /// </summary>
     private static readonly List<string> _multiValueSettings = new()
     {
-        AppAutoApprove, AppAutoDeny
+        AppAutoApprove, AppAutoDeny, AppAutoApproveTools, AppAutoApproveMcps, AppUseTools
     };
 
     #endregion

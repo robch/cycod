@@ -42,9 +42,14 @@ public class ChatCommand : CommandWithVariables
         // Deep copy variables dictionary
         clone.Variables = new Dictionary<string, string>(this.Variables);
         
-        // Deep copy UseMcps and ImagePatterns
+        // Deep copy UseMcps, UseTools, and ImagePatterns
         clone.UseMcps = new List<string>(this.UseMcps);
         clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
+        clone.UseTools = new List<string>(this.UseTools);
+        clone.UseToolsScope = this.UseToolsScope;
+        clone.AutoApprove = new List<string>(this.AutoApprove);
+        clone.AutoApproveTools = new List<string>(this.AutoApproveTools);
+        clone.AutoApproveMcps = new List<string>(this.AutoApproveMcps);
         clone.ImagePatterns = new List<string>(this.ImagePatterns);
         
         return clone;
@@ -82,8 +87,11 @@ public class ChatCommand : CommandWithVariables
         UserPromptAdds = GroundUserPromptAdds();
         InputInstructions = GroundInputInstructions();
 
-        // Create the function factory and add functions.
-        var factory = new McpFunctionFactory();
+        // Load tool settings from config
+        LoadToolSettingsFromConfig();
+
+        // Create the function factory and add functions and tools
+        var factory = new CustomToolFunctionFactory();
         factory.AddFunctions(new DateAndTimeHelperFunctions());
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
         factory.AddFunctions(new BackgroundProcessHelperFunctions());
@@ -91,6 +99,16 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
         factory.AddFunctions(new ImageHelperFunctions(this));
+        
+        // Load and register tools if any are specified
+        if (UseTools.Count > 0)
+        {
+            ToolManager.LoadAndRegisterTools(factory, UseTools, UseToolsScope);
+        }
+        else
+        {
+            ConsoleHelpers.WriteDebugLine("No tools specified. Use --use-tool to enable specific tools.");
+        }
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -523,9 +541,38 @@ public class ChatCommand : CommandWithVariables
 
     private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
     {
-        var autoApprove = ShouldAutoApprove(factory, name);
-        if (autoApprove) return true;
+        // Check if the factory is a CustomToolFunctionFactory for enhanced approval logic
+        if (factory is CustomToolFunctionFactory customToolFactory)
+        {
+            // Load auto-approve defaults if needed
+            var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
+            if (needToAddAutoApproveToolDefaults) AddAutoApproveToolDefaults();
+            
+            // Load auto-deny defaults if needed
+            var needToAddAutoDenyToolDefaults = _deniedFunctionCallNames.Count == 0;
+            if (needToAddAutoDenyToolDefaults) AddAutoDenyToolDefaults();
+            
+            // Check if the function should be auto-approved or auto-denied
+            var autoDecision = customToolFactory.ShouldAutoApproveOrDeny(
+                name, 
+                _approvedFunctionCallNames, 
+                _deniedFunctionCallNames);
+                
+            if (autoDecision.HasValue)
+                return autoDecision.Value;
+        }
+        else
+        {
+            // Fall back to basic auto-approve check for non-custom tool functions
+            var autoApprove = ShouldAutoApprove(factory, name);
+            if (autoApprove) return true;
+            
+            // Fall back to basic auto-deny check
+            if (ShouldDenyFunctionCall(factory, name))
+                return false;
+        }
 
+        // If no auto-decision could be made, prompt the user
         while (true)
         {
             var approvePrompt = " Approve? (Y/n or ?) ";
@@ -847,6 +894,19 @@ public class ChatCommand : CommandWithVariables
     {
         _approvedFunctionCallNames.Add("Think");
 
+        // Add general auto-approves
+        foreach (var item in AutoApprove)
+        {
+            _approvedFunctionCallNames.Add(item);
+        }
+        
+        // Add tool-specific auto-approves
+        foreach (var item in AutoApproveTools)
+        {
+            _approvedFunctionCallNames.Add(item);
+        }
+
+        // Load from config
         var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApprove).AsList();
         foreach (var item in items)
         {
@@ -882,10 +942,47 @@ public class ChatCommand : CommandWithVariables
 
     private void AddAutoDenyToolDefaults()
     {
+        // Load from command line
+        foreach (var item in AutoApprove.Where(i => i.StartsWith("!")))
+        {
+            _deniedFunctionCallNames.Add(item.Substring(1));
+        }
+
+        // Load from config
         var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoDeny).AsList();
         foreach (var item in items)
         {
             _deniedFunctionCallNames.Add(item);
+        }
+    }
+    
+    /// <summary>
+    /// Loads tool settings from configuration.
+    /// </summary>
+    private void LoadToolSettingsFromConfig()
+    {
+        // Load UseTools settings
+        var configUseTools = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppUseTools).AsList();
+        foreach (var tool in configUseTools)
+        {
+            if (!UseTools.Contains(tool))
+                UseTools.Add(tool);
+        }
+        
+        // Load auto-approval settings
+        var configAutoApproveTools = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApproveTools).AsList();
+        foreach (var item in configAutoApproveTools)
+        {
+            if (!AutoApproveTools.Contains(item))
+                AutoApproveTools.Add(item);
+        }
+        
+        // Load MCP auto-approval settings
+        var configAutoApproveMcps = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApproveMcps).AsList();
+        foreach (var item in configAutoApproveMcps)
+        {
+            if (!AutoApproveMcps.Contains(item))
+                AutoApproveMcps.Add(item);
         }
     }
 
@@ -911,6 +1008,13 @@ public class ChatCommand : CommandWithVariables
 
     public List<string> UseMcps = new();
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
+    
+    // Tool management properties
+    public List<string> UseTools = new();
+    public ConfigFileScope UseToolsScope = ConfigFileScope.Any;
+    public List<string> AutoApprove = new();
+    public List<string> AutoApproveTools = new();
+    public List<string> AutoApproveMcps = new();
     
     public List<string> ImagePatterns = new();
 
