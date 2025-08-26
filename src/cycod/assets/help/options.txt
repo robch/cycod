@@ -52,6 +52,7 @@ USAGE: cycod [...]
     --use-gemini                          Prefer use of Google Gemini
     --use-grok                            Prefer use of Grok (x.ai)
     --use-openai                          Prefer use of OpenAI API as the chat provider
+    --use-ollama                          Prefer use of a local Ollama server (OpenAI-compatible)
 
   ANTHROPIC OPTIONS                       (see: cycod help use anthropic)
     --anthropic-api-key KEY               Use a specific API key for Anthropic
@@ -80,6 +81,10 @@ USAGE: cycod [...]
   OPENAI OPTIONS                          (see: cycod help use openai)
     --openai-api-key KEY                  Use a specific API key
     --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
+
+  OLLAMA OPTIONS                          (see: cycod help use ollama)
+  --ollama-base-url URL               Use a specific API base URL (default: http://localhost:11434/v1)
+  --ollama-model-id ID                Use a specific model ID (e.g., llama3:8b, qwen2.5:0.5b)
 
   COPILOT OPTIONS                         (see: cycod help use github copilot)
     --copilot-model-name NAME             Use a specific model by name (default: claude-sonnet-4)

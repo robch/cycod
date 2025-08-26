@@ -1,0 +1,70 @@
+USE OLLAMA
+
+  AUTHENTICATION
+
+    No API key required for local Ollama.
+
+  QUICK START
+
+    EXAMPLE 1: Pull a tiny model locally (Ollama CLI)
+      ollama pull qwen2.5:0.5b
+
+    EXAMPLE 2: Run a quick test with CycoD
+      cycod chat --use-ollama -q "hello"
+
+    EXAMPLE 3: Point to a non-default server
+      cycod chat --use-ollama --ollama-base-url http://localhost:11434/v1 -q "hi"
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set model via config
+      cycod config set Ollama.ModelId qwen2.5:0.5b
+      cycod config set Ollama.ModelId llama3:8b --local
+      cycod config set Ollama.ModelId qwen2.5:7b --user
+
+    EXAMPLE 2: Set model via environment variable
+      Set OLLAMA_MODEL_ID environment variable
+
+    EXAMPLE 3: Supply model via command line
+      cycod chat --use-ollama --ollama-model-id qwen2.5:0.5b -q "hello"
+
+  POPULAR MODELS
+
+    EXAMPLE 1: Small (good for low-spec dev boxes)
+      ollama pull qwen2.5:0.5b
+      cycod chat --use-ollama --ollama-model-id qwen2.5:0.5b -q "hello"
+
+    EXAMPLE 2: Mid-size (quality vs speed)
+      ollama pull llama3:8b
+      cycod chat --use-ollama --ollama-model-id llama3:8b -q "summarize why Rust uses a borrow checker"
+
+    EXAMPLE 3: GPT-OSS (larger; needs more memory)
+      ollama pull gpt-oss:20b
+      cycod chat --use-ollama --ollama-model-id gpt-oss:20b -q "explain transformers in simple terms"
+
+  API ENDPOINT (BASE URL)
+
+    EXAMPLE 1: Set base URL via config
+      cycod config set Ollama.BaseUrl http://localhost:11434/v1
+      cycod config set Ollama.BaseUrl http://127.0.0.1:11434/v1 --local
+      cycod config set Ollama.BaseUrl http://my-host:11434/v1 --user
+
+    EXAMPLE 2: Set base URL via environment variable
+      Set OLLAMA_BASE_URL environment variable (default: http://localhost:11434/v1)
+
+    EXAMPLE 3: Supply base URL via command line
+      cycod chat --use-ollama --ollama-base-url http://localhost:11434/v1 -q "hello"
+
+  FUNCTION CALLING
+
+    In this release, CycoD uses Ollama for chat completion only.
+    Function tools are not enabled with Ollama.
+
+  TROUBLESHOOTING
+
+    - model "X" not found
+        Run:  ollama pull <model-id>
+
+    - out of memory / slow generation
+        Try a smaller model (e.g., qwen2.5:0.5b or llama3:8b), close other GPU apps,
+        or use a quantized/compact variant if available.
