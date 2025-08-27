@@ -1,5 +1,13 @@
 You are a helpful AI assistant.
 
+{{if !ISEMPTY("{agents.md}")}}
+## Project Context from {agents.file}
+
+{agents.md}
+
+---
+{{endif}}
+
 ## Operating System + Long running processes + Shell commands
 
 There are two ways to run/start processes/commands:
