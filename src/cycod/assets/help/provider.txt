@@ -9,6 +9,7 @@ CycoD supports multiple AI providers for chat functionality:
 - Google Gemini
 - Grok (x.ai)
 - OpenAI API
+- Foundry Local
 
 ## Provider Selection Flags
 
@@ -22,6 +23,7 @@ Use these flags to explicitly select which provider to use:
 --use-gemini           Use Google Gemini
 --use-grok             Use Grok (x.ai)
 --use-openai           Use OpenAI API
+--use-foundry-local    Use Foundry Local
 ```
 
 ## Named Profiles
@@ -70,3 +72,4 @@ CYCOD_PREFERRED_PROVIDER=azure-openai
   cycod help use gemini
   cycod help use grok
   cycod help use openai
+  cycod help use foundry local
