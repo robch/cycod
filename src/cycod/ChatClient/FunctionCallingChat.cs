@@ -13,6 +13,8 @@ public class FunctionCallingChat : IAsyncDisposable
             ? chatClient.AsBuilder().UseFunctionInvocation().Build()
             : chatClient;
 
+        var toolsDisabled = (options?.ToolMode ?? ChatToolMode.Auto) == ChatToolMode.None;
+
         var tools = _functionFactory.GetAITools().ToList();
         ConsoleHelpers.WriteDebugLine($"FunctionCallingChat: Found {tools.Count} tools in FunctionFactory");
 
@@ -20,8 +22,8 @@ public class FunctionCallingChat : IAsyncDisposable
         _options = new ChatOptions()
         {
             ModelId = options?.ModelId,
-            ToolMode = options?.ToolMode,
-            Tools = tools,
+            ToolMode = toolsDisabled ? ChatToolMode.None : (options?.ToolMode ?? ChatToolMode.Auto),
+            Tools = toolsDisabled ? new List<AITool>() : tools,
             MaxOutputTokens = maxOutputTokens.HasValue
                 ? maxOutputTokens.Value
                 : options?.MaxOutputTokens,
@@ -51,7 +53,7 @@ public class FunctionCallingChat : IAsyncDisposable
             maxPromptTokenTarget: maxPromptTokenTarget,
             maxChatTokenTarget: maxChatTokenTarget);
     }
-    
+
     public void AddUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
     {
         foreach (var userMessage in userMessages)
@@ -109,12 +111,16 @@ public class FunctionCallingChat : IAsyncDisposable
         messageCallback?.Invoke(_messages);
 
         var contentToReturn = string.Empty;
+        var toolsDisabled = (_options.ToolMode ?? ChatToolMode.Auto) == ChatToolMode.None;
         while (true)
         {
             var responseContent = string.Empty;
             await foreach (var update in _chatClient.GetStreamingResponseAsync(_messages, _options))
             {
-                _functionCallDetector.CheckForFunctionCall(update);
+                if (!toolsDisabled)
+                {
+                    _functionCallDetector.CheckForFunctionCall(update);
+                }
 
                 var content = string.Join("", update.Contents
                     .Where(c => c is TextContent)
@@ -133,7 +139,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 streamingCallback?.Invoke(update);
             }
 
-            if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
+            if (!toolsDisabled && TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
             {
                 _functionCallDetector.Clear();
                 continue;
@@ -150,7 +156,7 @@ public class FunctionCallingChat : IAsyncDisposable
     {
         var noFunctionsToCall = !_functionCallDetector.HasFunctionCalls();
         if (noFunctionsToCall) return false;
-        
+
         var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
 
         var emptyResponseContent = string.IsNullOrEmpty(responseContent);

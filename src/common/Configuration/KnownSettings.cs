@@ -13,13 +13,13 @@ public static class KnownSettings
     // Anthropic settings
     public const string AnthropicApiKey = "Anthropic.ApiKey";
     public const string AnthropicModelName = "Anthropic.ModelName";
-    
+
     // AWS Bedrock settings
     public const string AWSBedrockAccessKey = "AWS.Bedrock.AccessKey";
     public const string AWSBedrockSecretKey = "AWS.Bedrock.SecretKey";
     public const string AWSBedrockRegion = "AWS.Bedrock.Region";
     public const string AWSBedrockModelId = "AWS.Bedrock.ModelId";
-    
+
     // Google Gemini settings
     public const string GoogleGeminiApiKey = "Google.Gemini.ApiKey";
     public const string GoogleGeminiModelId = "Google.Gemini.ModelId";
@@ -33,15 +33,19 @@ public static class KnownSettings
     public const string AzureOpenAIApiKey = "Azure.OpenAI.ApiKey";
     public const string AzureOpenAIEndpoint = "Azure.OpenAI.Endpoint";
     public const string AzureOpenAIChatDeployment = "Azure.OpenAI.ChatDeployment";
-    
+
     // OpenAI settings
     public const string OpenAIApiKey = "OpenAI.ApiKey";
     public const string OpenAIEndpoint = "OpenAI.Endpoint";
     public const string OpenAIChatModelName = "OpenAI.ChatModelName";
-    
+
+    //Ollama settings
+    public const string OllamaBaseUrl = "Ollama.BaseUrl";
+    public const string OllamaModelId = "Ollama.ModelId";
+
     // GitHub settings
     public const string GitHubToken = "GitHub.Token";
-    
+
     // Copilot settings
     public const string CopilotModelName = "Copilot.ModelName";
     public const string CopilotApiEndpoint = "Copilot.ApiEndpoint";
@@ -59,11 +63,11 @@ public static class KnownSettings
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
-    
+
     #endregion
-    
+
     #region Secret Settings
-    
+
     /// <summary>
     /// Collection of known setting names that should be treated as secrets.
     /// </summary>
@@ -91,11 +95,11 @@ public static class KnownSettings
         // GitHub secrets
         GitHubToken,
     };
-    
+
     #endregion
-    
+
     #region Setting Format Mappings
-    
+
     /// <summary>
     /// Mapping from dot notation to environment variable format.
     /// </summary>
@@ -129,6 +133,10 @@ public static class KnownSettings
         { OpenAIApiKey, "OPENAI_API_KEY" },
         { OpenAIEndpoint, "OPENAI_ENDPOINT" },
         { OpenAIChatModelName, "OPENAI_CHAT_MODEL_NAME" },
+
+        //Ollama mappings
+        { OllamaBaseUrl, "OLLAMA_BASE_URL" },
+        { OllamaModelId, "OLLAMA_MODEL_ID" },
         
         // GitHub mappings
         { GitHubToken, "GITHUB_TOKEN" },
@@ -151,7 +159,7 @@ public static class KnownSettings
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
         { AppAutoDeny, "CYCOD_AUTO_DENY" }
     };
-    
+
     /// <summary>
     /// Mapping from dot notation to CLI option format.
     /// </summary>
@@ -185,6 +193,10 @@ public static class KnownSettings
         { OpenAIApiKey, "--openai-api-key" },
         { OpenAIEndpoint, "--openai-endpoint" },
         { OpenAIChatModelName, "--openai-chat-model-name" },
+
+        // Ollama mappings
+        { OllamaBaseUrl, "--ollama-base-url" },
+        { OllamaModelId, "--ollama-model-id" },
         
         // GitHub mappings
         { GitHubToken, "--github-token" },
@@ -206,12 +218,12 @@ public static class KnownSettings
         { AppAutoApprove, "--auto-approve" },
         { AppAutoDeny, "--auto-deny" }
     };
-    
+
     /// <summary>
     /// Mapping from environment variable format to dot notation.
     /// </summary>
     private static readonly Dictionary<string, string> _envVarToDotMap;
-    
+
     /// <summary>
     /// Mapping from CLI option format to dot notation.
     /// </summary>
@@ -237,7 +249,7 @@ public static class KnownSettings
         AnthropicApiKey,
         AnthropicModelName
     };
-    
+
     /// <summary>
     /// Collection of settings for AWS Bedrock integration.
     /// </summary>
@@ -248,7 +260,7 @@ public static class KnownSettings
         AWSBedrockRegion,
         AWSBedrockModelId
     };
-    
+
     /// <summary>
     /// Collection of settings for Google Gemini integration.
     /// </summary>
@@ -257,7 +269,7 @@ public static class KnownSettings
         GoogleGeminiApiKey,
         GoogleGeminiModelId
     };
-    
+
     /// <summary>
     /// Collection of settings for Grok integration.
     /// </summary>
@@ -277,7 +289,7 @@ public static class KnownSettings
         AzureOpenAIEndpoint,
         AzureOpenAIChatDeployment
     };
-    
+
     /// <summary>
     /// Collection of settings for OpenAI integration.
     /// </summary>
@@ -287,7 +299,16 @@ public static class KnownSettings
         OpenAIEndpoint,
         OpenAIChatModelName
     };
-    
+
+    /// <summary>
+    /// Collection of settings for Ollama integration.
+    /// </summary>
+    public static readonly HashSet<string> OllamaSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        OllamaBaseUrl,
+        OllamaModelId
+    };
+
     /// <summary>
     /// Collection of settings for GitHub integration.
     /// </summary>
@@ -295,7 +316,7 @@ public static class KnownSettings
     {
         GitHubToken
     };
-    
+
     /// <summary>
     /// Collection of settings for Copilot integration.
     /// </summary>
@@ -306,7 +327,7 @@ public static class KnownSettings
         CopilotIntegrationId,
         CopilotEditorVersion
     };
-    
+
     /// <summary>
     /// Collection of settings for application configuration.
     /// </summary>
@@ -323,16 +344,16 @@ public static class KnownSettings
         AppAutoApprove,
         AppAutoDeny
     };
-    
+
     #endregion
-    
+
     static KnownSettings()
     {
         // Initialize reverse mappings
         _envVarToDotMap = _dotToEnvVarMap.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
         _cliOptionToDotMap = _dotToCLIOptionMap.ToDictionary(kvp => kvp.Value, kvp => kvp.Key, StringComparer.OrdinalIgnoreCase);
     }
-    
+
     /// <summary>
     /// Checks if the given key is a known setting.
     /// </summary>
@@ -345,7 +366,7 @@ public static class KnownSettings
         if (_cliOptionToDotMap.ContainsKey(key)) return true;
         return false;
     }
-    
+
     /// <summary>
     /// Checks if the given key is a secret value that should be obfuscated.
     /// </summary>
@@ -356,7 +377,7 @@ public static class KnownSettings
         var dotNotationKey = ToDotNotation(key);
         return _secretSettings.Contains(dotNotationKey);
     }
-    
+
     /// <summary>
     /// Gets all known setting names in dot notation format.
     /// </summary>
@@ -376,7 +397,7 @@ public static class KnownSettings
         var dotNotationKey = ToDotNotation(key);
         return _multiValueSettings.Contains(dotNotationKey, StringComparer.OrdinalIgnoreCase);
     }
-    
+
     /// <summary>
     /// Gets the canonical form of a known setting key.
     /// </summary>
@@ -418,7 +439,7 @@ public static class KnownSettings
         // Otherwise, just return it
         return key;
     }
-    
+
     /// <summary>
     /// Converts a setting name to CLI option format.
     /// </summary>
@@ -427,20 +448,20 @@ public static class KnownSettings
     public static string ToCLIOption(string key)
     {
         if (IsCLIOptionFormat(key)) return key;
-        
+
         // Try to map to a CLI option
         var dotNotationKey = ToDotNotation(key);
         if (_dotToCLIOptionMap.TryGetValue(dotNotationKey, out string? cliOption))
         {
             return cliOption;
         }
-        
+
         // Otherwise, use a general algorithm
         var parts = dotNotationKey.Split('.');
         var kebabParts = parts.Select(p => ToKebabCase(p));
         return "--" + string.Join("-", kebabParts).ToLowerInvariant();
     }
-    
+
     /// <summary>
     /// Converts a setting name to dot notation format.
     /// </summary>
@@ -456,7 +477,7 @@ public static class KnownSettings
                 return dotNotation;
             }
         }
-        
+
         // If it's a CLI option format
         if (IsCLIOptionFormat(key))
         {
@@ -464,7 +485,7 @@ public static class KnownSettings
             {
                 return dotNotation;
             }
-            
+
             // Remove leading -- and convert kebab-case to PascalCase with dots
             var trimmed = key.TrimStart('-');
             var parts = trimmed.Split('-');
@@ -475,13 +496,13 @@ public static class KnownSettings
                     parts[i] = char.ToUpper(parts[i][0]) + parts[i].Substring(1).ToLower();
                 }
             }
-            
+
             return string.Join(".", parts);
         }
 
         return key;
     }
-    
+
     /// <summary>
     /// Determines if the given key is in environment variable format.
     /// </summary>
@@ -491,7 +512,7 @@ public static class KnownSettings
     {
         return Regex.IsMatch(key, "^[A-Z0-9_]+$");
     }
-    
+
     /// <summary>
     /// Determines if the given key is in CLI option format.
     /// </summary>
@@ -501,7 +522,7 @@ public static class KnownSettings
     {
         return key.StartsWith("--");
     }
-    
+
     /// <summary>
     /// Converts a string from PascalCase to kebab-case.
     /// </summary>
@@ -511,7 +532,7 @@ public static class KnownSettings
     {
         if (string.IsNullOrEmpty(input))
             return input;
-        
+
         // Insert a hyphen before each uppercase letter that follows a lowercase letter
         var result = Regex.Replace(input, "(?<!^)([A-Z])", "-$1");
         return result.ToLowerInvariant();

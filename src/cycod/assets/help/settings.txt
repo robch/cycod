@@ -238,6 +238,7 @@ USE APP SETTINGS
       cycod config set App.PreferredProvider gemini
       cycod config set App.PreferredProvider grok
       cycod config set App.PreferredProvider openai
+      cycod config set App.PreferredProvider ollama
 
     EXAMPLE 2: Set preferred AI provider via environment variable
 
@@ -259,6 +260,7 @@ USE APP SETTINGS
       cycod chat --use-google
       cycod chat --use-grok
       cycod chat --use-openai
+      cycod chat --use-ollama
 
 SEE ALSO
 

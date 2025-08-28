@@ -69,7 +69,7 @@ public static class ChatClientFactory
         {
             ModelId = modelId
         };
-        
+
         ConsoleHelpers.WriteDebugLine("Using Google Gemini API credentials for authentication");
         return client;
     }
@@ -96,7 +96,7 @@ public static class ChatClientFactory
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var runtime = new AmazonBedrockRuntimeClient(accessKey, secretKey, regionEndpoint);
         var chatClient = runtime.AsIChatClient();
-        
+
         options = new ChatOptions
         {
             ModelId = modelId,
@@ -107,6 +107,31 @@ public static class ChatClientFactory
         ConsoleHelpers.WriteDebugLine("Using AWS Bedrock API credentials for authentication");
         return chatClient;
     }
+
+    public static IChatClient CreateOllamaChatClient(out ChatOptions? options)
+    {
+
+        var baseUrl = EnvironmentHelpers.FindEnvVar("OLLAMA_BASE_URL")
+                    ?? "http://localhost:11434/v1";
+        var modelId = EnvironmentHelpers.FindEnvVar("OLLAMA_MODEL_ID")
+                    ?? "gpt-oss:20b";
+
+        var chatClient = new OpenAI.Chat.ChatClient(
+            modelId,
+            new System.ClientModel.ApiKeyCredential("ollama-local"),
+            InitOpenAIClientOptions(baseUrl)
+        );
+
+        options = new ChatOptions
+        {
+            ModelId = modelId,
+            ToolMode = ChatToolMode.None
+        };
+
+        ConsoleHelpers.WriteDebugLine($"Using Ollama at {baseUrl} with model {modelId}");
+        return chatClient.AsIChatClient();
+    }
+
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
     {
@@ -170,13 +195,13 @@ public static class ChatClientFactory
             {
                 return CreateAnthropicChatClientWithApiKey(out options);
             }
-            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") && 
+            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
             {
                 return CreateAWSBedrockChatClient(out options);
             }
-            else if ((preferredProvider == "google" || preferredProvider == "gemini" || preferredProvider == "google-gemini") && 
+            else if ((preferredProvider == "google" || preferredProvider == "gemini" || preferredProvider == "google-gemini") &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
             {
                 return CreateGeminiChatClient(out options);
@@ -193,6 +218,10 @@ public static class ChatClientFactory
             else if (preferredProvider == "openai" && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY")))
             {
                 return CreateOpenAIChatClientWithApiKey();
+            }
+            else if (preferredProvider == "ollama")
+            {
+                return CreateOllamaChatClient(out options);
             }
 
             // If preferred provider credentials aren't available, warn the user
@@ -243,6 +272,12 @@ public static class ChatClientFactory
         {
             return CreateOpenAIChatClientWithApiKey();
         }
+
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OLLAMA_BASE_URL")) || !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OLLAMA_MODEL_ID")))
+        {
+            return CreateOllamaChatClient(out options);
+        }
+
 
         return null;
     }
@@ -296,7 +331,12 @@ public static class ChatClientFactory
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
                     - OPENAI_ENDPOINT (optional)
-                    - OPENAI_CHAT_MODEL_NAME (optional)"
+                    - OPENAI_CHAT_MODEL_NAME (optional)
+
+                    To use Ollama (OpenAI-compatible local server), please set:
+                    - OLLAMA_BASE_URL (optional, default: http://localhost:11434/v1)
+                    - OLLAMA_MODEL_ID (optional, default: gpt-oss:20b)
+                    Tip for low-spec dev boxes: set OLLAMA_MODEL_ID=llama3:8b"
                 .Split(new[] { '\n' })
                 .Select(line => line.Trim()));
 
