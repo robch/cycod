@@ -11,7 +11,6 @@ CycoD is a command-line interface (CLI) application that provides a chat-based i
   - Run shell commands (Bash, CMD, PowerShell) with persistent sessions
   - Manipulate files (view, create, edit, replace text)
   - Access date and time information
-  - **GUI Interactions** (Windows only): Show dialogs for user input, file selection, and notifications
 - **Comprehensive Configuration System**: 
   - Multiple configuration scopes (global, user, local)
   - Profile support for different configurations
@@ -178,7 +177,6 @@ For more detailed documentation, see:
 - [Getting Started](docs/getting-started.md)
 - [Command Line Options](docs/cli-options.md)
 - [Function Calling](docs/function-calling.md)
-- [GUI Functions](docs/gui-functions.md) - Windows GUI interaction functions
 - [Creating Aliases](docs/aliases.md)
 - [Chat History](docs/chat-history.md)
 - [Slash Commands](#chat-commands) - Special commands during chat sessions
