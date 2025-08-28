@@ -614,6 +614,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot-token");
         }
+        else if (arg == "--use-foundry-local")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "foundry-local");
+        }
         else if (arg == "--grok-api-key")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);

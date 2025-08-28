@@ -52,6 +52,12 @@ USAGE: cycod [...]
     --use-gemini                          Prefer use of Google Gemini
     --use-grok                            Prefer use of Grok (x.ai)
     --use-openai                          Prefer use of OpenAI API as the chat provider
+    --use-foundry-local                   Prefer use of Foundry Local (OpenAI-compatible local service)
+
+  COPILOT OPTIONS                         (see: cycod help use github copilot)
+    --copilot-model-name NAME             Use a specific model by name (default: claude-sonnet-4)
+    --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
+    --github-token TOKEN                  Use a specific GitHub authentication token
 
   ANTHROPIC OPTIONS                       (see: cycod help use anthropic)
     --anthropic-api-key KEY               Use a specific API key for Anthropic
@@ -81,10 +87,9 @@ USAGE: cycod [...]
     --openai-api-key KEY                  Use a specific API key
     --openai-chat-model-name NAME         Use a specific chat model (default: gpt-4o)
 
-  COPILOT OPTIONS                         (see: cycod help use github copilot)
-    --copilot-model-name NAME             Use a specific model by name (default: claude-sonnet-4)
-    --copilot-api-endpoint URL            Use a specific API endpoint (default: https://api.githubcopilot.com)
-    --github-token TOKEN                  Use a specific GitHub authentication token
+  FOUNDRY LOCAL                           (see: cycod help use foundry local)
+    --foundry-local-endpoint URL          Use a specific API base URL (e.g., http://127.0.0.1:51328/v1)
+    --foundry-local-model-id NAME         Use a specific model (exact from /openai/models, e.g., qwen2.5-0.5b-instruct-generic-cpu)
 
   CONFIGURATION
     --config FILE1 [FILE2 [...]]          Load configuration from YAML or INI files
