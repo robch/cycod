@@ -12,6 +12,10 @@ using OpenAI.Chat;
 using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+
 
 public static class ChatClientFactory
 {
@@ -69,7 +73,7 @@ public static class ChatClientFactory
         {
             ModelId = modelId
         };
-        
+
         ConsoleHelpers.WriteDebugLine("Using Google Gemini API credentials for authentication");
         return client;
     }
@@ -96,7 +100,7 @@ public static class ChatClientFactory
         var regionEndpoint = RegionEndpoint.GetBySystemName(region);
         var runtime = new AmazonBedrockRuntimeClient(accessKey, secretKey, regionEndpoint);
         var chatClient = runtime.AsIChatClient();
-        
+
         options = new ChatOptions
         {
             ModelId = modelId,
@@ -107,6 +111,62 @@ public static class ChatClientFactory
         ConsoleHelpers.WriteDebugLine("Using AWS Bedrock API credentials for authentication");
         return chatClient;
     }
+
+    public static IChatClient CreateFoundryLocalChatClient(out ChatOptions? options)
+    {
+        var rawEndpoint = EnvironmentHelpers.FindEnvVar("FOUNDRY_LOCAL_ENDPOINT")
+                        ?? "http://127.0.0.1:51328";
+        var configuredModel = EnvironmentHelpers.FindEnvVar("FOUNDRY_LOCAL_MODEL_ID");
+
+        var baseRoot = rawEndpoint.TrimEnd('/');
+        var openAiV1 = baseRoot + "/v1";
+        var mgmtRoot = baseRoot + "/openai";
+
+        using var http = new HttpClient { BaseAddress = new Uri(baseRoot) };
+        http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", "local-foundry");
+
+        var health = http.GetAsync("/openai/status").GetAwaiter().GetResult();
+        if (!health.IsSuccessStatusCode)
+        {
+            throw new Exception($"Foundry Local not healthy at {baseRoot} (/openai/status → {(int)health.StatusCode}).");
+        }
+
+        var modelId = configuredModel;
+        if (string.IsNullOrWhiteSpace(modelId))
+        {
+            var models = http.GetFromJsonAsync<string[]>("/openai/models").GetAwaiter().GetResult();
+            if (models == null || models.Length == 0)
+                throw new Exception("Foundry Local returned no models from /openai/models.");
+            modelId = models[0];
+            ConsoleHelpers.WriteDebugLine($"FOUNDRY_LOCAL_MODEL_ID not set; using '{modelId}'.");
+        }
+
+        // Load model (keep it hot for an hour)
+        var load = http.GetAsync($"/openai/load/{Uri.EscapeDataString(modelId)}?ttl=3600").GetAwaiter().GetResult();
+        if (!load.IsSuccessStatusCode)
+        {
+            var body = load.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            throw new Exception($"Failed to load model '{modelId}': {(int)load.StatusCode} {load.StatusCode}\n{body}");
+        }
+
+        var optionsClient = InitOpenAIClientOptions(openAiV1, authHeader: null);
+        var chatClient = new OpenAI.Chat.ChatClient(
+            modelId!,
+            new ApiKeyCredential("local-foundry"),
+            optionsClient
+        );
+
+        options = new ChatOptions
+        {
+            ModelId = modelId,
+            ToolMode = ChatToolMode.None
+        };
+
+        ConsoleHelpers.WriteDebugLine($"Using Foundry Local at {openAiV1} with model {modelId}");
+        return chatClient.AsIChatClient();
+    }
+
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
     {
@@ -170,13 +230,13 @@ public static class ChatClientFactory
             {
                 return CreateAnthropicChatClientWithApiKey(out options);
             }
-            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") && 
+            else if ((preferredProvider == "aws" || preferredProvider == "bedrock" || preferredProvider == "aws-bedrock") &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_SECRET_KEY")))
             {
                 return CreateAWSBedrockChatClient(out options);
             }
-            else if ((preferredProvider == "google" || preferredProvider == "gemini" || preferredProvider == "google-gemini") && 
+            else if ((preferredProvider == "google" || preferredProvider == "gemini" || preferredProvider == "google-gemini") &&
                     !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
             {
                 return CreateGeminiChatClient(out options);
@@ -193,6 +253,10 @@ public static class ChatClientFactory
             else if (preferredProvider == "openai" && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY")))
             {
                 return CreateOpenAIChatClientWithApiKey();
+            }
+            else if (preferredProvider == "foundry-local" || preferredProvider == "foundry")
+            {
+                return CreateFoundryLocalChatClient(out options);
             }
 
             // If preferred provider credentials aren't available, warn the user
@@ -242,6 +306,11 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY")))
         {
             return CreateOpenAIChatClientWithApiKey();
+        }
+
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("FOUNDRY_LOCAL_ENDPOINT")))
+        {
+            return CreateFoundryLocalChatClient(out options);
         }
 
         return null;
@@ -296,7 +365,11 @@ public static class ChatClientFactory
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
                     - OPENAI_ENDPOINT (optional)
-                    - OPENAI_CHAT_MODEL_NAME (optional)"
+                    - OPENAI_CHAT_MODEL_NAME (optional)
+
+                    To use Foundry Local, please set:
+                    - FOUNDRY_LOCAL_ENDPOINT
+                    - FOUNDRY_LOCAL_MODEL_ID (optional, default: gpt-oss:20b)"
                 .Split(new[] { '\n' })
                 .Select(line => line.Trim()));
 
