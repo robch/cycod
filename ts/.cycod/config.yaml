@@ -1,0 +1,4 @@
+test:
+  key: test-value
+  setting: test-value
+provider: openai
