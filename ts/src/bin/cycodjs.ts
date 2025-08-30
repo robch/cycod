@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { ConfigCommand } from '../commands/ConfigCommand';
+import { PromptCommand } from '../commands/PromptCommand';
 
 const program = new Command();
 
@@ -11,5 +12,6 @@ program
   .version('1.0.0');
 
 program.addCommand(ConfigCommand.createCommand());
+program.addCommand(PromptCommand.createCommand());
 
 program.parse(process.argv);
