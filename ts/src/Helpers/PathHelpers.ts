@@ -107,4 +107,23 @@ export class PathHelpers {
   static resolve(filePath: string): string {
     return path.resolve(this.expandPath(filePath));
   }
+
+  /**
+   * Gets the directory path for a given scope.
+   */
+  static getScopeDirectoryPath(scope: any): string | null {
+    // Handle string enum values
+    const scopeStr = scope?.toString?.()?.toLowerCase() || String(scope).toLowerCase();
+    
+    switch (scopeStr) {
+      case 'global':
+        return this.getGlobalConfigDirectory();
+      case 'user':
+        return this.getUserConfigDirectory();
+      case 'local':
+        return this.getLocalConfigDirectory();
+      default:
+        return null;
+    }
+  }
 }
