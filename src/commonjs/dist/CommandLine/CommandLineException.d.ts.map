@@ -1,0 +1,1 @@
+{"version":3,"file":"CommandLineException.d.ts","sourceRoot":"","sources":["../../src/CommandLine/CommandLineException.ts"],"names":[],"mappings":"AAAA,qBAAa,oBAAqB,SAAQ,KAAK;IAC3C,OAAO,CAAC,UAAU,CAAC,CAAS;gBAEhB,OAAO,CAAC,EAAE,MAAM,EAAE,SAAS,CAAC,EAAE,MAAM;IAMhD,YAAY,IAAI,MAAM,GAAG,SAAS;CAGrC"}

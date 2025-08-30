@@ -4,13 +4,13 @@ describe('KnownSettings', () => {
   describe('Known Settings Detection', () => {
     test('should recognize known settings', () => {
       expect(KnownSettings.isKnown('provider')).toBe(true);
-      expect(KnownSettings.isKnown('openai.token')).toBe(true);
+      expect(KnownSettings.isKnown('OpenAI.ApiKey')).toBe(true);
       expect(KnownSettings.isKnown('github.copilot.token')).toBe(true);
       expect(KnownSettings.isKnown('azure.openai.endpoint')).toBe(true);
     });
 
     test('should recognize aliases', () => {
-      expect(KnownSettings.isKnown('openai_token')).toBe(true);
+      expect(KnownSettings.isKnown('openai_api_key')).toBe(true);
       expect(KnownSettings.isKnown('copilot_token')).toBe(true);
       expect(KnownSettings.isKnown('debug')).toBe(true);
       expect(KnownSettings.isKnown('quiet')).toBe(true);
@@ -25,11 +25,11 @@ describe('KnownSettings', () => {
   describe('Canonical Form', () => {
     test('should return canonical form for known settings', () => {
       expect(KnownSettings.getCanonicalForm('provider')).toBe('provider');
-      expect(KnownSettings.getCanonicalForm('openai.token')).toBe('openai.token');
+      expect(KnownSettings.getCanonicalForm('OpenAI.ApiKey')).toBe('OpenAI.ApiKey');
     });
 
     test('should convert aliases to canonical form', () => {
-      expect(KnownSettings.getCanonicalForm('openai_token')).toBe('openai.token');
+      expect(KnownSettings.getCanonicalForm('openai_api_key')).toBe('OpenAI.ApiKey');
       expect(KnownSettings.getCanonicalForm('copilot_token')).toBe('github.copilot.token');
       expect(KnownSettings.getCanonicalForm('debug')).toBe('system.debug');
       expect(KnownSettings.getCanonicalForm('quiet')).toBe('system.quiet');
@@ -42,19 +42,19 @@ describe('KnownSettings', () => {
 
   describe('Secret Detection', () => {
     test('should identify secret settings', () => {
-      expect(KnownSettings.isSecret('openai.token')).toBe(true);
+      expect(KnownSettings.isSecret('OpenAI.ApiKey')).toBe(true);
       expect(KnownSettings.isSecret('github.copilot.token')).toBe(true);
       expect(KnownSettings.isSecret('azure.openai.token')).toBe(true);
     });
 
     test('should identify non-secret settings', () => {
       expect(KnownSettings.isSecret('provider')).toBe(false);
-      expect(KnownSettings.isSecret('openai.endpoint')).toBe(false);
+      expect(KnownSettings.isSecret('OpenAI.Endpoint')).toBe(false);
       expect(KnownSettings.isSecret('system.debug')).toBe(false);
     });
 
     test('should handle aliases for secret detection', () => {
-      expect(KnownSettings.isSecret('openai_token')).toBe(true);
+      expect(KnownSettings.isSecret('openai_api_key')).toBe(true);
       expect(KnownSettings.isSecret('copilot_token')).toBe(true);
     });
   });
@@ -71,9 +71,9 @@ describe('KnownSettings', () => {
       expect(KnownSettings.toDotNotation('github.copilot.token')).toBe('github.copilot.token');
     });
 
-    test('should convert to lowercase', () => {
-      expect(KnownSettings.toDotNotation('OPENAI_TOKEN')).toBe('openai.token');
-      expect(KnownSettings.toDotNotation('GitHub_Copilot_Token')).toBe('github.copilot.token');
+    test('should preserve casing', () => {
+      expect(KnownSettings.toDotNotation('OPENAI_TOKEN')).toBe('OPENAI.TOKEN');
+      expect(KnownSettings.toDotNotation('GitHub_Copilot_Token')).toBe('GitHub.Copilot.Token');
     });
   });
 
@@ -100,7 +100,7 @@ describe('KnownSettings', () => {
       const allSettings = KnownSettings.getAllKnownSettings();
       
       expect(allSettings).toContain('provider');
-      expect(allSettings).toContain('openai.token');
+      expect(allSettings).toContain('OpenAI.ApiKey');
       expect(allSettings).toContain('github.copilot.token');
       expect(allSettings).toContain('azure.openai.endpoint');
       expect(allSettings).toContain('system.debug');
@@ -114,7 +114,7 @@ describe('KnownSettings', () => {
   describe('Description', () => {
     test('should return description for known settings', () => {
       expect(KnownSettings.getDescription('provider')).toContain('AI provider');
-      expect(KnownSettings.getDescription('openai.token')).toContain('OpenAI');
+      expect(KnownSettings.getDescription('OpenAI.ApiKey')).toContain('OpenAI');
       expect(KnownSettings.getDescription('system.debug')).toContain('debug');
     });
 

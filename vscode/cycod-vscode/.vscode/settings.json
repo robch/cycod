@@ -1,0 +1,19 @@
+{
+    "files.exclude": {
+        "out": false,
+        "dist": false,
+        "**/*.map": true,
+        ".vscode-test": false,
+        ".vscode-test/**": true,
+        "**/.DS_Store": true
+    },
+    "search.exclude": {
+        "out": true,
+        "dist": true,
+        "**/node_modules": true,
+        "**/*.code-search": true,
+        ".vscode-test": true,
+        ".vscode-test/**": true
+    },
+    "typescript.tsc.autoDetect": "off"
+}

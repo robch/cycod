@@ -1,0 +1,1 @@
+{"version":3,"file":"INamedValues.d.ts","sourceRoot":"","sources":["../../src/Templates/INamedValues.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,YAAY;IACzB,QAAQ,CAAC,IAAI,EAAE,MAAM,GAAG,MAAM,GAAG,SAAS,CAAC;IAC3C,QAAQ,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO,CAAC;IAChC,OAAO,IAAI,MAAM,EAAE,CAAC;CACvB"}

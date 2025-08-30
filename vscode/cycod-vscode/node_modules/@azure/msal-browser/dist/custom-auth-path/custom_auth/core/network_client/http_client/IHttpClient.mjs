@@ -1,0 +1,15 @@
+/*! @azure/msal-browser v4.21.0 2025-08-19 */
+'use strict';
+/*
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * Licensed under the MIT License.
+ */
+/**
+ * Represents an HTTP method type.
+ */
+const HttpMethod = {
+    GET: "GET",
+    POST: "POST"};
+
+export { HttpMethod };
+//# sourceMappingURL=IHttpClient.mjs.map

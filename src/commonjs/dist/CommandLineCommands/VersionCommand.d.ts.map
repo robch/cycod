@@ -1,0 +1,1 @@
+{"version":3,"file":"VersionCommand.d.ts","sourceRoot":"","sources":["../../src/CommandLineCommands/VersionCommand.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,MAAM,wBAAwB,CAAC;AAEjD,qBAAa,cAAe,SAAQ,OAAO;;IAKvC,cAAc,IAAI,MAAM;IAIxB,OAAO,IAAI,OAAO;IAIZ,YAAY,CAAC,WAAW,EAAE,OAAO,GAAG,OAAO,CAAC,GAAG,CAAC;CAKzD"}

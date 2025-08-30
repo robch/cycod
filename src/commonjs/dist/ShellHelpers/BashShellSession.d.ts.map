@@ -1,0 +1,1 @@
+{"version":3,"file":"BashShellSession.d.ts","sourceRoot":"","sources":["../../src/ShellHelpers/BashShellSession.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,YAAY,EAAE,SAAS,EAAE,MAAM,gBAAgB,CAAC;AAEzD,qBAAa,gBAAiB,SAAQ,YAAY;IAC9C,SAAS,CAAC,YAAY,IAAI,SAAS;CAGtC"}

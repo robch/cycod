@@ -1,4 +1,4 @@
-import { CliTestHelper } from '../helpers/CliTestHelper';
+import { CliTestHelper } from '../utils/CliTestHelper';
 
 describe('Config Nested Keys Tests', () => {
   beforeEach(async () => {

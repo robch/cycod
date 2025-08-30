@@ -1,4 +1,4 @@
-import { CliTestHelper } from '../helpers/CliTestHelper';
+import { CliTestHelper } from '../utils/CliTestHelper';
 
 describe('Config Scope Tests', () => {
   beforeAll(async () => {

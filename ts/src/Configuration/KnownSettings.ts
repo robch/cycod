@@ -44,12 +44,12 @@ export class KnownSettings {
     ['copilot.token', 'github.copilot.token'],
     ['copilot_token', 'github.copilot.token'],
     
-    // OpenAI aliases
-    ['openai_token', 'openai.token'],
-    ['openai_api_key', 'openai.token'],
-    ['openai.api.key', 'openai.token'],
-    ['openai_endpoint', 'openai.endpoint'],
-    ['openai_model', 'openai.model'],
+    // OpenAI aliases (map to actual canonical names)
+    ['openai_api_key', 'OpenAI.ApiKey'],
+    ['openai.api.key', 'OpenAI.ApiKey'],
+    ['openai_token', 'OpenAI.ApiKey'],
+    ['openai_endpoint', 'OpenAI.Endpoint'],
+    ['openai_model', 'OpenAI.ChatModelName'],
     
     // Azure aliases
     ['azure_openai_token', 'azure.openai.token'],
@@ -130,7 +130,7 @@ export class KnownSettings {
    * Converts a key to dot notation format.
    */
   static toDotNotation(key: string): string {
-    // Keep the original casing but convert underscores to dots
+    // Convert underscores to dots while preserving original casing
     return key.replace(/_/g, '.');
   }
 

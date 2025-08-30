@@ -1,0 +1,98 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ForEachVarHelpers = void 0;
+const CommandWithVariables_1 = require("./CommandWithVariables");
+const ForEachVariable_1 = require("./ForEachVariable");
+const CommandLineException_1 = require("./CommandLineException");
+class ForEachVarHelpers {
+    static expandForEachVars(commands) {
+        return commands.flatMap(command => command instanceof CommandWithVariables_1.CommandWithVariables
+            ? this.expandCommandWithVars(command)
+            : [command]);
+    }
+    static parseForeachVarOption(args) {
+        let skipCount = 0;
+        if (args.length < 4) {
+            throw new CommandLineException_1.CommandLineException("Invalid foreach variable format. Expected: 'var name in value1 value2...'");
+        }
+        if (args[0] !== "var") {
+            throw new CommandLineException_1.CommandLineException("Invalid foreach variable format. Expected: 'var name in value1 value2...'");
+        }
+        const varName = args[1];
+        if (args[2] !== "in") {
+            throw new CommandLineException_1.CommandLineException("Invalid foreach variable format. Expected: 'var name in value1 value2...'");
+        }
+        skipCount += args.length;
+        const variableArgs = args.slice(3);
+        const treatLinesAsValues = variableArgs.length === 1 && variableArgs[0].includes('\n');
+        let values;
+        if (treatLinesAsValues) {
+            values = variableArgs[0].split(/[\r\n]/).filter(line => line.trim() !== '');
+        }
+        else {
+            values = variableArgs;
+        }
+        // Check for integer range (e.g., "1..10")
+        if (values.length === 1) {
+            const rangeMatch = this.parseIntRange(values[0]);
+            if (rangeMatch) {
+                const { start, end } = rangeMatch;
+                values = Array.from({ length: end - start + 1 }, (_, i) => (start + i).toString());
+            }
+        }
+        return {
+            variable: new ForEachVariable_1.ForEachVariable(varName, values),
+            skipCount
+        };
+    }
+    static parseIntRange(value) {
+        const parts = value.split('..');
+        if (parts.length !== 2)
+            return null;
+        const start = parseInt(parts[0], 10);
+        const end = parseInt(parts[1], 10);
+        if (isNaN(start) || isNaN(end) || start > end) {
+            return null;
+        }
+        return { start, end };
+    }
+    static expandCommandWithVars(commandWithVars) {
+        const foreachVars = commandWithVars.forEachVariables;
+        if (foreachVars.length === 0) {
+            return [commandWithVars];
+        }
+        // Generate all combinations of variable values (Cartesian product)
+        const combinations = this.generateValueCombinations(foreachVars);
+        // Create a new command for each combination
+        const expandedCommands = [];
+        for (const combination of combinations) {
+            const clonedCommand = commandWithVars.clone();
+            // Set variables for this combination
+            for (let i = 0; i < foreachVars.length; i++) {
+                const varName = foreachVars[i].name;
+                const varValue = combination[i];
+                clonedCommand.variables.set(varName, varValue);
+            }
+            expandedCommands.push(clonedCommand);
+        }
+        return expandedCommands;
+    }
+    static generateValueCombinations(foreachVars) {
+        // Start with a single empty combination
+        let combinations = [[]];
+        // For each variable, extend all existing combinations with each value of the variable
+        for (const foreachVar of foreachVars) {
+            const newCombinations = [];
+            for (const existingCombination of combinations) {
+                for (const value of foreachVar.values) {
+                    const newCombination = [...existingCombination, value];
+                    newCombinations.push(newCombination);
+                }
+            }
+            combinations = newCombinations;
+        }
+        return combinations;
+    }
+}
+exports.ForEachVarHelpers = ForEachVarHelpers;
+//# sourceMappingURL=ForEachVarHelpers.js.map

@@ -4,7 +4,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
-import { RegexMatcher } from './__tests__/helpers/CliTestHelper';
+import { RegexMatcher } from './__tests__/utils/CliTestHelper';
 
 // Add custom Jest matcher for YAML-style regex testing
 expect.extend({

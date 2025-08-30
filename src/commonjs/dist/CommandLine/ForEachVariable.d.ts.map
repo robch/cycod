@@ -1,0 +1,1 @@
+{"version":3,"file":"ForEachVariable.d.ts","sourceRoot":"","sources":["../../src/CommandLine/ForEachVariable.ts"],"names":[],"mappings":"AAAA,qBAAa,eAAe;IACxB,QAAQ,CAAC,IAAI,EAAE,MAAM,CAAC;IACtB,QAAQ,CAAC,MAAM,EAAE,MAAM,EAAE,CAAC;gBAEd,IAAI,EAAE,MAAM,EAAE,MAAM,EAAE,MAAM,EAAE;CAI7C"}
