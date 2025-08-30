@@ -52,11 +52,15 @@ export class ConfigValueHelpers {
     }
 
     if (configValue.isSecret) {
-      return '***';
+      const str = String(configValue.value);
+      // Match C# behavior: show first 2 characters for short secrets  
+      return str.length >= 2 ? str.slice(0, 2) : '***';
     }
 
     if (Array.isArray(configValue.value)) {
-      return `[${configValue.value.join(', ')}]`;
+      // For arrays, we need to format them as YAML-style lists for display
+      // This will be handled by the display logic, so return a special marker
+      return 'YAML_ARRAY_FORMAT';
     }
 
     if (typeof configValue.value === 'object') {

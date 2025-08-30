@@ -4,6 +4,26 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as os from 'os';
+import { RegexMatcher } from './__tests__/helpers/CliTestHelper';
+
+// Add custom Jest matcher for YAML-style regex testing
+expect.extend({
+  toMatchYamlRegex(received: string, pattern: string) {
+    const matches = RegexMatcher.matches(received, pattern);
+    
+    if (matches) {
+      return {
+        message: () => `Expected output NOT to match regex pattern:\n${pattern}\n\nBut it matched:\n${received}`,
+        pass: true
+      };
+    } else {
+      return {
+        message: () => `Expected output to match regex pattern:\n${pattern}\n\nActual output:\n${received}`,
+        pass: false
+      };
+    }
+  }
+});
 
 // Setup temporary directories for tests
 export const createTempDir = async (): Promise<string> => {

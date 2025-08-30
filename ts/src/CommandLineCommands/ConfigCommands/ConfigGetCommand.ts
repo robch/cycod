@@ -60,7 +60,15 @@ export class ConfigGetCommand extends ConfigBaseCommand {
 
     // Then show indented key: value (like C# DisplayConfigValue)
     const displayValue = ConfigValueHelpers.getDisplayValue(configValue);
-    ConsoleHelpers.writeLine(`  ${key}: ${displayValue}`, true);
+    if (displayValue === 'YAML_ARRAY_FORMAT' && Array.isArray(configValue.value)) {
+      // Display array in YAML format with dashes
+      ConsoleHelpers.writeLine(`  ${key}:`, true);
+      for (const item of configValue.value) {
+        ConsoleHelpers.writeLine(`    - ${item}`, true);
+      }
+    } else {
+      ConsoleHelpers.writeLine(`  ${key}: ${displayValue}`, true);
+    }
   }
 
   private getLocationPath(configValue: any): string {

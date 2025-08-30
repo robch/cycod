@@ -36,28 +36,24 @@ export class ConfigListCommand extends ConfigBaseCommand {
     const scope = scopeOrFileName as ConfigFileScope;
     const isAnyScope = scope === ConfigFileScope.Any;
     
-    if (isAnyScope || scope === ConfigFileScope.Global) {
-      await this.displayConfigSettings(ConfigFileScope.Global);
-      if (isAnyScope) ConsoleHelpers.writeLine('', true);
-    }
-
-    if (isAnyScope || scope === ConfigFileScope.User) {
-      await this.displayConfigSettings(ConfigFileScope.User);
-      if (isAnyScope) ConsoleHelpers.writeLine('', true);
-    }
-    
-    if (isAnyScope || scope === ConfigFileScope.Local) {
-      await this.displayConfigSettings(ConfigFileScope.Local);
-      if (isAnyScope) ConsoleHelpers.writeLine('', true);
-    }
-
     if (isAnyScope) {
+      // Show all scopes
+      await this.displayConfigSettings(ConfigFileScope.Global);
+      ConsoleHelpers.writeLine('', true);
+      await this.displayConfigSettings(ConfigFileScope.User);
+      ConsoleHelpers.writeLine('', true);
+      await this.displayConfigSettings(ConfigFileScope.Local);
+      ConsoleHelpers.writeLine('', true);
+      
       const commandLineValues = this._configStore.listFromCommandLineSettings();
       if (Object.keys(commandLineValues).length > 0) {
         const location = 'Command line (specified)';
         ConsoleHelpers.displayConfigSettings(location, commandLineValues);
         ConsoleHelpers.writeLine('', true);
       }
+    } else {
+      // Show only the specific scope requested
+      await this.displayConfigSettings(scope);
     }
     
     return 0;

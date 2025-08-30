@@ -92,19 +92,44 @@ export class ConfigSetCommand extends ConfigBaseCommand {
     return 0;
   }
 
-  private displayConfigValue(key: string, value: any): void {
-    if (!ConfigValueHelpers.hasValue(value)) {
-      ConsoleHelpers.writeLine(`${key}= (not set)`);
-      return;
+  private displayConfigValue(key: string, configValue: any): void {
+    // Show location header first (like C# WriteLocationHeader)
+    const locationPath = this.getLocationPath(configValue);
+    if (locationPath) {
+      ConsoleHelpers.displayLocationHeader(locationPath);
     }
-
-    const displayValue = ConfigValueHelpers.getDisplayValue(value);
-    const location = ConfigValueHelpers.getLocationDisplayName(value);
     
-    ConsoleHelpers.writeLine(`${key}=${displayValue} (${location})`);
+    // Then show indented key: value
+    const displayValue = ConfigValueHelpers.getDisplayValue(configValue);
+    ConsoleHelpers.writeLine(`  ${key}: ${displayValue}`, true);
   }
 
   private displayList(key: string, list: string[]): void {
-    ConsoleHelpers.writeLine(`${key}=[${list.join(', ')}]`);
+    // Format list as YAML-style list with dashes
+    ConsoleHelpers.writeLine(`${key}:`);
+    for (const item of list) {
+      ConsoleHelpers.writeLine(`- ${item}`);
+    }
+  }
+
+  private getLocationPath(configValue: any): string | undefined {
+    if (!ConfigValueHelpers.hasValue(configValue)) {
+      return undefined;
+    }
+
+    // Use the same method as ConfigGetCommand
+    if (!configValue || !configValue.scope) return undefined;
+    
+    const { PathHelpers } = require('../../Helpers/PathHelpers');
+    switch (configValue.scope) {
+      case 'global':
+        return `${PathHelpers.getConfigFilePath('global')} (global)`;
+      case 'user':
+        return `${PathHelpers.getConfigFilePath('user')} (user)`;
+      case 'local':
+        return `${PathHelpers.getConfigFilePath('local')} (local)`;
+      default:
+        return `${configValue.source} (${configValue.scope})`;
+    }
   }
 }

@@ -45,26 +45,13 @@ export class ConfigClearCommand extends ConfigBaseCommand {
     if (isFileNameScope) {
       // For file-based clearing, we would need to implement clearFromFile
       // For now, we'll just indicate success
-      ConsoleHelpers.writeLine(`Cleared '${normalizedKey}' from ${configFileName}`);
+      ConsoleHelpers.writeLine(`${normalizedKey}: (cleared)`);
     } else {
       await this._configStore.clear(normalizedKey, scope);
-      const scopeName = this.getScopeDisplayName(scope);
-      ConsoleHelpers.writeLine(`Cleared '${normalizedKey}' from ${scopeName} configuration`);
+      ConsoleHelpers.writeLine(`${normalizedKey}: (cleared)`);
     }
 
     return 0;
   }
 
-  private getScopeDisplayName(scope: ConfigFileScope): string {
-    switch (scope) {
-      case ConfigFileScope.Global:
-        return 'Global';
-      case ConfigFileScope.User:
-        return 'User';
-      case ConfigFileScope.Local:
-        return 'Local';
-      default:
-        return 'Unknown';
-    }
-  }
 }

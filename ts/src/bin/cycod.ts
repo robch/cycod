@@ -44,7 +44,8 @@ configCommand
   .action(async (options) => {
     try {
       const command = new ConfigListCommand();
-      command.scope = parseScopeFromFlags(options);
+      const scope = parseScopeFromFlags(options);
+      command.scope = scope;
       command.configFileName = options.configFile;
       
       const exitCode = await command.executeAsync(false);
@@ -173,10 +174,10 @@ configCommand
 
 // Helper function to parse scope from individual flags
 function parseScopeFromFlags(options: any): ConfigFileScope {
-  if (options.global) return ConfigFileScope.Global;
-  if (options.user) return ConfigFileScope.User;
-  if (options.local) return ConfigFileScope.Local;
-  if (options.any) return ConfigFileScope.Any;
+  if (options.global || options.g || options.G) return ConfigFileScope.Global;
+  if (options.user || options.u || options.U) return ConfigFileScope.User;
+  if (options.local || options.l || options.L) return ConfigFileScope.Local;
+  if (options.any || options.a || options.A) return ConfigFileScope.Any;
   
   // Default to Any for config get (matches C# behavior)
   return ConfigFileScope.Any;
@@ -184,9 +185,9 @@ function parseScopeFromFlags(options: any): ConfigFileScope {
 
 // Helper function to parse scope from individual flags for set operations
 function parseScopeFromFlagsForSet(options: any): ConfigFileScope {
-  if (options.global) return ConfigFileScope.Global;
-  if (options.user) return ConfigFileScope.User;
-  if (options.local) return ConfigFileScope.Local;
+  if (options.global || options.g || options.G) return ConfigFileScope.Global;
+  if (options.user || options.u || options.U) return ConfigFileScope.User;
+  if (options.local || options.l || options.L) return ConfigFileScope.Local;
   
   // Default to Local for config set/clear/add/remove (matches C# behavior)
   return ConfigFileScope.Local;

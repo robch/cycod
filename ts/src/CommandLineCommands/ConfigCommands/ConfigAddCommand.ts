@@ -45,29 +45,17 @@ export class ConfigAddCommand extends ConfigBaseCommand {
     }
 
     await this._configStore.addToList(normalizedKey, value, scope);
-    
-    const scopeName = this.getScopeDisplayName(scope);
-    ConsoleHelpers.writeLine(`Added '${value}' to '${normalizedKey}' in ${scopeName} configuration`);
 
-    // Display the updated list
+    // Display the updated list in YAML format
     const updatedValue = await this._configStore.getFromScope(normalizedKey, scope);
     if (updatedValue && Array.isArray(updatedValue.value)) {
-      ConsoleHelpers.writeLine(`${normalizedKey}=[${updatedValue.value.join(', ')}]`);
+      ConsoleHelpers.writeLine(`${normalizedKey}:`);
+      for (const item of updatedValue.value) {
+        ConsoleHelpers.writeLine(`- ${item}`);
+      }
     }
 
     return 0;
   }
 
-  private getScopeDisplayName(scope: ConfigFileScope): string {
-    switch (scope) {
-      case ConfigFileScope.Global:
-        return 'Global';
-      case ConfigFileScope.User:
-        return 'User';
-      case ConfigFileScope.Local:
-        return 'Local';
-      default:
-        return 'Unknown';
-    }
-  }
 }
