@@ -4,15 +4,15 @@ import { ConfigFileScope } from '../types';
 import { ConsoleHelpers } from '../helpers/ConsoleHelpers';
 
 export class ConfigCommand {
-  private static parseScopeFromFlags(options: any): ConfigFileScope {
+  private static parseScopeFromFlags(options: any, defaultScope: ConfigFileScope = ConfigFileScope.Local): ConfigFileScope {
     // Handle Commander.js flag variations (including capitalized short flags)
     if (options.global || options.g || options.G) return ConfigFileScope.Global;
     if (options.user || options.u || options.U) return ConfigFileScope.User;
     if (options.local || options.l || options.L) return ConfigFileScope.Local;
     if (options.any || options.a || options.A) return ConfigFileScope.Any;
     
-    // Default to local scope if no flags specified
-    return ConfigFileScope.Local;
+    // Use provided default scope if no flags specified
+    return defaultScope;
   }
 
   static createCommand(): Command {
@@ -27,14 +27,35 @@ export class ConfigCommand {
       .option('--global', 'Show global configuration only')
       .action(async (options) => {
         try {
-          const scope = ConfigCommand.parseScopeFromFlags(options);
+          const scope = ConfigCommand.parseScopeFromFlags(options, ConfigFileScope.Any);
           
           if (scope === ConfigFileScope.Any || (!options.local && !options.user && !options.global)) {
-            // Show all scopes
+            // Show all scopes (matching C# ConfigListCommand behavior)
             const allConfigs = await configStore.getAllConfigs();
-            for (const config of allConfigs) {
-              ConsoleHelpers.displayLocationHeader(config.location, config.scope);
-              ConsoleHelpers.displayYamlContent(config.data);
+            const scopes = [ConfigFileScope.Global, ConfigFileScope.User, ConfigFileScope.Local];
+            
+            for (let i = 0; i < scopes.length; i++) {
+              const scopeToShow = scopes[i];
+              const config = allConfigs.find(c => c.scope === scopeToShow);
+              
+              if (config) {
+                ConsoleHelpers.displayLocationHeader(config.location, config.scope);
+                if (Object.keys(config.data || {}).length === 0) {
+                  console.log('  No configuration settings found.');
+                } else {
+                  ConsoleHelpers.displayYamlContent(config.data);
+                }
+              } else {
+                // Handle case where config file doesn't exist
+                const defaultPath = await configStore.getConfigPath(scopeToShow);
+                ConsoleHelpers.displayLocationHeader(defaultPath, scopeToShow);
+                console.log('  No configuration settings found.');
+              }
+              
+              // Add blank line between scopes (except after the last one)
+              if (i < scopes.length - 1) {
+                console.log('');
+              }
             }
           } else {
             // Show specific scope
@@ -42,7 +63,16 @@ export class ConfigCommand {
             const config = allConfigs.find(c => c.scope === scope);
             if (config) {
               ConsoleHelpers.displayLocationHeader(config.location, config.scope);
-              ConsoleHelpers.displayYamlContent(config.data);
+              if (Object.keys(config.data || {}).length === 0) {
+                console.log('  No configuration settings found.');
+              } else {
+                ConsoleHelpers.displayYamlContent(config.data);
+              }
+            } else {
+              // Handle case where config file doesn't exist
+              const defaultPath = await configStore.getConfigPath(scope);
+              ConsoleHelpers.displayLocationHeader(defaultPath, scope);
+              console.log('  No configuration settings found.');
             }
           }
         } catch (error) {
@@ -60,7 +90,7 @@ export class ConfigCommand {
       .option('--any', 'Get from any scope (follows precedence)')
       .action(async (key: string, options) => {
         try {
-          const scope = ConfigCommand.parseScopeFromFlags(options);
+          const scope = ConfigCommand.parseScopeFromFlags(options, ConfigFileScope.Any);
           const result = await configStore.getFromScope(key, scope);
           
           if (result) {

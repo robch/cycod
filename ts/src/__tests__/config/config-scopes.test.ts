@@ -2,16 +2,15 @@ import { CliTestHelper } from '../helpers/CliTestHelper';
 
 describe('Config Scopes', () => {
   beforeAll(async () => {
-    // Clean up any existing test keys
-    await CliTestHelper.cleanup('BoolTest');
-    await CliTestHelper.cleanup('TestInheritance');
+    // Clean up any existing test keys from all files
+    await CliTestHelper.cleanupAllTestKeys();
   });
 
   afterAll(async () => {
-    // Clean up test keys after all tests
-    await CliTestHelper.cleanup('BoolTest');
-    await CliTestHelper.cleanup('TestInheritance');
+    // Clean up all test keys after all tests
+    await CliTestHelper.cleanupAllTestKeys();
   });
+
 
   describe('Scope Inheritance', () => {
     it('should follow Local > User > Global precedence', async () => {

@@ -8,7 +8,7 @@ export class ConfigStore {
   private static readonly CONFIG_DIR_NAME = '.cycod';
   private static readonly CONFIG_FILE_NAME = 'config.yaml';
 
-  private getConfigPath(scope: ConfigFileScope): string {
+  public getConfigPath(scope: ConfigFileScope): string {
     switch (scope) {
       case ConfigFileScope.Local:
         return path.join(process.cwd(), ConfigStore.CONFIG_DIR_NAME, ConfigStore.CONFIG_FILE_NAME);

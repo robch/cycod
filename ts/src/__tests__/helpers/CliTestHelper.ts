@@ -56,12 +56,12 @@ export class CliTestHelper {
   }
 
   static async cleanup(key: string): Promise<void> {
-    // Clean up test keys from all scopes, including --any to catch all
-    const scopes = ['--local', '--user', '--global', '--any'];
+    // Clean up test keys from all specific scopes (--any is not valid for clear command)
+    const scopes = ['--local', '--user', '--global'];
     
     for (const scope of scopes) {
       try {
-        const result = await CliTestHelper.run(`cycodjs config clear ${key} ${scope}`);
+        await CliTestHelper.run(`cycodjs config clear ${key} ${scope}`);
         // Don't throw on errors, just continue cleanup
       } catch (error) {
         // Ignore cleanup errors
@@ -70,5 +70,28 @@ export class CliTestHelper {
     
     // Small delay to ensure cleanup completes
     await new Promise(resolve => setTimeout(resolve, 10));
+  }
+
+  static async cleanupAllTestKeys(): Promise<void> {
+    // List of all keys used across all test files
+    const testKeys = [
+      'TestKey',
+      'TestList', 
+      'NonexistentKey',
+      'OpenAI.ApiKey',
+      'Deep.Nested.Config.Key',
+      'App.Setting',
+      'App.Setting.Nested',
+      'Scopes.Nested.Test',
+      'Scopes.Local.Test',
+      'Scopes.User.Test',
+      'Scopes.Global.Test',
+      'BoolTest',
+      'TestInheritance'
+    ];
+
+    for (const key of testKeys) {
+      await CliTestHelper.cleanup(key);
+    }
   }
 }

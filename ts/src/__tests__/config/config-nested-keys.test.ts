@@ -2,20 +2,20 @@ import { CliTestHelper } from '../helpers/CliTestHelper';
 
 describe('Config Nested Keys', () => {
   beforeAll(async () => {
-    // Clean up any existing test keys
-    await CliTestHelper.cleanup('App.Setting');
-    await CliTestHelper.cleanup('App.Setting.Nested');
-    await CliTestHelper.cleanup('Deep.Nested.Config.Key');
-    await CliTestHelper.cleanup('Scopes.Nested.Test');
+    // Clean up any existing test keys from all files
+    await CliTestHelper.cleanupAllTestKeys();
   });
 
   afterAll(async () => {
-    // Clean up test keys after all tests
-    await CliTestHelper.cleanup('App.Setting');
-    await CliTestHelper.cleanup('App.Setting.Nested');
-    await CliTestHelper.cleanup('Deep.Nested.Config.Key');
-    await CliTestHelper.cleanup('Scopes.Nested.Test');
+    // Clean up all test keys after all tests
+    await CliTestHelper.cleanupAllTestKeys();
   });
+
+  afterEach(async () => {
+    // Clean up after each test to prevent interference
+    await CliTestHelper.cleanupAllTestKeys();
+  });
+
 
   describe('Basic Nested Key Operations', () => {
     it('should set and get single-level nested key', async () => {
@@ -91,6 +91,9 @@ describe('Config Nested Keys', () => {
     });
 
     it('should clear nested keys', async () => {
+      // First set a nested key
+      await CliTestHelper.run('cycodjs config set App.Setting.Nested TestValue --local');
+      
       // Clear nested key
       const result = await CliTestHelper.run('cycodjs config clear App.Setting.Nested --local');
       expect(result.exitCode).toBe(0);

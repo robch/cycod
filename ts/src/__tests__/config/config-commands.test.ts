@@ -2,19 +2,15 @@ import { CliTestHelper } from '../helpers/CliTestHelper';
 
 describe('Config Commands', () => {
   beforeAll(async () => {
-    // Clean up any existing test keys
-    await CliTestHelper.cleanup('TestKey');
-    await CliTestHelper.cleanup('TestList');
-    await CliTestHelper.cleanup('NonexistentKey');
-    await CliTestHelper.cleanup('OpenAI.ApiKey');
+    // Clean up any existing test keys from all files
+    await CliTestHelper.cleanupAllTestKeys();
   });
 
   afterAll(async () => {
-    // Clean up test keys after all tests
-    await CliTestHelper.cleanup('TestKey');
-    await CliTestHelper.cleanup('TestList');
-    await CliTestHelper.cleanup('OpenAI.ApiKey');
+    // Clean up all test keys after all tests
+    await CliTestHelper.cleanupAllTestKeys();
   });
+
 
   describe('Config List', () => {
     it('Config List (all scopes)', async () => {
@@ -53,17 +49,17 @@ describe('Config Commands', () => {
   });
 
   describe('Config Set and Get', () => {
-    it('Config Set (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config set TestKey TestValue --local');
+    it('Config Set and Get (local scope)', async () => {
+      // Set the value
+      let result = await CliTestHelper.run('cycodjs config set TestKey TestValue --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `LOCATION: .*config\\.yaml \\(local\\).*` +
         `TestKey: TestValue`
       );
-    });
 
-    it('Config Get (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config get TestKey --local');
+      // Get the value  
+      result = await CliTestHelper.run('cycodjs config get TestKey --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `LOCATION: .*config\\.yaml \\(local\\).*` +
@@ -74,6 +70,10 @@ describe('Config Commands', () => {
 
   describe('Config Clear', () => {
     it('Config Clear (local scope)', async () => {
+      // First set a value
+      await CliTestHelper.run('cycodjs config set TestKey TestValue --local');
+      
+      // Then clear it
       const result = await CliTestHelper.run('cycodjs config clear TestKey --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(`TestKey: \\(cleared\\)`);
@@ -81,27 +81,26 @@ describe('Config Commands', () => {
   });
 
   describe('Config List Operations', () => {
-    it('Config Add to List (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config add TestList TestItem1 --local');
+    it('Config List Operations (complete workflow)', async () => {
+      // Add first item to list
+      let result = await CliTestHelper.run('cycodjs config add TestList TestItem1 --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `TestList:.*` +
         `- TestItem1`
       );
-    });
 
-    it('Config Add Another Value to List (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config add TestList TestItem2 --local');
+      // Add second item to list
+      result = await CliTestHelper.run('cycodjs config add TestList TestItem2 --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `TestList:.*` +
         `- TestItem1.*` +
         `- TestItem2`
       );
-    });
 
-    it('Config Get List Value (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config get TestList --local');
+      // Get the list value
+      result = await CliTestHelper.run('cycodjs config get TestList --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `LOCATION: .*config\\.yaml \\(local\\).*` +
@@ -109,19 +108,17 @@ describe('Config Commands', () => {
         `- TestItem1.*` +
         `- TestItem2`
       );
-    });
 
-    it('Config Remove Value from List (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config remove TestList TestItem1 --local');
+      // Remove one item from list
+      result = await CliTestHelper.run('cycodjs config remove TestList TestItem1 --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `TestList:.*` +
         `- TestItem2`
       );
-    });
 
-    it('Config Clear List (local scope)', async () => {
-      const result = await CliTestHelper.run('cycodjs config clear TestList --local');
+      // Clear the list
+      result = await CliTestHelper.run('cycodjs config clear TestList --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(`TestList: \\(cleared\\)`);
     });
@@ -136,23 +133,25 @@ describe('Config Commands', () => {
   });
 
   describe('Config Key Normalization', () => {
-    it('Config Set creates correct casing', async () => {
-      const result = await CliTestHelper.run('cycodjs config set OpenAI.ApiKey 1234567890 --local');
+    it('Config Key Normalization (complete workflow)', async () => {
+      // Set API key (shows masked value)
+      let result = await CliTestHelper.run('cycodjs config set OpenAI.ApiKey 1234567890 --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(
         `LOCATION: .*config\\.yaml \\(local\\).*` +
         `OpenAI.ApiKey: 12`
       );
-    });
 
-    it('Config Get creates correct casing', async () => {
-      const result = await CliTestHelper.run('cycodjs config get OpenAI.ApiKey --local');
+      // Get API key (shows masked value)
+      result = await CliTestHelper.run('cycodjs config get OpenAI.ApiKey --local');
       expect(result.exitCode).toBe(0);
-      expect(result.stdout).toMatchYamlRegex(`OpenAI.ApiKey: 12`);
-    });
+      expect(result.stdout).toMatchYamlRegex(
+        `LOCATION: .*config\\.yaml \\(local\\).*` +
+        `OpenAI.ApiKey: 12`
+      );
 
-    it('Config Clear creates correct casing', async () => {
-      const result = await CliTestHelper.run('cycodjs config clear OpenAI.ApiKey --local');
+      // Clear API key
+      result = await CliTestHelper.run('cycodjs config clear OpenAI.ApiKey --local');
       expect(result.exitCode).toBe(0);
       expect(result.stdout).toMatchYamlRegex(`OpenAI.ApiKey: \\(cleared\\)`);
     });
