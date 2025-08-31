@@ -3,6 +3,7 @@
 import { Command } from 'commander';
 import { ConfigCommand } from '../commands/ConfigCommand';
 import { PromptCommand } from '../commands/PromptCommand';
+import { ChatCommand } from '../commands/ChatCommand';
 
 const program = new Command();
 
@@ -13,5 +14,6 @@ program
 
 program.addCommand(ConfigCommand.createCommand());
 program.addCommand(PromptCommand.createCommand());
+program.addCommand(ChatCommand.createCommand());
 
 program.parse(process.argv);

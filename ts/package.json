@@ -32,5 +32,10 @@
     "readline-sync": "^1.4.10",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.60.0",
+    "@azure/openai": "^2.0.0",
+    "openai": "^5.16.0"
   }
 }
