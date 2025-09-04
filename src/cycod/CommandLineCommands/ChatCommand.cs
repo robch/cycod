@@ -491,7 +491,7 @@ public class ChatCommand : CommandWithVariables
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteWarningLine($"Failed to save chat history to '{filePath}': {ex.Message}");
+            ConsoleHelpers.WriteWarningLine($"Warning: Failed to save chat history to '{filePath}': {ex.Message}");
         }
     }
 
