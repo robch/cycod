@@ -2,6 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import OpenAI from 'openai';
 import { IChatClient } from './FunctionCallingChat';
 import { ChatMessage } from '../types';
+import { ConfigStore } from '../config/ConfigStore';
+import { KnownSettings, findEnvVar, findEnvVarWithDefault, findSettingValue, findSettingValueWithDefault } from '../config/KnownSettings';
 
 // Anthropic client implementation
 class AnthropicChatClient implements IChatClient {
@@ -111,65 +113,158 @@ class OpenAIChatClient implements IChatClient {
   }
 }
 
-// Factory class matching C# ChatClientFactory
+// Interfaces for client options (matching C# ChatOptions)
+export interface ChatOptions {
+  modelId?: string;
+  toolMode?: string;
+  maxOutputTokens?: number;
+}
+
+// Factory class matching C# ChatClientFactory exactly
 export class ChatClientFactory {
-  static createChatClient(): IChatClient {
-    // Check environment variables to determine which client to create
-    // This matches the C# implementation pattern
+  /**
+   * Main method to create chat client - matches C# CreateChatClient(out ChatOptions? options) exactly
+   */
+  static async createChatClient(): Promise<{ client: IChatClient; options: ChatOptions | null }> {
+    // First try to create client from preferred provider (matches C# exactly)
+    let result = await this.tryCreateChatClientFromPreferredProvider();
     
-    const anthropicApiKey = process.env.ANTHROPIC_API_KEY;
-    if (anthropicApiKey) {
-      const model = process.env.ANTHROPIC_MODEL_NAME || 'claude-3-5-sonnet-20241022';
-      console.log('Using Anthropic API key for authentication'); // Match C# debug output
-      return new AnthropicChatClient(anthropicApiKey, model);
+    // If that fails, try to create from environment variables (matches C# exactly)
+    if (!result) {
+      result = await this.tryCreateChatClientFromEnv();
     }
 
-    const openaiApiKey = process.env.OPENAI_API_KEY;
-    if (openaiApiKey) {
-      const model = process.env.OPENAI_MODEL_NAME || 'gpt-4o';
-      console.log('Using OpenAI API key for authentication'); // Match C# debug output
-      return new OpenAIChatClient(openaiApiKey, model);
+    // If no client could be created, throw an exception with helpful message (matches C# exactly)
+    if (!result) {
+      const message = [
+        "No valid environment variables found.",
+        "",
+        "To use Anthropic, please set:",
+        "- ANTHROPIC_API_KEY",
+        "- ANTHROPIC_MODEL_NAME (optional)",
+        "",
+        "To use OpenAI, please set:",
+        "- OPENAI_API_KEY", 
+        "- OPENAI_MODEL_NAME (optional)",
+        "",
+        "To use Azure OpenAI, please set:",
+        "- AZURE_OPENAI_API_KEY",
+        "- AZURE_OPENAI_ENDPOINT",
+        "- AZURE_OPENAI_CHAT_DEPLOYMENT",
+        "",
+        "To use GitHub Copilot with token authentication, please set:",
+        "- GITHUB_TOKEN",
+        "- COPILOT_API_ENDPOINT (optional)",
+        "- COPILOT_INTEGRATION_ID (optional)",
+        "",
+        "Or use config commands to set preferred provider:",
+        "  cycodjs config set App.PreferredProvider anthropic",
+        "  cycodjs config set App.PreferredProvider openai",
+        "  cycodjs config set App.PreferredProvider azure-openai"
+      ].join('\n');
+      
+      throw new Error(message);
     }
 
-    // Azure OpenAI support
-    const azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
-    const azureApiKey = process.env.AZURE_OPENAI_API_KEY;
-    const azureDeployment = process.env.AZURE_OPENAI_CHAT_DEPLOYMENT;
-    
-    if (azureEndpoint && azureApiKey && azureDeployment) {
-      console.log('Using Azure OpenAI API key for authentication'); // Match C# debug output
-      return this.createAzureOpenAIChatClient(azureEndpoint, azureApiKey, azureDeployment);
-    }
-
-    // GitHub Copilot support (if available)
-    const githubToken = process.env.GITHUB_TOKEN;
-    if (githubToken) {
-      console.log('Using GitHub Copilot for authentication'); // Match C# debug output
-      // GitHub Copilot client would be implemented here
-      // For now, fall back to a default
-    }
-
-    throw new Error('No AI provider configuration found. Please set ANTHROPIC_API_KEY, OPENAI_API_KEY, or Azure OpenAI environment variables.');
+    return result;
   }
 
-  private static createAzureOpenAIChatClient(endpoint: string, apiKey: string, deployment: string): IChatClient {
-    // For now, fall back to regular OpenAI client
-    // TODO: Implement proper Azure OpenAI support
-    console.log('Azure OpenAI support not yet implemented, falling back to OpenAI client');
-    return new OpenAIChatClient(apiKey);
+  /**
+   * Try to create client from preferred provider set in config - matches C# TryCreateChatClientFromPreferredProvider exactly
+   */
+  private static async tryCreateChatClientFromPreferredProvider(): Promise<{ client: IChatClient; options: ChatOptions | null } | null> {
+    const configStore = new ConfigStore();
+    const configValue = await configStore.getFromAnyScope(KnownSettings.AppPreferredProvider);
+    const preferredProvider = configValue?.value?.toString()?.toLowerCase();
+
+    if (!preferredProvider) {
+      return null;
+    }
+
+    console.log(`Using preferred provider: ${preferredProvider}`); // Match C# debug output
+
+    // Try to create client based on preference (matches C# logic exactly)
+    if ((preferredProvider === 'copilot-github' || preferredProvider === 'copilot') && 
+        (await findSettingValue(KnownSettings.GitHubToken) || findEnvVar('GITHUB_TOKEN'))) {
+      return await this.createCopilotChatClientWithGitHubToken();
+    }
+    else if (preferredProvider === 'anthropic' && 
+            (await findSettingValue(KnownSettings.AnthropicApiKey) || findEnvVar('ANTHROPIC_API_KEY'))) {
+      return await this.createAnthropicChatClientWithApiKey();
+    }
+    else if ((preferredProvider === 'aws' || preferredProvider === 'bedrock' || preferredProvider === 'aws-bedrock') && 
+            (await findSettingValue(KnownSettings.AWSBedrockAccessKey) || findEnvVar('AWS_BEDROCK_ACCESS_KEY')) &&
+            (await findSettingValue(KnownSettings.AWSBedrockSecretKey) || findEnvVar('AWS_BEDROCK_SECRET_KEY'))) {
+      return await this.createAWSBedrockChatClient();
+    }
+    else if ((preferredProvider === 'google' || preferredProvider === 'gemini' || preferredProvider === 'google-gemini') && 
+            (await findSettingValue(KnownSettings.GoogleGeminiApiKey) || findEnvVar('GOOGLE_GEMINI_API_KEY'))) {
+      return await this.createGeminiChatClient();
+    }
+    else if ((preferredProvider === 'grok' || preferredProvider === 'x.ai') && 
+            (await findSettingValue(KnownSettings.GrokApiKey) || findEnvVar('GROK_API_KEY'))) {
+      return await this.createGrokChatClient();
+    }
+    else if ((preferredProvider === 'azure' || preferredProvider === 'azure-openai') && 
+            (await findSettingValue(KnownSettings.AzureOpenAIApiKey) || findEnvVar('AZURE_OPENAI_API_KEY')) &&
+            (await findSettingValue(KnownSettings.AzureOpenAIEndpoint) || findEnvVar('AZURE_OPENAI_ENDPOINT')) &&
+            (await findSettingValue(KnownSettings.AzureOpenAIChatDeployment) || findEnvVar('AZURE_OPENAI_CHAT_DEPLOYMENT'))) {
+      return await this.createAzureOpenAIChatClientWithApiKey();
+    }
+    else if (preferredProvider === 'openai' && 
+            (await findSettingValue(KnownSettings.OpenAIApiKey) || findEnvVar('OPENAI_API_KEY'))) {
+      return await this.createOpenAIChatClientWithApiKey();
+    }
+
+    console.log(`Preferred provider '${preferredProvider}' not available or missing required environment variables.`);
+    return null;
   }
 
-  // Static method to create Anthropic client specifically (matching C# pattern)
-  static createAnthropicChatClientWithApiKey(): { client: IChatClient; options: any } {
-    const model = process.env.ANTHROPIC_MODEL_NAME || 'claude-3-7-sonnet-latest';
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+  /**
+   * Try to create client from environment variables and config - matches C# TryCreateChatClientFromEnv exactly
+   */
+  private static async tryCreateChatClientFromEnv(): Promise<{ client: IChatClient; options: ChatOptions | null } | null> {
+    // Try providers in the same order as C# implementation
+    if (await findSettingValue(KnownSettings.GitHubToken) || findEnvVar('GITHUB_TOKEN')) {
+      return await this.createCopilotChatClientWithGitHubToken();
+    }
+    else if (await findSettingValue(KnownSettings.AnthropicApiKey) || findEnvVar('ANTHROPIC_API_KEY')) {
+      return await this.createAnthropicChatClientWithApiKey();
+    }
+    else if ((await findSettingValue(KnownSettings.AWSBedrockAccessKey) || findEnvVar('AWS_BEDROCK_ACCESS_KEY')) && 
+            (await findSettingValue(KnownSettings.AWSBedrockSecretKey) || findEnvVar('AWS_BEDROCK_SECRET_KEY'))) {
+      return await this.createAWSBedrockChatClient();
+    }
+    else if (await findSettingValue(KnownSettings.GoogleGeminiApiKey) || findEnvVar('GOOGLE_GEMINI_API_KEY')) {
+      return await this.createGeminiChatClient();
+    }
+    else if (await findSettingValue(KnownSettings.GrokApiKey) || findEnvVar('GROK_API_KEY')) {
+      return await this.createGrokChatClient();
+    }
+    else if ((await findSettingValue(KnownSettings.AzureOpenAIApiKey) || findEnvVar('AZURE_OPENAI_API_KEY')) && 
+            (await findSettingValue(KnownSettings.AzureOpenAIEndpoint) || findEnvVar('AZURE_OPENAI_ENDPOINT')) &&
+            (await findSettingValue(KnownSettings.AzureOpenAIChatDeployment) || findEnvVar('AZURE_OPENAI_CHAT_DEPLOYMENT'))) {
+      return await this.createAzureOpenAIChatClientWithApiKey();
+    }
+    else if (await findSettingValue(KnownSettings.OpenAIApiKey) || findEnvVar('OPENAI_API_KEY')) {
+      return await this.createOpenAIChatClientWithApiKey();
+    }
+
+    return null;
+  }
+
+  // Individual provider creation methods (matching C# method signatures)
+  
+  static async createAnthropicChatClientWithApiKey(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    const model = await findSettingValueWithDefault(KnownSettings.AnthropicModelName, 'claude-3-7-sonnet-latest');
+    const apiKey = await findSettingValue(KnownSettings.AnthropicApiKey);
     
     if (!apiKey) {
       throw new Error('ANTHROPIC_API_KEY is not set.');
     }
 
     const client = new AnthropicChatClient(apiKey, model);
-    const options = {
+    const options: ChatOptions = {
       modelId: model,
       toolMode: 'auto',
       maxOutputTokens: 4000
@@ -179,15 +274,66 @@ export class ChatClientFactory {
     return { client, options };
   }
 
-  // Static method to create OpenAI client specifically (matching C# pattern)
-  static createOpenAIChatClientWithApiKey(): IChatClient {
-    const apiKey = process.env.OPENAI_API_KEY;
+  static async createOpenAIChatClientWithApiKey(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    const apiKey = await findSettingValue(KnownSettings.OpenAIApiKey);
+    const model = await findSettingValueWithDefault(KnownSettings.OpenAIModelName, 'gpt-4o');
     
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY is not set.');
     }
 
     console.log('Using OpenAI API key for authentication'); // Match C# debug output
-    return new OpenAIChatClient(apiKey);
+    const client = new OpenAIChatClient(apiKey, model);
+    const options: ChatOptions = {
+      modelId: model,
+      toolMode: 'auto',
+      maxOutputTokens: 4000
+    };
+
+    return { client, options };
+  }
+
+  static async createAzureOpenAIChatClientWithApiKey(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    const deployment = await findSettingValue(KnownSettings.AzureOpenAIChatDeployment);
+    const endpoint = await findSettingValue(KnownSettings.AzureOpenAIEndpoint);
+    const apiKey = await findSettingValue(KnownSettings.AzureOpenAIApiKey);
+
+    if (!deployment) throw new Error('AZURE_OPENAI_CHAT_DEPLOYMENT is not set.');
+    if (!endpoint) throw new Error('AZURE_OPENAI_ENDPOINT is not set.');
+    if (!apiKey) throw new Error('AZURE_OPENAI_API_KEY is not set.');
+
+    console.log('Using Azure OpenAI API key for authentication'); // Match C# debug output
+    
+    // For now, fall back to regular OpenAI client
+    // TODO: Implement proper Azure OpenAI support
+    console.log('Azure OpenAI support not yet implemented, falling back to OpenAI client');
+    return await this.createOpenAIChatClientWithApiKey();
+  }
+
+  // Placeholder implementations for other providers (to be implemented later)
+  static async createCopilotChatClientWithGitHubToken(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    console.log('GitHub Copilot support not yet implemented'); // Match C# debug output
+    throw new Error('GitHub Copilot support not yet implemented');
+  }
+
+  static async createAWSBedrockChatClient(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    console.log('AWS Bedrock support not yet implemented'); // Match C# debug output
+    throw new Error('AWS Bedrock support not yet implemented');
+  }
+
+  static async createGeminiChatClient(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    console.log('Google Gemini support not yet implemented'); // Match C# debug output
+    throw new Error('Google Gemini support not yet implemented');
+  }
+
+  static async createGrokChatClient(): Promise<{ client: IChatClient; options: ChatOptions }> {
+    console.log('Grok support not yet implemented'); // Match C# debug output
+    throw new Error('Grok support not yet implemented');
+  }
+
+  // Legacy method for backwards compatibility
+  static async createChatClient_Legacy(): Promise<IChatClient> {
+    const result = await this.createChatClient();
+    return result.client;
   }
 }

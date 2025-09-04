@@ -75,14 +75,14 @@ export class ChatCommand {
     return chatCmd;
   }
 
-  async execute(options: any, command: Command): Promise<number> {
+  async execute(commandOptions: any, command: Command): Promise<number> {
     try {
       // Process options and set properties
-      this.processOptions(options);
+      this.processOptions(commandOptions);
       
       // Determine if we're in interactive mode
       const hasInputInstructions = this.inputInstructions.length > 0;
-      const interactive = options.interactive && !hasInputInstructions;
+      const interactive = commandOptions.interactive && !hasInputInstructions;
       
       // Check if we have input when not in interactive mode
       if (!interactive && !hasInputInstructions) {
@@ -90,8 +90,8 @@ export class ChatCommand {
         return 1;
       }
 
-      // Create the chat client and function calling chat
-      const chatClient = ChatClientFactory.createChatClient();
+      // Create the chat client and function calling chat (matching C# ChatCommand.cs:99-100)
+      const { client: chatClient, options: clientOptions } = await ChatClientFactory.createChatClient();
       const systemPrompt = this.groundSystemPrompt();
       const chat = new FunctionCallingChat(chatClient, systemPrompt, this.maxOutputTokens);
 
