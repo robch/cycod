@@ -14,6 +14,25 @@ OPTIONS
     --line-contains REGEX          Match only lines that contain the specified regex pattern
     --remove-all-lines REGEX       Remove lines that contain the specified regex pattern
 
+  TIME-BASED FILTERING
+
+    --modified TIMESPEC            Match files modified on/in the specified date/period
+    --created TIMESPEC             Match files created on/in the specified date/period
+    --accessed TIMESPEC            Match files accessed on/in the specified date/period
+
+    --after TIMESPEC               Alias for --modified-after
+    --before TIMESPEC              Alias for --modified-before
+    --modified-after TIMESPEC      Match files modified after the specified time
+    --modified-before TIMESPEC     Match files modified before the specified time
+    --created-after TIMESPEC       Match files created after the specified time
+    --created-before TIMESPEC      Match files created before the specified time
+    --accessed-after TIMESPEC      Match files accessed after the specified time
+    --accessed-before TIMESPEC     Match files accessed before the specified time
+
+    --anytime TIMESPEC             Match files with any time attribute in the specified period
+    --anytime-after TIMESPEC       Match files with any time attribute after the specified time
+    --anytime-before TIMESPEC      Match files with any time attribute before the specified time
+
   LINE FORMATTING
 
     --lines N                      Include N lines both before and after matching lines
