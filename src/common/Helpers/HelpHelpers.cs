@@ -72,6 +72,54 @@ public class HelpHelpers
                     return;
                 }
             }
+            
+            if (topic.StartsWith("ama ", StringComparison.OrdinalIgnoreCase))
+            {
+                string question = topic.Substring("ama ".Length).Trim();
+                if (!string.IsNullOrEmpty(question))
+                {
+                    string toolName = ProgramInfo.Name.ToLower();
+                    string command = $"cycod --inputs \"/run {toolName} help topics --expand\" \"Please tell me how to: {question}\" \"exit\"";
+                    var result = ProcessHelpers.RunProcess(command);
+                    
+                    // Clean up the output to show only the AI's response
+                    string output = result.MergedOutput;
+                    
+                    // Find the start of the response (after "Please tell me how to: {question}")
+                    string startPattern = $"User: Please tell me how to: {question}";
+                    int startIndex = output.IndexOf(startPattern);
+                    if (startIndex >= 0)
+                    {
+                        // Move past this line to get to the assistant's response
+                        startIndex = output.IndexOf('\n', startIndex);
+                        if (startIndex >= 0) startIndex++;
+                    }
+                    
+                    // Find the end of the response (before "User: exit")
+                    string endPattern = "User: exit";
+                    int endIndex = output.IndexOf(endPattern);
+                    
+                    // Extract just the assistant's response
+                    if (startIndex >= 0 && endIndex > startIndex)
+                    {
+                        output = output.Substring(startIndex, endIndex - startIndex).Trim();
+                        
+                        // Remove "Assistant:" prefix if present
+                        if (output.StartsWith("Assistant:"))
+                        {
+                            output = output.Substring("Assistant:".Length).Trim();
+                        }
+                        // Also check for "A:" prefix
+                        else if (output.StartsWith("A:"))
+                        {
+                            output = output.Substring("A:".Length).Trim();
+                        }
+                    }
+                    
+                    ConsoleHelpers.WriteLine(output, overrideQuiet: true);
+                    return;
+                }
+            }
 
             ConsoleHelpers.WriteLine(
                 $"  WARNING: No help topic found for '{topic}'\n\n" +
