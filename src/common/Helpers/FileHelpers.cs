@@ -486,5 +486,48 @@ public class FileHelpers
         return invalidCharList.Distinct().ToArray();
     }
 
+    /// <summary>
+    /// Finds the first existing file from a list of filenames, searching in parent directories if specified.
+    /// </summary>
+    /// <param name="fileNames">List of filenames to search for in priority order</param>
+    /// <param name="searchParents">Whether to search in parent directories</param>
+    /// <returns>Path to the first matching file if found, null otherwise</returns>
+    public static string? FindFirstExistingFileFromNames(string[] fileNames, bool searchParents = true)
+    {
+        if (fileNames == null || fileNames.Length == 0)
+            return null;
+            
+        var currentPath = Directory.GetCurrentDirectory();
+        
+        if (!searchParents)
+        {
+            // Just check in the current directory
+            foreach (var fileName in fileNames)
+            {
+                var filePath = Path.Combine(currentPath, fileName);
+                if (File.Exists(filePath))
+                    return filePath;
+            }
+            return null;
+        }
+        
+        // Search up the directory tree
+        string? currentCheckPath = currentPath;
+        while (currentCheckPath != null)
+        {
+            foreach (var fileName in fileNames)
+            {
+                var filePath = Path.Combine(currentCheckPath, fileName);
+                if (File.Exists(filePath))
+                    return filePath;
+            }
+            
+            // Move up one directory
+            currentCheckPath = Directory.GetParent(currentCheckPath)?.FullName;
+        }
+        
+        return null;
+    }
+
     private static char[] _invalidFileNameCharsForWeb = GetInvalidFileNameCharsForWeb();
 }
