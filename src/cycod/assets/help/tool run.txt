@@ -1,0 +1,47 @@
+CYCOD TOOL RUN
+
+  Execute a custom tool with parameters.
+
+USAGE: cycod tool run TOOL_NAME [options]
+
+ARGUMENTS
+
+  TOOL_NAME         Name of the tool to run
+
+OPTIONS
+
+  PARAMETER OPTIONS
+
+    --param NAME=VALUE   Set parameter value (can be used multiple times)
+
+  SCOPE OPTIONS
+
+    --global, -g         Run tool from global scope (all users)
+    --user, -u           Run tool from user scope (current user)
+    --local, -l          Run tool from local scope (current project)
+    --any, -a            Run tool from first scope where found (default)
+
+  EXECUTION OPTIONS
+
+    --show-command       Show the command that would be executed without running it
+    --dry-run            Parse and validate parameters without executing the command
+    --timeout MILLISECONDS  Override the tool's default timeout in milliseconds
+
+EXAMPLES
+
+  EXAMPLE 1: Run a tool with inline parameters
+    cycod tool run weather-lookup --param LOCATION=London
+
+  EXAMPLE 2: Run a tool with multiple parameters
+    cycod tool run github-commit-stats --param OWNER=microsoft --param REPO=vscode
+
+  EXAMPLE 3: Show the command that would be executed without running it
+    cycod tool run search-code --param PATTERN="TODO" --param DIRECTORY="./src" --show-command
+
+SEE ALSO
+
+  cycod help tool
+  cycod help tool list
+  cycod help tool get
+  cycod help tool add
+  cycod help tool remove

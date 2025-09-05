@@ -1,0 +1,197 @@
+- area: Tool Commands
+  tests:
+  - name: Tool List (shows all tools)
+    run: cycod tool list
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools \(local\)
+
+  - name: Tool Add (create new tool)
+    run: cycod tool add test-tool --description "A test tool for documentation" --bash "echo 'This is a test tool'"
+    expect-regex: |
+      Created tool 'test-tool' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]test-tool\.yaml
+
+      USAGE: cycod --use-tool test-tool \[additional arguments\]
+
+  - name: Tool Get (verify created tool)
+    run: cycod tool get test-tool
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools[\\/]test-tool\.yaml \(local\)
+
+      test-tool \(bash\)
+
+        Description: A test tool for documentation
+
+        Command: echo 'This is a test tool'
+
+        Timeout: 60000 ms
+
+  - name: Tool Run (execute tool)
+    run: cycod tool run test-tool
+    expect-regex: |
+      This is a test tool
+
+  - name: Tool Add PowerShell
+    run: cycod tool add ps-date-tool --description "Get current date with PowerShell" --pwsh "Get-Date -Format 'yyyy-MM-dd HH:mm:ss'"
+    expect-regex: |
+      Created tool 'ps-date-tool' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]ps-date-tool\.yaml
+
+      USAGE: cycod --use-tool ps-date-tool \[additional arguments\]
+
+  - name: Tool Run PowerShell
+    run: cycod tool run ps-date-tool
+    expect-regex: |
+      \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}
+
+  - name: Tool Add Python
+    run: cycod tool add simple-python --description "Simple one-line Python tool" --python "print('Hello from Python!')"
+    expect-regex: |
+      Created tool 'simple-python' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]simple-python\.yaml
+
+      USAGE: cycod --use-tool simple-python \[additional arguments\]
+
+  - name: Tool Run Python
+    run: cycod tool run simple-python
+    expect-regex: |
+      Hello from Python!
+
+  - name: Tool Add With Arguments
+    run: |
+      cycod tool add bash-args --description "Bash tool that uses arguments" --bash "echo 'First argument: $1, Second argument: $2'"
+    expect-regex: |
+      Created tool 'bash-args' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]bash-args\.yaml
+
+      USAGE: cycod --use-tool bash-args \[additional arguments\]
+  
+  - name: Tool List After Adding Tools
+    run: cycod tool list
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools \(local\)
+
+        bash-args \(bash\) - Bash tool that uses arguments
+        ps-date-tool \(pwsh\) - Get current date with PowerShell
+        simple-python \(python\) - Simple one-line Python tool
+        test-tool \(bash\) - A test tool for documentation
+
+  - name: Tool Remove
+    run: cycod tool remove test-tool
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]test-tool\.yaml
+
+  - name: Tool List After Removal
+    run: cycod tool list
+    not-expect-regex: |
+      test-tool \(bash\) - A test tool for documentation
+
+  # Scope-specific tests
+  - name: Tool List (local scope only)
+    run: cycod tool list --local
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools \(local\)
+
+  - name: Tool List (user scope only)
+    run: cycod tool list --user
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools \(user\)
+
+  - name: Tool List (global scope only)
+    run: cycod tool list --global
+    expect-regex: |
+      LOCATION: .*[\\/]\.cycod[\\/]tools \(global\)
+
+  # Error cases
+  - name: Tool Get Non-existent
+    run: cycod tool get non-existent-tool
+    expect-exit-code: 1
+    expect-regex: |
+      Error: Tool 'non-existent-tool' not found
+
+  - name: Tool Add Without Description
+    run: cycod tool add missing-desc --bash "echo 'No description'"
+    expect-exit-code: 0
+
+  - name: Tool Run Non-existent
+    run: cycod tool run non-existent-tool
+    expect-exit-code: 1
+    expect-regex: |
+      Error: Tool 'non-existent-tool' not found
+
+  # Cleanup all created tools
+  - name: Cleanup - Remove bash-args
+    run: cycod tool remove bash-args
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]bash-args\.yaml
+
+  - name: Cleanup - Remove ps-date-tool
+    run: cycod tool remove ps-date-tool
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]ps-date-tool\.yaml
+
+  - name: Cleanup - Remove simple-python
+    run: cycod tool remove simple-python
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]simple-python\.yaml
+      
+  # Parameter Definition Tests
+  - name: Tool Add With Parameter
+    run: |
+      cycod tool add search-tool --description "Search files for pattern" --bash "grep {PATTERN} {FILES}" --parameter "PATTERN \"Search pattern\" type=string required=true" --parameter "FILES \"Files to search\" type=string default=\"*.*\""
+    expect-regex: |
+      Created tool 'search-tool' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]search-tool\.yaml
+
+  - name: Tool Get With Parameters
+    run: cycod tool get search-tool
+    expect-regex: |
+      .*PATTERN.*Search pattern.*
+      .*required=true.*
+      .*FILES.*Files to search.*
+      .*default=.*
+
+  # Boolean Parameter and Flag Mapping Tests
+  - name: Tool Add With Boolean Parameter
+    run: |
+      cycod tool add case-search --description "Case-sensitive search" --bash "grep {IGNORE_CASE} {PATTERN} {FILES}" --parameter "IGNORE_CASE \"Ignore case\" type=boolean default=false"
+    expect-regex: |
+      Created tool 'case-search' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]case-search\.yaml
+
+  # Conditional Parameter Tests
+  - name: Tool Add With Conditional Parameter
+    run: |
+      cycod tool add conditional-search --description "Search with conditional parameters" --bash "grep {IGNORE_CASE:-} {PATTERN} {FILES:-*.*}"
+    expect-regex: |
+      Created tool 'conditional-search' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]conditional-search\.yaml
+
+  # Environment Variable Parameter Tests
+  - name: Tool Add With Environment Parameter
+    run: |
+      cycod tool add env-tool --description "Tool with environment variables" --bash "echo $MESSAGE" --env "MESSAGE={MESSAGE}"
+    expect-regex: |
+      Created tool 'env-tool' in local scope\.
+      Saved: .*[\\/]\.cycod[\\/]tools[\\/]env-tool\.yaml
+
+  # Cleanup Parameter Test Tools
+  - name: Cleanup - Remove search-tool
+    run: cycod tool remove search-tool
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]search-tool\.yaml
+
+  - name: Cleanup - Remove case-search
+    run: cycod tool remove case-search
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]case-search\.yaml
+
+  - name: Cleanup - Remove conditional-search
+    run: cycod tool remove conditional-search
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]conditional-search\.yaml
+
+  - name: Cleanup - Remove env-tool
+    run: cycod tool remove env-tool
+    expect-regex: |
+      Deleted: .*[\\/]\.cycod[\\/]tools[\\/]env-tool\.yaml

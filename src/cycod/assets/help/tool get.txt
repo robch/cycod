@@ -1,0 +1,34 @@
+CYCOD TOOL GET
+
+  Display detailed information about a specific tool.
+
+USAGE: cycod tool get TOOL_NAME [options]
+
+ARGUMENTS
+
+  TOOL_NAME         The name of the tool to display
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Look for tool in global scope (all users)
+    --user, -u      Look for tool in user scope (current user)
+    --local, -l     Look for tool in local scope (current project)
+    --any, -a       Look for tool in any scope (default, searches in order: local → user → global)
+
+EXAMPLES
+
+  EXAMPLE 1: Get information about a tool
+    cycod tool get git-push-all
+
+  EXAMPLE 2: Get information about a global tool
+    cycod tool get search-code --global
+
+SEE ALSO
+
+  cycod help tool
+  cycod help tool list
+  cycod help tool add
+  cycod help tool remove
+  cycod help tool run

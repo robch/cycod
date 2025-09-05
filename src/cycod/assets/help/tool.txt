@@ -1,0 +1,35 @@
+CYCOD TOOL COMMANDS
+
+  These commands allow you to manage custom tools for CYCOD.
+
+USAGE: cycod tool list [--scope]
+   OR: cycod tool get TOOL_NAME [--scope]
+   OR: cycod tool add TOOL_NAME [options]
+   OR: cycod tool remove TOOL_NAME [--scope]
+   OR: cycod tool run TOOL_NAME [options]
+
+OPTIONS
+
+  SCOPE OPTIONS
+
+    --global, -g    Manage tools from global scope (all users)
+    --user, -u      Manage tools from user scope (current user)
+    --local, -l     Manage tools from local scope (default for most commands)
+    --any, -a       Manage tools from all scopes (default for 'list' and 'get' commands)
+
+COMMANDS
+
+    list            List all available tools
+    get             Display the details of a specific tool
+    add             Create a new tool
+    remove          Delete a tool
+    run             Execute a tool with parameters
+
+SEE ALSO
+
+  cycod help tool list
+  cycod help tool get
+  cycod help tool add
+  cycod help tool remove
+  cycod help tool run
+  cycod help tools

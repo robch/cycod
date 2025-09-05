@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Text;
 
-public static class ProcessHelpers
+public static partial class ProcessHelpers
 {
     public static RunnableProcessResult RunShellScript(string shell, string script, string? scriptArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
@@ -49,8 +49,27 @@ public static class ProcessHelpers
 
     public static RunnableProcessResult RunProcess(string command, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
-        return RunProcessAsync(command, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
+        // Use cache for common commands
+        if (timeout == null && input == null && (envVars == null || envVars.Count == 0) && 
+            _processResultCache.TryGetValue(command, out var cachedResult))
+        {
+            return cachedResult;
+        }
+        
+        var result = RunProcessAsync(command, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();
+        
+        // Cache result for common commands
+        if (timeout == null && input == null && (envVars == null || envVars.Count == 0) && 
+            result.ExitCode == 0 && _processResultCache.Count < 100)
+        {
+            _processResultCache[command] = result;
+        }
+        
+        return result;
     }
+    
+    // Cache for process results
+    private static readonly Dictionary<string, RunnableProcessResult> _processResultCache = new(StringComparer.OrdinalIgnoreCase);
 
     public static async Task<RunnableProcessResult> RunProcessAsync(string command, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
