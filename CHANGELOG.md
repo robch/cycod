@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Chat Mode:
+  - Added support for multiline input using backtick code blocks
+  - Users can now paste multiline content by starting with three or more backticks and ending with a matching number of backticks
+
 ### Fixed
 - GitHub Copilot integration: Fixed token expiration issue by implementing automatic token refresh
   - Tokens are now automatically refreshed before they expire
