@@ -135,9 +135,10 @@ public static class ChatClientFactory
             githubToken,
             helper);
 
-        // Add the vision + refresh policy to the pipeline
+        // Add the vision + refresh + interaction policies to the pipeline
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);
         options.AddPolicy(new VisionHeaderPolicy(), PipelinePosition.BeforeTransport);
+        options.AddPolicy(new InteractionHeadersPolicy(new InteractionService()), PipelinePosition.BeforeTransport);
 
         var integrationIdOk = !string.IsNullOrEmpty(integrationId);
         if (integrationIdOk) options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId!), PipelinePosition.BeforeTransport);
@@ -331,7 +332,6 @@ public static class ChatClientFactory
         options.AddPolicy(new CustomJsonPropertyRemovalPolicy("tool_choice"), PipelinePosition.PerCall);
         options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
-        options.AddPolicy(new InteractionHeadersPolicy(new InteractionService()), PipelinePosition.BeforeTransport);
 
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
 
