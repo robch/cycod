@@ -25,26 +25,34 @@ EXAMPLES
     cycodmd "**/*.md" --contains "TODO" --line-numbers
     cycodmd "**/*.md" --contains "(?i)LLM" --lines-after 10
 
-  EXAMPLE 4: Apply AI processing on each found file
+  EXAMPLE 4: Filter files based on time attributes
+
+    cycodmd "**/*.md" --modified "today"
+    cycodmd "**/*.cs" --modified-after "2023-09-01"
+    cycodmd "**/*.json" --created "7d"
+    cycodmd "**/*.js" --modified "2023-01-01..2023-12-31"
+    cycodmd "**/*" --anytime-after "2d4h"
+
+  EXAMPLE 5: Apply AI processing on each found file
 
     cycodmd "**/*.json" --file-instructions "convert the JSON to YAML"
     cycodmd "**/*.json" --file-instructions @instructions.md --threads 5
 
-  EXAMPLE 5: Apply AI to specific file types; multi-step instructions
+  EXAMPLE 6: Apply AI to specific file types; multi-step instructions
 
     cycodmd --cs-file-instructions @cs-instructions.txt --md-file-instructions @md-instructions.txt
     cycodmd --file-instructions @step1-instructions.md @step2-instructions.md
 
-  EXAMPLE 6: Apply AI to the final output
+  EXAMPLE 7: Apply AI to the final output
 
     cycodmd "**/*.md" --instructions "Create a markdown summary table for each file"
     cycodmd README.md "**/*.cs" --instructions "Output only an updated README.md"
 
-  EXAMPLE 7: Save each file output to a specified template file
+  EXAMPLE 8: Save each file output to a specified template file
 
     cycodmd "**/*.cs" --save-file-output "outputs/{fileBase}.md"
 
-  EXAMPLE 8: Save the current options as an alias, and then use it
+  EXAMPLE 9: Save the current options as an alias, and then use it
 
     cycodmd "**/*.cs" --save-alias cs
     cycodmd --cs
