@@ -11,6 +11,7 @@ Welcome to the CycoD documentation. This documentation provides detailed informa
 - [Creating Aliases](aliases.md)
 - [Chat History](chat-history.md)
 - [Templates](templates.md)
+- [AGENTS.md Support](agents-md-feature.md)
 - [API Reference](api-reference.md)
 - [Troubleshooting](troubleshooting.md)
 

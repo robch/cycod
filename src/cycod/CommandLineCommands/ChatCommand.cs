@@ -54,6 +54,7 @@ public class ChatCommand : CommandWithVariables
     {
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
+        AddAgentsFileContentToTemplateVariables();
         
         // Initialize slash command handlers
         _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
@@ -175,8 +176,32 @@ public class ChatCommand : CommandWithVariables
         SystemPrompt = GroundPromptName(SystemPrompt);
         SystemPrompt = GroundSlashPrompt(SystemPrompt);
 
-        var processed =  ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+        var processed = ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
         return _namedValues != null ? processed.ReplaceValues(_namedValues) : processed;
+    }
+    
+    /// <summary>
+    /// Adds AGENTS.md file content to template variables
+    /// </summary>
+    private void AddAgentsFileContentToTemplateVariables()
+    {
+        if (_namedValues == null)
+            return;
+            
+        var agentsFile = AgentsFileHelpers.FindAgentsFile();
+        if (agentsFile != null)
+        {
+            var agentsContent = FileHelpers.ReadAllText(agentsFile);
+            if (!string.IsNullOrEmpty(agentsContent))
+            {
+                // Store the AGENTS.md content as a template variable
+                _namedValues.Set("agents.md", agentsContent);
+                _namedValues.Set("agents.file", Path.GetFileName(agentsFile));
+                _namedValues.Set("agents.path", agentsFile);
+
+                ConsoleHelpers.WriteDebugLine($"Added AGENTS.md content from {agentsFile} as template variable");
+            }
+        }
     }
 
     private List<string> GroundUserPromptAdds()
@@ -463,7 +488,17 @@ public class ChatCommand : CommandWithVariables
         var input = ReadLineOrSimulateInput(inputInstructions, null);
         if (input != null) return input;
 
-        return Console.ReadLine() ?? defaultOnEndOfInput;
+        string? line = Console.ReadLine();
+        if (line == null) return defaultOnEndOfInput;
+
+        var isMultiLine = MultilineInputHelper.StartsWithBackticks(line);
+        return isMultiLine ? InteractivelyReadMultiLineInput(line) : line;
+    }
+
+    private string? InteractivelyReadMultiLineInput(string firstLine)    
+    {
+        ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
+        return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
