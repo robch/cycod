@@ -73,7 +73,7 @@ public static class MultilineInputHelper
     /// </summary>
     /// <param name="line">The line to check.</param>
     /// <returns>True if the line starts with at least 3 backticks, false otherwise.</returns>
-    public static bool StartsWithBackticks(string line)
+    public static bool StartsWithBackticks(string? line)
     {
         return !string.IsNullOrEmpty(line) && CountLeadingBackticks(line) >= 3;
     }
