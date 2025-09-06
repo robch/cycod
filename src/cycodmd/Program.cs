@@ -150,7 +150,15 @@ class Program
             findFilesCommand.ExcludeGlobs,
             findFilesCommand.ExcludeFileNamePatternList,
             findFilesCommand.IncludeFileContainsPatternList,
-            findFilesCommand.ExcludeFileContainsPatternList)
+            findFilesCommand.ExcludeFileContainsPatternList,
+            findFilesCommand.ModifiedAfter,
+            findFilesCommand.ModifiedBefore,
+            findFilesCommand.CreatedAfter,
+            findFilesCommand.CreatedBefore,
+            findFilesCommand.AccessedAfter,
+            findFilesCommand.AccessedBefore,
+            findFilesCommand.AnyTimeAfter,
+            findFilesCommand.AnyTimeBefore)
             .ToList();
 
         var tasks = new List<Task<string>>();

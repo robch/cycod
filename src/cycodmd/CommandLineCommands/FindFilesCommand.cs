@@ -22,6 +22,16 @@ class FindFilesCommand : CycoDmdCommand
 
         RemoveAllLineContainsPatternList = new();
         FileInstructionsList = new();
+        
+        // Initialize time constraints to null
+        ModifiedAfter = null;
+        ModifiedBefore = null;
+        CreatedAfter = null;
+        CreatedBefore = null;
+        AccessedAfter = null;
+        AccessedBefore = null;
+        AnyTimeAfter = null;
+        AnyTimeBefore = null;
     }
 
     override public string GetCommandName()
@@ -41,7 +51,15 @@ class FindFilesCommand : CycoDmdCommand
             IncludeLineCountAfter == 0 &&
             IncludeLineNumbers == false &&
             !RemoveAllLineContainsPatternList.Any() &&
-            !FileInstructionsList.Any();
+            !FileInstructionsList.Any() &&
+            ModifiedAfter == null &&
+            ModifiedBefore == null &&
+            CreatedAfter == null &&
+            CreatedBefore == null &&
+            AccessedAfter == null &&
+            AccessedBefore == null &&
+            AnyTimeAfter == null &&
+            AnyTimeBefore == null;
     }
 
     override public CycoDmdCommand Validate()
@@ -78,4 +96,14 @@ class FindFilesCommand : CycoDmdCommand
     public List<Tuple<string, string>> FileInstructionsList;
 
     public string? SaveFileOutput;
+    
+    // Time-based filtering properties
+    public DateTime? ModifiedAfter;
+    public DateTime? ModifiedBefore;
+    public DateTime? CreatedAfter;
+    public DateTime? CreatedBefore;
+    public DateTime? AccessedAfter;
+    public DateTime? AccessedBefore;
+    public DateTime? AnyTimeAfter;
+    public DateTime? AnyTimeBefore;
 }
