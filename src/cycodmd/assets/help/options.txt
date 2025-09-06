@@ -33,6 +33,14 @@ OPTIONS
     --anytime-after TIMESPEC       Match files with any time attribute after the specified time
     --anytime-before TIMESPEC      Match files with any time attribute before the specified time
 
+    TIMESPEC formats:
+    
+      - Absolute dates: "2023-09-01", "September 1, 2023"
+      - Relative times: "3d" (3 days ago), "4h" (4 hours ago)
+      - Combined times: "2d4h3m" (2 days, 4 hours, 3 minutes ago)
+      - Keywords: "today", "yesterday"
+      - Ranges: "2023-01-01..2023-12-31", "3d..", "..yesterday"
+
   LINE FORMATTING
 
     --lines N                      Include N lines both before and after matching lines
