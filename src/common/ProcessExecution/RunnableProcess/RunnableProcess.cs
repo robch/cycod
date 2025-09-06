@@ -582,8 +582,17 @@ public class RunnableProcess
     {
         if (_process != null && !_process.HasExited)
         {
-            try { _process.Kill(); } catch { }
-            _process.Dispose();
+            try { 
+                _process.Kill();
+                if (_process.WaitForExit(1000))
+                {
+                    _process.Dispose();
+                }
+            } 
+            catch 
+            { 
+                // Ignore exceptions during cleanup
+            }
             _process = null;
         }
     }

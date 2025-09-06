@@ -95,8 +95,18 @@ public abstract class ShellSession
 
     public void ForceShutdown()
     {
-        _shellProcess?.ForceShutdown();
-        _shellProcess = null;
+        try
+        {
+            _shellProcess?.ForceShutdown();
+        }
+        catch
+        {
+            // Ignore errors during cleanup
+        }
+        finally
+        {
+            _shellProcess = null;
+        }
     }
 
     public static void ShutdownAll()
