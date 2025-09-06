@@ -1,0 +1,10 @@
+The 'ama' (Ask Me Anything) feature allows you to ask natural language questions about how to use the cycod, cycodmd, and cycodt tools.
+
+USAGE: cycod help ama "your question here"
+
+EXAMPLES:
+  cycod help ama "How do I auto-approve file operations for code analysis?"
+  cycod help ama "How can I continue a previous conversation or chat session?"
+  cycod help ama "How do I use the foreach variable feature with numeric ranges?"
+
+This feature combines AI with the comprehensive help documentation to provide helpful answers to your questions.

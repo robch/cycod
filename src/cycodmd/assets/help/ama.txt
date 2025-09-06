@@ -1,0 +1,10 @@
+The 'ama' (Ask Me Anything) feature allows you to ask natural language questions about how to use the cycod, cycodmd, and cycodt tools.
+
+USAGE: cycodmd help ama "your question here"
+
+EXAMPLES:
+  cycodmd help ama "How do I convert a PDF or PPTX file to markdown?"
+  cycodmd help ama "How can I search the web and process the results with AI instructions?"
+  cycodmd help ama "How do I apply different instructions to different file types?"
+
+This feature combines AI with the comprehensive help documentation to provide helpful answers to your questions.

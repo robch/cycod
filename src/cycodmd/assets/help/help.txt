@@ -1,3 +1,4 @@
 USAGE: cycodmd help topics
    OR: cycodmd help topics --expand
    OR: cycodmd help find "TERMS"
+   OR: cycodmd help ama "YOUR QUESTION"
