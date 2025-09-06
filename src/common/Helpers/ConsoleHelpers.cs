@@ -170,6 +170,11 @@ public class ConsoleHelpers
             : _allLinesFromStdin;
     }
 
+    public static void SetForegroundColor(ConsoleColor color)
+    {
+        Console.ForegroundColor = ColorHelpers.MapColor(color);
+    }
+
     public static ConsoleKeyInfo? ReadKey(bool intercept = false)
     {
         if (Console.IsInputRedirected)
