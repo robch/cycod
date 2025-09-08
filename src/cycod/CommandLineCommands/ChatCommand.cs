@@ -526,7 +526,7 @@ public class ChatCommand : CommandWithVariables
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Warning: Failed to save chat history to '{filePath}': {ex.Message}");
+            ConsoleHelpers.WriteWarningLine($"Warning: Failed to save chat history to '{filePath}': {ex.Message}");
         }
     }
 
@@ -624,7 +624,7 @@ public class ChatCommand : CommandWithVariables
     private void DisplayUserPrompt()
     {
         ConsoleHelpers.Write("\rUser: ", ConsoleColor.Green);
-        Console.ForegroundColor = ConsoleColor.White;
+        ConsoleHelpers.SetForegroundColor(ConsoleColor.White);
     }
 
     private void DisplayUserFunctionCall(string userFunctionName, string? result)
