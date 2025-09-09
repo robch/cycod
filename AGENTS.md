@@ -14,6 +14,9 @@ This is a cycod CLI application written in C#. It consists of multiple component
 
 ## Code Style
 - Follow Microsoft C# coding guidelines
+- Match the order of method implementations with the order they are referenced or called
+- Place private fields at the end of class definitions, not the beginning
+- Name async methods with an "Async" suffix (e.g., `ProcessDataAsync`)
 - Use XML documentation comments for public members
 - Prefer explicit types over var when the type is not obvious
 - Avoid magic strings and numbers
@@ -21,6 +24,9 @@ This is a cycod CLI application written in C#. It consists of multiple component
 - Prefer concise code (e.g., ternary operators for simple conditionals)
 
 ## PR Instructions
+- Don't create or submit PRs unless explicitly requested to do so
+- Don't stage changes with `git add` unless explicitly requested by reviewers
+- Reviewers use staging status to track which changes they have reviewed
 - Run tests before submitting PRs
 - Keep changes focused and small when possible
 - Follow semantic versioning
@@ -31,9 +37,17 @@ This is a cycod CLI application written in C#. It consists of multiple component
 - Don't expose sensitive information in error messages
 
 ## Code Organization
-- Reuse existing utility classes whenever possible
+- Keep implementation order consistent with reference/calling order throughout the codebase
+- Reuse existing utility/helper classes whenever possible
 - Check FileHelpers.cs for file-related operations before creating custom implementations
 - When extending functionality, consider adding to existing helper classes rather than creating duplicates
+- Follow local documentation style when modifying existing files
+- For new files, use XML documentation for public members and classes
+- When creating help files, follow the existing style and conventions:
+  - Use spaces between words in help topic names (e.g., "chat history" not "chat-history")
+  - Don't include short options (-f, -o) in help documentation unless they're supported in code
+  - Format examples with proper spacing and follow the established pattern
+  - Modify help files directly, don't create separate "revised" versions
 
 ## Key Helper Classes
 - **FileHelpers**: Core utility for file operations including reading, writing, finding files, path manipulations

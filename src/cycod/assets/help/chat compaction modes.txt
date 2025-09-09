@@ -1,0 +1,62 @@
+CYCOD CHAT COMPACTION MODES
+
+  CycoD offers multiple AI-based compaction modes to intelligently summarize
+  older parts of conversations while preserving important context.
+
+AVAILABLE MODES
+
+  full (DEFAULT)
+    Creates a comprehensive summary with structured sections:
+    - Conversation Overview (objectives, context, user intent)
+    - Technical Foundation (technologies, frameworks, configurations)
+    - Codebase Status (files, code segments, dependencies)
+    - Problem Resolution (challenges, solutions, insights)
+    - Progress Tracking (completed tasks, partial work)
+    - Active Work State (current focus, code being modified)
+    - Recent Operations (commands, tool results)
+    - Continuation Plan (pending tasks, next steps)
+
+  simple
+    Creates a more concise summary with basic sections:
+    - Main User Goals
+    - Key Information Shared
+    - Tools Used and Results
+    - Current Status
+
+  none
+    Disables AI-based compaction, falling back to traditional trimming
+
+AUTOMATIC COMPACTION
+
+  To enable automatic AI-based compaction during chat sessions:
+
+    cycod config set App.CompactionMode full
+
+  Additional configuration options:
+
+    App.PreserveMessages       Number of recent messages to preserve
+
+EXAMPLES
+
+  EXAMPLE 1: Manual compaction with full mode
+
+    cycod chat compact history.jsonl --compact full
+
+  EXAMPLE 2: Manual compaction with simple mode
+
+    cycod chat compact history.jsonl --compact simple
+
+  EXAMPLE 3: Disabling compaction
+
+    cycod chat compact history.jsonl --no-compact
+
+  EXAMPLE 4: Enable automatic compaction for all chats
+
+    cycod config set App.CompactionMode full --user
+
+SEE ALSO
+
+  cycod help chat compact
+  cycod help chat history
+  cycod help chat token management
+  cycod help settings

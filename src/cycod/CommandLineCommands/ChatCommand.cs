@@ -39,6 +39,10 @@ public class ChatCommand : CommandWithVariables
         clone.InputInstructions = new List<string>(this.InputInstructions);
         clone.UseTemplates = this.UseTemplates;
         
+        // Copy compaction settings
+        clone._compactionMode = this._compactionMode;
+        clone._preserveMessages = this._preserveMessages;
+        
         // Deep copy variables dictionary
         clone.Variables = new Dictionary<string, string>(this.Variables);
         
@@ -66,6 +70,11 @@ public class ChatCommand : CommandWithVariables
         MaxPromptTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxPromptTokens).AsInt(DefaultMaxPromptTokenTarget);
         MaxToolTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxToolTokens).AsInt(DefaultMaxToolTokenTarget);
         MaxChatTokenTarget = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxChatTokens).AsInt(DefaultMaxChatTokenTarget);
+
+        // Initialize compaction settings
+        string compactionMode = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppCompactionMode).AsString() ?? "";
+        _compactionMode = ChatHistoryCompactionHelper.ParseCompactionMode(compactionMode);
+        _preserveMessages = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreserveMessages).AsInt(ChatHistoryCompactionHelper.DefaultPreserveMessages);
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
@@ -148,7 +157,7 @@ public class ChatCommand : CommandWithVariables
                 ImagePatterns.Clear();
                 
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
-                    (messages) => HandleUpdateMessages(messages),
+                    (messages) => HandleUpdateMessagesAsync(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
@@ -501,10 +510,18 @@ public class ChatCommand : CommandWithVariables
         return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
-    private void HandleUpdateMessages(IList<ChatMessage> messages)
+    private async void HandleUpdateMessagesAsync(IList<ChatMessage> messages)
     {
-        messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
-
+        // Try trim with compaction as needed - only using compaction mode and preserve messages
+        await ChatHistoryCompactionHelper.TryTrimToTargetWithCompactionAsync(
+            messages,
+            MaxPromptTokenTarget,
+            MaxToolTokenTarget,
+            MaxChatTokenTarget,
+            _compactionMode,
+            _preserveMessages);
+        
+        // Handle all the file saving operations
         TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
         if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
@@ -515,6 +532,7 @@ public class ChatCommand : CommandWithVariables
         _autoSaveTrajectoryFile.AppendMessage(lastMessage);
         _trajectoryFile.AppendMessage(lastMessage);
     }
+
 
     private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath)
     {
@@ -967,4 +985,8 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+    
+    // Compaction settings to be initialized during ExecuteAsync
+    private ChatHistoryCompactionHelper.CompactionMode _compactionMode;
+    private int _preserveMessages;
 }

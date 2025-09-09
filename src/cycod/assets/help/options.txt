@@ -42,7 +42,7 @@ USAGE: cycod [...]
     --max-prompt-tokens TOKENS            Maximum prompt token target (managed by CYCOD)
     --max-output-tokens TOKENS            Maximum AI output tokens (provided to AI model)
     --max-tool-tokens TOKENS              Maximum tool output tokens target (managed by CYCOD)
-    --max-chat-tokens TOKENS              Maximum total chat tokens target (managed by CYCOD)
+    --max-tokens TOKENS                   Maximum total chat tokens target (managed by CYCOD)
 
   MODEL PROVIDERS
     --use-copilot                         Prefer use of GitHub Copilot
