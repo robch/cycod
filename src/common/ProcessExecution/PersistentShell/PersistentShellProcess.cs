@@ -249,7 +249,7 @@ public abstract class PersistentShellProcess
                 isSyntaxError
             );
         }
-        catch (TimeoutException timeoutEx)
+        catch (TimeoutException)
         {
             // Attempt to kill the shell process since it's in a bad state
             try

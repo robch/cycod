@@ -97,7 +97,7 @@ USE APP SETTINGS
 
     EXAMPLE 3: Supply maximum total chat tokens via command line
 
-      cycod chat --max-chat-tokens 50000
+      cycod chat --max-tokens 50000
 
   CHAT COMPLETION TIMEOUT
 
@@ -227,6 +227,52 @@ USE APP SETTINGS
       cycod chat --auto-deny write
       cycod chat --auto-deny "CreateFile StrReplace"
 
+  AI-BASED CHAT COMPACTION
+
+    EXAMPLE 1: Configure AI-based compaction for chat history
+
+      # Enable full (detailed) compaction mode
+      cycod config set App.CompactionMode full
+
+      # Enable simple compaction mode
+      cycod config set App.CompactionMode simple
+
+      # Disable compaction
+      cycod config set App.CompactionMode none
+
+      # Set locally, for user, or globally
+      cycod config set App.CompactionMode full --local
+      cycod config set App.CompactionMode full --user
+      cycod config set App.CompactionMode full --global
+
+    EXAMPLE 2: Configure preservation of recent messages
+
+      # Set number of recent messages to preserve intact
+      cycod config set App.PreserveMessages 6 --user
+
+    EXAMPLE 3: Control compaction via environment variables
+
+      # Bash (Linux/macOS)
+      export CYCOD_COMPACTION_MODE="full"
+      export CYCOD_PRESERVE_MESSAGES="6"
+
+      # PowerShell (Windows)
+      $env:CYCOD_COMPACTION_MODE = "full"
+      $env:CYCOD_PRESERVE_MESSAGES = "6"
+
+    EXAMPLE 4: Configure compaction via command line
+
+      # Enable full compaction mode
+      cycod chat --compact
+
+      # Specify compaction mode
+      cycod chat --compact full
+      cycod chat --compact simple
+      
+      # Disable compaction
+      cycod chat --no-compact
+      cycod chat --compact none
+
   PREFERRED PROVIDER
 
     EXAMPLE 1: Set preferred AI provider via config
@@ -264,6 +310,7 @@ SEE ALSO
 
   cycod help function calls
   cycod help chat history
+  cycod help chat token management
   cycod help provider
   cycod help config
   cycod help options

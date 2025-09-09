@@ -56,6 +56,8 @@ public static class KnownSettings
     public const string AppPreferredProvider = "App.PreferredProvider";
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
+    public const string AppCompactionMode = "App.CompactionMode";
+    public const string AppPreserveMessages = "App.PreserveMessages";
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
@@ -149,7 +151,9 @@ public static class KnownSettings
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
         { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
-        { AppAutoDeny, "CYCOD_AUTO_DENY" }
+        { AppAutoDeny, "CYCOD_AUTO_DENY" },
+        { AppCompactionMode, "CYCOD_COMPACTION_MODE" },
+        { AppPreserveMessages, "CYCOD_PRESERVE_MESSAGES" }
     };
     
     /// <summary>
@@ -199,12 +203,14 @@ public static class KnownSettings
         { AppMaxPromptTokens, "--max-prompt-tokens" },
         { AppMaxOutputTokens, "--max-output-tokens" },
         { AppMaxToolTokens, "--max-tool-tokens" },
-        { AppMaxChatTokens, "--max-chat-tokens" },
+        { AppMaxChatTokens, "--max-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
         { AppChatCompletionTimeout, "--chat-completion-timeout" },
         { AppAutoApprove, "--auto-approve" },
-        { AppAutoDeny, "--auto-deny" }
+        { AppAutoDeny, "--auto-deny" },
+        { AppCompactionMode, "--compact" },
+        { AppPreserveMessages, "--preserve-messages" }
     };
     
     /// <summary>
@@ -321,7 +327,9 @@ public static class KnownSettings
         AppAutoSaveTrajectory,
         AppChatCompletionTimeout,
         AppAutoApprove,
-        AppAutoDeny
+        AppAutoDeny,
+        AppCompactionMode,
+        AppPreserveMessages
     };
     
     #endregion
