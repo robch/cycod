@@ -110,7 +110,7 @@ public static class ChatClientFactory
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
     {
-        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
+        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-sonnet-4";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
         var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new EnvVarSettingException("GITHUB_TOKEN is not set. Run 'cycod github login' to authenticate with GitHub Copilot.");
         var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
@@ -135,8 +135,10 @@ public static class ChatClientFactory
             githubToken,
             helper);
 
-        // Add the refresh policy to the pipeline
+        // Add the vision + refresh + interaction policies to the pipeline
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);
+        options.AddPolicy(new VisionHeaderPolicy(), PipelinePosition.BeforeTransport);
+        options.AddPolicy(new InteractionHeadersPolicy(new InteractionService()), PipelinePosition.BeforeTransport);
 
         var integrationIdOk = !string.IsNullOrEmpty(integrationId);
         if (integrationIdOk) options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId!), PipelinePosition.BeforeTransport);
@@ -330,6 +332,7 @@ public static class ChatClientFactory
         options.AddPolicy(new CustomJsonPropertyRemovalPolicy("tool_choice"), PipelinePosition.PerCall);
         options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
 
         // Apply timeout if configured

@@ -1,0 +1,124 @@
+CYCOD CONFIG EXAMPLES
+
+  Configuration settings control CYCOD's behavior, API keys, models, and preferences.
+  Settings can be stored at local, user, or global scope.
+
+BASIC CONFIGURATION
+
+  EXAMPLE 1: Set up OpenAI API key for current user
+
+    cycod config set OPENAI_API_KEY sk-your-api-key-here --user
+
+  EXAMPLE 2: Configure specific model for code generation
+
+    cycod config set OPENAI_CHAT_MODEL_NAME gpt-5-mini
+
+  EXAMPLE 3: Enable auto-approval for file operations
+
+    cycod config set App.AutoApprove "read write"
+
+PROVIDER CONFIGURATION
+
+  EXAMPLE 4: Set up Azure OpenAI for team use
+
+    cycod config set AZURE_OPENAI_API_KEY your-azure-key --global
+    cycod config set AZURE_OPENAI_ENDPOINT "https://your-resource.openai.azure.com" --global
+    cycod config set AZURE_OPENAI_API_VERSION 2023-12-01-preview --global
+
+  EXAMPLE 5: Configure Anthropic Claude
+
+    cycod config set ANTHROPIC_API_KEY sk-ant-your-key-here --user
+    cycod config set ANTHROPIC_MODEL_NAME claude-sonnet-4
+
+  EXAMPLE 6: Set up Google Gemini
+
+    cycod config set GOOGLE_GEMINI_API_KEY your-gemini-key --user
+    cycod config set GOOGLE_GEMINI_MODEL_ID gemini-2.5-pro
+
+APPLICATION BEHAVIOR
+
+  EXAMPLE 7: Configure function call timeouts
+
+    cycod config set App.FunctionCallTimeout 300
+
+  EXAMPLE 8: Set default auto-approval preferences
+
+    cycod config set App.AutoApprove read
+    cycod config set App.AutoDeny run
+
+  EXAMPLE 9: Configure threading for parallel operations
+
+    cycod config set App.DefaultThreads 4
+
+DEVELOPMENT ENVIRONMENT SETUP
+
+  EXAMPLE 10: Set up local development configuration
+
+    cycod config set OPENAI_CHAT_MODEL_NAME gpt-4o
+    cycod config set App.AutoApprove "read write"
+    cycod config set App.AutoDeny run
+
+  EXAMPLE 11: Configure production environment (restricted)
+
+    cycod config set OPENAI_CHAT_MODEL_NAME gpt-4o-mini --global
+    cycod config set App.AutoApprove read --global
+    cycod config set App.AutoDeny "write run" --global
+
+  EXAMPLE 12: Project-specific model settings
+
+    cycod config set OPENAI_CHAT_MODEL_NAME gpt-4o
+    cycod config set ANTHROPIC_MODEL_NAME claude-3-5-sonnet
+
+CONFIGURATION MANAGEMENT
+
+  EXAMPLE 13: View all configuration settings
+
+    cycod config list
+
+  EXAMPLE 14: Check specific configuration value
+
+    cycod config get OPENAI_CHAT_MODEL_NAME
+
+  EXAMPLE 15: View configuration from different scopes
+
+    cycod config get OPENAI_API_KEY --user
+    cycod config get OPENAI_API_KEY --global
+    cycod config get OPENAI_API_KEY --any
+
+  EXAMPLE 16: Remove configuration setting
+
+    cycod config remove OPENAI_CHAT_MODEL_NAME
+
+TEAM COLLABORATION
+
+  EXAMPLE 17: Set up shared team settings
+
+    cycod config set OPENAI_API_KEY sk-team-key --global
+    cycod config set OPENAI_CHAT_MODEL_NAME gpt-4o --global
+    cycod config set App.AutoApprove read --global
+
+  EXAMPLE 18: Override team settings for personal use
+
+    cycod config set OPENAI_CHAT_MODEL_NAME claude-3-5-sonnet --user
+    cycod config set App.AutoApprove "read write" --user
+
+ADVANCED CONFIGURATION
+
+  EXAMPLE 19: Configure multiple providers for fallback
+
+    cycod config set OPENAI_API_KEY sk-primary-key
+    cycod config set ANTHROPIC_API_KEY sk-ant-backup-key
+    cycod config set GOOGLE_GEMINI_API_KEY backup-gemini-key
+
+  EXAMPLE 20: Set up proxy and network settings
+
+    cycod config set HTTP_PROXY "http://proxy.company.com:8080"
+    cycod config set HTTPS_PROXY "https://proxy.company.com:8080"
+
+SEE ALSO
+
+  cycod help config
+  cycod help config set
+  cycod help config get
+  cycod help config list
+  cycod help configuration

@@ -2,7 +2,8 @@ CYCOD MCP COMMANDS
 
   These commands allow you to manage Model Context Protocol (MCP) server registrations.
 
-  MCP servers provide capabilities like database access, API integrations, or tool execution.
+  MCP servers provide capabilities like web automation (Playwright), database access, 
+  API integrations, file system operations, or tool execution.
 
 USAGE: cycod mcp list [--scope]
    OR: cycod mcp get SERVER_NAME [--scope]
@@ -14,10 +15,10 @@ OPTIONS
 
   SCOPE OPTIONS
 
-    --global, -g    Manage regrations from global scope (all users)
-    --user, -u      Manage regrations from user scope (current user)
-    --local, -l     Manage regrations from local scope (default for most commands)
-    --any, -a       Manage regrations from from all scopes (default for 'list' and 'get' commands)
+    --global, -g    Manage registrations from global scope (all users)
+    --user, -u      Manage registrations from user scope (current user)
+    --local, -l     Manage registrations from local scope (default for most commands)
+    --any, -a       Manage registrations from all scopes (default for 'list' and 'get' commands)
 
 COMMANDS
 
@@ -29,6 +30,7 @@ COMMANDS
 SEE ALSO
 
   cycod help options
+  cycod help mcp examples
   cycod help mcp list
   cycod help mcp get
   cycod help mcp add

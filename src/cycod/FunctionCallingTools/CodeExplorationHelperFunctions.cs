@@ -78,18 +78,5 @@ public class CodeExplorationHelperFunctions
     
     #endregion
     
-    #region Command Analysis Functions
-    
-    [Description("Run commands and convert their output to formatted markdown. Useful for analyzing command results, system information, or any command-line tool output.")]
-    public async Task<string> RunCommandsAndFormatOutput(
-        [Description("Commands to execute (each will run separately)")] string[] commands,
-        [Description("Shell to use: 'cmd', 'bash', or 'powershell'")] string shell = "cmd",
-        [Description("Instructions for AI to process the command output (e.g. 'create a table of processes', 'highlight errors')")] string? processingInstructions = null)
-    {
-        return await _cycoDmdWrapper.ExecuteRunCommandsAndFormatOutputCommand(commands, shell, processingInstructions);
-    }
-    
-    #endregion
-
     private readonly CycoDmdCliWrapper _cycoDmdWrapper = new CycoDmdCliWrapper();
 }

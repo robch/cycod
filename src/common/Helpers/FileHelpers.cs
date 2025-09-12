@@ -233,7 +233,15 @@ public class FileHelpers
         List<string>? excludeGlobs = null,
         List<Regex>? excludeFileNamePatternList = null,
         List<Regex>? includeFileContainsPatternList = null,
-        List<Regex>? excludeFileContainsPatternList = null)
+        List<Regex>? excludeFileContainsPatternList = null,
+        DateTime? modifiedAfter = null,
+        DateTime? modifiedBefore = null,
+        DateTime? createdAfter = null,
+        DateTime? createdBefore = null,
+        DateTime? accessedAfter = null,
+        DateTime? accessedBefore = null,
+        DateTime? anyTimeAfter = null,
+        DateTime? anyTimeBefore = null)
     {
         excludeGlobs ??= new List<string>();
         excludeFileNamePatternList ??= new List<Regex>();
@@ -255,19 +263,102 @@ public class FileHelpers
             ConsoleHelpers.WriteLine($"## Pattern: {string.Join(" ", globs)}\n\n - No files found\n");
             return Enumerable.Empty<string>();
         }
-
-        var filtered = files.Where(file => IsFileMatch(file, includeFileContainsPatternList, excludeFileContainsPatternList)).ToList();
-        if (filtered.Count == 0)
+        
+        // Apply time-based filtering if any time constraints are specified
+        bool hasTimeConstraints = modifiedAfter != null || modifiedBefore != null || 
+                                 createdAfter != null || createdBefore != null || 
+                                 accessedAfter != null || accessedBefore != null ||
+                                 anyTimeAfter != null || anyTimeBefore != null;
+                                 
+        var timeFiltered = hasTimeConstraints 
+            ? files.Where(file => IsFileTimeMatch(file, 
+                modifiedAfter, modifiedBefore,
+                createdAfter, createdBefore,
+                accessedAfter, accessedBefore,
+                anyTimeAfter, anyTimeBefore)).ToList()
+            : files;
+            
+        if (hasTimeConstraints && timeFiltered.Count == 0)
         {
-            ConsoleHelpers.WriteLine($"## Pattern: {string.Join(" ", globs)}\n\n - No files matched criteria\n");
+            ConsoleHelpers.WriteLine($"## Pattern: {string.Join(" ", globs)}\n\n - No files matched time criteria\n");
             return Enumerable.Empty<string>();
         }
 
-        var distinct = filtered.Distinct().ToList();
+        // Apply content-based filtering
+        var contentFiltered = timeFiltered.Where(file => IsFileMatch(file, includeFileContainsPatternList, excludeFileContainsPatternList)).ToList();
+        if (contentFiltered.Count == 0)
+        {
+            ConsoleHelpers.WriteLine($"## Pattern: {string.Join(" ", globs)}\n\n - No files matched content criteria\n");
+            return Enumerable.Empty<string>();
+        }
+
+        var distinct = contentFiltered.Distinct().ToList();
         ConsoleHelpers.WriteDebugLine($"DEBUG: 2: Found files ({distinct.Count()} distinct/filtered): ");
         distinct.ForEach(x => ConsoleHelpers.WriteDebugLine($"DEBUG: 2: - {x}"));
 
         return distinct;
+    }
+    
+    public static bool IsFileTimeMatch(string fileName,
+        DateTime? modifiedAfter, DateTime? modifiedBefore,
+        DateTime? createdAfter, DateTime? createdBefore,
+        DateTime? accessedAfter, DateTime? accessedBefore,
+        DateTime? anyTimeAfter, DateTime? anyTimeBefore)
+    {
+        try
+        {
+            var fileInfo = new FileInfo(fileName);
+            
+            // Check modification time constraints
+            if (modifiedAfter.HasValue && fileInfo.LastWriteTime < modifiedAfter.Value)
+                return false;
+            
+            if (modifiedBefore.HasValue && fileInfo.LastWriteTime > modifiedBefore.Value)
+                return false;
+            
+            // Check creation time constraints
+            if (createdAfter.HasValue && fileInfo.CreationTime < createdAfter.Value)
+                return false;
+            
+            if (createdBefore.HasValue && fileInfo.CreationTime > createdBefore.Value)
+                return false;
+            
+            // Check access time constraints
+            if (accessedAfter.HasValue && fileInfo.LastAccessTime < accessedAfter.Value)
+                return false;
+            
+            if (accessedBefore.HasValue && fileInfo.LastAccessTime > accessedBefore.Value)
+                return false;
+            
+            // Check any-time constraints (using OR logic)
+            if (anyTimeAfter.HasValue)
+            {
+                bool anyMatch = 
+                    fileInfo.LastWriteTime >= anyTimeAfter.Value ||
+                    fileInfo.CreationTime >= anyTimeAfter.Value ||
+                    fileInfo.LastAccessTime >= anyTimeAfter.Value;
+                    
+                if (!anyMatch)
+                    return false;
+            }
+            
+            if (anyTimeBefore.HasValue)
+            {
+                bool anyMatch = 
+                    fileInfo.LastWriteTime <= anyTimeBefore.Value ||
+                    fileInfo.CreationTime <= anyTimeBefore.Value ||
+                    fileInfo.LastAccessTime <= anyTimeBefore.Value;
+                    
+                if (!anyMatch)
+                    return false;
+            }
+            
+            return true;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     public static string MakeRelativePath(string fullPath)
@@ -484,6 +575,49 @@ public class FileHelpers
             if (!char.IsLetterOrDigit(c)) invalidCharList.Add(c);
         }
         return invalidCharList.Distinct().ToArray();
+    }
+
+    /// <summary>
+    /// Finds the first existing file from a list of filenames, searching in parent directories if specified.
+    /// </summary>
+    /// <param name="fileNames">List of filenames to search for in priority order</param>
+    /// <param name="searchParents">Whether to search in parent directories</param>
+    /// <returns>Path to the first matching file if found, null otherwise</returns>
+    public static string? FindFirstExistingFileFromNames(string[] fileNames, bool searchParents = true)
+    {
+        if (fileNames == null || fileNames.Length == 0)
+            return null;
+            
+        var currentPath = Directory.GetCurrentDirectory();
+        
+        if (!searchParents)
+        {
+            // Just check in the current directory
+            foreach (var fileName in fileNames)
+            {
+                var filePath = Path.Combine(currentPath, fileName);
+                if (File.Exists(filePath))
+                    return filePath;
+            }
+            return null;
+        }
+        
+        // Search up the directory tree
+        string? currentCheckPath = currentPath;
+        while (currentCheckPath != null)
+        {
+            foreach (var fileName in fileNames)
+            {
+                var filePath = Path.Combine(currentCheckPath, fileName);
+                if (File.Exists(filePath))
+                    return filePath;
+            }
+            
+            // Move up one directory
+            currentCheckPath = Directory.GetParent(currentCheckPath)?.FullName;
+        }
+        
+        return null;
     }
 
     private static char[] _invalidFileNameCharsForWeb = GetInvalidFileNameCharsForWeb();

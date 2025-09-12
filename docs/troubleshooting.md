@@ -44,9 +44,9 @@ This guide provides solutions for common issues you might encounter when using C
    ```
 
 3. **Shell Availability**: Ensure the requested shell is available on your system:
-   - For `RunBashCommandAsync`: Bash must be installed
-   - For `RunCmdCommandAsync`: Windows Command Prompt (only works on Windows)
-   - For `RunPowershellCommandAsync`: PowerShell must be installed
+   - For `RunBashCommand`: Bash must be installed
+   - For `RunCmdCommand`: Windows Command Prompt (only works on Windows)
+   - For `RunPowershellCommand`: PowerShell must be installed
 
 ### Issue: File Operations Failed
 

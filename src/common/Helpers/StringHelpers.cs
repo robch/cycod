@@ -14,6 +14,13 @@ public class StringHelpers
     {
         countFound = 0;
 
+        var bothEmpty = string.IsNullOrEmpty(fileContent) && string.IsNullOrEmpty(oldStr);
+        if (bothEmpty)
+        {
+            countFound = 1;
+            return newStr;
+        }
+
         var first = fileContent.IndexOf(oldStr, StringComparison.Ordinal);
         if (first == -1) return null;
         

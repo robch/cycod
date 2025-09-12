@@ -2,41 +2,41 @@ USAGE: cycod [...]
 
 EXAMPLES
 
-  EXAMPLE 1: Ask a single question
+  EXAMPLE 1: Analyze a codebase and suggest improvements
 
-    cycod --question "What time is it?"
+    cycod --question "Analyze this codebase structure and suggest architectural improvements"
 
-  EXAMPLE 2: Automatically approve function calls
+  EXAMPLE 2: Automatically approve file operations for code analysis
 
-    cycod --question "What time is it?" --auto-approve *
+    cycod --question "Analyze this codebase structure and suggest architectural improvements" --auto-approve read
 
-  EXAMPLE 3: Use multiple sequential inline inputs
-
-    cycod --inputs "What's today's date?" "show me a calendar for this month"
+  EXAMPLE 3: Create documentation for multiple code files
+  
+    cycod --inputs "Generate README.md documentation for this project" "What are the main API endpoints and how do they work?"
     
-  EXAMPLE 4: Continue the most recent chat history
+  EXAMPLE 4: Continue a code review session
 
-    cycod --continue --question "Next month?"
+    cycod --continue --question "Now check the security aspects of this implementation"
 
-  EXAMPLE 5: Save chat history in JSONL format
+  EXAMPLE 5: Save development session for team sharing
 
-    cycod --question "Tell me a joke" --output-chat-history chat-history.jsonl
+    cycod --question "Review this API design and suggest improvements" --output-chat-history team-review.jsonl
 
-  EXAMPLE 6: Continue chat, after loading chat history from a JSONL file
+  EXAMPLE 6: Continue a code review from saved session
 
-    cycod --input-chat-history chat-history.jsonl --question "Tell me another"
+    cycod --input-chat-history team-review.jsonl --question "What about the error handling in these endpoints?"
 
-  EXAMPLE 7: Save chat history in human readable trajectory format
+  EXAMPLE 7: Create detailed development session log
   
-    cycod --question "What time is it?" --output-trajectory trajectory.md
+    cycod --question "Help me refactor this legacy code to use modern patterns" --output-trajectory refactoring-session.md
 
-  EXAMPLE 8: Use additional system prompt with the base system prompt
+  EXAMPLE 8: Add domain-specific expertise to your AI assistant
   
-    cycod --add-system-prompt "Never access files outside the current directory."
+    cycod --add-system-prompt "You are a senior DevOps engineer specializing in Kubernetes, Docker, and CI/CD pipelines"
 
-  EXAMPLE 9: Add a user prompt that will be included when starting a new chat
+  EXAMPLE 9: Create focused documentation from code analysis
   
-    cycod --add-user-prompt "Always answer in french."
+    cycod --add-user-prompt "Generate detailed README.md documentation with usage examples for any code you analyze"
     
   EXAMPLE 10: Use foreach variables to run multiple versions of a command
   
@@ -63,15 +63,15 @@ EXAMPLES
     > /find "class Program"
     > /search Python best practices
     
-  EXAMPLE 15: Using an external MCP server without registration
+  EXAMPLE 15: Using Playwright MCP for web automation without registration
   
-    cycod --with-mcp cycod-mcp-weather
+    cycod --with-mcp "npx @playwright/mcp@latest"
     
-  EXAMPLE 16: Using both registered MCP servers and an external MCP command
+  EXAMPLE 16: Using both registered MCP servers and external Playwright MCP
   
-    cycod mcp add osm --command cycod-mcp-osm
-    cycod --use-mcps --with-mcp cycod-mcp-weather
-
+    cycod mcp add playwright --command "npx" --args "@playwright/mcp@latest"
+    cycod --use-mcps --with-mcp "npx @playwright/mcp@latest --headless"
+    
 SEE ALSO
 
   cycod help options

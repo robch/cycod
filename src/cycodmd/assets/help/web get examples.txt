@@ -8,20 +8,20 @@ EXAMPLES
 
   EXAMPLE 1: Create markdown for web page content
 
-    cycodmd web get https://example.com
-    cycodmd web get https://mbers.us/bio --strip
+    cycodmd web get "https://example.com"
+    cycodmd web get "https://mbers.us/bio" --strip
 
   EXAMPLE 2: Apply AI processing on each web page
 
-    cycodmd web get https://example.com https://mbers.us/bio --page-instructions "what's the title of this page?"
+    cycodmd web get "https://example.com" "https://mbers.us/bio" --page-instructions "what's the title of this page?"
 
   EXAMPLE 3: Apply AI multi-step instructions
 
-    cycodmd web get https://learnxinyminutes.com/yaml/ --page-instructions @step1-instructions.txt @step2-instructions.txt
+    cycodmd web get "https://learnxinyminutes.com/yaml/" --page-instructions @step1-instructions.txt @step2-instructions.txt
 
   EXAMPLE 4: Apply AI to the final output
 
-    cycodmd web get https://example.com https://mbers.us/bio --instructions "style example.com as the other site"    
+    cycodmd web get "https://example.com" "https://mbers.us/bio" --instructions "style example.com as the other site"    
 
 SEE ALSO
 
@@ -31,4 +31,3 @@ SEE ALSO
   cycodmd help web search
   cycodmd help web search examples
   cycodmd help web search options
-

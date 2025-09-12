@@ -333,17 +333,17 @@ public class DateAndTimeHelperFunctions {
 ```csharp
 public class ShellCommandToolHelperFunctions {
     [HelperFunctionDescription("Run commands in a bash shell. This persistent session maintains state across commands.")]
-    public async Task<string> RunBashCommandAsync(
+    public async Task<string> RunBashCommand(
         [HelperFunctionParameterDescription("The bash command to run.")] string command,
         [HelperFunctionParameterDescription("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000);
     
     [HelperFunctionDescription("Run commands in a cmd shell. This persistent session maintains state across commands.")]
-    public async Task<string> RunCmdCommandAsync(
+    public async Task<string> RunCmdCommand(
         [HelperFunctionParameterDescription("The cmd command to run.")] string command,
         [HelperFunctionParameterDescription("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000);
     
     [HelperFunctionDescription("Run commands in a PowerShell shell. This persistent session maintains state across commands.")]
-    public async Task<string> RunPowershellCommandAsync(
+    public async Task<string> RunPowershellCommand(
         [HelperFunctionParameterDescription("The PowerShell command to run.")] string command,
         [HelperFunctionParameterDescription("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000);
 }

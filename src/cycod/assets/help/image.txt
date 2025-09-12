@@ -1,0 +1,61 @@
+CYCOD IMAGE SUPPORT
+
+  CYCOD supports including images in your conversations with AI models that support
+  multimodal input. Images can be provided through command line options or slash 
+  commands during interactive sessions.
+
+COMMAND LINE USAGE
+
+  --image FILE.png [FILE2.jpg ...]     Include one or more image files in the conversation
+  --image "*.png"                      Use glob patterns to include multiple images
+
+SLASH COMMAND USAGE
+
+  /image FILE.png                      Add an image file to the current conversation
+  /image "*.jpg"                       Use glob patterns to add multiple images
+
+SUPPORTED FORMATS
+
+  The following image formats are supported:
+  - JPEG (.jpg, .jpeg)
+  - PNG (.png)  
+  - GIF (.gif)
+  - BMP (.bmp)
+  - WebP (.webp)
+
+EXAMPLES
+
+  EXAMPLE 1: Describe an image from command line
+
+    cycod --image screenshot.png --input "What's in this image?"
+
+  EXAMPLE 2: Include multiple images using glob patterns
+
+    cycod --image "*.png" --input "Compare these images"
+
+  EXAMPLE 3: Add image during interactive session
+
+    cycod
+    User: Hello!
+    Assistant: Hello! How can I help you today?
+    User: /image diagram.jpg
+    Assistant: Added image file 'diagram.jpg'
+    User: Can you explain this diagram?
+
+  EXAMPLE 4: Add multiple images with glob patterns
+
+    /image screenshots/*.png
+    Added image files 'screen1.png', 'screen2.png', 'screen3.png'
+
+NOTES
+
+  - Images are processed by the AI model along with your text prompts
+  - Different AI models may have varying levels of image understanding capabilities
+  - Large images may affect token usage and response time
+  - Images must exist on your local file system
+
+SEE ALSO
+
+  cycod help options
+  cycod help slash commands
+  cycod help examples

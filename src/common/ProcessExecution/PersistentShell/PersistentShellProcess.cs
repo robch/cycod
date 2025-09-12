@@ -79,7 +79,7 @@ public abstract class PersistentShellProcess
         var verifyCommand = GetVerifyCommand();
         var wrappedCommand = WrapCommandWithMarker(verifyCommand);
         await _shellProcess.SendInputAsync(wrappedCommand);
-
+        
         var commandOutput = await WaitForMarkerAsync(CancellationToken.None, 10000);
         var exitCode = ParseExitCodeFromMarker(commandOutput.StandardOutput);
         return exitCode == 0;
@@ -249,8 +249,18 @@ public abstract class PersistentShellProcess
                 isSyntaxError
             );
         }
-        catch (TimeoutException)
+        catch (TimeoutException timeoutEx)
         {
+            // Attempt to kill the shell process since it's in a bad state
+            try
+            {
+                _shellProcess.ForceShutdown();
+            }
+            catch
+            {
+                // Ignore errors during cleanup
+            }
+            
             // Report the actual timeout used
             int actualTimeout = timeoutMs ?? _commandTimeoutMs;
             var duration = DateTime.Now - startTime;
@@ -270,16 +280,19 @@ public abstract class PersistentShellProcess
         }
         catch (OperationCanceledException)
         {
+            var duration = DateTime.Now - startTime;
+            var looksLikeTimeout = timeoutMs.HasValue && Math.Abs(duration.TotalMilliseconds - timeoutMs.Value) < 100;
+            
             return PersistentShellCommandResult.FromProcessResult(
                 new RunnableProcessResult(
                     "",
                     "",
                     "",
                     -1,
-                    ProcessCompletionState.Canceled,
-                    DateTime.Now - startTime,
-                    ProcessErrorType.Other,
-                    "Command execution was canceled"
+                    looksLikeTimeout ? ProcessCompletionState.TimedOut : ProcessCompletionState.Canceled,
+                    duration,
+                    looksLikeTimeout ? ProcessErrorType.Timeout : ProcessErrorType.Other,
+                    looksLikeTimeout ? $"Command timed out after {duration.TotalMilliseconds:0}ms (timeout: {timeoutMs}ms)" : "Command execution was canceled"
                 ),
                 command
             );
@@ -422,6 +435,12 @@ public abstract class PersistentShellProcess
         
         while (!cancellationToken.IsCancellationRequested)
         {
+            // Check if shell has exited unexpectedly
+            if (HasExited)
+            {
+                throw new InvalidOperationException("Shell process has exited while waiting for marker");
+            }
+            
             // Check for marker in output
             string currentOutput;
             lock (_lock)
