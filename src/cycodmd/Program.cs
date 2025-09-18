@@ -529,7 +529,9 @@ class Program
                     var size = FileHelpers.GetFriendlySize(fileInfo);
                     var lang = FileHelpers.GetMarkdownLanguage(fileInfo.Extension);
 
-                    content = $"## {fileName}\n\nModified: {modified}\nSize: {size}\n\n{backticks}{lang}\n{content}\n{backticks}\n";
+                    content = ConsoleHelpers.IsVerbose()
+                        ? $"## {fileName}\n\nModified: {modified}\nSize: {size}\n\n{backticks}{lang}\n{content}\n{backticks}\n"
+                        : $"## {fileName}\n\n{backticks}{lang}\n{content}\n{backticks}\n";
                 }
                 else
                 {
