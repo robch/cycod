@@ -419,7 +419,9 @@ public static class OpenAIChatHelpers
             OpenAI.Chat.UserChatMessage => ChatRole.User,
             OpenAI.Chat.AssistantChatMessage => ChatRole.Assistant,
             OpenAI.Chat.ToolChatMessage => ChatRole.Tool,
+#pragma warning disable OPENAI001
             OpenAI.Chat.DeveloperChatMessage => new ChatRole("developer"),
+#pragma warning restore OPENAI001
             _ => throw new Exception($"Unknown chat message type {message.GetType().Name}")
         };
 
@@ -485,10 +487,12 @@ public static class OpenAIChatHelpers
                 input.Role == ChatRoleDeveloper)
             {
                 var parts = ToOpenAIChatContent(input.Contents);
+#pragma warning disable OPENAI001
                 yield return
                     input.Role == ChatRole.System ? new OpenAI.Chat.SystemChatMessage(parts) { ParticipantName = input.AuthorName } :
                     input.Role == ChatRoleDeveloper ? new OpenAI.Chat.DeveloperChatMessage(parts) { ParticipantName = input.AuthorName } :
                     new OpenAI.Chat.UserChatMessage(parts) { ParticipantName = input.AuthorName };
+#pragma warning restore OPENAI001
             }
             else if (input.Role == ChatRole.Tool)
             {
@@ -562,7 +566,7 @@ public static class OpenAIChatHelpers
                 case DataContent dataContent when dataContent.HasTopLevelMediaType("image"):
                     parts.Add(OpenAI.Chat.ChatMessageContentPart.CreateImagePart(BinaryData.FromBytes(dataContent.Data), dataContent.MediaType, GetImageDetail(content)));
                     break;
-
+#pragma warning disable OPENAI001
                 case DataContent dataContent when dataContent.HasTopLevelMediaType("audio"):
                     var audioData = BinaryData.FromBytes(dataContent.Data);
                     if (dataContent.MediaType.Equals("audio/mpeg", StringComparison.OrdinalIgnoreCase))
@@ -576,6 +580,7 @@ public static class OpenAIChatHelpers
 
                     break;
             }
+#pragma warning restore OPENAI001
         }
 
         if (parts.Count == 0)
