@@ -64,21 +64,36 @@ TOKEN MANAGEMENT
 
   CycoD automatically manages token usage for long conversations:
 
-    --max-chat-tokens <number>     Set a target for maximum total chat tokens
+    --max-tokens <number>          Maximum total chat tokens target (managed by CYCOD)
 
-  When loading or continuing chat histories, CycoD will automatically trim the
-  history to stay under the token target. This prevents errors from exceeding
+  When loading or continuing chat histories, CycoD will automatically handle
+  the history to stay under the token target. This prevents errors from exceeding
   model context limits while preserving the most relevant conversation parts.
 
-  CycoD optimizes this by:
-  - Trimming before loading chat histories
-  - Trimming during the conversation as needed
-  - Preserving essential context while removing less important details
-  - Focusing on keeping the most recent messages intact
+  CycoD offers two methods for managing token limits:
+
+  1. TRADITIONAL TRIMMING (DEFAULT)
+     - Trims based on character counts and simple heuristics
+     - Preserves recent messages while trimming older content
+     - Faster but less intelligent about what content to keep
+
+  2. AI-BASED COMPACTION (NEW)
+     - Uses AI to create intelligent summaries of older conversation parts
+     - Preserves the context and key information while reducing token count
+     - Enable with: cycod config set App.CompactionMode full
+     - Supports three modes: full (detailed), simple (concise), none (disabled)
+     - For manual compaction: cycod chat compact <file>
+
+  For detailed information on AI-based compaction:
+    cycod help chat compact
+
+  For comprehensive token management information:
+    cycod help chat token management
 
 SEE ALSO
 
   cycod help
   cycod help config
   cycod help options
+  cycod help chat token management
   cycod help settings

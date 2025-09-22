@@ -1,0 +1,59 @@
+CYCOD CHAT COMPACT
+
+  Compact chat history files using AI-based summarization. This command
+  intelligently summarizes older parts of the conversation while preserving
+  important context, enabling much longer conversations within token limits.
+
+USAGE: cycod chat compact <file> [options]
+
+ARGUMENTS
+
+  <file>                  Chat history file to compact (required)
+                          Can also be specified with --file
+
+OPTIONS
+
+  --file <file>                   Specify a chat history file to compact
+  --output <file>                 Output file for the compacted history (default: original-name-compacted.jsonl)
+  --compact [mode]                Specify compaction mode: full, simple, or none (default: full if --compact used without a mode)
+  --no-compact                    Disable compaction (same as --compact none)
+  --preserve-messages <number>    Number of recent messages to preserve intact (default: 4)
+  --preserve <number>             Same as --preserve-messages (for compatibility)
+  --max-tokens <number>           Maximum total chat tokens target (managed by CYCOD) (default: 160000)
+  --max-prompt-tokens <number>    Maximum prompt token target (managed by CYCOD) (default: 50000)
+  --max-tool-tokens <number>      Maximum tool token target (managed by CYCOD) (default: 50000)
+
+COMPACTION MODES
+
+  For detailed information about compaction modes:
+    cycod help chat compaction modes
+
+EXAMPLES
+
+  EXAMPLE 1: Compact a chat history file with default (full) mode
+
+    cycod chat compact chat-history.jsonl
+
+  EXAMPLE 2: Use simple mode and specify output file
+
+    cycod chat compact chat-history.jsonl --compact simple --output simple-chat.jsonl
+
+  EXAMPLE 3: Preserve more recent messages and set token target
+
+    cycod chat compact chat-history.jsonl --preserve-messages 6 --max-tokens 8000
+
+  EXAMPLE 4: Set different token limits for different token types
+
+    cycod chat compact chat-history.jsonl --max-prompt-tokens 16000 --max-tool-tokens 8000 --max-tokens 32000
+
+  EXAMPLE 5: Disable compaction
+
+    cycod chat compact chat-history.jsonl --no-compact
+
+SEE ALSO
+
+  cycod help chat history
+  cycod help chat compaction modes
+  cycod help chat token management
+  cycod help settings
+  cycod help config

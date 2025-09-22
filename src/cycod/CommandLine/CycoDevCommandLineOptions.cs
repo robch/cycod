@@ -32,9 +32,11 @@ public class CycoDevCommandLineOptions : CommandLineOptions
     override protected string PeekCommandName(string[] args, int i)
     {
         var name1 = GetInputOptionArgs(i, args, max: 1).FirstOrDefault();
+        var name2 = GetInputOptionArgs(i + 1, args, max: 1).FirstOrDefault();
+        
         return name1 switch
         {
-            "chat" => "chat",
+            "chat" => name2 == "compact" ? "chat compact" : "chat",
             _ => base.PeekCommandName(args, i)
         };
     }
@@ -58,6 +60,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         return commandName switch
         {
             "chat" => new ChatCommand(),
+            "chat compact" => new ChatCompactCommand(),
             "github login" => new GitHubLoginCommand(),
             "github models" => new GitHubModelsCommand(),
             "config list" => new ConfigListCommand(),
@@ -85,6 +88,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
 	{
 		return TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
+               TryParseChatCompactCommandOptions(command as ChatCompactCommand, args, ref i, arg) ||
                TryParseGitHubLoginCommandOptions(command as GitHubLoginCommand, args, ref i, arg) ||
                TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
                TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
@@ -198,6 +202,11 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (command is McpAddCommand mcpAddCommand && string.IsNullOrEmpty(mcpAddCommand.Name))
         {
             mcpAddCommand.Name = arg;
+            parsedOption = true;
+        }
+        else if (command is ChatCompactCommand chatCompactCommand && chatCompactCommand.File == null)
+        {
+            chatCompactCommand.File = new FileInfo(arg);
             parsedOption = true;
         }
         else if (command is McpRemoveCommand mcpRemoveCommand && string.IsNullOrEmpty(mcpRemoveCommand.Name))
@@ -394,6 +403,8 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         return parsed;
     }
 
+
+
     private bool TryParseChatCommandOptions(ChatCommand? command, string[] args, ref int i, string arg)
     {
         bool parsed = true;
@@ -582,6 +593,31 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.OutputTrajectory = outputTrajectory;
             i += max1Arg.Count();
         }
+        else if (arg == "--compact")
+        {
+            // Check if there's a mode specified (full, simple, none)
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var modeValue = max1Arg.FirstOrDefault();
+                
+            // Set the compaction mode in configuration
+            if (modeValue == null || modeValue.StartsWith("-"))
+            {
+                // Default to "full" if no mode specified
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppCompactionMode, "full");
+                i += 0; // No argument consumed
+            }
+            else
+            {
+                // Use the specified mode
+                ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppCompactionMode, modeValue.ToLowerInvariant());
+                i += max1Arg.Count();
+            }
+        }
+        else if (arg == "--no-compact")
+        {
+            // Explicitly disable compaction
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppCompactionMode, "none");
+        }
         else if (arg == "--use-anthropic")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
@@ -651,6 +687,67 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         }
 
         return parsed;
+    }
+
+    private bool TryParseChatCompactCommandOptions(ChatCompactCommand? command, string[] args, ref int i, string arg)
+    {
+        var parsedOption = false;
+        
+        if (command == null) return parsedOption;
+        
+        // Parse file option
+        if (arg == "--file")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var fileValue = max1Arg.FirstOrDefault();
+            if (fileValue != null)
+            {
+                command.File = new FileInfo(fileValue);
+                i += max1Arg.Count();
+                parsedOption = true;
+            }
+        }
+        // Parse output file option
+        else if (arg == "--output")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var outputValue = max1Arg.FirstOrDefault();
+            if (outputValue != null)
+            {
+                command.OutputFile = outputValue;
+                i += max1Arg.Count();
+                parsedOption = true;
+            }
+        }
+        // Parse compaction mode options
+        else if (arg == "--compact")
+        {
+            // Check if there's a mode specified (full, simple, none)
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var modeValue = max1Arg.FirstOrDefault();
+            
+            // If the next argument looks like another option or is missing, use "full" as default
+            if (modeValue == null)
+            {
+                command.CompactionMode = "full";
+                parsedOption = true;
+            }
+            else
+            {
+                // Get the specified mode
+                command.CompactionMode = modeValue.ToLowerInvariant();
+                i += max1Arg.Count();
+                parsedOption = true;
+            }
+        }
+        // Handle explicit --no-compact
+        else if (arg == "--no-compact")
+        {
+            command.CompactionMode = "none";
+            parsedOption = true;
+        }
+        
+        return parsedOption;
     }
 
     private bool TryParseGitHubLoginCommandOptions(GitHubLoginCommand? command, string[] args, ref int i, string arg)
