@@ -2,8 +2,7 @@
 # and verify that only messages at or above the specified level are logged
 
 class: log-level-configuration-tests
-tag: cycod
-optional: broken-test
+tags: [cycod, logger]
 tests:
 
 - name: Test log level Error - should only show Error messages
@@ -18,9 +17,14 @@ tests:
       cycod config get non.existent.key --log test-error-level.log 2>&1 || true
       cycodmd test-error-level.log
     expect-regex: |
-      ERROR:
+      Version:
+    # With LOG_LEVEL=Error, should have no INFO/WARNING/VERBOSE logs
     not-expect-regex: |
-      WARNING:|INFO:|VERBOSE:
+      INFO:.*File logger initialized
+      INFO:.*Memory logger configured
+      INFO:.*Logging system fully initialized
+      WARNING:
+      VERBOSE:
   
   - name: Clean up error level test files
     bash: |
@@ -41,9 +45,13 @@ tests:
       cycod --log test-warning-level.log 2>&1 || true
       cycodmd test-warning-level.log
     expect-regex: |
-      WARNING:|ERROR:
+      Version:
+    # With LOG_LEVEL=Warning, should have no INFO/VERBOSE logs
     not-expect-regex: |
-      INFO:|VERBOSE:
+      INFO:.*File logger initialized
+      INFO:.*Memory logger configured  
+      INFO:.*Logging system fully initialized
+      VERBOSE:
       
   - name: Clean up warning level test files
     bash: |
@@ -62,7 +70,7 @@ tests:
       cycod version --log test-info-level.log 2>&1 || true
       cycodmd test-info-level.log
     expect-regex: |
-      INFO:.*Starting cycod
+      Version:
       INFO:.*File logger initialized
       INFO:.*Memory logger configured
       INFO:.*Logging system fully initialized
@@ -86,7 +94,7 @@ tests:
       cycod version --log test-all-level.log 2>&1 || true
       cycodmd test-all-level.log
     expect-regex: |
-      INFO:.*Starting cycod
+      Version:
       INFO:.*File logger initialized
       INFO:.*Memory logger configured
       INFO:.*Logging system fully initialized

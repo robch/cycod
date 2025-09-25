@@ -1,7 +1,7 @@
 # Test log file directory creation: Test that the log directory is created if it doesn't exist
 
 class: log-directory-creation-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test log directory creation with nested path for cycod

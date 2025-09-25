@@ -2,7 +2,7 @@
 # and verify that applications continue to work even when file logging fails
 
 class: log-file-error-handling-tests  
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test logging to invalid directory path - application continues to work

@@ -1,7 +1,7 @@
 # Test default log file name template: log-{ProgramName}-{time}.log
 
 class: default-log-file-tests
-tag: cycodmd
+tags: [cycodmd, logger]
 tests:
 
 - name: Test default log file name template for cycodmd

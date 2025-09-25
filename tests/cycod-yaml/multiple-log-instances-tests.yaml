@@ -1,7 +1,7 @@
 # Test multiple log instances: Test that running multiple instances of the application creates separate log files
 
 class: multiple-log-instances-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test multiple cycod instances create separate log files with default naming

@@ -2,7 +2,7 @@
 # Specifically tests that LOG_LEVEL environment variable is read and applied to loggers
 
 class: log-environment-variables-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test LOG_LEVEL environment variable is read and applied to File Logger

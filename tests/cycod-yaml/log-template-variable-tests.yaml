@@ -2,7 +2,7 @@
 # Tests various template variable formats: {ProgramName}, {Time}, {TimeStamp} and case variations
 
 class: log-template-variable-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test ProgramName template variable (uppercase P) for cycod

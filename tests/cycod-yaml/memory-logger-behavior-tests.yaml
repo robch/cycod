@@ -1,8 +1,8 @@
 # Test memory logger behavior: Test that memory logging is always active
 # and that memory logs get dumped to a file when an error occurs
 
-class: memory-logger-behavior-tests  
-tag: cycod
+class: memory-logger-behavior-tests
+tags: [cycod, logger]
 tests:
 
 - name: Test memory logging is always active during normal operation

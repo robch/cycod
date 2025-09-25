@@ -1,7 +1,7 @@
 # Test path handling: Test with absolute and relative paths for log files
 
 class: log-path-handling-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test absolute path for log files

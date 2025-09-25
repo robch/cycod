@@ -134,6 +134,17 @@ public static class LoggingInitializer
                     InitializeMemoryLogger();
                 }
                 
+                // Get log level configuration from environment variable
+                var logConfig = LogConfiguration.GetConfig("default");
+                
+                // Apply log level configuration to all loggers immediately
+                if (logConfig.Level != LogLevel.All)
+                {
+                    FileLogger.Instance.Level = logConfig.Level;
+                    ConsoleLogger.Instance.Level = logConfig.Level;
+                    MemoryLogger.Instance.Level = logConfig.Level;
+                }
+                
                 // Configure file logger if filename was provided
                 if (!string.IsNullOrEmpty(logFileName))
                 {

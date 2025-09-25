@@ -1,5 +1,6 @@
 name: Exception Logging Tests - cycod
 description: Tests exception logging functionality for the cycod CLI application
+tags: [cycod, logger]
 
 tests:
   - name: Generate exception and verify exception files are created

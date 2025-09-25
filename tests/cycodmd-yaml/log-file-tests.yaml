@@ -1,7 +1,7 @@
 # Test custom log file name
 
 class: log-file-tests
-tag: cycodmd
+tags: [cycodmd, logger]
 tests:
 
 - name: Test log file creation with custom filename for cycodmd

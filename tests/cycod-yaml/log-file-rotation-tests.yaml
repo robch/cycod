@@ -1,8 +1,7 @@
 # Test log file rotation: Test log file rotation based on size or duration
 
 class: log-file-rotation-tests
-tag: cycod
-optional: broken-test
+tags: [cycod, logger]
 tests:
 
 - name: Test log file rotation based on size limit (once CLI support is added)

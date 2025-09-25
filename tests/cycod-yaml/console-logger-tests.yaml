@@ -2,7 +2,7 @@
 # and that console logs appear in stderr or stdout as configured
 
 class: console-logger-tests
-tag: cycod
+tags: [cycod, logger]
 tests:
 
 - name: Test console logging enabled in debug mode
