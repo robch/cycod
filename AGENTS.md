@@ -58,6 +58,49 @@ Commands follow a consistent pattern:
 - Commands should use existing helper methods when available
 - Commands should respect the configuration scope system
 
+## Testing with cycodt
+The project uses a YAML-based test framework called cycodt. Key operations:
+
+- **List tests**: `dotnet run --project src/cycodt/cycodt.csproj list --file <test_file.yaml>`
+- **Run specific test**: `dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml> --test "<test_name>"`
+- **Run all tests in file**: `dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml>`
+
+Tests are defined in YAML files with:
+- Test name and command/script to run
+- Expected outputs (regex patterns)
+- Environment variables, inputs, and other settings
+
+### Testing Best Practices
+
+**File Creation and Content Verification:**
+- Use `cycodmd` with patterns to verify both file creation AND content in one step
+- Much cleaner than bash scripting with `ls`/`cat` combinations
+- Example: `dotnet run --project ../../src/cycodmd/cycodmd.csproj -- log-*.log`
+
+**Side Effect Detection:**
+- Use `not-expect-regex` to catch unwanted files or outputs (great for detecting "turd files")
+- Example: `not-expect-regex: "## exception-log-.*\.log"` to ensure no exception logs appear
+
+**Test Structure:**
+- Clean up only at the end - allows debugging failed tests by inspecting leftover files
+- Use minimal comments in test files - step names should be self-documenting
+- Avoid redundant bash comments when the command is obvious
+
+**Debugging Failed Tests:**
+- Make tests fail deliberately to see full output using impossible expect-regex patterns
+- Use `git status` after test runs to detect unintended side effects
+- Check for "turd files" that tests should clean up but don't
+
+When creating YAML tests:
+- Use `|` for multi-line scripts/commands to preserve line breaks
+- Each line in `expect-regex` matches as a substring of output lines
+- Include cleanup steps for resources created during tests
+
+For detailed documentation on creating test files and all available options, refer to:
+`src/cycodt/TestFramework/README.md`
+
+Example test files can be found in the `tests/cycodt-yaml/` directory.
+
 ## Operating System + Shell Commands
 The application is designed to run on Windows, macOS, and Linux environments. Be mindful of:
 - Path separators (`\` vs `/`)

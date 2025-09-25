@@ -24,7 +24,7 @@ public class YamlTagHelpers
     {
         var defaultTags = new Dictionary<string, List<string>>();
 
-        Logger.Log($"Loading default tags from {defaultsFile}");
+        TestLogger.Log($"Loading default tags from {defaultsFile}");
         var parsed = YamlHelpers.ParseYamlStream(defaultsFile);
         if (parsed.Documents.Count() > 0)
         {

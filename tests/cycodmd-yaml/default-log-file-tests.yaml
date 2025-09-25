@@ -1,0 +1,28 @@
+# Test default log file name template: log-{ProgramName}-{time}.log
+
+class: default-log-file-tests
+tag: cycodmd
+tests:
+
+- name: Test default log file name template for cycodmd
+  steps:
+  - name: Run cycodmd and verify log file
+    bash: |
+      cycodmd version --log
+      cycodmd log-cycodmd-*.log exception-log-*.log
+    expect-regex: |
+      Version:
+      log-cycodmd-[0-9]+\.log
+      File logger initialized with file:
+      Memory logger configured to dump to
+      exception-log-cycodmd-[0-9]+\.log
+      Logging system fully initialized
+    not-expect-regex: |
+      ## exception-log-.*\.log
+  
+  - name: Clean up test log files
+    bash: |
+      rm -f log-cycodmd-*.log exception-log-cycodmd-*.log
+      echo "Cleanup completed"
+    expect-regex: |
+      Cleanup completed

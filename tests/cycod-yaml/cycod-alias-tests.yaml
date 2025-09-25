@@ -70,7 +70,8 @@
       Error: Invalid argument in alias file
 
   - name: Combine Multiple Aliases
-    run: cycod --python-expert --code-review "def add(a, b): return a + b" --quiet
+    run: |
+      cycod --python-expert --code-review "def add(a, b): return a + b" --quiet
     not-expect-regex: |
       Error: Invalid argument in alias file
 

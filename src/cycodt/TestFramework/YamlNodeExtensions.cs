@@ -19,7 +19,7 @@ public static class YamlNodeExtensions
         if (text == null)
         {
             text = $"Invalid sequence or sequence value at {test.CodeFilePath}({yaml.Start.Line},{yaml.Start.Column})";
-            Logger.Log(text);
+            TestLogger.Log(text);
         }
 
         return new YamlScalarNode(text);
@@ -42,7 +42,7 @@ public static class YamlNodeExtensions
 
             // ensure each item is either scalar, or sequence of scalar                
             var invalidItem = (line == null);
-            Logger.LogIf(invalidItem, $"Invalid item at ({item.Start.Line},{item.Start.Column})");
+            TestLogger.LogIf(invalidItem, $"Invalid item at ({item.Start.Line},{item.Start.Column})");
             if (invalidItem) return null; 
 
             lines.Add(line!);
@@ -58,7 +58,7 @@ public static class YamlNodeExtensions
 
         // ensure there are no non-scalar children
         var count = sequence.Count(x => !(x is YamlScalarNode));
-        Logger.LogIf(count > 0, $"Invalid: (non-scalar) count({count}) > 0");
+        TestLogger.LogIf(count > 0, $"Invalid: (non-scalar) count({count}) > 0");
         if (count > 0) return null;
 
         // join the scalar children separated by tabs
@@ -72,7 +72,7 @@ public static class YamlNodeExtensions
         }
 
         tsv = tsv.Replace('\n', '\f');
-        Logger.Log($"YamlNodeExtensions.ConvertScalarSequenceToTsvString: tsv='{tsv}'");
+        TestLogger.Log($"YamlNodeExtensions.ConvertScalarSequenceToTsvString: tsv='{tsv}'");
         return tsv;
     }
 
@@ -84,12 +84,12 @@ public static class YamlNodeExtensions
 
         // ensure there are no non-scalar kvp children
         var count = mapping.Count(x => !(x.Key is YamlScalarNode) || !(x.Value is YamlScalarNode));
-        Logger.LogIf(count > 0, $"Invalid: (non-scalar key or value) count({count}) > 0");
+        TestLogger.LogIf(count > 0, $"Invalid: (non-scalar key or value) count({count}) > 0");
         if (count > 0) return null;
 
         // ensure the key specified is in the list of keys
         count = mapping.Count(x => !keys.Contains((x.Key as YamlScalarNode)?.Value));
-        Logger.LogIf(count > 0, $"Invalid: key not found count({count}) > 0");
+        TestLogger.LogIf(count > 0, $"Invalid: key not found count({count}) > 0");
         if (count > 0) return null;
 
         // join the scalar children ordered by keys, separated by tabs
@@ -99,7 +99,7 @@ public static class YamlNodeExtensions
                 : ""));
 
         tsv = tsv.Replace('\n', '\f');
-        Logger.Log($"YamlNodeExtensions.ConvertScalarMapToTsvString: tsv='{tsv}'");
+        TestLogger.Log($"YamlNodeExtensions.ConvertScalarMapToTsvString: tsv='{tsv}'");
         return tsv;
     }  
 }

@@ -147,17 +147,26 @@ public class FileHelpers
         ConsoleHelpers.WriteDebugLine($"timeStamp: {timeStamp}");
 
         return template
+            .Replace("{FileName}", fileName)
             .Replace("{fileName}", fileName)
             .Replace("{filename}", fileName)
+            .Replace("{FilePath}", filePath)
             .Replace("{filePath}", filePath)
             .Replace("{filepath}", filePath)
+            .Replace("{FileBase}", fileBase)
             .Replace("{fileBase}", fileBase)
             .Replace("{filebase}", fileBase)
+            .Replace("{FileExt}", fileExt)
             .Replace("{fileExt}", fileExt)
             .Replace("{fileext}", fileExt)
+            .Replace("{TimeStamp}", timeStamp)
             .Replace("{timeStamp}", timeStamp)
             .Replace("{timestamp}", timeStamp)
+            .Replace("{Time}", time)
             .Replace("{time}", time)
+            .Replace("{ProgramName}", ProgramInfo.Name)
+            .Replace("{programName}", ProgramInfo.Name)
+            .Replace("{programname}", ProgramInfo.Name)
             .TrimEnd(' ', '/', '\\');
     }
 

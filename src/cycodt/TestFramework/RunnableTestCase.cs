@@ -27,7 +27,7 @@ public class RunnableTestCase
 
     public void RecordStart(IYamlTestFrameworkHost host, RunnableTestCaseItem item)
     {
-        Logger.Log($"RunnableTestCase.RecordStart({_test.DisplayName})");
+        TestLogger.Log($"RunnableTestCase.RecordStart({_test.DisplayName})");
 
         if (_stopped) throw new InvalidOperationException("Cannot start a stopped test case.");
         if (_started) return;
@@ -39,7 +39,7 @@ public class RunnableTestCase
 
     public void RecordResults(IYamlTestFrameworkHost host, RunnableTestCaseItem runnableTestCaseItem, IList<TestResult> results)
     {
-        Logger.Log($"RunnableTestCase.RecordResults({_test.DisplayName})");
+        TestLogger.Log($"RunnableTestCase.RecordResults({_test.DisplayName})");
 
         if (!_started) throw new InvalidOperationException("Cannot record results for a test case that has not been started.");
         if (_stopped) throw new InvalidOperationException("Cannot record results for a test case that has been stopped.");
@@ -54,7 +54,7 @@ public class RunnableTestCase
 
     public void RecordStop(IYamlTestFrameworkHost host, RunnableTestCaseItem runnableTestCaseItem)
     {
-        Logger.Log($"RunnableTestCase.RecordStop({_test.DisplayName})");
+        TestLogger.Log($"RunnableTestCase.RecordStop({_test.DisplayName})");
 
         if (!_started) throw new InvalidOperationException("Cannot stop a test case that has not been started.");
         if (_stopped) throw new InvalidOperationException("Cannot stop a test case that has already been stopped.");
@@ -63,11 +63,11 @@ public class RunnableTestCase
         var countExpected = _items.Count;
         if (countRecorded != countExpected)
         {
-            Logger.Log($"RunnableTestCase.RecordStop({_test.DisplayName}): Expected {countExpected} items; recorded {countRecorded} items.");
+            TestLogger.Log($"RunnableTestCase.RecordStop({_test.DisplayName}): Expected {countExpected} items; recorded {countRecorded} items.");
             return;
         }
 
-        Logger.Log($"RunnableTestCase.RecordStop({_test.DisplayName}): All items recorded ({countRecorded}); recording end.");
+        TestLogger.Log($"RunnableTestCase.RecordStop({_test.DisplayName}): All items recorded ({countRecorded}); recording end.");
         var outcome = TestResultHelpers.TestOutcomeFromResults(_resultsRecorded.SelectMany(x => x));
         host.RecordEnd(_test, outcome);
         _stopped = true;
@@ -78,7 +78,7 @@ public class RunnableTestCase
     private static List<Dictionary<string, string>> MatrixFromTest(TestCase test)
     {
         var matrix = YamlTestProperties.Get(test, "matrix");
-        Logger.Log($"RunnableTestCase.MatrixFromTest({test.DisplayName}): {matrix}");
+        TestLogger.Log($"RunnableTestCase.MatrixFromTest({test.DisplayName}): {matrix}");
         return !string.IsNullOrEmpty(matrix)
             ? JsonHelpers.FromJsonArrayText(matrix!)
             : new List<Dictionary<string, string>>();
