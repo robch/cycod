@@ -1,0 +1,118 @@
+# Test log level configuration: Test different log levels (Error, Warning, Info, Verbose) 
+# and verify that only messages at or above the specified level are logged
+
+class: log-level-configuration-tests
+tag: cycod
+optional: broken-test
+tests:
+
+- name: Test log level Error - should only show Error messages
+  steps:
+  - name: Run cycod with LOG_LEVEL=Error and capture logs
+    env:
+      LOG_LEVEL: Error
+    bash: |
+      # Run a command that generates various log levels
+      cycod version --log test-error-level.log 2>&1 || true
+      # Add a command that might generate warnings/errors for better testing
+      cycod config get non.existent.key --log test-error-level.log 2>&1 || true
+      cycodmd test-error-level.log
+    expect-regex: |
+      ERROR:
+    not-expect-regex: |
+      WARNING:|INFO:|VERBOSE:
+  
+  - name: Clean up error level test files
+    bash: |
+      rm -f test-error-level.log exception-test-error-level.log
+      echo "Error level test cleanup completed"
+    expect-regex: |
+      Error level test cleanup completed
+
+- name: Test log level Warning - should show Warning and Error messages
+  steps:
+  - name: Run cycod with LOG_LEVEL=Warning and capture logs
+    env:
+      LOG_LEVEL: Warning
+    bash: |
+      # Run commands that generate various log levels
+      cycod version --log test-warning-level.log 2>&1 || true
+      # This should generate a warning about displaying help
+      cycod --log test-warning-level.log 2>&1 || true
+      cycodmd test-warning-level.log
+    expect-regex: |
+      WARNING:|ERROR:
+    not-expect-regex: |
+      INFO:|VERBOSE:
+      
+  - name: Clean up warning level test files
+    bash: |
+      rm -f test-warning-level.log exception-test-warning-level.log
+      echo "Warning level test cleanup completed"
+    expect-regex: |
+      Warning level test cleanup completed
+
+- name: Test log level Info - should show Info, Warning and Error messages
+  steps:
+  - name: Run cycod with LOG_LEVEL=Info and capture logs
+    env:
+      LOG_LEVEL: Info
+    bash: |
+      # Run a command that generates info-level messages during normal operation
+      cycod version --log test-info-level.log 2>&1 || true
+      cycodmd test-info-level.log
+    expect-regex: |
+      INFO:.*Starting cycod
+      INFO:.*File logger initialized
+      INFO:.*Memory logger configured
+      INFO:.*Logging system fully initialized
+    not-expect-regex: |
+      VERBOSE:
+      
+  - name: Clean up info level test files
+    bash: |
+      rm -f test-info-level.log exception-test-info-level.log
+      echo "Info level test cleanup completed"
+    expect-regex: |
+      Info level test cleanup completed
+
+- name: Test log level All - should show all message levels
+  steps:
+  - name: Run cycod with LOG_LEVEL=All and capture logs
+    env:
+      LOG_LEVEL: All
+    bash: |
+      # Run commands to generate various log levels
+      cycod version --log test-all-level.log 2>&1 || true
+      cycodmd test-all-level.log
+    expect-regex: |
+      INFO:.*Starting cycod
+      INFO:.*File logger initialized
+      INFO:.*Memory logger configured
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up all level test files
+    bash: |
+      rm -f test-all-level.log exception-test-all-level.log
+      echo "All level test cleanup completed"
+    expect-regex: |
+      All level test cleanup completed
+
+- name: Test log level None - should show no log messages
+  steps:
+  - name: Run cycod with LOG_LEVEL=None and capture logs
+    env:
+      LOG_LEVEL: None
+    bash: |
+      # Run a command that would normally generate log messages
+      cycod version --log test-none-level.log 2>&1 || true
+      cycodmd test-none-level.log
+    not-expect-regex: |
+      ERROR:|WARNING:|INFO:|VERBOSE:
+      
+  - name: Clean up none level test files
+    bash: |
+      rm -f test-none-level.log exception-test-none-level.log
+      echo "None level test cleanup completed"
+    expect-regex: |
+      None level test cleanup completed

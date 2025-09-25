@@ -38,7 +38,8 @@ public static class LoggingInitializer
     /// <summary>
     /// Dump memory logs to the configured exception file
     /// </summary>
-    public static void DumpMemoryLogsOnError()
+    /// <param name="exception">Optional exception that triggered the error</param>
+    public static void DumpMemoryLogsOnError(Exception? exception = null)
     {
         try
         {
@@ -53,6 +54,24 @@ public static class LoggingInitializer
                 
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(dumpFileName) ?? "");
+            
+            // If we have an exception, ensure it gets logged before dumping
+            if (exception != null)
+            {
+                // Access Exit method using reflection as it's private
+                var exitMethod = typeof(MemoryLogger).GetMethod("Exit", 
+                    System.Reflection.BindingFlags.NonPublic | 
+                    System.Reflection.BindingFlags.Instance);
+                
+                if (exitMethod != null)
+                {
+                    exitMethod.Invoke(memory, new object[] { exception });
+                    return; // Exit already calls Dump, so we're done
+                }
+                
+                // If reflection failed, log directly before dumping
+                Logger.Error($"Unhandled exception: {exception.Message}\n{exception.StackTrace}");
+            }
             
             // Dump the memory logs to the file
             memory.Dump(dumpFileName, "LOG", emitToStdOut: false, emitToStdErr: false);

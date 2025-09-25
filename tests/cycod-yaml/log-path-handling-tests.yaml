@@ -1,0 +1,137 @@
+# Test path handling: Test with absolute and relative paths for log files
+
+class: log-path-handling-tests
+tag: cycod
+tests:
+
+- name: Test absolute path for log files
+  steps:
+  - name: Create temp directory and test with absolute log path
+    bash: |
+      # Create a temp directory for testing absolute paths
+      mkdir -p /tmp/cycod-log-test-absolute 2>/dev/null || mkdir cycod-log-test-absolute
+      
+      # Get the absolute path (handle both Unix and Windows)
+      if [ -d "/tmp" ]; then
+        ABSOLUTE_LOG_PATH="/tmp/cycod-log-test-absolute/absolute-test.log"
+      else
+        ABSOLUTE_LOG_PATH="$(pwd)/cycod-log-test-absolute/absolute-test.log"
+      fi
+      
+      # Run cycod with absolute path
+      cycod version --log "$ABSOLUTE_LOG_PATH"
+      
+      # Verify the log file exists and has content
+      cycodmd "$ABSOLUTE_LOG_PATH"
+    expect-regex: |
+      INFO:.*File logger initialized with file:.*absolute-test\.log
+      INFO:.*Memory logger configured to dump to
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up absolute path test files
+    bash: |
+      # Clean up temp directory and files
+      if [ -d "/tmp/cycod-log-test-absolute" ]; then
+        rm -rf /tmp/cycod-log-test-absolute
+      else
+        rm -rf cycod-log-test-absolute
+      fi
+      echo "Absolute path test cleanup completed"
+    expect-regex: |
+      Absolute path test cleanup completed
+
+- name: Test relative path for log files  
+  steps:
+  - name: Create subdirectory and test with relative log path
+    bash: |
+      # Create a subdirectory for testing relative paths
+      mkdir -p logs/subdir
+      
+      # Run cycod with relative path
+      cycod version --log logs/subdir/relative-test.log
+      
+      # Verify the log file exists in the expected relative location
+      cycodmd logs/subdir/relative-test.log
+    expect-regex: |
+      INFO:.*File logger initialized with file:.*logs/subdir/relative-test\.log
+      INFO:.*Memory logger configured to dump to
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up relative path test files
+    bash: |
+      rm -rf logs
+      echo "Relative path test cleanup completed"
+    expect-regex: |
+      Relative path test cleanup completed
+
+- name: Test relative path with dot notation
+  steps:
+  - name: Test relative path starting with ./
+    bash: |
+      # Create subdirectory for dot notation test
+      mkdir -p testlogs
+      
+      # Run cycod with ./ relative path
+      cycod version --log ./testlogs/dot-relative-test.log
+      
+      # Verify the log file exists
+      cycodmd ./testlogs/dot-relative-test.log
+    expect-regex: |
+      INFO:.*File logger initialized with file:.*testlogs/dot-relative-test\.log
+      INFO:.*Memory logger configured to dump to
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up dot notation test files
+    bash: |
+      rm -rf testlogs
+      echo "Dot notation test cleanup completed"
+    expect-regex: |
+      Dot notation test cleanup completed
+
+- name: Test nested relative path
+  steps:
+  - name: Test deeply nested relative path
+    bash: |
+      # Create nested directory structure
+      mkdir -p deep/nested/log/directory
+      
+      # Run cycod with nested relative path
+      cycod version --log deep/nested/log/directory/nested-test.log
+      
+      # Verify the log file exists in the nested location
+      cycodmd deep/nested/log/directory/nested-test.log
+    expect-regex: |
+      INFO:.*File logger initialized with file:.*deep/nested/log/directory/nested-test\.log
+      INFO:.*Memory logger configured to dump to
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up nested path test files
+    bash: |
+      rm -rf deep
+      echo "Nested path test cleanup completed"  
+    expect-regex: |
+      Nested path test cleanup completed
+
+- name: Test path with spaces
+  steps:
+  - name: Test log path containing spaces
+    bash: |
+      # Create directory with spaces in name
+      mkdir -p "log dir with spaces"
+      
+      # Run cycod with path containing spaces
+      cycod version --log "log dir with spaces/space-test.log"
+      
+      # Verify the log file exists
+      cycodmd "log dir with spaces/space-test.log"
+    expect-regex: |
+      INFO:.*File logger initialized with file:.*log dir with spaces/space-test\.log
+      INFO:.*Memory logger configured to dump to
+      INFO:.*Logging system fully initialized
+      
+  - name: Clean up spaces path test files
+    bash: |
+      rm -rf "log dir with spaces"
+      echo "Spaces path test cleanup completed"
+    expect-regex: |
+      Spaces path test cleanup completed

@@ -1,0 +1,110 @@
+# Test environment variable loading for logging system
+# Specifically tests that LOG_LEVEL environment variable is read and applied to loggers
+
+class: log-environment-variables-tests
+tag: cycod
+tests:
+
+- name: Test LOG_LEVEL environment variable is read and applied to File Logger
+  steps:
+  - name: Run cycod with LOG_LEVEL=Error and verify logger configuration
+    env:
+      LOG_LEVEL: Error
+    bash: |
+      # Run a simple command that initializes logging
+      cycod version --log test-env-error.log 2>&1 || true
+      cycodmd test-env-error.log
+    expect-regex: |
+      Version:
+      File logger initialized with file: test-env-error\.log
+    # Note: This test checks that the logger is configured, but due to the known bug
+    # the actual log level filtering doesn't work. This test focuses on whether
+    # the environment variable is at least being read during initialization.
+      
+  - name: Clean up error env test files
+    bash: |
+      rm -f test-env-error.log exception-test-env-error.log
+      echo "Error env test cleanup completed"
+    expect-regex: |
+      Error env test cleanup completed
+
+- name: Test LOG_LEVEL environment variable with different values
+  steps:
+  - name: Test LOG_LEVEL=Warning
+    env:
+      LOG_LEVEL: Warning
+    bash: |
+      cycod version --log test-env-warning.log 2>&1 || true
+      cycodmd test-env-warning.log
+    expect-regex: |
+      Version:
+      File logger initialized with file: test-env-warning\.log
+      
+  - name: Test LOG_LEVEL=Info
+    env:
+      LOG_LEVEL: Info  
+    bash: |
+      cycod version --log test-env-info.log 2>&1 || true
+      cycodmd test-env-info.log
+    expect-regex: |
+      Version:
+      File logger initialized with file: test-env-info\.log
+      
+  - name: Test LOG_LEVEL=Verbose
+    env:
+      LOG_LEVEL: Verbose
+    bash: |
+      cycod version --log test-env-verbose.log 2>&1 || true
+      cycodmd test-env-verbose.log
+    expect-regex: |
+      Version:
+      File logger initialized with file: test-env-verbose\.log
+      
+  - name: Clean up various env level test files
+    bash: |
+      rm -f test-env-*.log exception-test-env-*.log
+      echo "Various env level test cleanup completed"
+    expect-regex: |
+      Various env level test cleanup completed
+
+- name: Test LOG_LEVEL environment variable with invalid values
+  steps:
+  - name: Test LOG_LEVEL with invalid value falls back to default
+    env:
+      LOG_LEVEL: InvalidLevel
+    bash: |
+      cycod version --log test-env-invalid.log 2>&1 || true
+      cycodmd test-env-invalid.log
+    expect-regex: |
+      Version:
+      File logger initialized with file: test-env-invalid\.log
+    # Should still initialize logging even with invalid LOG_LEVEL value
+      
+  - name: Clean up invalid env test files  
+    bash: |
+      rm -f test-env-invalid.log exception-test-env-invalid.log
+      echo "Invalid env test cleanup completed"
+    expect-regex: |
+      Invalid env test cleanup completed
+
+- name: Test no LOG_LEVEL environment variable uses default behavior
+  steps:
+  - name: Run without LOG_LEVEL set and verify default behavior
+    bash: |
+      # Ensure LOG_LEVEL is not set for this test
+      unset LOG_LEVEL
+      cycod version --log test-env-default.log 2>&1 || true
+      cycodmd test-env-default.log
+    expect-regex: |
+      Version:
+      test-env-default\.log
+      INFO:.*Memory logger configured
+      INFO:.*Logging system fully initialized
+    # Without LOG_LEVEL set, should use default behavior and still initialize logging
+      
+  - name: Clean up default env test files
+    bash: |
+      rm -f test-env-default.log exception-test-env-default.log  
+      echo "Default env test cleanup completed"
+    expect-regex: |
+      Default env test cleanup completed

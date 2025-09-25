@@ -22,27 +22,27 @@ abstract public class ProgramRunner
         {
             Logger.Error($"Environment variable setting error: {ex.Message}");
             ConsoleHelpers.WriteLine($"Error: {ex.Message}");
-            LoggingInitializer.DumpMemoryLogsOnError();
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 2;
         }
-        catch (GitHubTokenExpiredException)
+        catch (GitHubTokenExpiredException ex)
         {
             Logger.Error("GitHub token has expired");
-            LoggingInitializer.DumpMemoryLogsOnError();
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         catch (CalcException ex)
         {
             Logger.Error($"Calculation error: {ex.Message}\n{ex.StackTrace}");
             ExceptionHelpers.SaveAndDisplayException(ex);
-            LoggingInitializer.DumpMemoryLogsOnError();
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         catch (Exception ex)
         {
             Logger.Error($"Unhandled exception: {ex.Message}\n{ex.StackTrace}");
             ExceptionHelpers.SaveAndDisplayException(ex);
-            LoggingInitializer.DumpMemoryLogsOnError();
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         finally

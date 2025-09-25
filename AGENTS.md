@@ -91,6 +91,13 @@ Tests are defined in YAML files with:
 - Use `git status` after test runs to detect unintended side effects
 - Check for "turd files" that tests should clean up but don't
 
+**Handling Tests for Broken Product Functionality:**
+When discovering broken functionality while writing tests:
+- Mark tests as optional with the `broken-test` category: `optional: broken-test`
+- Document the issue in a `todo-{problem}.md` file with detailed findings
+- Include reproduction steps using `--include-optional broken-test` in the TODO
+- This keeps broken tests separate from working tests while preserving evidence
+
 When creating YAML tests:
 - Use `|` for multi-line scripts/commands to preserve line breaks
 - Each line in `expect-regex` matches as a substring of output lines

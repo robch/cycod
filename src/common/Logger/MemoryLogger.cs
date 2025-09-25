@@ -32,7 +32,28 @@ public class MemoryLogger : ILogger
     
     private MemoryLogger()
     {
-        AppDomain.CurrentDomain.UnhandledException += (s, e) => Exit();
+        // Enhanced handler to capture exception details before dumping logs
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => 
+        {
+            // Extract and log the exception details first
+            if (e.ExceptionObject is Exception ex)
+            {
+                // Log directly to memory buffer to avoid potential circular references
+                LogExceptionDirectly(ex);
+                
+                // Then exit with the exception to dump logs
+                Exit(ex);
+            }
+            else
+            {
+                // Unknown exception type, log what we can
+                LogMessage(LogLevel.Error, "FATAL:", 
+                          "UnhandledException", 
+                          0, 
+                          $"Unhandled exception of unknown type: {e.ExceptionObject}");
+                Exit();
+            }
+        };
     }
     
     public void EnableLogging(bool enable)
@@ -127,6 +148,40 @@ public class MemoryLogger : ILogger
     
     public void SetFilter(string filterPattern) => _filter.SetFilter(filterPattern);
     
+    // Helper method to log exception directly to memory buffer to avoid circular references
+    private void LogExceptionDirectly(Exception ex)
+    {
+        if (!IsLoggingEnabled)
+            return;
+            
+        var formatted = $"FATAL: Unhandled exception: {ex.Message}\n{ex.StackTrace}";
+        
+        // Lock-free logging using ticket system
+        using var ticket = _tickets.CreateTicketGuard();
+        ticket.AdvanceToStep(LOG_STEP_UPDATE_BUFFER);
+        
+        // Write to circular buffer
+        _lines.Write(formatted);
+        
+        ticket.AdvanceToStep(LOG_STEP_UPDATE_LINES);
+        
+        // Log inner exceptions if any
+        var innerEx = ex.InnerException;
+        int depth = 0;
+        while (innerEx != null && depth < 5) // Limit depth to prevent infinite loops
+        {
+            var innerFormatted = $"INNER: Inner exception ({depth}): {innerEx.Message}\n{innerEx.StackTrace}";
+            
+            using var innerTicket = _tickets.CreateTicketGuard();
+            innerTicket.AdvanceToStep(LOG_STEP_UPDATE_BUFFER);
+            _lines.Write(innerFormatted);
+            innerTicket.AdvanceToStep(LOG_STEP_UPDATE_LINES);
+            
+            innerEx = innerEx.InnerException;
+            depth++;
+        }
+    }
+    
     public void LogMessage(LogLevel level, string title, string fileName, int lineNumber, string message)
     {
         if (!IsLevelEnabled(level) || !_filter.ShouldLog(message))
@@ -147,12 +202,19 @@ public class MemoryLogger : ILogger
         ticket.AdvanceToStep(LOG_STEP_UPDATE_LINES);
     }
     
-    private void Exit()
+    // Updated to accept an optional exception parameter
+    private void Exit(Exception? exception = null)
     {
         if (!_dumpOnExit) return;
         
         try
         {
+            // If exception is provided and not already logged, log it first
+            if (exception != null)
+            {
+                LogExceptionDirectly(exception);
+            }
+            
             Dump(_dumpFileName, _dumpLinePrefix, _dumpToStdOut, _dumpToStdErr);
         }
         catch

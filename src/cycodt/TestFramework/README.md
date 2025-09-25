@@ -133,6 +133,24 @@ expect-regex: |
 - Avoid redundant comments that just repeat what the command does
 - Focus comments on complex logic or non-obvious requirements
 
+**Handling Tests for Broken Product Functionality:**
+When writing tests that discover broken product functionality, mark them as optional with a descriptive category:
+```yaml
+class: broken-feature-tests
+tag: cycod
+optional: broken-test
+tests:
+- name: Test that should pass but fails due to product bug
+  # Test content here
+```
+
+This approach:
+- Documents the expected behavior through comprehensive tests
+- Excludes broken tests from normal test runs to avoid noise
+- Allows running broken tests selectively with `--include-optional broken-test`
+- Provides reproduction steps and evidence for bug reports
+- Keeps tests ready for when the functionality is fixed
+
 Example:
 
 ```yaml

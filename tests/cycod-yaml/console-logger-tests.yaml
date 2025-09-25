@@ -1,0 +1,100 @@
+# Test console logger: Test that debug mode enables console logging
+# and that console logs appear in stderr or stdout as configured
+
+class: console-logger-tests
+tag: cycod
+tests:
+
+- name: Test console logging enabled in debug mode
+  steps:
+  - name: Run cycod in debug mode and capture stderr
+    bash: |
+      # Run cycod with --debug flag and capture stderr separately from stdout
+      cycod version --debug 2> test-console-debug-stderr.log 1> test-console-debug-stdout.log
+      echo "=== STDERR ===" && cat test-console-debug-stderr.log
+      echo "=== STDOUT ===" && cat test-console-debug-stdout.log
+    expect-regex: |
+      === STDERR ===
+      INFO:.*Console logger initialized in debug mode
+      INFO:.*Logging system fully initialized
+    
+  - name: Clean up console debug test files
+    bash: |
+      rm -f test-console-debug-stderr.log test-console-debug-stdout.log
+      echo "Console debug test cleanup completed"
+    expect-regex: |
+      Console debug test cleanup completed
+
+- name: Test console logging disabled in normal mode
+  steps:
+  - name: Run cycod in normal mode and verify no console logs
+    bash: |
+      # Run cycod without --debug flag and capture stderr separately from stdout
+      cycod version 2> test-console-normal-stderr.log 1> test-console-normal-stdout.log
+      echo "=== STDERR ===" && cat test-console-normal-stderr.log
+      echo "=== STDOUT ===" && cat test-console-normal-stdout.log
+    expect-regex: |
+      === STDERR ===
+      === STDOUT ===
+      Version:
+    not-expect-regex: |
+      INFO:.*Console logger
+      INFO:.*File logger
+      INFO:.*Memory logger
+      INFO:.*Starting
+    
+  - name: Clean up console normal test files
+    bash: |
+      rm -f test-console-normal-stderr.log test-console-normal-stdout.log
+      echo "Console normal test cleanup completed"
+    expect-regex: |
+      Console normal test cleanup completed
+
+- name: Test console logs appear on stderr by default
+  steps:
+  - name: Run cycod with debug and verify logs go to stderr not stdout
+    bash: |
+      # Run command with debug logging and check that logs go to stderr
+      cycod version --debug 2> test-stderr-logs.log 1> test-stdout-logs.log
+      echo "=== STDERR CONTENT ==="
+      cat test-stderr-logs.log
+      echo "=== STDOUT CONTENT ==="
+      cat test-stdout-logs.log
+      echo "=== END ==="
+    expect-regex: |
+      === STDERR CONTENT ===
+      INFO:.*Console logger initialized in debug mode
+      === STDOUT CONTENT ===
+      Version:
+    not-expect-regex: |
+      INFO:.*Console logger.*Version:
+    
+  - name: Clean up stderr test files
+    bash: |
+      rm -f test-stderr-logs.log test-stdout-logs.log
+      echo "Stderr test cleanup completed"
+    expect-regex: |
+      Stderr test cleanup completed
+
+- name: Test console logging with different log levels in debug mode
+  steps:
+  - name: Run cycod with debug mode to test different log message types
+    bash: |
+      # Run a command that might generate various log levels in debug mode
+      cycod version --debug 2> test-console-levels.log 1> /dev/null
+      # Also try a command that might generate errors/warnings for better testing
+      cycod config get non.existent.key --debug 2>> test-console-levels.log 1> /dev/null || true
+      echo "=== CONSOLE LOG CONTENT ==="
+      cat test-console-levels.log
+      echo "=== END ==="
+    expect-regex: |
+      === CONSOLE LOG CONTENT ===
+      INFO:.*Console logger initialized in debug mode
+      INFO:.*Logging system fully initialized
+    
+  - name: Clean up console levels test files
+    bash: |
+      rm -f test-console-levels.log
+      echo "Console levels test cleanup completed"
+    expect-regex: |
+      Console levels test cleanup completed
