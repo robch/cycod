@@ -216,4 +216,22 @@ public static class LoggingInitializer
             }
         }
     }
+
+    /// <summary>
+    /// Logs detailed startup information for debugging purposes
+    /// </summary>
+    /// <param name="args">Command line arguments</param>
+    public static void LogStartupDetails(string[] args)
+    {
+        var processId = Environment.ProcessId;
+        var currentDir = Directory.GetCurrentDirectory();
+        var processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+        var threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+        var argsString = string.Join(" ", args);
+        
+        Logger.Info($"Process Details - PID: {processId}, Name: {processName}, ThreadID: {threadId}");
+        Logger.Info($"Working Directory: {currentDir}");
+        Logger.Info($"Command Line Args: {argsString}");
+        Logger.Info($"Environment Variables: LOG_LEVEL={Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "not set"}");
+    }
 }

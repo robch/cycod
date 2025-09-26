@@ -13,6 +13,7 @@ abstract public class ProgramRunner
         try
         {
             LoggingInitializer.InitializeMemoryLogger();
+            LoggingInitializer.LogStartupDetails(args);
             Logger.Info($"Starting {ProgramInfo.Name}, version {VersionInfo.GetVersion()}");
             
             SaveConsoleColor();

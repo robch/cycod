@@ -1,6 +1,7 @@
 # Test console logger: Test that debug mode enables console logging
 # and that console logs appear in stderr or stdout as configured
 
+workingDirectory: ../../../testresults/cycod/logger/console-logger-tests
 class: console-logger-tests
 tags: [cycod, logger]
 tests:

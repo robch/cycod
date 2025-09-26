@@ -1,25 +1,26 @@
 # Test log file template variables
 # Tests various template variable formats: {ProgramName}, {Time}, {TimeStamp} and case variations
 
+workingDirectory: ../../../testresults/cycodmd/logger/log-template-variable-tests
 class: log-template-variable-tests
-tags: [cycodt, logger]
+tags: [cycodmd, logger]
 tests:
 
-- name: Test ProgramName template variable (uppercase P) for cycodt
+- name: Test ProgramName template variable (uppercase P) for cycodmd
   steps:
-  - name: Run cycodt with {ProgramName} template and verify
+  - name: Run cycodmd with {ProgramName} template and verify
     bash: |
-      cycodt version --log "test-{ProgramName}-log.log"
-      cycodmd test-cycodt-log.log exception-test-cycodt-log.log
+      cycodmd version --log "test-{ProgramName}-log.log"
+      cycodmd test-cycodmd-log.log exception-test-cycodmd-log.log
     expect-regex: |
       Version:
-      test-cycodt-log\.log
+      test-cycodmd-log\.log
       File logger initialized with file:
       Memory logger configured to dump to
-      exception-test-cycodt-log\.log
+      exception-test-cycodmd-log\.log
       Logging system fully initialized
     not-expect-regex: |
-      ## exception-test-cycodt-log\.log
+      ## exception-test-cycodmd-log\.log
 
   - name: Clean up test log files
     bash: |
@@ -28,21 +29,21 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test programName template variable (lowercase p) for cycodt
+- name: Test programName template variable (lowercase p) for cycodmd
   steps:
-  - name: Run cycodt with {programName} template and verify
+  - name: Run cycodmd with {programName} template and verify
     bash: |
-      cycodt version --log "test-{programName}-log.log"
-      cycodmd test-cycodt-log.log exception-test-cycodt-log.log
+      cycodmd version --log "test-{programName}-log.log"
+      cycodmd test-cycodmd-log.log exception-test-cycodmd-log.log
     expect-regex: |
       Version:
-      test-cycodt-log\.log
+      test-cycodmd-log\.log
       File logger initialized with file:
       Memory logger configured to dump to
-      exception-test-cycodt-log\.log
+      exception-test-cycodmd-log\.log
       Logging system fully initialized
     not-expect-regex: |
-      ## exception-test-cycodt-log\.log
+      ## exception-test-cycodmd-log\.log
 
   - name: Clean up test log files
     bash: |
@@ -51,11 +52,11 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test Time template variable (uppercase T) for cycodt
+- name: Test Time template variable (uppercase T) for cycodmd
   steps:
-  - name: Run cycodt with {Time} template and verify
+  - name: Run cycodmd with {Time} template and verify
     bash: |
-      cycodt version --log "test-{Time}-log.log"
+      cycodmd version --log "test-{Time}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
     expect-regex: |
       Version:
@@ -74,11 +75,11 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test time template variable (lowercase t) for cycodt
+- name: Test time template variable (lowercase t) for cycodmd
   steps:
-  - name: Run cycodt with {time} template and verify
+  - name: Run cycodmd with {time} template and verify
     bash: |
-      cycodt version --log "test-{time}-log.log"
+      cycodmd version --log "test-{time}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
     expect-regex: |
       Version:
@@ -97,11 +98,11 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test TimeStamp template variable (uppercase T and S) for cycodt
+- name: Test TimeStamp template variable (uppercase T and S) for cycodmd
   steps:
-  - name: Run cycodt with {TimeStamp} template and verify
+  - name: Run cycodmd with {TimeStamp} template and verify
     bash: |
-      cycodt version --log "test-{TimeStamp}-log.log"
+      cycodmd version --log "test-{TimeStamp}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
     expect-regex: |
       Version:
@@ -120,11 +121,11 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test timestamp template variable (lowercase t and s) for cycodt
+- name: Test timestamp template variable (lowercase t and s) for cycodmd
   steps:
-  - name: Run cycodt with {timestamp} template and verify
+  - name: Run cycodmd with {timestamp} template and verify
     bash: |
-      cycodt version --log "test-{timestamp}-log.log"
+      cycodmd version --log "test-{timestamp}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
     expect-regex: |
       Version:
@@ -143,21 +144,21 @@ tests:
     expect-regex: |
       Cleanup completed
 
-- name: Test combined template variables for cycodt
+- name: Test combined template variables for cycodmd
   steps:
-  - name: Run cycodt with multiple template variables and verify
+  - name: Run cycodmd with multiple template variables and verify
     bash: |
-      cycodt version --log "test-{ProgramName}-{time}-combined.log"
-      cycodmd test-cycodt-*-combined.log exception-test-cycodt-*-combined.log
+      cycodmd version --log "test-{ProgramName}-{time}-combined.log"
+      cycodmd test-cycodmd-*-combined.log exception-test-cycodmd-*-combined.log
     expect-regex: |
       Version:
-      test-cycodt-[0-9]+-combined\.log
+      test-cycodmd-[0-9]+-combined\.log
       File logger initialized with file:
       Memory logger configured to dump to
-      exception-test-cycodt-[0-9]+-combined\.log
+      exception-test-cycodmd-[0-9]+-combined\.log
       Logging system fully initialized
     not-expect-regex: |
-      ## exception-test-cycodt-.*-combined\.log
+      ## exception-test-cycodmd-.*-combined\.log
 
   - name: Clean up test log files
     bash: |

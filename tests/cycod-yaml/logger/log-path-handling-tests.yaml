@@ -1,5 +1,6 @@
 # Test path handling: Test with absolute and relative paths for log files
 
+workingDirectory: ../../../testresults/cycod/logger/log-path-handling-tests
 class: log-path-handling-tests
 tags: [cycod, logger]
 tests:

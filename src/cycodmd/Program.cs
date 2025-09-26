@@ -15,6 +15,7 @@ class Program
         CycoDmdProgramInfo _programInfo = new ();
 
         LoggingInitializer.InitializeMemoryLogger();
+        LoggingInitializer.LogStartupDetails(args);
         Logger.Info($"Starting {ProgramInfo.Name}, version {VersionInfo.GetVersion()}");
 
         var playwrightCommand = args.Length >= 1 && args[0] == "playwright";

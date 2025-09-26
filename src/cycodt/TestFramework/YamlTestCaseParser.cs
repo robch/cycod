@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using YamlDotNet.RepresentationModel;
@@ -628,7 +629,56 @@ public partial class YamlTestCaseParser
 
     private static string GetRootArea(FileInfo file)
     {
-        return $"{file.Extension.TrimStart('.')}.{file.Name.Remove(file.Name.LastIndexOf(file.Extension))}";
+        var projectRootPath = FindProjectRoot(file.Directory);
+        if (projectRootPath == null)
+        {
+            // Fallback to original behavior
+            return $"{file.Extension.TrimStart('.')}.{Path.GetFileNameWithoutExtension(file.Name)}";
+        }
+        
+        // Extract tool from directory path
+        var fileDirectory = file.DirectoryName ?? file.Directory?.FullName ?? string.Empty;
+        var relativePath = Path.GetRelativePath(projectRootPath, fileDirectory);
+        var pathParts = relativePath.Split(Path.DirectorySeparatorChar);
+        
+        if (pathParts.Length > 1 && pathParts[0].Equals("tests", StringComparison.OrdinalIgnoreCase))
+        {
+            var toolDir = pathParts[1]; // "cycod-yaml"
+            var tool = toolDir.Split('-')[0]; // "cycod" from "cycod-yaml"
+            var fileName = Path.GetFileNameWithoutExtension(file.Name); // "console-logger-tests"
+            return $"{tool}.{fileName}"; // "cycod.console-logger-tests"
+        }
+        
+        // Fallback to original behavior
+        return $"{file.Extension.TrimStart('.')}.{Path.GetFileNameWithoutExtension(file.Name)}";
+    }
+
+    private static string? FindProjectRoot(DirectoryInfo? directory)
+    {
+        // Adapt FileHelpers.FindFileSearchParents pattern for directories
+        var current = directory?.FullName ?? Directory.GetCurrentDirectory();
+        string? lastValidRoot = null;
+        
+        while (current != null)
+        {
+            // Check for .cycod directory first (more specific)
+            var cycodPath = Path.Combine(current, ".cycod");
+            if (Directory.Exists(cycodPath))
+            {
+                lastValidRoot = current; // Keep going up to find the topmost .cycod
+            }
+            
+            // Check for .git directory OR .git file (for worktrees/submodules)
+            var gitPath = Path.Combine(current, ".git");
+            if (Directory.Exists(gitPath) || File.Exists(gitPath))
+            {
+                lastValidRoot = current; // Keep going up to find the topmost .git
+            }
+            
+            current = Directory.GetParent(current)?.FullName;
+        }
+        
+        return lastValidRoot;
     }
 
     private static string UpdateArea(YamlMappingNode mapping, string area)

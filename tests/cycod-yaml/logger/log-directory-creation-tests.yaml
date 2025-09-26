@@ -1,5 +1,6 @@
 # Test log file directory creation: Test that the log directory is created if it doesn't exist
 
+workingDirectory: ../../../testresults/cycod/logger/log-directory-creation-tests
 class: log-directory-creation-tests
 tags: [cycod, logger]
 tests:

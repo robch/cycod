@@ -1,5 +1,6 @@
 # Test log file rotation: Test log file rotation based on size or duration
 
+workingDirectory: ../../../testresults/cycod/logger/log-file-rotation-tests
 class: log-file-rotation-tests
 tags: [cycod, logger]
 tests:

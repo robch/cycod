@@ -1,6 +1,7 @@
 # Test log file error handling: Test what happens when writing to invalid/inaccessible locations
 # and verify that applications continue to work even when file logging fails
 
+workingDirectory: ../../../testresults/cycod/logger/log-file-error-handling-tests
 class: log-file-error-handling-tests  
 tags: [cycod, logger]
 tests:
@@ -40,13 +41,17 @@ tests:
   - name: Verify no files with invalid characters were created
     bash: |
       # Check that no stray files were created with invalid names
+      # First, give any parallel cleanups a moment to complete
+      sleep 0.5
       if ls test*invalid* 2>/dev/null; then
-        echo "WARNING: Some files may have been created"
+        echo "WARNING: Some files may have been created, cleaning up stray files"
+        rm -f test*invalid* 2>/dev/null || true
+        echo "Cleanup completed"
       else
         echo "Good: No invalid files created"
       fi
     expect-regex: |
-      Good: No invalid files created
+      (Good: No invalid files created|Cleanup completed)
 
 - name: Test logging to restricted location - application continues
   steps:

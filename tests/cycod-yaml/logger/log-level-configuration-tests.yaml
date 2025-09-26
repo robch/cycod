@@ -1,6 +1,7 @@
 # Test log level configuration: Test different log levels (Error, Warning, Info, Verbose) 
 # and verify that only messages at or above the specified level are logged
 
+workingDirectory: ../../../testresults/cycod/logger/log-level-configuration-tests
 class: log-level-configuration-tests
 tags: [cycod, logger]
 tests:

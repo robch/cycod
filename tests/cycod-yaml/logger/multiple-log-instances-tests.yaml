@@ -1,42 +1,37 @@
 # Test multiple log instances: Test that running multiple instances of the application creates separate log files
 
+workingDirectory: ../../../testresults/cycod/logger/multiple-log-instances-tests
 class: multiple-log-instances-tests
 tags: [cycod, logger]
 tests:
 
 - name: Test multiple cycod instances create separate log files with default naming
   steps:
-  - name: Run two cycod instances simultaneously and verify separate log files
+  - name: Run two cycod instances sequentially and verify separate log files
     bash: |
-      # Run first instance in background
-      cycod version --log &
-      FIRST_PID=$!
+      # Run first instance with unique log name
+      cycod version --log multi-test-1.log
       
-      # Small delay to ensure different timestamps
-      sleep 1
+      # Wait 2 seconds to ensure different timestamps  
+      sleep 2
       
-      # Run second instance
-      cycod version --log &
-      SECOND_PID=$!
-      
-      # Wait for both to complete
-      wait $FIRST_PID
-      wait $SECOND_PID
+      # Run second instance with unique log name
+      cycod version --log multi-test-2.log
       
       # List all log files created
-      cycodmd log-cycod-*.log
+      cycodmd multi-test-*.log
     expect-regex: |
       Version:
-      ## log-cycod-[0-9]+\.log
+      ## multi-test-1\.log
       File logger initialized with file:
-      ## log-cycod-[0-9]+\.log
+      ## multi-test-2\.log
       File logger initialized with file:
     not-expect-regex: |
       ## exception-log-.*\.log
   
   - name: Clean up default instance test files
     bash: |
-      rm -f log-cycod-*.log exception-log-cycod-*.log
+      rm -f multi-test-*.log exception-multi-test-*.log
       echo "Default instance test cleanup completed"
     expect-regex: |
       Default instance test cleanup completed

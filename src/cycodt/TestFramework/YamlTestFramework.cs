@@ -5,10 +5,21 @@ public class YamlTestFramework
     public static IEnumerable<TestCase> GetTestsFromYaml(string source, FileInfo file)
     {
         TestLogger.Log($"YamlTestFramework.GetTestsFromYaml('{source}', '{file.FullName}'): ENTER");
+        Logger.Info($"YamlTestFramework.GetTestsFromYaml: PARSING file: {file.FullName}");
+        
         var tests = YamlTestCaseParser.TestCasesFromYaml(source, file);
+        var testsList = tests.ToList(); // Force enumeration to get count
+        
+        Logger.Info($"YamlTestFramework.GetTestsFromYaml: PARSED {testsList.Count} tests from {file.FullName}");
+        
+        // Log each TestCase created from this file
+        for (int i = 0; i < testsList.Count; i++)
+        {
+            Logger.Info($"YamlTestFramework.GetTestsFromYaml: File={file.Name} TestCase[{i}] ID={testsList[i].Id}, Name={testsList[i].DisplayName}");
+        }
 
         TestLogger.Log($"YamlTestFramework.GetTestsFromYaml('{source}', '{file.FullName}'): EXIT");
-        return tests;
+        return testsList;
     }
 
     public static IDictionary<string, IList<TestResult>> RunTests(IEnumerable<TestCase> tests, IYamlTestFrameworkHost host)
@@ -16,7 +27,24 @@ public class YamlTestFramework
         TestLogger.Log($"YamlTestFramework.RunTests(): ENTER (test count: {tests.Count()})");
 
         tests = tests.ToList(); // force enumeration
+        Logger.Info($"YamlTestFramework.RunTests: About to create RunnableTestCase objects for {tests.Count()} tests");
+        
+        // Log each incoming TestCase for debugging duplication issues
+        var testIndex = 0;
+        foreach (var test in tests)
+        {
+            Logger.Info($"YamlTestFramework.RunTests: Input[{testIndex}] TestCase ID: {test.Id}, Name: {test.DisplayName}");
+            Logger.Info($"YamlTestFramework.RunTests: Input[{testIndex}] Source: File: {test.CodeFilePath ?? "null"}, FullyQualifiedName: {test.FullyQualifiedName ?? "null"}");
+            testIndex++;
+        }
+        
         var runnableTests = tests.Select(test => new RunnableTestCase(test)).ToList();
+        
+        Logger.Info($"YamlTestFramework.RunTests: Created {runnableTests.Count} RunnableTestCase objects");
+        for (int i = 0; i < runnableTests.Count; i++)
+        {
+            Logger.Info($"YamlTestFramework.RunTests: RunnableTest[{i}] TestCase ID: {runnableTests[i].Test.Id}, Name: {runnableTests[i].Test.DisplayName}, Items: {runnableTests[i].Items.Count()}");
+        }
 
         var runnableTestItems = runnableTests.SelectMany(x => x.Items).ToList();
         var groups = GetPriorityGroups(runnableTestItems);
@@ -175,9 +203,17 @@ public class YamlTestFramework
 
     private static void RunAndRecordRunnableTestCaseItemsStepByStep(IYamlTestFrameworkHost host, Dictionary<string, RunnableTestCaseItem> itemFromItemIdMap, Dictionary<string, TaskCompletionSource<IList<TestResult>>> itemCompletionFromItemIdMap, string firstStepItemId)
     {
+        var threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+        Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - STARTING with firstStepItemId: {firstStepItemId}");
+        
         var firstItem = itemFromItemIdMap[firstStepItemId];
+        Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - About to execute FIRST item: {firstStepItemId}, TestCase: {firstItem.RunnableTest.Test.DisplayName}");
+        
         var firstTestResults = RunAndRecordRunnableTestCaseItem(firstItem, host);
         var firstTestOutcome = TestResultHelpers.TestOutcomeFromResults(firstTestResults);
+        
+        Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - FIRST item completed: {firstStepItemId}, TestCase: {firstItem.RunnableTest.Test.DisplayName}, Outcome: {firstTestOutcome}");
+
         // defer setting completion until all steps are complete
 
         var checkItem = firstItem;
@@ -186,28 +222,50 @@ public class YamlTestFramework
             var nextItem = GetNextRunnableTestCaseItem(itemFromItemIdMap, checkItem);
             if (nextItem == null)
             {
-                TestLogger.Log($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() ==> No next runnable item for {checkItem.RunnableTest.Test.DisplayName}");
+                Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - No next runnable item for {checkItem.RunnableTest.Test.DisplayName}");
                 break;
             }
             var nextItemId = nextItem!.Id;
+            Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - Found NEXT item: {nextItemId}, TestCase: {nextItem.RunnableTest.Test.DisplayName}");
+            
             var itemCompletion = itemCompletionFromItemIdMap.ContainsKey(nextItemId) ? itemCompletionFromItemIdMap[nextItemId] : null;
             if (itemCompletion == null)
             {
-                TestLogger.Log($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() ==> nextItemId '{nextItemId}' completion not found for test '{checkItem.RunnableTest.Test.DisplayName}'");
+                Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - nextItemId '{nextItemId}' completion not found for test '{checkItem.RunnableTest.Test.DisplayName}'");
                 break;
             }
 
+            Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - About to execute NEXT item: {nextItemId}, TestCase: {nextItem.RunnableTest.Test.DisplayName}");
             var itemResults = RunAndRecordRunnableTestCaseItem(nextItem, host);
             var itemOutcome = TestResultHelpers.TestOutcomeFromResults(itemResults);
-            TestLogger.Log($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() ==> Setting completion outcome for {nextItem.RunnableTest.Test.DisplayName} to {itemOutcome}");
-            itemCompletion.SetResult(itemResults);
+            Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - NEXT item completed: {nextItemId}, TestCase: {nextItem.RunnableTest.Test.DisplayName}, Outcome: {itemOutcome}");
+            
+            // Defensive programming: check if task is already completed
+            if (!itemCompletion.Task.IsCompleted)
+            {
+                itemCompletion.SetResult(itemResults);
+            }
+            else
+            {
+                Logger.Warning($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - Task already completed for {nextItem.RunnableTest.Test.DisplayName}, skipping SetResult");
+            }
 
             checkItem = nextItem;
         }
 
         // now that all steps are complete, set the completion outcome
-        itemCompletionFromItemIdMap[firstStepItemId].SetResult(firstTestResults);
-        TestLogger.Log($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() ==> Setting completion; outcome for {firstItem.RunnableTest.Test.DisplayName}: {firstTestOutcome}");
+        var firstStepCompletion = itemCompletionFromItemIdMap[firstStepItemId];
+        if (!firstStepCompletion.Task.IsCompleted)
+        {
+            firstStepCompletion.SetResult(firstTestResults);
+            Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - Setting completion for FIRST item: {firstItem.RunnableTest.Test.DisplayName}, Outcome: {firstTestOutcome}");
+        }
+        else
+        {
+            Logger.Warning($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - First step task already completed for {firstItem.RunnableTest.Test.DisplayName}, skipping SetResult");
+        }
+        
+        Logger.Info($"YamlTestFramework.RunAndRecordRunnableTestCaseItemsStepByStep() - Thread: {threadId} - COMPLETED step-by-step execution chain starting with: {firstStepItemId}");
     }
 
     private static RunnableTestCaseItem? GetNextRunnableTestCaseItem(Dictionary<string, RunnableTestCaseItem> itemFromItemIdMap, RunnableTestCaseItem current)

@@ -1,28 +1,29 @@
 # Test default log file name template: log-{ProgramName}-{time}.log
 
+workingDirectory: ../../../testresults/cycodt/logger/default-log-file-tests
 class: default-log-file-tests
-tags: [cycodmd, logger]
+tags: [cycodt, logger]
 tests:
 
-- name: Test default log file name template for cycodmd
+- name: Test default log file name template for cycodt
   steps:
-  - name: Run cycodmd and verify log file
+  - name: Run cycodt and verify log file
     bash: |
-      cycodmd version --log
-      cycodmd log-cycodmd-*.log exception-log-*.log
+      cycodt version --log
+      cycodmd log-cycodt-*.log exception-log-*.log
     expect-regex: |
       Version:
-      log-cycodmd-[0-9]+\.log
+      log-cycodt-[0-9]+\.log
       File logger initialized with file:
       Memory logger configured to dump to
-      exception-log-cycodmd-[0-9]+\.log
+      exception-log-cycodt-[0-9]+\.log
       Logging system fully initialized
     not-expect-regex: |
       ## exception-log-.*\.log
   
   - name: Clean up test log files
     bash: |
-      rm -f log-cycodmd-*.log exception-log-cycodmd-*.log
+      rm -f log-cycodt-*.log exception-log-cycodt-*.log
       echo "Cleanup completed"
     expect-regex: |
       Cleanup completed

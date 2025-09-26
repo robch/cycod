@@ -1,6 +1,7 @@
 # Test log file template variables
 # Tests various template variable formats: {ProgramName}, {Time}, {TimeStamp} and case variations
 
+workingDirectory: ../../../testresults/cycod/logger/log-template-variable-tests
 class: log-template-variable-tests
 tags: [cycod, logger]
 tests:

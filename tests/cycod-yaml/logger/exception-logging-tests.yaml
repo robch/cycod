@@ -1,11 +1,13 @@
 name: Exception Logging Tests - cycod
 description: Tests exception logging functionality for the cycod CLI application
+
+workingDirectory: ../../../testresults/cycod/logger/exception-logging-tests
 tags: [cycod, logger]
 
 tests:
   - name: Generate exception and verify exception files are created
     script: |
-      dotnet run --project ../../src/cycod/cycod.csproj -- chat --use-openai --openai-api-key "bogus-key" --question "test"
+      cycod chat --use-openai --openai-api-key "bogus-key" --question "test"
     expect-exit-code: 1
     expect-regex:
       - "EXCEPTION: HTTP 401 \\(invalid_request_error: invalid_api_key\\)"
@@ -19,7 +21,7 @@ tests:
 
   - name: Verify exception chat history file contains system prompt and user input
     script: |
-      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- exception-chat-history-*.jsonl
+      cycodmd exception-chat-history-*.jsonl
     expect-regex:
       - "## exception-chat-history-.*\\.jsonl"
       - '"role":"system"'
@@ -29,14 +31,14 @@ tests:
 
   - name: Verify exception trajectory file contains user input
     script: |
-      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- exception-trajectory-*.md
+      cycodmd exception-trajectory-*.md
     expect-regex:
       - "## exception-trajectory-.*\\.md"
       - "> test"
 
   - name: Verify exception log file contains stack trace
     script: |
-      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- exception-log-*.log
+      cycodmd exception-log-*.log
     expect-regex:
       - "## exception-log-.*\\.log"
       - "EXCEPTION: HTTP 401 \\(invalid_request_error: invalid_api_key\\)"
@@ -47,7 +49,7 @@ tests:
 
   - name: Verify cycod-specific exception log file contains detailed logging
     script: |
-      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- exception-log-cycod-*.log
+      cycodmd exception-log-cycod-*.log
     expect-regex:
       - "## exception-log-cycod-.*\\.log"
       - "Memory logger initialized"
@@ -59,7 +61,7 @@ tests:
 
   - name: Verify no exception files are left as turds after cleanup
     script: |
-      rm -f exception-*
+      rm -f exception-chat-history-* exception-trajectory-* exception-log-*
       git status --porcelain
     not-expect-regex:
       - "exception-"

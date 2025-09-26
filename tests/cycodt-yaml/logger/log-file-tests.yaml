@@ -1,5 +1,6 @@
 # Test custom log file name
 
+workingDirectory: ../../../testresults/cycodt/logger/log-file-tests
 class: log-file-tests
 tags: [cycodt, logger]
 tests:
