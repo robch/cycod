@@ -1,7 +1,7 @@
 class: run-tests
 tag: inception
 tests:
-- name: cycodt run simple.yaml
+- name: run_simple_test
   run: cycodt run --file simple.yaml --output-file test-results-simple.trx
   expect-regex: |
     Found 1 test...
@@ -16,7 +16,7 @@ tests:
     Tests: 1
     Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple.trx
 
-- name: cycodt run simple.yaml w/ all optional
+- name: run_simple_test w/ all optional
   run: cycodt run --file simple.yaml --include-optional --output-file test-results-simple-optional.trx
   expect-regex: |
     Found 3 tests...
@@ -35,7 +35,7 @@ tests:
     Tests: 3
     Results: .*[\\/]tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]test-results-simple-optional.trx
 
-- name: cycodt run simple2.yaml
+- name: run_simple2_test
   run: cycodt run --file simple2.yaml --output-file test-results-simple2.trx
   expect-regex: |
     Found 2 tests...
@@ -57,7 +57,7 @@ tests:
   run: cat hello.txt
   expect-regex: hello
 
-- name: cycodt run simple3.yaml
+- name: run_simple3_test
   run: cycodt run --file simple3.yaml --output-file test-results-simple3.trx
   expect-exit-code: 1
   expect-regex: |

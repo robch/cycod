@@ -13,12 +13,57 @@ This is a cycod CLI application written in C#. It consists of multiple component
 - Leverage the FileHelpers class for file operations
 
 ## Code Style
+
+### General Guidelines
 - Follow Microsoft C# coding guidelines
-- Use XML documentation comments for public members
-- Prefer explicit types over var when the type is not obvious
 - Avoid magic strings and numbers
 - Use meaningful variable and method names
+- "When in Rome, do as the Romans do" - match the style of the file you're modifying
+
+### Variables and Types
+- Use `var` consistently for local variable declarations
+- Only use explicit types when it improves clarity or the type is not obvious from the right side
+
+### Expressions and Statements
 - Prefer concise code (e.g., ternary operators for simple conditionals)
+- Prefer LINQ and functional programming patterns where appropriate
+- Maintain existing functional patterns (e.g., if code uses SelectMany, continue that pattern)
+
+### Methods and Functions
+- Prefer smaller, focused methods over large ones with multiple responsibilities
+- Prefer singular methods (e.g., ProcessFile) over batch methods (e.g., ProcessFiles)
+- Keep the original structure of methods when adding error handling
+
+### Comments and Documentation
+- Use XML documentation comments for public members only
+- Follow the commenting style of the file - if a file doesn't use comments, don't add them
+- Let code be self-documenting whenever possible
+
+### Error Handling
+- Use specific exception types rather than string pattern checking in catch blocks
+- Follow existing error handling patterns in the codebase
+- For critical errors, log clear messages and prevent further execution
+- For non-critical errors, log warnings and allow execution to continue
+
+### Console Output
+- Use `ConsoleHelpers` methods instead of direct `Console` calls for all user output
+- Follow existing color conventions:
+  - Red for errors (`ConsoleHelpers.WriteErrorLine`)
+  - Yellow for warnings and guidance (`ConsoleHelpers.WriteLine` with ConsoleColor.Yellow)
+  - White/default for standard output
+
+### Code Organization
+- Place helper methods near related primary methods
+- Keep changes localized to specific files when possible
+- When adding new code, follow the existing organization pattern of the file
+- Put methods in a logical order that follows the execution flow
+
+### Refactoring and Modifying Code
+- Prefer minimal changes that preserve existing structure
+- When fixing bugs, focus on addressing the root cause rather than symptoms
+- When adding error handling, try to keep the original code flow intact
+- Create specific types (e.g., custom exceptions) rather than using string checking or other workarounds
+- Keep changes backward compatible when possible
 
 ## PR Instructions
 - Run tests before submitting PRs

@@ -51,7 +51,7 @@ abstract class TestBaseCommand : Command
 
         var atLeastOneFileSpecified = files.Any();
         var tests = atLeastOneFileSpecified
-            ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("cycodt", file))
+            ? files.SelectMany(file => GetTestsFromFile(file))
             : Array.Empty<TestCase>();
 
         var withOrWithoutOptional = FilterOptionalTests(tests, IncludeOptionalCategories).ToList();
@@ -132,5 +132,22 @@ abstract class TestBaseCommand : Command
     {
         var optionalTraits = test.Traits.Where(t => t.Name == "optional").Select(t => t.Value);
         return optionalTraits.Any(value => categories.Contains(value));
+    }
+    
+    private IEnumerable<TestCase> GetTestsFromFile(FileInfo file)
+    {
+        try
+        {
+            return YamlTestFramework.GetTestsFromYaml("cycodt", file);
+        }
+        catch (DuplicateTestNamesException ex)
+        {
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}");
+            ConsoleHelpers.WriteLine("\nTo fix this issue:", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("1. Open the YAML file and ensure each test has a unique name", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("2. For cleanup steps, consider names like 'Clean up ProgramName test log files'", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("3. For similar tests, add context like 'Run cycodt with uppercase ProgramName'", ConsoleColor.Yellow);
+            return new List<TestCase>();
+        }
     }
 }

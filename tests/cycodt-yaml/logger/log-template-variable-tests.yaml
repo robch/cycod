@@ -1,14 +1,15 @@
 # Test log file template variables
 # Tests various template variable formats: {ProgramName}, {Time}, {TimeStamp} and case variations
 
-workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests
 class: log-template-variable-tests
 tags: [cycodt, logger]
 tests:
 
 - name: Test ProgramName template variable (uppercase P) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-ProgramName-uppercase
   steps:
-  - name: Run cycodt with {ProgramName} template and verify
+  - name: Run cycodt with uppercase {ProgramName} template and verify
     bash: |
       cycodt version --log "test-{ProgramName}-log.log"
       cycodmd test-cycodt-log.log exception-test-cycodt-log.log
@@ -22,7 +23,7 @@ tests:
     not-expect-regex: |
       ## exception-test-cycodt-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up uppercase ProgramName test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -30,8 +31,10 @@ tests:
       Cleanup completed
 
 - name: Test programName template variable (lowercase p) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-programName-lowercase
   steps:
-  - name: Run cycodt with {programName} template and verify
+  - name: Run cycodt with lowercase {programName} template and verify
     bash: |
       cycodt version --log "test-{programName}-log.log"
       cycodmd test-cycodt-log.log exception-test-cycodt-log.log
@@ -45,7 +48,7 @@ tests:
     not-expect-regex: |
       ## exception-test-cycodt-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up lowercase programName test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -53,8 +56,10 @@ tests:
       Cleanup completed
 
 - name: Test Time template variable (uppercase T) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-Time-uppercase
   steps:
-  - name: Run cycodt with {Time} template and verify
+  - name: Run cycodt with uppercase {Time} template and verify
     bash: |
       cycodt version --log "test-{Time}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
@@ -68,7 +73,7 @@ tests:
     not-expect-regex: |
       ## exception-test-.*-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up uppercase Time test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -76,8 +81,10 @@ tests:
       Cleanup completed
 
 - name: Test time template variable (lowercase t) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-time-lowercase
   steps:
-  - name: Run cycodt with {time} template and verify
+  - name: Run cycodt with lowercase {time} template and verify
     bash: |
       cycodt version --log "test-{time}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
@@ -91,7 +98,7 @@ tests:
     not-expect-regex: |
       ## exception-test-.*-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up lowercase time test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -99,8 +106,10 @@ tests:
       Cleanup completed
 
 - name: Test TimeStamp template variable (uppercase T and S) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-TimeStamp-uppercase
   steps:
-  - name: Run cycodt with {TimeStamp} template and verify
+  - name: Run cycodt with uppercase {TimeStamp} template and verify
     bash: |
       cycodt version --log "test-{TimeStamp}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
@@ -114,7 +123,7 @@ tests:
     not-expect-regex: |
       ## exception-test-.*-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up uppercase TimeStamp test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -122,8 +131,10 @@ tests:
       Cleanup completed
 
 - name: Test timestamp template variable (lowercase t and s) for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-timestamp-lowercase
   steps:
-  - name: Run cycodt with {timestamp} template and verify
+  - name: Run cycodt with lowercase {timestamp} template and verify
     bash: |
       cycodt version --log "test-{timestamp}-log.log"
       cycodmd test-*-log.log exception-test-*-log.log
@@ -137,7 +148,7 @@ tests:
     not-expect-regex: |
       ## exception-test-.*-log\.log
 
-  - name: Clean up test log files
+  - name: Clean up lowercase timestamp test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"
@@ -145,6 +156,8 @@ tests:
       Cleanup completed
 
 - name: Test combined template variables for cycodt
+  parallelize: false
+  workingDirectory: ../../../testresults/cycodt/logger/log-template-variable-tests/test-combined-variables
   steps:
   - name: Run cycodt with multiple template variables and verify
     bash: |
@@ -160,7 +173,7 @@ tests:
     not-expect-regex: |
       ## exception-test-cycodt-.*-combined\.log
 
-  - name: Clean up test log files
+  - name: Clean up combined variables test log files
     bash: |
       rm -f test-*-log.log test-*-combined.log exception-test-*-log.log exception-test-*-combined.log
       echo "Cleanup completed"

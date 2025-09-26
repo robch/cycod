@@ -6,6 +6,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test log directory creation with nested path for cycod
+  parallelize: false
   steps:
   - name: Remove test directory and run cycod with nested log path
     bash: |

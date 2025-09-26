@@ -6,6 +6,7 @@ tags: [cycodmd, logger]
 tests:
 
 - name: Test default log file name template for cycodmd
+  parallelize: false
   steps:
   - name: Run cycodmd and verify log file
     bash: |

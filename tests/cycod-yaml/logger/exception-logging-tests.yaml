@@ -6,6 +6,7 @@ tags: [cycod, logger]
 
 tests:
   - name: Generate exception and verify exception files are created
+    parallelize: false
     script: |
       cycod chat --use-openai --openai-api-key "bogus-key" --question "test"
     expect-exit-code: 1

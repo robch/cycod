@@ -6,6 +6,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test log file rotation based on size limit (once CLI support is added)
+  parallelize: false
   steps:
   - name: Test that would check size-based rotation if --log-rotation-size-mb was implemented
     bash: |

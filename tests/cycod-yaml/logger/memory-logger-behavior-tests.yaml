@@ -7,6 +7,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test memory logging is always active during normal operation
+  parallelize: false
   steps:
   - name: Run cycod and verify memory logging is enabled
     bash: |

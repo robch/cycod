@@ -6,6 +6,7 @@ tags: [cycodt, logger]
 tests:
 
 - name: Test default log file name template for cycodt
+  parallelize: false
   steps:
   - name: Run cycodt and verify log file
     bash: |

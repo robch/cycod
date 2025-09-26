@@ -7,6 +7,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test console logging enabled in debug mode
+  parallelize: false
   steps:
   - name: Run cycod in debug mode and capture stderr
     bash: |

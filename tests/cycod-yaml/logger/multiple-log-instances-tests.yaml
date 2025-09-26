@@ -6,6 +6,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test multiple cycod instances create separate log files with default naming
+  parallelize: false
   steps:
   - name: Run two cycod instances sequentially and verify separate log files
     bash: |

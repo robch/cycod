@@ -6,6 +6,7 @@ tags: [cycodmd, logger]
 tests:
 
 - name: Test log file creation with custom filename for cycodmd
+  parallelize: false
   steps:
   - name: Run cycodmd with custom log file and verify
     bash: |

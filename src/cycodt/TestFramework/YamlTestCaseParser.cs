@@ -44,6 +44,7 @@ public partial class YamlTestCaseParser
                 tests.AddRange(fromDocument);
             }
         }
+        CheckForDuplicateTestNames(tests);
         return tests;
     }
 
@@ -734,6 +735,54 @@ public partial class YamlTestCaseParser
             {
                 test.Traits.Add(tag.Key, value);
             }
+        }
+    }
+    
+    private static void CheckForDuplicateTestNames(List<TestCase> testCases)
+    {
+        var testNameMap = new Dictionary<string, TestCase>(StringComparer.OrdinalIgnoreCase);
+        var duplicates = new List<DuplicateTestNamesException.DuplicateInfo>();
+        
+        foreach (var test in testCases)
+        {
+            var testName = test.DisplayName.Split('.').Last();
+            
+            if (test.DisplayName.Contains("Error parsing YAML"))
+                continue;
+            
+            if (testNameMap.TryGetValue(testName, out var existingTest))
+            {
+                duplicates.Add(new DuplicateTestNamesException.DuplicateInfo(testName, existingTest, test));
+            }
+            else
+            {
+                testNameMap[testName] = test;
+            }
+        }
+        
+        if (duplicates.Count > 0)
+        {
+            var filePath = duplicates[0].Duplicate.CodeFilePath;
+            var fileName = Path.GetFileName(filePath);
+            
+            foreach (var duplicate in duplicates)
+            {
+                var existingLine = duplicate.Original.LineNumber;
+                var currentLine = duplicate.Duplicate.LineNumber;
+                
+                var error = $"Error parsing YAML: Duplicate test name '{duplicate.TestName}' detected " +
+                            $"at {filePath}({currentLine}). First occurrence at {filePath}({existingLine}). " +
+                            $"Test names within a file must be unique.";
+                
+                TestLogger.LogError(error);
+            }
+            
+            TestLogger.LogInfo("To fix duplicate test names, consider more specific names like:");
+            TestLogger.LogInfo("  - 'Clean up test log files for ProgramName test'");
+            TestLogger.LogInfo("  - 'Clean up test log files after TimeStamp test'");
+            
+            var message = $"Found {duplicates.Count} duplicate test names in {filePath}. Tests cannot run with duplicate names.";
+            throw new DuplicateTestNamesException(message, filePath, duplicates);
         }
     }
 

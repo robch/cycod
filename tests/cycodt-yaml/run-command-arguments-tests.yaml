@@ -7,15 +7,12 @@ tests:
   arguments:
     input: /file README.md
     threads: 1
-  expect-regex: &readme-expected-output |
+  expect-regex: |
     ^\r?$\n
     ^User: /file README\.md\r?$\n
     ^\r?$\n
     ^user-function: /file => \.\.\.\r?$\n
     ^user-function: /file => ## README\.md\r?$\n
-    ^\r?$\n
-    ^Modified: .*\r?$\n
-    ^Size: .*\r?$\n
     ^\r?$\n
     ^```markdown\r?$\n
     ^# README\.md\r?$\n
@@ -31,6 +28,20 @@ tests:
   run: cycod --openai-api-key fake --use-openai
   workingDirectory: testfiles
   arguments:
-    - input: "/file README.md"
-    - threads: 1
-  expect-regex: *readme-expected-output
+    input: 
+      - /file README.md
+      - exit
+    threads: 1
+  expect-regex: |
+    ^\r?$\n
+    ^User: /file README\.md\r?$\n
+    ^exit\r?$\n
+    ^\r?$\n
+    ^user-function: /file => \.\.\.\r?$\n
+    ^user-function: /file => ## Pattern: README\.md\r?$\n
+    ^exit\r?$\n
+    ^\r?$\n
+    ^ - No files found\r?$\n
+    ^\r?$\n
+    ^User: \r?$\n
+    ^User: exit\r?$\n

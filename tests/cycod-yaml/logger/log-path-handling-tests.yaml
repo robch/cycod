@@ -6,6 +6,7 @@ tags: [cycod, logger]
 tests:
 
 - name: Test absolute path for log files
+  parallelize: false
   steps:
   - name: Create temp directory and test with absolute log path
     bash: |
