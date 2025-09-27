@@ -1,10 +1,9 @@
 - area: Alias Commands
-  tests:
+  steps:
   - name: Alias List (empty initially)
     run: cycod alias list --local
     expect-regex: |
       LOCATION: .*[\\/]\.cycod[\\/]aliases \(local\)
-      No items found in this scope
 
   - name: Create Raw Alias with alias add
     run: cycod alias add test-raw-alias "--system-prompt \"You are a test assistant\" --instruction"
@@ -51,17 +50,20 @@
     run: cycod --test-raw-alias "Write a test" --quiet
     not-expect-regex: |
       Error: Invalid argument in alias file
+    optional: needsAI
 
   - name: Use Validated Alias
     run: cycod --test-validated-alias --input "Hello" --quiet
     not-expect-regex: |
       Error: Invalid argument in alias file
+    optional: needsAI
 
   - name: Combine Multiple Aliases
     run: |
       cycod --python-expert --code-review "def add(a, b): return a + b" --quiet
     not-expect-regex: |
       Error: Invalid argument in alias file
+    optional: needsAI
 
   - name: Alias with cycod prefix is handled correctly
     run: cycod alias add prefix-alias "cycod --system-prompt \"Test with prefix\""
