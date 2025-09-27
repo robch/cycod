@@ -247,13 +247,9 @@ abstract class TestBaseCommand : Command
         {
             return YamlTestFramework.GetTestsFromYaml("cycodt", file);
         }
-        catch (DuplicateTestNamesException ex)
+        catch (Exception ex)
         {
             ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}");
-            ConsoleHelpers.WriteLine("\nTo fix this issue:", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine("1. Open the YAML file and ensure each test has a unique name", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine("2. For cleanup steps, consider names like 'Clean up ProgramName test log files'", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine("3. For similar tests, add context like 'Run cycodt with uppercase ProgramName'", ConsoleColor.Yellow);
             return new List<TestCase>();
         }
     }

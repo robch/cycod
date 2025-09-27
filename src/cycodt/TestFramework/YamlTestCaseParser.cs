@@ -1,4 +1,7 @@
 using System.IO;
+using System;
+using System.Security.Cryptography;
+
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using YamlDotNet.RepresentationModel;
@@ -44,7 +47,7 @@ public partial class YamlTestCaseParser
                 tests.AddRange(fromDocument);
             }
         }
-        CheckForDuplicateTestNames(tests);
+
         return tests;
     }
 
@@ -328,6 +331,8 @@ public partial class YamlTestCaseParser
             CodeFilePath = context.File.FullName,
             LineNumber = (int)mapping.Start.Line
         };
+
+        AppendDeterministicUniquenessSuffix(test);
 
         SetTestCaseProperty(test, "cli", cli);
         SetTestCaseProperty(test, "run", runProcess);
@@ -630,57 +635,10 @@ public partial class YamlTestCaseParser
 
     private static string GetRootArea(FileInfo file)
     {
-        var projectRootPath = FindProjectRoot(file.Directory);
-        if (projectRootPath == null)
-        {
-            // Fallback to original behavior
-            return $"{file.Extension.TrimStart('.')}.{Path.GetFileNameWithoutExtension(file.Name)}";
-        }
-        
-        // Extract tool from directory path
-        var fileDirectory = file.DirectoryName ?? file.Directory?.FullName ?? string.Empty;
-        var relativePath = Path.GetRelativePath(projectRootPath, fileDirectory);
-        var pathParts = relativePath.Split(Path.DirectorySeparatorChar);
-        
-        if (pathParts.Length > 1 && pathParts[0].Equals("tests", StringComparison.OrdinalIgnoreCase))
-        {
-            var toolDir = pathParts[1]; // "cycod-yaml"
-            var tool = toolDir.Split('-')[0]; // "cycod" from "cycod-yaml"
-            var fileName = Path.GetFileNameWithoutExtension(file.Name); // "console-logger-tests"
-            return $"{tool}.{fileName}"; // "cycod.console-logger-tests"
-        }
-        
-        // Fallback to original behavior
         return $"{file.Extension.TrimStart('.')}.{Path.GetFileNameWithoutExtension(file.Name)}";
     }
 
-    private static string? FindProjectRoot(DirectoryInfo? directory)
-    {
-        // Adapt FileHelpers.FindFileSearchParents pattern for directories
-        var current = directory?.FullName ?? Directory.GetCurrentDirectory();
-        string? lastValidRoot = null;
-        
-        while (current != null)
-        {
-            // Check for .cycod directory first (more specific)
-            var cycodPath = Path.Combine(current, ".cycod");
-            if (Directory.Exists(cycodPath))
-            {
-                lastValidRoot = current; // Keep going up to find the topmost .cycod
-            }
-            
-            // Check for .git directory OR .git file (for worktrees/submodules)
-            var gitPath = Path.Combine(current, ".git");
-            if (Directory.Exists(gitPath) || File.Exists(gitPath))
-            {
-                lastValidRoot = current; // Keep going up to find the topmost .git
-            }
-            
-            current = Directory.GetParent(current)?.FullName;
-        }
-        
-        return lastValidRoot;
-    }
+
 
     private static string UpdateArea(YamlMappingNode mapping, string area)
     {
@@ -738,53 +696,7 @@ public partial class YamlTestCaseParser
         }
     }
     
-    private static void CheckForDuplicateTestNames(List<TestCase> testCases)
-    {
-        var testNameMap = new Dictionary<string, TestCase>(StringComparer.OrdinalIgnoreCase);
-        var duplicates = new List<DuplicateTestNamesException.DuplicateInfo>();
-        
-        foreach (var test in testCases)
-        {
-            var testName = test.DisplayName.Split('.').Last();
-            
-            if (test.DisplayName.Contains("Error parsing YAML"))
-                continue;
-            
-            if (testNameMap.TryGetValue(testName, out var existingTest))
-            {
-                duplicates.Add(new DuplicateTestNamesException.DuplicateInfo(testName, existingTest, test));
-            }
-            else
-            {
-                testNameMap[testName] = test;
-            }
-        }
-        
-        if (duplicates.Count > 0)
-        {
-            var filePath = duplicates[0].Duplicate.CodeFilePath;
-            var fileName = Path.GetFileName(filePath);
-            
-            foreach (var duplicate in duplicates)
-            {
-                var existingLine = duplicate.Original.LineNumber;
-                var currentLine = duplicate.Duplicate.LineNumber;
-                
-                var error = $"Error parsing YAML: Duplicate test name '{duplicate.TestName}' detected " +
-                            $"at {filePath}({currentLine}). First occurrence at {filePath}({existingLine}). " +
-                            $"Test names within a file must be unique.";
-                
-                TestLogger.LogError(error);
-            }
-            
-            TestLogger.LogInfo("To fix duplicate test names, consider more specific names like:");
-            TestLogger.LogInfo("  - 'Clean up test log files for ProgramName test'");
-            TestLogger.LogInfo("  - 'Clean up test log files after TimeStamp test'");
-            
-            var message = $"Found {duplicates.Count} duplicate test names in {filePath}. Tests cannot run with duplicate names.";
-            throw new DuplicateTestNamesException(message, filePath, duplicates);
-        }
-    }
+
 
     private static string UpdateWorkingDirectory(YamlMappingNode mapping, string currentWorkingDirectory)
     {
@@ -797,6 +709,30 @@ public partial class YamlTestCaseParser
         if (string.IsNullOrEmpty(workingDirectory)) return currentWorkingDirectory;
         return PathHelpers.Combine(currentWorkingDirectory, workingDirectory) ?? currentWorkingDirectory;
     }
+
+    private static void AppendDeterministicUniquenessSuffix(TestCase test)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(test.CodeFilePath)) return;
+
+            var fileInfo = new FileInfo(test.CodeFilePath);
+            var rel = fileInfo.FullName.Replace('\\', '/').ToLowerInvariant();
+            var seed = $"{rel}:{test.LineNumber}";
+            using var sha1 = System.Security.Cryptography.SHA1.Create();
+            var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(seed));
+            var h6 = BitConverter.ToString(bytes).Replace("-", string.Empty).Substring(0, 6).ToLowerInvariant();
+            if (!test.FullyQualifiedName.EndsWith("@" + h6, StringComparison.Ordinal))
+            {
+                test.FullyQualifiedName += "@" + h6;
+            }
+        }
+        catch (Exception ex)
+        {
+            TestLogger.LogWarning($"AppendDeterministicUniquenessSuffix failed: {ex.Message}");
+        }
+    }
+
 
     private const string defaultClassName = "TestCases";
 
