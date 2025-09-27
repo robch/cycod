@@ -79,7 +79,7 @@
       ^  prefix-alias\r?$\n
       ^\r?$\n
       ^    --system-prompt\r?$\n
-      ^\r?$\n
+      ^    \r?$\n
       ^    Test with prefix\r?$\n
 
   - name: Alias Delete (raw alias)
