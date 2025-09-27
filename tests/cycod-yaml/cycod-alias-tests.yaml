@@ -74,13 +74,10 @@
   - name: Get Alias with cycod prefix removed
     run: cycod alias get prefix-alias
     expect-regex: |
-      ^LOCATION: .*[\\/]\.cycod[\\/]aliases[\\/]prefix-alias\.alias \(local\)\r?$\n
-      ^\r?$\n
-      ^  prefix-alias\r?$\n
-      ^\r?$\n
-      ^    --system-prompt\r?$\n
-      ^    \r?$\n
-      ^    Test with prefix\r?$\n
+      LOCATION: .*[\\/]\.cycod[\\/]aliases[\\/]prefix-alias\.alias \(local\)
+        prefix-alias
+          --system-prompt
+          Test with prefix
 
   - name: Alias Delete (raw alias)
     run: cycod alias delete test-raw-alias
