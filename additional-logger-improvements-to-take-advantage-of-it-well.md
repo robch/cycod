@@ -20,7 +20,7 @@ Added LogException method to ConsoleHelpers.cs:
 - Added CallerFilePath and CallerLineNumber attributes for better context
 - Verified successful build in both Debug and Release configurations
 
-Commit: [commit hash] - "Added LogException helper method to ConsoleHelpers for comprehensive exception logging"
+Commit: 7120c75b - "Added LogException helper method to ConsoleHelpers for comprehensive exception logging"
 
 ## Current State Analysis
 
