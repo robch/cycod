@@ -22,14 +22,20 @@ public class McpFunctionFactory : FunctionFactory
     /// <returns>The task representing the asynchronous operation.</returns>
     public async Task AddMcpClientToolsAsync(IMcpClient mcpClient, string clientName)
     {
+        Logger.Info($"MCP: Adding tools from client '{clientName}' ({mcpClient.ServerInfo.Version})");
+        
         if (!_mcpClients.ContainsKey(clientName))
         {
             _mcpClients[clientName] = mcpClient;
+            Logger.Verbose($"MCP: Added client '{clientName}' to function factory");
         }
 
         // Get the list of tools from the MCP client
         var tools = await mcpClient.ListToolsAsync();
+        var toolNames = string.Join(", ", tools.Select(t => t.Name));
+        
         ConsoleHelpers.WriteDebugLine($"Found {tools.Count} tools on MCP server '{mcpClient.ServerInfo.Name}'");
+        Logger.Info($"MCP: Found {tools.Count} tools on server '{clientName}': {toolNames}");
 
         // Add each tool individually
         foreach (var tool in tools)
@@ -68,6 +74,8 @@ public class McpFunctionFactory : FunctionFactory
         if (!string.IsNullOrEmpty(functionName) && _mcpTools.TryGetValue(functionName, out var tool))
         {
             ConsoleHelpers.WriteDebugLine($"Found MCP tool '{functionName}'");
+            Logger.Verbose($"MCP: Preparing to call tool '{functionName}'");
+            
             try
             {
                 var arguments = JsonSerializer.Deserialize<Dictionary<string, object?>>(functionArguments, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -75,24 +83,63 @@ public class McpFunctionFactory : FunctionFactory
                 
                 var clientName = functionName.Split('_')[0];
                 var toolName = functionName.Substring(clientName.Length + 1);
+                
+                // Log the argument values (but mask potential sensitive data)
+                var safeArgs = new Dictionary<string, object?>(arguments);
+                foreach (var key in safeArgs.Keys.ToList())
+                {
+                    if (key.Contains("key", StringComparison.OrdinalIgnoreCase) || 
+                        key.Contains("token", StringComparison.OrdinalIgnoreCase) ||
+                        key.Contains("secret", StringComparison.OrdinalIgnoreCase) ||
+                        key.Contains("password", StringComparison.OrdinalIgnoreCase))
+                    {
+                        safeArgs[key] = "********";
+                    }
+                }
+                var argsJson = JsonSerializer.Serialize(safeArgs);
+                
                 if (_mcpClients.TryGetValue(clientName, out var client))
                 {
+                    // Log the tool call at Info level
+                    Logger.Info($"MCP: Calling tool '{toolName}' on server '{clientName}' with args: {argsJson}");
                     ConsoleHelpers.WriteDebugLine($"Calling MCP tool '{toolName}' on client '{clientName}'");
+                    
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
                     var response = Task.Run(async () => await client.CallToolAsync(toolName, arguments)).Result;
-                    ConsoleHelpers.WriteDebugLine(response.IsError
-                        ? $"MCP tool '{toolName}' on `{clientName}` resulted in ERROR!"
-                        : $"MCP tool '{toolName}' on `{clientName}` resulted in SUCCESS!");
+                    sw.Stop();
+                    
+                    var status = response.IsError ? "ERROR" : "SUCCESS";
+                    ConsoleHelpers.WriteDebugLine($"MCP tool '{toolName}' on `{clientName}` resulted in {status}!");
+                    
+                    // Log at appropriate level based on success/failure
+                    if (response.IsError)
+                    {
+                        Logger.Warning($"MCP: Tool '{toolName}' on server '{clientName}' failed after {sw.ElapsedMilliseconds}ms");
+                    }
+                    else
+                    {
+                        Logger.Info($"MCP: Tool '{toolName}' on server '{clientName}' completed successfully in {sw.ElapsedMilliseconds}ms");
+                    }
 
                     result = string.Join('\n', response.Content
                         .Where(c => !string.IsNullOrEmpty(c.Text))
                         .Select(c => c.Text))
                         ?? "(no text response)";
 
+                    // Log a short version of the result (truncate if too long)
+                    var resultString = result.ToString() ?? "";
+                    var truncatedResult = resultString.Length > 500 
+                        ? resultString.Substring(0, 500) + "..." 
+                        : resultString;
+                    
+                    Logger.Verbose($"MCP: Tool '{toolName}' returned: {truncatedResult}");
                     ConsoleHelpers.WriteDebugLine($"MCP tool '{functionName}' returned: {result}");
                     return true;
                 }
                 
-                result = $"Error: MCP client not found for tool {functionName}";
+                var errorMsg = $"Error: MCP client not found for tool {functionName}";
+                Logger.Warning($"MCP: {errorMsg}");
+                result = errorMsg;
                 return false;
             }
             catch (Exception ex)
@@ -113,20 +160,38 @@ public class McpFunctionFactory : FunctionFactory
     /// </summary>
     public async Task DisposeAsync()
     {
-        foreach (var client in _mcpClients.Values)
+        Logger.Info($"MCP: Disposing of {_mcpClients.Count} MCP clients");
+        
+        foreach (var entry in _mcpClients)
         {
-            if (client is IAsyncDisposable asyncDisposable)
+            var clientName = entry.Key;
+            var client = entry.Value;
+            
+            try
             {
-                await asyncDisposable.DisposeAsync();
+                Logger.Verbose($"MCP: Disposing client '{clientName}'");
+                
+                if (client is IAsyncDisposable asyncDisposable)
+                {
+                    await asyncDisposable.DisposeAsync();
+                    Logger.Verbose($"MCP: Async disposed client '{clientName}'");
+                }
+                else if (client is IDisposable disposable)
+                {
+                    disposable.Dispose();
+                    Logger.Verbose($"MCP: Disposed client '{clientName}'");
+                }
             }
-            else if (client is IDisposable disposable)
+            catch (Exception ex)
             {
-                disposable.Dispose();
+                Logger.Warning($"MCP: Error disposing client '{clientName}': {ex.Message}");
             }
         }
         
         _mcpClients.Clear();
         _mcpTools.Clear();
+        
+        Logger.Info("MCP: All clients disposed and cleared");
     }
 
     private readonly Dictionary<string, IMcpClient> _mcpClients = new();

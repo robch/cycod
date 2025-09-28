@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
+using System.Diagnostics;
 using System.Text;
 
 public class ChatCommand : CommandWithVariables
@@ -765,9 +766,15 @@ public class ChatCommand : CommandWithVariables
 
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
+        Logger.Info("MCP: Initializing MCP functions for chat");
+        
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var clients = await CreateMcpClientsFromConfig();
         await CreateWithMcpClients(clients);
+        
+        Logger.Info($"MCP: Created {clients.Count} MCP clients in {sw.ElapsedMilliseconds}ms");
 
+        // Add all tools from all clients to the function factory
         foreach (var clientEntry in clients)
         {
             var serverName = clientEntry.Key;
@@ -775,6 +782,7 @@ public class ChatCommand : CommandWithVariables
 
             try
             {
+                Logger.Info($"MCP: Adding tools from server '{serverName}'");
                 await factory.AddMcpClientToolsAsync(client, serverName);
             }
             catch (Exception ex)
@@ -782,6 +790,9 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.LogException(ex, $"Error adding tools from MCP server '{serverName}'");
             }
         }
+        
+        sw.Stop();
+        Logger.Info($"MCP: Finished initializing MCP functions in {sw.ElapsedMilliseconds}ms");
     }
 
     private async Task<Dictionary<string, IMcpClient>> CreateMcpClientsFromConfig()
@@ -790,18 +801,33 @@ public class ChatCommand : CommandWithVariables
         if (noMcps)
         {
             ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            Logger.Info("MCP: Functions are disabled (no MCPs specified)");
             return new();
         }
 
-        var servers = McpFileHelpers.ListMcpServers(ConfigFileScope.Any)
+        Logger.Info($"MCP: Looking for MCP servers matching criteria: {string.Join(", ", UseMcps)}");
+        
+        var allServers = McpFileHelpers.ListMcpServers(ConfigFileScope.Any);
+        Logger.Verbose($"MCP: Found {allServers.Count} total MCP servers in configuration");
+        
+        var servers = allServers
             .Where(kvp => ShouldUseMcpFromConfig(kvp.Key, kvp.Value))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            
+        Logger.Info($"MCP: Selected {servers.Count} MCP servers matching criteria");
+        
+        if (servers.Count > 0)
+        {
+            var serverList = string.Join(", ", servers.Keys);
+            Logger.Info($"MCP: Creating clients for servers: {serverList}");
+        }
 
         var clients = await McpClientManager.CreateClientsAsync(servers);
         if (clients.Count == 0)
         {
             var criteria = string.Join(", ", UseMcps);
             ConsoleHelpers.WriteDebugLine($"Searched {UseMcps.Count} MCPs; found no MCPs matching criteria: {criteria}");
+            Logger.Warning($"MCP: No functioning MCP servers found matching criteria: {criteria}");
             return new();
         }
 
@@ -816,18 +842,26 @@ public class ChatCommand : CommandWithVariables
         if (noMcps)
         {
             ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            Logger.Info("MCP: No ad-hoc MCP servers specified");
             return;
         }
 
+        Logger.Info($"MCP: Creating {servers.Count} ad-hoc MCP server(s)");
+        
         var start = DateTime.Now;
         ConsoleHelpers.Write($"Loading {servers.Count} ad-hoc MCP server(s) ...", ConsoleColor.DarkGray);
 
         var loaded = 0;
+        var failed = 0;
+        
         foreach (var serverName in servers.Keys)
         {
             var stdioConfig = servers[serverName];
             try
             {
+                Logger.Info($"MCP: Creating ad-hoc MCP client '{serverName}' with command: {stdioConfig.Command}");
+                
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var client = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
                 {
                     Name = serverName,
@@ -835,24 +869,45 @@ public class ChatCommand : CommandWithVariables
                     Arguments = stdioConfig.Args,
                     EnvironmentVariables = stdioConfig.Env,
                 }));
+                sw.Stop();
 
                 ConsoleHelpers.WriteDebugLine($"Created MCP client for '{serverName}' with command: {stdioConfig.Command}");
+                Logger.Info($"MCP: Successfully created ad-hoc MCP client '{serverName}' in {sw.ElapsedMilliseconds}ms");
+                
                 clients[serverName] = client;
                 loaded++;
             }
             catch (Exception ex)
             {
+                failed++;
                 ConsoleHelpers.LogException(ex, $"Failed to create MCP client for '{serverName}'");
             }
         }
 
         var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
-        ConsoleHelpers.WriteLine($"\rLoaded {loaded} ad-hoc MCP server(s) ({duration})", ConsoleColor.DarkGray);
+        var statusMsg = $"Loaded {loaded} ad-hoc MCP server(s) ({duration})";
+        ConsoleHelpers.WriteLine($"\r{statusMsg}", ConsoleColor.DarkGray);
+        
+        if (failed > 0)
+        {
+            Logger.Warning($"MCP: {statusMsg}, {failed} server(s) failed to load");
+        }
+        else
+        {
+            Logger.Info($"MCP: {statusMsg}");
+        }
     }
 
     private bool ShouldUseMcpFromConfig(string name, IMcpServerConfigItem item)
     {
-        return UseMcps.Contains(name) || UseMcps.Contains("*");
+        var shouldUse = UseMcps.Contains(name) || UseMcps.Contains("*");
+        
+        if (shouldUse)
+        {
+            Logger.Verbose($"MCP: Selected server '{name}' of type {item.Type} (matched criteria)");
+        }
+        
+        return shouldUse;
     }
 
     private bool ShouldAutoApprove(McpFunctionFactory factory, string name)
