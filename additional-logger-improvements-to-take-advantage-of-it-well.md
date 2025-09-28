@@ -52,7 +52,7 @@ Updated exception handling across the codebase to use the new LogException helpe
 - Updated exception handling in command classes (AliasCommands, PromptCommands, etc.)
 - Verified successful build in Release configuration
 
-Commit: [pending] - "Enhanced exception handling with comprehensive logging"
+Commit: 71a27aa1 - "Enhanced exception handling with comprehensive logging in cycod commands and function calling"
 
 ## Current State Analysis
 
