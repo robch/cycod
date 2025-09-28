@@ -227,20 +227,64 @@ public class ConsoleHelpers
         return Console.ReadKey(intercept);
     }
 
-    private static List<string> ReadAllLinesFromStdin()
+    /// <summary>
+    /// Logs a debug message to both the console (if debug is enabled) and the logging system.
+    /// </summary>
+    /// <param name="message">The debug message to log</param>
+    /// <param name="filePath">Source file where the log occurred</param>
+    /// <param name="lineNumber">Line number where the log occurred</param>
+    public static void LogDebug(string message, 
+        [CallerFilePath] string filePath = "", 
+        [CallerLineNumber] int lineNumber = 0)
     {
-        _allLinesFromStdin = new();
-        while (true)
-        {
-            var line = Console.ReadLine();
-            if (line == null) break;
-
-            _allLinesFromStdin.Add(line);
-        }
-
-        return _allLinesFromStdin;
+        WriteDebugLine(message);
+        // WriteDebugLine already logs to Logger.Verbose if appropriate
     }
-    
+
+    /// <summary>
+    /// Logs an informational message to both the console and the logging system.
+    /// </summary>
+    /// <param name="message">The info message to log</param>
+    /// <param name="color">Optional color for console output</param>
+    /// <param name="filePath">Source file where the log occurred</param>
+    /// <param name="lineNumber">Line number where the log occurred</param>
+    public static void LogInfo(string message, 
+        ConsoleColor? color = null,
+        [CallerFilePath] string filePath = "", 
+        [CallerLineNumber] int lineNumber = 0)
+    {
+        WriteLine(message, color);
+        Logger.Info(message);
+    }
+
+    /// <summary>
+    /// Logs a warning message to both the console and the logging system.
+    /// </summary>
+    /// <param name="message">The warning message to log</param>
+    /// <param name="filePath">Source file where the log occurred</param>
+    /// <param name="lineNumber">Line number where the log occurred</param>
+    public static void LogWarning(string message,
+        [CallerFilePath] string filePath = "", 
+        [CallerLineNumber] int lineNumber = 0)
+    {
+        WriteWarningLine(message);
+        // WriteWarningLine already logs to Logger.Warning
+    }
+
+    /// <summary>
+    /// Logs an error message to both the console and the logging system.
+    /// </summary>
+    /// <param name="message">The error message to log</param>
+    /// <param name="filePath">Source file where the log occurred</param>
+    /// <param name="lineNumber">Line number where the log occurred</param>
+    public static void LogError(string message,
+        [CallerFilePath] string filePath = "", 
+        [CallerLineNumber] int lineNumber = 0)
+    {
+        WriteErrorLine(message);
+        // WriteErrorLine already logs to Logger.Error
+    }
+
     /// <summary>
     /// Logs an exception with detailed information to both the console and logger system.
     /// </summary>
@@ -274,6 +318,20 @@ public class ConsoleHelpers
             inner = inner.InnerException;
             depth++;
         }
+    }
+
+    private static List<string> ReadAllLinesFromStdin()
+    {
+        _allLinesFromStdin = new();
+        while (true)
+        {
+            var line = Console.ReadLine();
+            if (line == null) break;
+
+            _allLinesFromStdin.Add(line);
+        }
+
+        return _allLinesFromStdin;
     }
 
     private static void WriteWithColorWithoutScrollSmear(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
