@@ -5,6 +5,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.IO;
+
+
+
+
+
 
 /// <summary>
 /// Manages long-running background processes.
@@ -25,7 +32,13 @@ public static class BackgroundProcessManager
         _cleanupTimer = new Timer(CleanupOldProcesses, null, _defaultCleanupInterval, _defaultCleanupInterval);
 
         // Register for application exit to clean up all processes
-        AppDomain.CurrentDomain.ProcessExit += (sender, e) => ShutdownAllProcesses();
+        AppDomain.CurrentDomain.ProcessExit += (sender, e) => 
+        {
+            Logger.Info("Application exiting - shutting down all background processes");
+            ShutdownAllProcesses();
+        };
+        
+        Logger.Info("Background process manager initialized");
     }
 
     /// <summary>
@@ -40,6 +53,16 @@ public static class BackgroundProcessManager
         if (string.IsNullOrEmpty(processName))
         {
             throw new ArgumentException("Process name cannot be null or empty", nameof(processName));
+        }
+
+        // Generate a unique handle for this process
+        string handle = Guid.NewGuid().ToString("N");
+
+        // Log process start attempt at Info level
+        Logger.Info($"Starting background process: {processName} {processArguments ?? ""} (handle: {handle})");
+        if (!string.IsNullOrEmpty(workingDirectory))
+        {
+            Logger.Verbose($"Background process working directory: {workingDirectory}");
         }
 
         // Create process using RunnableProcessBuilder
@@ -59,9 +82,6 @@ public static class BackgroundProcessManager
 
         var process = processBuilder.Build();
 
-        // Generate a unique handle for this process
-        string handle = Guid.NewGuid().ToString("N");
-
         // Create the process info and store it
         var processInfo = new BackgroundProcessInfo(handle, process);
         _processes[handle] = processInfo;
@@ -72,11 +92,13 @@ public static class BackgroundProcessManager
             try
             {
                 // Start the process but don't await it - let it run in the background
+                Logger.Verbose($"Executing background process {handle} asynchronously");
                 await process.StartAsync();
+                Logger.Info($"Background process {handle} started successfully");
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteDebugLine($"Error in background process {handle}: {ex.Message}");
+                ConsoleHelpers.LogException(ex, $"Error starting background process {handle}");
             }
         });
 
@@ -130,24 +152,37 @@ public static class BackgroundProcessManager
     {
         if (string.IsNullOrEmpty(handle) || !_processes.TryGetValue(handle, out var processInfo))
         {
+            Logger.Warning($"Attempt to kill non-existent background process with handle: {handle}");
             return false;
         }
 
         try
         {
+            // Get process info for logging
+            var processName = processInfo.Process.FileName;
+            var runTime = DateTime.Now - processInfo.StartTime;
+            
             if (processInfo.IsRunning)
             {
+                Logger.Info($"Terminating background process: {processName} (handle: {handle}, running for {runTime.TotalSeconds:F1}s, force: {force})");
+                
                 // Send Ctrl+C if not forcing
                 if (!force)
                 {
+                    Logger.Verbose($"Sending Ctrl+C to background process {handle}");
                     processInfo.Process.SendCtrlCAsync().Wait(500);
                 }
 
                 // If process is still running or force is true, kill it
                 if (force || processInfo.IsRunning)
                 {
+                    Logger.Verbose($"Force killing background process {handle}");
                     processInfo.Process.ForceShutdown();
                 }
+            }
+            else
+            {
+                Logger.Info($"Background process already exited: {processName} (handle: {handle}, ran for {runTime.TotalSeconds:F1}s)");
             }
 
             // Remove from our collection
@@ -156,7 +191,7 @@ public static class BackgroundProcessManager
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"Error killing process {handle}: {ex.Message}");
+            ConsoleHelpers.LogException(ex, $"Error killing background process {handle}");
             return false;
         }
     }
@@ -175,12 +210,19 @@ public static class BackgroundProcessManager
     /// </summary>
     public static void ShutdownAllProcesses()
     {
-        foreach (var handle in _processes.Keys.ToList())
+        var processCount = _processes.Count;
+        if (processCount > 0)
         {
-            KillLongRunningProcess(handle, true);
-        }
+            Logger.Info($"Shutting down all {processCount} background processes");
+            
+            foreach (var handle in _processes.Keys.ToList())
+            {
+                KillLongRunningProcess(handle, true);
+            }
 
-        _processes.Clear();
+            _processes.Clear();
+            Logger.Info("All background processes terminated");
+        }
     }
 
     /// <summary>
@@ -194,10 +236,16 @@ public static class BackgroundProcessManager
             .Where(p => (now - p.StartTime) > _defaultMaxProcessAge)
             .ToList();
 
-        foreach (var process in oldProcesses)
+        if (oldProcesses.Count > 0)
         {
-            ConsoleHelpers.WriteDebugLine($"Cleaning up old process: {process.Handle} running since {process.StartTime}");
-            KillLongRunningProcess(process.Handle, true);
+            Logger.Info($"Cleaning up {oldProcesses.Count} old background processes that exceeded maximum age of {_defaultMaxProcessAge.TotalHours:F1} hours");
+            
+            foreach (var process in oldProcesses)
+            {
+                var runTime = now - process.StartTime;
+                Logger.Info($"Cleaning up old process: {process.Handle} running for {runTime.TotalHours:F1} hours");
+                KillLongRunningProcess(process.Handle, true);
+            }
         }
     }
 }

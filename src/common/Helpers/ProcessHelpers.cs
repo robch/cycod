@@ -1,5 +1,11 @@
 using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Text;
+
 
 public static class ProcessHelpers
 {
@@ -14,10 +20,15 @@ public static class ProcessHelpers
 
         try
         {
+            // Log shell script execution at Info level
+            Logger.Info($"Executing {shell} shell script {(scriptArgs != null ? $"with args: {scriptArgs}" : "")}");
+            Logger.Verbose($"Script content length: {script?.Length ?? 0} characters");
+            
             var scriptFileExt = GetShellScriptFileExtension(shell);
             var scriptWrapped = WrapScriptContent(shell, script);
             var scriptFileName = FileHelpers.WriteTextToTempFile(scriptWrapped, scriptFileExt)!;
             filesToDelete.Add(scriptFileName);
+            Logger.Verbose($"Created temporary script file: {scriptFileName}");
 
             GetShellProcessNameAndArgsFormat(shell, out var processName, out var processArgsFormat);
             ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {processArgsFormat}");
@@ -25,7 +36,12 @@ public static class ProcessHelpers
             ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {shellArgsFormatted}");
 
             var hasScriptFileName = shellArgsFormatted.Contains(scriptFileName);
-            if (!hasScriptFileName) throw new InvalidOperationException($"Script file name not found in shell arguments: {shellArgsFormatted}");
+            if (!hasScriptFileName) 
+            {
+                var error = $"Script file name not found in shell arguments: {shellArgsFormatted}";
+                Logger.Error(error);
+                throw new InvalidOperationException(error);
+            }
 
             var builder = new RunnableProcessBuilder()
                 .WithFileName(processName)
@@ -35,14 +51,49 @@ public static class ProcessHelpers
                 .WithStandardInput(input)
                 .WithTimeout(timeout);
 
-            return await builder.RunAsync();
+            var startTime = DateTime.Now;
+            var result = await builder.RunAsync();
+            var duration = DateTime.Now - startTime;
+            
+            // Additional logging after execution
+            if (result.ExitCode == 0)
+            {
+                Logger.Info($"Shell script executed successfully in {duration.TotalSeconds:F2}s with exit code: {result.ExitCode}");
+            }
+            else
+            {
+                Logger.Warning($"Shell script exited with non-zero code: {result.ExitCode} in {duration.TotalSeconds:F2}s");
+                Logger.Verbose($"Script stderr: {result.StandardError}");
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Shell script execution failed: {ex.Message}");
+            throw;
         }
         finally
         {
             var skipDelete = ConsoleHelpers.IsDebug();
             if (!skipDelete)
             {
-                filesToDelete?.ForEach(x => File.Delete(x));
+                filesToDelete?.ForEach(x => 
+                {
+                    try
+                    {
+                        File.Delete(x);
+                        Logger.Verbose($"Deleted temporary script file: {x}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"Failed to delete temporary script file {x}: {ex.Message}");
+                    }
+                });
+            }
+            else
+            {
+                Logger.Verbose($"Debug mode: Keeping temporary script files");
             }
         }
     }
