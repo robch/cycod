@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+// Added for Logger integration
+using System.Runtime.CompilerServices;
+// Add reference to Logger
+// Logger is a static class in the global namespace
 
 public class ConsoleHelpers
 {
@@ -103,33 +107,57 @@ public class ConsoleHelpers
     public static void WriteWarning(string message)
     {
         Write(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+        
+        // Always log warnings
+        Logger.Warning(message);
     }
 
     public static void WriteWarningLine(string message)
     {
         WriteLine(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+        
+        // Always log warnings
+        Logger.Warning(message);
     }
     
     public static void WriteError(string message)
     {
         Write(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
+        
+        // Always log errors
+        Logger.Error(message);
     }
 
     public static void WriteErrorLine(string message)
     {
         WriteLine(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
+        
+        // Always log errors
+        Logger.Error(message);
     }
 
     public static void WriteDebug(string message)
     {
         if (!_debug) return;
         Write(message, ConsoleColor.Cyan);
+        
+        // Also log to Logger if enabled
+        if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+        {
+            Logger.Verbose(message);
+        }
     }
 
     public static void WriteDebugLine(string message = "")
     {
         if (!_debug) return;
         WriteLine(message, ConsoleColor.Cyan);
+        
+        // Also log to Logger if enabled
+        if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+        {
+            Logger.Verbose(message);
+        }
     }
 
     public static void WriteDebugHexDump(string message, string? title = null)
