@@ -1,9 +1,15 @@
 using System;
 using System.ClientModel.Primitives;
+using System.IO;
 using System.Text;
+using System.Text.RegularExpressions;
 
 public class LogTrafficEventPolicy : TrafficEventPolicy
 {
+    // Regular expressions for sensitive data masking
+    private static readonly Regex _authHeaderPattern = new(@"(Authorization|Bearer|api-key):\s*([^\s]+)", RegexOptions.IgnoreCase);
+    private static readonly Regex _tokenPattern = new(@"(token|apiKey|password|secret|key)(\s*[=:]\s*)([^\s&,"";]+)", RegexOptions.IgnoreCase);
+    
     public LogTrafficEventPolicy()
     {
         var wrapLogRequest = TryCatchHelpers.NoThrowWrap((PipelineRequest request) => LogRequest(request))!;
@@ -15,13 +21,43 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
 
     private static void LogRequest(PipelineRequest request)
     {
+        // Log the request method and URI to both console and file
         ConsoleHelpers.WriteDebugLine($"===== REQUEST: {request.Method} {request.Uri}");
-
+        
+        // Always log HTTP requests at Info level (important for operations tracking)
+        Logger.Info($"HTTP {request.Method} {request.Uri}");
+        
+        // Log request headers
+        var sensitiveHeaders = false;
         foreach ((string headerName, string headerValue) in request.Headers)
         {
-            ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {headerValue}");
+            // Mask sensitive values in headers
+            string logHeaderValue = headerValue;
+            if (headerName.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
+                headerName.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
+                headerName.Contains("Token", StringComparison.OrdinalIgnoreCase))
+            {
+                logHeaderValue = "[REDACTED]";
+                sensitiveHeaders = true;
+            }
+            
+            // Console debug output
+            ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {logHeaderValue}");
+            
+            // Log headers at Verbose level in file
+            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+            {
+                Logger.Verbose($"REQUEST HEADER: {headerName}: {logHeaderValue}");
+            }
+        }
+        
+        // If we had sensitive headers, note it at Info level
+        if (sensitiveHeaders && Logger.IsLogLevelEnabled(LogLevel.Info))
+        {
+            Logger.Info("Request contained sensitive authentication headers (values redacted in logs)");
         }
 
+        // If the request has content, log it
         using MemoryStream dumpStream = new();
         request.Content?.WriteTo(dumpStream);
         dumpStream.Position = 0;
@@ -30,26 +66,101 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
         var line = requestData.ToString().Replace("\n", "\\n").Replace("\r", "");
         if (!string.IsNullOrWhiteSpace(line))
         {
-            ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {line}");
+            // Mask sensitive data in request body
+            string logLine = MaskSensitiveData(line);
+            
+            // Console debug output
+            ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {logLine}");
+            
+            // Log request body at Verbose level
+            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+            {
+                Logger.Verbose($"REQUEST BODY: {logLine}");
+            }
         }
     }
 
     private static void LogResponse(PipelineResponse response)
     {
+        // Log the response status code and reason phrase
         ConsoleHelpers.WriteDebugLine($"===== RESPONSE: {response.Status} ({response.ReasonPhrase})");
+        
+        // Always log HTTP responses at Info level (important for operations tracking)
+        Logger.Info($"HTTP Response: {response.Status} ({response.ReasonPhrase})");
 
+        // Log each response header
         var sb = new StringBuilder();
         foreach ((string headerName, string headerValue) in response.Headers)
         {
-            sb.Append($"{headerName}: {headerValue}\n");
+            // Mask sensitive values in headers
+            string logHeaderValue = headerValue;
+            if (headerName.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
+                headerName.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
+                headerName.Contains("Token", StringComparison.OrdinalIgnoreCase))
+            {
+                logHeaderValue = "[REDACTED]";
+            }
+            
+            sb.Append($"{headerName}: {logHeaderValue}\n");
         }
+        
         var headers = sb.ToString().Replace("\n", "\\n").Replace("\r", "");
         if (!string.IsNullOrWhiteSpace(headers))
         {
+            // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE HEADERS: {headers}");
+            
+            // Log headers at Verbose level
+            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+            {
+                Logger.Verbose($"RESPONSE HEADERS: {headers}");
+            }
         }
 
+        // If the response has content, log it
         var line = response.Content?.ToString()?.Replace("\n", "\\n")?.Replace("\r", "");
-        ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {line}");
+        if (line != null)
+        {
+            // Mask sensitive data in response body
+            string logLine = MaskSensitiveData(line);
+            
+            // Console debug output
+            ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {logLine}");
+            
+            // Log very large responses at debug level only to avoid filling logs
+            if (logLine.Length > 1000 && Logger.IsLogLevelEnabled(LogLevel.Verbose))
+            {
+                Logger.Verbose($"RESPONSE BODY: {logLine.Substring(0, 1000)}... [truncated, total length: {logLine.Length}]");
+            }
+            else if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
+            {
+                Logger.Verbose($"RESPONSE BODY: {logLine}");
+            }
+            
+            // If we got a non-success status code, log at Warning level
+            if (response.Status < 200 || response.Status >= 300)
+            {
+                Logger.Warning($"HTTP request failed with status {response.Status}: {logLine.Substring(0, Math.Min(500, logLine.Length))}");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Masks sensitive data such as tokens, keys and passwords in the text to be logged
+    /// </summary>
+    /// <param name="input">The input text to mask</param>
+    /// <returns>The masked text</returns>
+    private static string MaskSensitiveData(string input)
+    {
+        if (string.IsNullOrEmpty(input))
+            return input;
+        
+        // Replace Authorization headers
+        var result = _authHeaderPattern.Replace(input, m => $"{m.Groups[1].Value}: [REDACTED]");
+        
+        // Replace tokens/keys/passwords in JSON or query strings
+        result = _tokenPattern.Replace(result, m => $"{m.Groups[1].Value}{m.Groups[2].Value}[REDACTED]");
+        
+        return result;
     }
 }
