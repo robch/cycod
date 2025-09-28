@@ -97,6 +97,8 @@ public class McpFunctionFactory : FunctionFactory
             }
             catch (Exception ex)
             {
+                // Log detailed exception but return a simpler message as the function result
+                ConsoleHelpers.LogException(ex, $"Error calling MCP tool '{functionName}'", showToUser: false);
                 result = $"Error calling MCP tool: {ex.Message}";
                 return false;
             }

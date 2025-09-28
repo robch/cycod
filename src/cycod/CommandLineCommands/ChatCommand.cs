@@ -450,8 +450,9 @@ public class ChatCommand : CommandWithVariables
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
             SaveExceptionHistory(chat);
             throw;
         }
@@ -526,7 +527,7 @@ public class ChatCommand : CommandWithVariables
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteWarningLine($"Warning: Failed to save chat history to '{filePath}': {ex.Message}");
+            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
         }
     }
 
@@ -739,8 +740,9 @@ public class ChatCommand : CommandWithVariables
             chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Failed to save exception chat history");
             ConsoleHelpers.WriteWarning("Failed to save exception chat history.");
         }
     }
@@ -754,8 +756,9 @@ public class ChatCommand : CommandWithVariables
             chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Failed to save exception trajectory", showToUser: false);
             ConsoleHelpers.WriteWarning("Failed to save exception trajectory.");
         }
     }
@@ -776,7 +779,7 @@ public class ChatCommand : CommandWithVariables
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteErrorLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
+                ConsoleHelpers.LogException(ex, $"Error adding tools from MCP server '{serverName}'");
             }
         }
     }
@@ -839,7 +842,7 @@ public class ChatCommand : CommandWithVariables
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteErrorLine($"Failed to create MCP client for '{serverName}': {ex.Message}");
+                ConsoleHelpers.LogException(ex, $"Failed to create MCP client for '{serverName}'");
             }
         }
 

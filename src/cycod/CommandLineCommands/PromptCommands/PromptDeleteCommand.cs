@@ -118,7 +118,7 @@ class PromptDeleteCommand : PromptBaseCommand
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteErrorLine($"Error deleting prompt: {ex.Message}");
+            ConsoleHelpers.LogException(ex, "Error deleting prompt");
             return 1;
         }
     }
