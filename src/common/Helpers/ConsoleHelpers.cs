@@ -240,6 +240,41 @@ public class ConsoleHelpers
 
         return _allLinesFromStdin;
     }
+    
+    /// <summary>
+    /// Logs an exception with detailed information to both the console and logger system.
+    /// </summary>
+    /// <param name="ex">The exception to log</param>
+    /// <param name="contextMessage">Optional context message to prefix the exception</param>
+    /// <param name="showToUser">Whether to show the message to the user on console</param>
+    /// <param name="filePath">Source file where the exception was caught</param>
+    /// <param name="lineNumber">Line number where the exception was caught</param>
+    public static void LogException(Exception ex, string contextMessage = "", bool showToUser = true,
+        [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        var message = string.IsNullOrEmpty(contextMessage) 
+            ? $"Exception: {ex.Message}" 
+            : $"{contextMessage}: {ex.Message}";
+    
+        // Show in console if requested
+        if (showToUser)
+        {
+            WriteErrorLine(message);
+        }
+    
+        // Always log to persistent storage with stack trace
+        Logger.Error($"{message}\n{ex.StackTrace}");
+    
+        // Log inner exceptions too
+        var inner = ex.InnerException;
+        int depth = 0;
+        while (inner != null && depth < 5)
+        {
+            Logger.Error($"Inner exception ({depth}): {inner.Message}\n{inner.StackTrace}");
+            inner = inner.InnerException;
+            depth++;
+        }
+    }
 
     private static void WriteWithColorWithoutScrollSmear(string message, ConsoleColor? foregroundColor, ConsoleColor? backgroundColor)
     {
