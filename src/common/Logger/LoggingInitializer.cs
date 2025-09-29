@@ -106,7 +106,7 @@ public static class LoggingInitializer
     /// <returns>The path to the logs directory.</returns>
     private static string EnsureLogsDirectory()
     {
-        return ScopeFileHelpers.EnsureDirectoryInScope("logs", ConfigFileScope.User);
+        return ScopeFileHelpers.EnsureDirectoryInScope("logs", ConfigFileScope.Local);
     }
     
     /// <summary>

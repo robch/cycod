@@ -40,39 +40,58 @@ public class StrReplaceEditorHelperFunctions
     [Description("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
     public string ViewFile(
         [Description("Absolute or relative path to file or directory.")] string path,
-        [Description("Optional start line number (1-indexed) to view.")] int? startLine = null,
-        [Description("Optional end line number. Use -1 to view all remaining lines.")] int? endLine = null,
-        [Description("Optional flag to view the file with line numbers.")] bool lineNumbers = false)
+        [Description("Start line number (1-indexed) to view. Default: 1")] int startLine = 1,
+        [Description("End line number. Use 0 or -1 to view all remaining lines. Default: 0")] int endLine = 0,
+        [Description("Optional flag to view the file with line numbers.")] bool lineNumbers = false,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        if (!Directory.Exists(path) && File.Exists(path))
-        {
-            var text = File.ReadAllText(path);
-            var lines = text.Split('\n', StringSplitOptions.None)
-                .Select(line => line.TrimEnd('\r'))
-                .ToArray();
-            if (startLine.HasValue)
-            {
-                int start = Math.Max(1, startLine.Value);
-                int end = endLine.HasValue && endLine.Value != -1 ? Math.Min(endLine.Value, lines.Length) : lines.Length;
-                if (start > lines.Length)
-                {
-                    return $"Invalid range: start line {start} exceeds file line count of {lines.Length}";
-                }
-                var selected = lines.Skip(start - 1).Take(end - start + 1);
-                return lineNumbers
-                    ? string.Join(Environment.NewLine, selected.Select((line, index) => $"{start + index}: {line}"))
-                    : string.Join(Environment.NewLine, selected);
-            }
+        var noFile = Directory.Exists(path) || !File.Exists(path);
+        if (noFile) return $"Path {path} does not exist or is not a file.";
 
-            // Otherwise, return entire file text.
-            return lineNumbers
-                ? string.Join(Environment.NewLine, lines.Select((line, index) => $"{index + 1}: {line}"))
-                : string.Join(Environment.NewLine, lines);
-        }
-        else
-        {
-            return $"Path {path} does not exist or is not a file.";
-        }
+        var linesFromFile = File.ReadAllText(path).Split('\n', StringSplitOptions.None)
+            .Select(line => line.TrimEnd('\r'))
+            .ToArray();
+            
+        startLine = Math.Max(1, startLine);
+        var invalidStart = startLine > linesFromFile.Length;
+        if (invalidStart) return $"Invalid range: start line {startLine} exceeds file line count of {linesFromFile.Length}";
+        
+        endLine = (endLine <= 0) ? linesFromFile.Length : Math.Min(endLine, linesFromFile.Length);
+        var requestedLines = linesFromFile.Skip(startLine - 1)
+            .Take(endLine - startLine + 1)
+            .ToArray();
+            
+        var needLineTruncs = requestedLines.Any(line => line.Length > maxCharsPerLine);
+        var linesAfterTrunc = requestedLines.Select(line => 
+            needLineTruncs && line.Length > maxCharsPerLine
+                ? line.Substring(0, maxCharsPerLine - 1) + "…" 
+                : line)
+            .ToArray();
+        
+        var formatted = string.Join("\n", lineNumbers
+            ? linesAfterTrunc.Select((line, idx) => $"{startLine + idx}: {line}")
+            : linesAfterTrunc);
+            
+        var needTotalTrunc = formatted.Length > maxTotalChars;
+        var formattedAfterTrunc = needTotalTrunc
+            ? formatted.Substring(0, maxTotalChars - 1) + "…"
+            : formatted;
+        
+        var noTruncations = !needLineTruncs && !needTotalTrunc;
+        if (noTruncations) return formattedAfterTrunc;
+        
+        var onlyLinesTrunc = needLineTruncs && !needTotalTrunc;
+        if (onlyLinesTrunc) return formattedAfterTrunc + "\n" + $"[Note: Lines with … were truncated ({maxCharsPerLine} char limit)]";
+        
+        var formattedLineCount = linesAfterTrunc.Count();
+        var truncatedCount = formattedLineCount - formattedAfterTrunc.Split('\n').Length;
+
+        var warning = needLineTruncs
+            ? $"[{truncatedCount} more lines truncated; lines with … exceeded {maxCharsPerLine} char limit]"
+            : $"[{truncatedCount} more lines truncated ({maxTotalChars} char total limit)]";
+
+        return formattedAfterTrunc + "\n" + warning;
     }
 
     [ReadOnly(false)]
