@@ -1,0 +1,43 @@
+USE FOUNDRY LOCAL
+
+  AUTHENTICATION
+
+    No cloud API key required for local Foundry.
+    CycoD automatically sends: Authorization: Bearer local-foundry
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set model via config
+
+      cycod config set Foundry.Local.ModelId qwen2.5-0.5b-instruct-generic-cpu
+      cycod config set Foundry.Local.ModelId Phi-4-mini-instruct-generic-cpu --local
+      cycod config set Foundry.Local.ModelId Phi-4-mini-instruct-generic-cpu --user
+      cycod config set Foundry.Local.ModelId Phi-4-mini-instruct-generic-cpu --global
+
+    EXAMPLE 2: Set model via environment variable
+
+      Set FOUNDRY_LOCAL_MODEL_ID environment variable
+
+    EXAMPLE 3: Supply model via command line
+
+      cycod chat --foundry-local-model-id qwen2.5-0.5b-instruct-generic-cpu
+
+  API ENDPOINT
+
+    Foundry Local exposes an OpenAI-compatible API at /v1 (chat is /v1/chat/completions).
+    Do NOT prefix chat requests with /openai — that path is for management only.
+
+    EXAMPLE 1: Set endpoint via config
+
+      cycod config set Foundry.Local.Endpoint http://127.0.0.1:51328/v1
+      cycod config set Foundry.Local.Endpoint http://localhost:51328/v1 --local
+      cycod config set Foundry.Local.Endpoint http://127.0.0.1:51328/v1 --user
+      cycod config set Foundry.Local.Endpoint http://127.0.0.1:51328/v1 --global
+
+    EXAMPLE 2: Set endpoint via environment variable
+
+      Set FOUNDRY_LOCAL_ENDPOINT environment variable (e.g., http://127.0.0.1:51328/v1)
+
+    EXAMPLE 3: Supply endpoint via command line
+
+      cycod chat --foundry-local-endpoint http://127.0.0.1:51328/v1
