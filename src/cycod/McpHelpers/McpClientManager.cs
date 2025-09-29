@@ -23,7 +23,7 @@ public static class McpClientManager
         {
             if (serverConfig is StdioServerConfig stdioConfig)
             {
-                Logger.Info($"MCP: Creating stdio client for '{serverName}' with command: {stdioConfig.Command}");
+                ConsoleHelpers.WriteDebugLine($"MCP: Creating stdio client for '{serverName}' with command: {stdioConfig.Command}");
                 
                 created = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
                 {
@@ -33,11 +33,11 @@ public static class McpClientManager
                     EnvironmentVariables = stdioConfig.Env,
                 }));
                 
-                Logger.Info($"MCP: Successfully created stdio client for '{serverName}'");
+                ConsoleHelpers.WriteDebugLine($"MCP: Successfully created stdio client for '{serverName}'");
             }
             else if (serverConfig is SseServerConfig sseConfig)
             {
-                Logger.Info($"MCP: Creating SSE client for '{serverName}' with endpoint: {sseConfig.Url}");
+                ConsoleHelpers.WriteDebugLine($"MCP: Creating SSE client for '{serverName}' with endpoint: {sseConfig.Url}");
                 
                 created = await McpClientFactory.CreateAsync(new SseClientTransport(new()
                 {
@@ -46,12 +46,11 @@ public static class McpClientManager
                     UseStreamableHttp = true
                 }));
                 
-                Logger.Info($"MCP: Successfully created SSE client for '{serverName}'");
+                ConsoleHelpers.WriteDebugLine($"MCP: Successfully created SSE client for '{serverName}'");
             }
             else
             {
                 var errorMsg = $"Unsupported transport type '{serverConfig.Type}' for MCP server '{serverName}'";
-                Logger.Error(errorMsg);
                 ConsoleHelpers.WriteErrorLine(errorMsg);
             }
         }
@@ -87,7 +86,7 @@ public static class McpClientManager
         {
             try
             {
-                Logger.Verbose($"MCP: Attempting to create client for '{serverName}'");
+                ConsoleHelpers.WriteDebugLine($"MCP: Attempting to create client for '{serverName}'");
                 var client = await CreateClientAsync(serverName, servers[serverName]);
                 if (client != null)
                 {
@@ -99,9 +98,7 @@ public static class McpClientManager
             catch (Exception ex)
             {
                 skipped++;
-                var message = "  " + ex.Message.Replace("\n", "\n  ").TrimEnd();
-                ConsoleHelpers.WriteErrorLine($"\rSkipping MCP server '{serverName}'; failed to load\n\n{message}\n");
-                Logger.Error($"MCP: Failed to load MCP server '{serverName}': {ex.Message}\n{ex.StackTrace}");
+                ConsoleHelpers.LogException(ex, $"Skipping MCP server '{serverName}'; failed to load", showToUser: true);
             }
         }
 

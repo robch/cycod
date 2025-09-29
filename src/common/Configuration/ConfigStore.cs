@@ -20,7 +20,6 @@ public class ConfigStore
     {
         EnsureLoaded();
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
         Logger.Info($"Loading config file: {fileName}");
         var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
         _configFiles.Add(configFile);
@@ -32,7 +31,6 @@ public class ConfigStore
 
         foreach (var fileName in fileNames)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
             Logger.Info($"Loading config file: {fileName}");
             var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
             _configFiles.Add(configFile);
@@ -50,7 +48,6 @@ public class ConfigStore
         if (_commandLineSettings.TryGetValue(dotNotationKey, out var cmdLineValue))
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in command line settings");
-            Logger.Verbose($"Config: Found '{dotNotationKey}' in command line settings");
             return new ConfigValue(cmdLineValue, ConfigSource.CommandLine, isSecret);
         }
 
@@ -59,8 +56,6 @@ public class ConfigStore
         if (TryGetFromEnv(envVarKey, out var configValue))
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in environment variable: {envVarKey}");
-            var displayValue = configValue!.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
-            Logger.Verbose($"Config: Found '{dotNotationKey}' in environment variable: {envVarKey}, value: {displayValue}");
             return configValue!;
         }
 
@@ -75,8 +70,6 @@ public class ConfigStore
             {
                 var source = ConfigSourceFromScope(configFile.Scope);
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in specified config file: {configFile.FileName}");
-                var displayValue = isSecret ? "<secret>" : value.Value?.ToString();
-                Logger.Verbose($"Config: Found '{dotNotationKey}' in config file: {configFile.FileName}, value: {displayValue}");
                 return new ConfigValue(value.Value, source, isSecret) { File = configFile };
             }
         }
@@ -92,8 +85,6 @@ public class ConfigStore
             {
                 var source = ConfigSourceFromScope(localConfigFile.Scope);
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in local config file: {localConfigFile.FileName}");
-                var displayValue = isSecret ? "<secret>" : value.Value?.ToString();
-                Logger.Verbose($"Config: Found '{dotNotationKey}' in local config file: {localConfigFile.FileName}, value: {displayValue}");
                 return new ConfigValue(value.Value, source, isSecret) { File = localConfigFile };
             }
         }
@@ -107,8 +98,6 @@ public class ConfigStore
             {
                 var source = ConfigSourceFromScope(userConfigFile.Scope);
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in user config file: {userConfigFile.FileName}");
-                var displayValue = isSecret ? "<secret>" : value.Value?.ToString();
-                Logger.Verbose($"Config: Found '{dotNotationKey}' in user config file: {userConfigFile.FileName}, value: {displayValue}");
                 return new ConfigValue(value.Value, source, isSecret) { File = userConfigFile };
             }
         }
@@ -122,14 +111,11 @@ public class ConfigStore
             {
                 var source = ConfigSourceFromScope(globalConfigFile.Scope);
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; Found '{dotNotationKey}' in global config file: {globalConfigFile.FileName}");
-                var displayValue = isSecret ? "<secret>" : value.Value?.ToString();
-                Logger.Verbose($"Config: Found '{dotNotationKey}' in global config file: {globalConfigFile.FileName}, value: {displayValue}");
                 return new ConfigValue(value.Value, source, isSecret) { File = globalConfigFile };
             }
         }
         
         ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromAnyScope; no value found for '{key}'");
-        Logger.Verbose($"Config: No value found for '{key}' in any scope");
         return new ConfigValue();
     }
 
@@ -168,7 +154,6 @@ public class ConfigStore
                 var configValue = new ConfigValue(value, ConfigSourceFromScope(configFile.Scope), isSecret) { File = configFile };
                 var displayValue = configValue.IsSecret ? configValue.AsObfuscated() : configValue.Value?.ToString();
                 ConsoleHelpers.WriteDebugLine($"ConfigStore.GetFromConfig; Found '{dotNotationKey}' in {configFile.FileName} setting: {displayValue}");
-                Logger.Verbose($"Config: Found '{dotNotationKey}' in {configFile.FileName}, value: {displayValue}");
                 return configValue;
             }
         }
@@ -295,14 +280,12 @@ public class ConfigStore
         if (!list.Contains(value))
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; adding '{value}' to '{key}' list");
-            Logger.Info($"Config: Added '{value}' to '{key}' list in {configFile.FileName}");
             list.Add(value);
             Set(key, list, configFile, save);
             return true;
         }
 
         ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; '{value}' already exists in '{key}' list");
-        Logger.Verbose($"Config: Value '{value}' already exists in '{key}' list in {configFile.FileName}");
         return false;
     }
 
@@ -328,13 +311,11 @@ public class ConfigStore
         if (list.Remove(value))
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.RemoveFromList; removed '{value}' from '{key}' list");
-            Logger.Info($"Config: Removed '{value}' from '{key}' list in {configFile.FileName}");
             Set(key, list, configFile, save);
             return true;
         }
         
         ConsoleHelpers.WriteDebugLine($"ConfigStore.RemoveFromList; '{value}' not found in '{key}' list");
-        Logger.Verbose($"Config: Value '{value}' not found in '{key}' list in {configFile.FileName}");
         return false;
     }
 
@@ -404,7 +385,6 @@ public class ConfigStore
     {
         var dotNotationKey = KnownSettings.ToDotNotation(key);
         _commandLineSettings[dotNotationKey] = value;
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.SetFromCommandLine; set '{dotNotationKey}' to '{value}'");
         var displayValue = KnownSettings.IsSecret(dotNotationKey) ? "<secret>" : value?.ToString();
         Logger.Info($"Config: Set command line setting '{dotNotationKey}' to '{displayValue}'");
         return true;
@@ -447,14 +427,11 @@ public class ConfigStore
         configValue = null;
 
         ConsoleHelpers.WriteDebugLine($"ConfigStore.TryGetFromEnv; checking environment variable: {key}");
-        Logger.Verbose($"Config: Checking environment variable: {key}");
         var value = Environment.GetEnvironmentVariable(key);
         var found = !string.IsNullOrEmpty(value);
         if (found)
         {
             ConsoleHelpers.WriteDebugLine($"ConfigStore.TryGetFromEnv; Found '{key}' environment variable: {value}");
-            var displayValue = KnownSettings.IsSecret(key) ? "<secret>" : value;
-            Logger.Verbose($"Config: Found environment variable '{key}' with value: {displayValue}");
             configValue = new ConfigValue(value, ConfigSource.EnvironmentVariable, isSecret: KnownSettings.IsSecret(key));
             return true;
         }
@@ -554,12 +531,10 @@ public class ConfigStore
         var configPath = ConfigFileHelpers.FindConfigFile(scope);
         if (configPath == null)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; no config file found for {scope} scope");
             Logger.Info($"Config: No config file found for {scope} scope");
             return;
         }
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {configPath}");
         Logger.Info($"Config: Loading config file from {configPath} for {scope} scope");
         var configFile = ConfigFile.FromFile(configPath, scope);
         _configFiles.Add(configFile);

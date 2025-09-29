@@ -22,12 +22,12 @@ public class McpFunctionFactory : FunctionFactory
     /// <returns>The task representing the asynchronous operation.</returns>
     public async Task AddMcpClientToolsAsync(IMcpClient mcpClient, string clientName)
     {
-        Logger.Info($"MCP: Adding tools from client '{clientName}' ({mcpClient.ServerInfo.Version})");
+        ConsoleHelpers.WriteDebugLine($"MCP: Adding tools from client '{clientName}' ({mcpClient.ServerInfo.Version})");
         
         if (!_mcpClients.ContainsKey(clientName))
         {
             _mcpClients[clientName] = mcpClient;
-            Logger.Verbose($"MCP: Added client '{clientName}' to function factory");
+            ConsoleHelpers.WriteDebugLine($"MCP: Added client '{clientName}' to function factory");
         }
 
         // Get the list of tools from the MCP client
@@ -35,7 +35,7 @@ public class McpFunctionFactory : FunctionFactory
         var toolNames = string.Join(", ", tools.Select(t => t.Name));
         
         ConsoleHelpers.WriteDebugLine($"Found {tools.Count} tools on MCP server '{mcpClient.ServerInfo.Name}'");
-        Logger.Info($"MCP: Found {tools.Count} tools on server '{clientName}': {toolNames}");
+        ConsoleHelpers.WriteDebugLine($"MCP: Found {tools.Count} tools on server '{clientName}': {toolNames}");
 
         // Add each tool individually
         foreach (var tool in tools)
@@ -74,7 +74,6 @@ public class McpFunctionFactory : FunctionFactory
         if (!string.IsNullOrEmpty(functionName) && _mcpTools.TryGetValue(functionName, out var tool))
         {
             ConsoleHelpers.WriteDebugLine($"Found MCP tool '{functionName}'");
-            Logger.Verbose($"MCP: Preparing to call tool '{functionName}'");
             
             try
             {
@@ -100,8 +99,7 @@ public class McpFunctionFactory : FunctionFactory
                 
                 if (_mcpClients.TryGetValue(clientName, out var client))
                 {
-                    // Log the tool call at Info level
-                    Logger.Info($"MCP: Calling tool '{toolName}' on server '{clientName}' with args: {argsJson}");
+                    ConsoleHelpers.WriteDebugLine($"MCP: Calling tool '{toolName}' on server '{clientName}' with args: {argsJson}");
                     ConsoleHelpers.WriteDebugLine($"Calling MCP tool '{toolName}' on client '{clientName}'");
                     
                     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -111,14 +109,13 @@ public class McpFunctionFactory : FunctionFactory
                     var status = response.IsError ? "ERROR" : "SUCCESS";
                     ConsoleHelpers.WriteDebugLine($"MCP tool '{toolName}' on `{clientName}` resulted in {status}!");
                     
-                    // Log at appropriate level based on success/failure
                     if (response.IsError)
                     {
                         Logger.Warning($"MCP: Tool '{toolName}' on server '{clientName}' failed after {sw.ElapsedMilliseconds}ms");
                     }
                     else
                     {
-                        Logger.Info($"MCP: Tool '{toolName}' on server '{clientName}' completed successfully in {sw.ElapsedMilliseconds}ms");
+                        ConsoleHelpers.WriteDebugLine($"MCP: Tool '{toolName}' on server '{clientName}' completed successfully in {sw.ElapsedMilliseconds}ms");
                     }
 
                     result = string.Join('\n', response.Content
@@ -132,7 +129,6 @@ public class McpFunctionFactory : FunctionFactory
                         ? resultString.Substring(0, 500) + "..." 
                         : resultString;
                     
-                    Logger.Verbose($"MCP: Tool '{toolName}' returned: {truncatedResult}");
                     ConsoleHelpers.WriteDebugLine($"MCP tool '{functionName}' returned: {result}");
                     return true;
                 }

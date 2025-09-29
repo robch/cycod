@@ -17,12 +17,12 @@ public class RunnableTestCase
             _items.Add(new RunnableTestCaseItem(this, matrixItem));
         }
         
-        // Log when a RunnableTestCase is created with detailed info
-        Logger.Info($"TestCase-{_test.Id}: CREATED - {_test.DisplayName} with {_items.Count} items");
-        Logger.Info($"TestCase-{_test.Id}: SOURCE - File: {_test.CodeFilePath ?? "null"}, FullyQualifiedName: {_test.FullyQualifiedName ?? "null"}");
+        // Demote detailed test case creation info to Debug level
+        ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: CREATED - {_test.DisplayName} with {_items.Count} items");
+        ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: SOURCE - File: {_test.CodeFilePath ?? "null"}, FullyQualifiedName: {_test.FullyQualifiedName ?? "null"}");
         for (int i = 0; i < _items.Count; i++)
         {
-            Logger.Info($"TestCase-{_test.Id}: Item[{i}] ID: {_items[i].Id}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: Item[{i}] ID: {_items[i].Id}");
         }
     }
 
@@ -55,11 +55,11 @@ public class RunnableTestCase
     public void RecordStart(IYamlTestFrameworkHost host, RunnableTestCaseItem item)
     {
         var threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        Logger.Info($"TestCase-{_test.Id}: START_REQUESTED - Thread: {threadId}, ItemId: {item?.Id ?? "null"} - {_test.DisplayName}");
+        ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: START_REQUESTED - Thread: {threadId}, ItemId: {item?.Id ?? "null"} - {_test.DisplayName}");
 
         lock (_stateLock)
         {
-            Logger.Info($"TestCase-{_test.Id}: INSIDE_LOCK - Thread: {threadId} - Started: {_started}, Stopped: {_stopped}, Active: {_activeItemCount}, Expected items: {_items.Count}, Recorded results: {_resultsRecorded.Count}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: INSIDE_LOCK - Thread: {threadId} - Started: {_started}, Stopped: {_stopped}, Active: {_activeItemCount}, Expected items: {_items.Count}, Recorded results: {_resultsRecorded.Count}");
             
             if (_stopped) 
             {
@@ -76,15 +76,15 @@ public class RunnableTestCase
             
             if (_started) 
             {
-                Logger.Info($"TestCase-{_test.Id}: ALREADY_STARTED - Thread: {threadId} - returning early (Active count now: {_activeItemCount})");
+                ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: ALREADY_STARTED - Thread: {threadId} - returning early (Active count now: {_activeItemCount})");
                 return;
             }
 
-            Logger.Info($"TestCase-{_test.Id}: CALLING_HOST_RECORDSTART - Thread: {threadId}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: CALLING_HOST_RECORDSTART - Thread: {threadId}");
             host.RecordStart(_test);
 
             _started = true;
-            Logger.Info($"TestCase-{_test.Id}: STARTED_SUCCESSFULLY - Thread: {threadId} - Active count: {_activeItemCount}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: STARTED_SUCCESSFULLY - Thread: {threadId} - Active count: {_activeItemCount}");
         }
     }
 
@@ -113,45 +113,45 @@ public class RunnableTestCase
     public void RecordStop(IYamlTestFrameworkHost host, RunnableTestCaseItem runnableTestCaseItem)
     {
         var threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
-        Logger.Info($"TestCase-{_test.Id}: STOP_REQUESTED - Thread: {threadId}, ItemId: {runnableTestCaseItem?.Id ?? "null"} - {_test.DisplayName}");
+        ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: STOP_REQUESTED - Thread: {threadId}, ItemId: {runnableTestCaseItem?.Id ?? "null"} - {_test.DisplayName}");
 
         lock (_stateLock)
         {
-            Logger.Info($"TestCase-{_test.Id}: STOP_INSIDE_LOCK - Thread: {threadId} - Started: {_started}, Stopped: {_stopped}, Active: {_activeItemCount}, Expected items: {_items.Count}, Recorded results: {_resultsRecorded.Count}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: STOP_INSIDE_LOCK - Thread: {threadId} - Started: {_started}, Stopped: {_stopped}, Active: {_activeItemCount}, Expected items: {_items.Count}, Recorded results: {_resultsRecorded.Count}");
             
             if (!_started) throw new InvalidOperationException("Cannot stop a test case that has not been started.");
             if (_stopped) 
             {
-                Logger.Info($"TestCase-{_test.Id}: ALREADY_STOPPED - Thread: {threadId} - ignoring");
+                ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: ALREADY_STOPPED - Thread: {threadId} - ignoring");
                 return; // Already stopped, nothing to do
             }
 
             _activeItemCount--; // Decrement active count
-            Logger.Info($"TestCase-{_test.Id}: ACTIVE_COUNT_DECREMENTED - Thread: {threadId} - to: {_activeItemCount}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: ACTIVE_COUNT_DECREMENTED - Thread: {threadId} - to: {_activeItemCount}");
             
             var countRecorded = _resultsRecorded.Count;
             var countExpected = _items.Count;
             
-            Logger.Info($"TestCase-{_test.Id}: CHECKING_COMPLETION - Thread: {threadId} - Results: {countRecorded}/{countExpected}, Active: {_activeItemCount}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: CHECKING_COMPLETION - Thread: {threadId} - Results: {countRecorded}/{countExpected}, Active: {_activeItemCount}");
             
             if (countRecorded != countExpected)
             {
-                Logger.Info($"TestCase-{_test.Id}: NOT_READY_RESULTS - Thread: {threadId} - Expected {countExpected} items; recorded {countRecorded} items - not ready to stop yet.");
+                ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: NOT_READY_RESULTS - Thread: {threadId} - Expected {countExpected} items; recorded {countRecorded} items - not ready to stop yet.");
                 return;
             }
 
             if (_activeItemCount > 0)
             {
-                Logger.Info($"TestCase-{_test.Id}: NOT_READY_ACTIVE - Thread: {threadId} - Still have {_activeItemCount} active items - not ready to stop yet.");
+                ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: NOT_READY_ACTIVE - Thread: {threadId} - Still have {_activeItemCount} active items - not ready to stop yet.");
                 return;
             }
 
             // We're the last item - stop the test case
-            Logger.Info($"TestCase-{_test.Id}: READY_TO_STOP - Thread: {threadId} - All items recorded ({countRecorded}) and no active items; recording end.");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: READY_TO_STOP - Thread: {threadId} - All items recorded ({countRecorded}) and no active items; recording end.");
             var outcome = TestResultHelpers.TestOutcomeFromResults(_resultsRecorded.SelectMany(x => x));
             host.RecordEnd(_test, outcome);
             _stopped = true;
-            Logger.Info($"TestCase-{_test.Id}: STOPPED_SUCCESSFULLY - Thread: {threadId}");
+            ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: STOPPED_SUCCESSFULLY - Thread: {threadId}");
         }
     }
 

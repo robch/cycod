@@ -19,16 +19,14 @@ public static class ConfigFileHelpers
         var yamlPath = GetYamlConfigFileName(scope);
         if (File.Exists(yamlPath))
         {
-            ConsoleHelpers.WriteDebugLine($"Found YAML config file at: {yamlPath}");
-            Logger.Info($"Config: Found YAML config file at: {yamlPath}");
+            ConsoleHelpers.WriteDebugLine($"FindConfigFile: Found YAML config file at: {yamlPath}");
             return yamlPath;
         }
 
         var iniPath = GetIniConfigFileName(scope);
         if (File.Exists(iniPath))
         {
-            ConsoleHelpers.WriteDebugLine($"Found INI config file at: {iniPath}");
-            Logger.Info($"Config: Found INI config file at: {iniPath}");
+            ConsoleHelpers.WriteDebugLine($"FindConfigFile: Found INI config file at: {iniPath}");
             return iniPath;
         }
 
@@ -74,7 +72,6 @@ public static class ConfigFileHelpers
         var parent = GetGlobalScopeParentDirectory();
         var configDir = Path.Combine(parent, CONFIG_DIR_NAME);
         ConsoleHelpers.WriteDebugLine($"Global config directory: {configDir}");
-        Logger.Verbose($"Config: Global config directory: {configDir}");
         return configDir;
     }
 
@@ -104,7 +101,6 @@ public static class ConfigFileHelpers
             if (!string.IsNullOrEmpty(xdgDataHome))
             {
                 ConsoleHelpers.WriteDebugLine($"On Linux/Mac... using XDG_DATA_HOME: {xdgDataHome}");
-                Logger.Verbose($"Config: On Linux/Mac using XDG_DATA_HOME path: {xdgDataHome}");
                 return xdgDataHome;
             }
             else
@@ -112,14 +108,12 @@ public static class ConfigFileHelpers
                 var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
                 var homeLocalShareDir = Path.Combine(homeDir, ".local", "share");
                 ConsoleHelpers.WriteDebugLine($"On Linux/Mac... using HOME/.local/share: {homeLocalShareDir}");
-                Logger.Verbose($"Config: On Linux/Mac using HOME/.local/share path: {homeLocalShareDir}");
                 return homeLocalShareDir;
             }
         }
 
         var commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         ConsoleHelpers.WriteDebugLine($"On Windows... using CommonApplicationData: {commonAppData}");
-        Logger.Verbose($"Config: On Windows using CommonApplicationData path: {commonAppData}");
         return commonAppData;
     }
 

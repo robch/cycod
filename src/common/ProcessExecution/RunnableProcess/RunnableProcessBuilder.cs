@@ -370,7 +370,7 @@ public class RunnableProcessBuilder
         Logger.Info($"Executing process: {_fileName} {_arguments}");
         if (!string.IsNullOrEmpty(_workingDirectory))
         {
-            Logger.Verbose($"Process working directory: {_workingDirectory}");
+            ConsoleHelpers.WriteDebugLine($"Process working directory: {_workingDirectory}");
         }
         
         var startTime = DateTime.Now;
@@ -412,7 +412,7 @@ public class RunnableProcessBuilder
         Logger.Info($"Executing process asynchronously: {_fileName} {_arguments}");
         if (!string.IsNullOrEmpty(_workingDirectory))
         {
-            Logger.Verbose($"Process working directory: {_workingDirectory}");
+            ConsoleHelpers.WriteDebugLine($"Process working directory: {_workingDirectory}");
         }
         
         var startTime = DateTime.Now;

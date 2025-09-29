@@ -62,7 +62,7 @@ public static class BackgroundProcessManager
         Logger.Info($"Starting background process: {processName} {processArguments ?? ""} (handle: {handle})");
         if (!string.IsNullOrEmpty(workingDirectory))
         {
-            Logger.Verbose($"Background process working directory: {workingDirectory}");
+            ConsoleHelpers.WriteDebugLine($"Background process working directory: {workingDirectory}");
         }
 
         // Create process using RunnableProcessBuilder
@@ -92,7 +92,7 @@ public static class BackgroundProcessManager
             try
             {
                 // Start the process but don't await it - let it run in the background
-                Logger.Verbose($"Executing background process {handle} asynchronously");
+                ConsoleHelpers.WriteDebugLine($"Executing background process {handle} asynchronously");
                 await process.StartAsync();
                 Logger.Info($"Background process {handle} started successfully");
             }
@@ -169,14 +169,14 @@ public static class BackgroundProcessManager
                 // Send Ctrl+C if not forcing
                 if (!force)
                 {
-                    Logger.Verbose($"Sending Ctrl+C to background process {handle}");
+                    ConsoleHelpers.WriteDebugLine($"Sending Ctrl+C to background process {handle}");
                     processInfo.Process.SendCtrlCAsync().Wait(500);
                 }
 
                 // If process is still running or force is true, kill it
                 if (force || processInfo.IsRunning)
                 {
-                    Logger.Verbose($"Force killing background process {handle}");
+                    ConsoleHelpers.WriteDebugLine($"Force killing background process {handle}");
                     processInfo.Process.ForceShutdown();
                 }
             }

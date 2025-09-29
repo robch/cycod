@@ -29,7 +29,6 @@ public static class ScopeFileHelpers
         if (scopeDir == null)
         {
             ConsoleHelpers.WriteDebugLine($"FindFileInScope: Scope directory for {scope} not found.");
-            Logger.Verbose($"Config: Scope directory for {scope} not found");
             return null;
         }
 
@@ -37,7 +36,6 @@ public static class ScopeFileHelpers
         if (!Directory.Exists(subDirPath))
         {
             ConsoleHelpers.WriteDebugLine($"FindFileInScope: Subdirectory {subDir} does not exist in scope {scope}.");
-            Logger.Verbose($"Config: Subdirectory {subDir} does not exist in scope {scope}");
             return null;
         }
 
@@ -47,12 +45,10 @@ public static class ScopeFileHelpers
         if (existingFile != null) 
         {
             ConsoleHelpers.WriteDebugLine($"FindFileInScope: Found file {fileName} in scope {scope} at {existingFile}");
-            Logger.Info($"Config: Found file {fileName} in scope {scope} at {existingFile}");
         } 
         else 
         {
             ConsoleHelpers.WriteDebugLine($"FindFileInScope: File {fileName} not found in scope {scope}.");
-            Logger.Verbose($"Config: File {fileName} not found in scope {scope}");
         }
 
         return existingFile;
@@ -72,7 +68,6 @@ public static class ScopeFileHelpers
         if (File.Exists(bareFilePath))
         {
             ConsoleHelpers.WriteDebugLine($"FindFileInAnyScope: Found bare file in current directory: {bareFilePath}");
-            Logger.Info($"Config: Found file {fileName} in current directory: {bareFilePath}");
             return bareFilePath;
         }
 
@@ -83,7 +78,6 @@ public static class ScopeFileHelpers
             if (fileInScope != null)
             {
                 ConsoleHelpers.WriteDebugLine($"FindFileInAnyScope: Found file in scope {scope}: {fileInScope}");
-                Logger.Info($"Config: Found file {fileName} in scope {scope}: {fileInScope}");
                 return fileInScope;
             }
         }
@@ -97,12 +91,10 @@ public static class ScopeFileHelpers
             if (existing != null) 
             {
                 ConsoleHelpers.WriteDebugLine($"FindFileInAnyScope: Found file in parent directory: {existing}");
-                Logger.Info($"Config: Found file {fileName} in parent directory: {existing}");
             } 
             else 
             {
                 ConsoleHelpers.WriteDebugLine($"FindFileInAnyScope: File {fileName} not found in any scope or parent directories.");
-                Logger.Verbose($"Config: File {fileName} not found in any scope or parent directories");
             }
             return existing;
         }
@@ -122,7 +114,6 @@ public static class ScopeFileHelpers
         if (scopeDir == null)
         {
             ConsoleHelpers.WriteDebugLine($"FindDirectoryInScope: Scope directory for {scope} not found.");
-            Logger.Verbose($"Config: Scope directory for {scope} not found");
             return null;
         }
 
@@ -132,12 +123,10 @@ public static class ScopeFileHelpers
         if (existing != null) 
         {
             ConsoleHelpers.WriteDebugLine($"FindDirectoryInScope: Found directory {subDir} in scope {scope} at {existing}");
-            Logger.Info($"Config: Found directory {subDir} in scope {scope} at {existing}");
         } 
         else 
         {
             ConsoleHelpers.WriteDebugLine($"FindDirectoryInScope: Directory {subDir} not found in scope {scope}.");
-            Logger.Verbose($"Config: Directory {subDir} not found in scope {scope}");
         }
         return existing;
     }
@@ -157,7 +146,6 @@ public static class ScopeFileHelpers
             if (dirInScope != null)
             {
                 ConsoleHelpers.WriteDebugLine($"FindDirectoryInAnyScope: Found directory in scope {scope}: {dirInScope}");
-                Logger.Info($"Config: Found directory {subDir} in scope {scope}: {dirInScope}");
                 return dirInScope;
             }
         }
@@ -171,18 +159,15 @@ public static class ScopeFileHelpers
             if (existing != null) 
             {
                 ConsoleHelpers.WriteDebugLine($"FindDirectoryInAnyScope: Found directory in parent directory: {existing}");
-                Logger.Info($"Config: Found directory {subDir} in parent directory: {existing}");
             } 
             else 
             {
                 ConsoleHelpers.WriteDebugLine($"FindDirectoryInAnyScope: Directory {subDir} not found in any scope or parent directories.");
-                Logger.Verbose($"Config: Directory {subDir} not found in any scope or parent directories");
             }
             return existing;
         }
 
         ConsoleHelpers.WriteDebugLine($"FindDirectoryInAnyScope: Directory {subDir} not found in any scope.");
-        Logger.Verbose($"Config: Directory {subDir} not found in any scope");
         return null;
     }
 
@@ -203,7 +188,6 @@ public static class ScopeFileHelpers
         var dirPath = Path.Combine(scopeDir, subDir);
         var existing = DirectoryHelpers.EnsureDirectoryExists(dirPath);
 
-        ConsoleHelpers.WriteDebugLine($"EnsureDirectoryInScope: Ensured directory {subDir} in scope {scope} at {existing}");
         Logger.Info($"Config: Ensured directory {subDir} exists in scope {scope} at {existing}");
         return existing;
     }

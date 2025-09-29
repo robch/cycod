@@ -24,11 +24,7 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
         // Log the request method and URI to both console and file
         ConsoleHelpers.WriteDebugLine($"===== REQUEST: {request.Method} {request.Uri}");
         
-        // Always log HTTP requests at Info level (important for operations tracking)
-        Logger.Info($"HTTP {request.Method} {request.Uri}");
-        
         // Log request headers
-        var sensitiveHeaders = false;
         foreach ((string headerName, string headerValue) in request.Headers)
         {
             // Mask sensitive values in headers
@@ -38,24 +34,13 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
                 headerName.Contains("Token", StringComparison.OrdinalIgnoreCase))
             {
                 logHeaderValue = "[REDACTED]";
-                sensitiveHeaders = true;
             }
             
             // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {logHeaderValue}");
-            
-            // Log headers at Verbose level in file
-            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
-            {
-                Logger.Verbose($"REQUEST HEADER: {headerName}: {logHeaderValue}");
-            }
         }
         
-        // If we had sensitive headers, note it at Info level
-        if (sensitiveHeaders && Logger.IsLogLevelEnabled(LogLevel.Info))
-        {
-            Logger.Info("Request contained sensitive authentication headers (values redacted in logs)");
-        }
+        // No additional logging needed for sensitive headers note
 
         // If the request has content, log it
         using MemoryStream dumpStream = new();
@@ -71,12 +56,6 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
             
             // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {logLine}");
-            
-            // Log request body at Verbose level
-            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
-            {
-                Logger.Verbose($"REQUEST BODY: {logLine}");
-            }
         }
     }
 
@@ -109,12 +88,6 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
         {
             // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE HEADERS: {headers}");
-            
-            // Log headers at Verbose level
-            if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
-            {
-                Logger.Verbose($"RESPONSE HEADERS: {headers}");
-            }
         }
 
         // If the response has content, log it
@@ -126,16 +99,6 @@ public class LogTrafficEventPolicy : TrafficEventPolicy
             
             // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {logLine}");
-            
-            // Log very large responses at debug level only to avoid filling logs
-            if (logLine.Length > 1000 && Logger.IsLogLevelEnabled(LogLevel.Verbose))
-            {
-                Logger.Verbose($"RESPONSE BODY: {logLine.Substring(0, 1000)}... [truncated, total length: {logLine.Length}]");
-            }
-            else if (Logger.IsLogLevelEnabled(LogLevel.Verbose))
-            {
-                Logger.Verbose($"RESPONSE BODY: {logLine}");
-            }
             
             // If we got a non-success status code, log at Warning level
             if (response.Status < 200 || response.Status >= 300)

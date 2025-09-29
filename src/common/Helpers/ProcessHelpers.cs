@@ -22,13 +22,13 @@ public static class ProcessHelpers
         {
             // Log shell script execution at Info level
             Logger.Info($"Executing {shell} shell script {(scriptArgs != null ? $"with args: {scriptArgs}" : "")}");
-            Logger.Verbose($"Script content length: {script?.Length ?? 0} characters");
+            ConsoleHelpers.WriteDebugLine($"Script content length: {script?.Length ?? 0} characters");
             
             var scriptFileExt = GetShellScriptFileExtension(shell);
             var scriptWrapped = WrapScriptContent(shell, script);
             var scriptFileName = FileHelpers.WriteTextToTempFile(scriptWrapped, scriptFileExt)!;
             filesToDelete.Add(scriptFileName);
-            Logger.Verbose($"Created temporary script file: {scriptFileName}");
+            ConsoleHelpers.WriteDebugLine($"Created temporary script file: {scriptFileName}");
 
             GetShellProcessNameAndArgsFormat(shell, out var processName, out var processArgsFormat);
             ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {processArgsFormat}");
@@ -63,7 +63,7 @@ public static class ProcessHelpers
             else
             {
                 Logger.Warning($"Shell script exited with non-zero code: {result.ExitCode} in {duration.TotalSeconds:F2}s");
-                Logger.Verbose($"Script stderr: {result.StandardError}");
+                ConsoleHelpers.WriteDebugLine($"Script stderr: {result.StandardError}");
             }
             
             return result;
@@ -83,7 +83,7 @@ public static class ProcessHelpers
                     try
                     {
                         File.Delete(x);
-                        Logger.Verbose($"Deleted temporary script file: {x}");
+                        ConsoleHelpers.WriteDebugLine($"Deleted temporary script file: {x}");
                     }
                     catch (Exception ex)
                     {
@@ -93,7 +93,7 @@ public static class ProcessHelpers
             }
             else
             {
-                Logger.Verbose($"Debug mode: Keeping temporary script files");
+                ConsoleHelpers.WriteDebugLine($"Debug mode: Keeping temporary script files");
             }
         }
     }
