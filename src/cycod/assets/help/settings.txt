@@ -173,6 +173,31 @@ USE APP SETTINGS
       cycod chat --auto-save-trajectory true
       cycod chat --auto-save-trajectory false
 
+  AUTO-SAVE LOG
+
+    EXAMPLE 1: Control auto-saving logs via config
+
+      cycod config set App.AutoSaveLog true
+      cycod config set App.AutoSaveLog false --local
+      cycod config set App.AutoSaveLog false --user
+      cycod config set App.AutoSaveLog false --global
+
+    EXAMPLE 2: Control auto-saving logs via environment variable
+
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_SAVE_LOG="true"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_SAVE_LOG=true
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_SAVE_LOG = "true"
+
+    EXAMPLE 3: Control auto-saving logs via command line
+
+      cycod chat --auto-save-log true
+      cycod chat --auto-save-log false
+
   FUNCTION CALL AUTO-APPROVE
 
     EXAMPLE 1: Set function auto-approval via config

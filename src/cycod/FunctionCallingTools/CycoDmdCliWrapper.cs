@@ -18,6 +18,9 @@ public class CycoDmdCliWrapper
     {
         try
         {
+            // Always log the command at Info level for better tracking
+            Logger.Info($"Executing CYCODMD command: cycodmd {arguments}");
+            
             if (ConsoleHelpers.IsVerbose())
             {
                 ConsoleHelpers.WriteLine($"Executing CYCODMD command: cycodmd {arguments}");
@@ -123,7 +126,7 @@ public class CycoDmdCliWrapper
 
         return output;
     }
-    
+
     /// <summary>
     /// Builds command arguments for searching codebase.
     /// </summary>
@@ -135,14 +138,19 @@ public class CycoDmdCliWrapper
         int? contextLines = null,
         string? processingInstructions = null)
     {
-        var sb = new StringBuilder();
+        // Log the content pattern at Info level for better tracking
+        Logger.Info($"Building search command with regex pattern: '{contentPattern}'");
         
+        Logger.Verbose($"Building search codebase arguments with filePatterns: [{string.Join(", ", filePatterns)}], contentPattern: {contentPattern}, excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns) : "")}], showLineNumbers: {showLineNumbers}, contextLines: {contextLines}, processingInstructions: {processingInstructions}");
+
+        var sb = new StringBuilder();
+
         // Add file patterns
         foreach (var pattern in filePatterns)
         {
             sb.Append($"{EscapeArgument(pattern)} ");
         }
-        
+
         // Add exclude patterns
         if (excludePatterns != null && excludePatterns.Length > 0)
         {
@@ -152,32 +160,38 @@ public class CycoDmdCliWrapper
                 sb.Append($"{EscapeArgument(pattern)} ");
             }
         }
-        
+
         // Add content pattern for searching within files
         if (!string.IsNullOrEmpty(contentPattern))
         {
-            sb.Append($"--contains {EscapeArgument(contentPattern)} ");
+            var escapedPattern = EscapeArgument(contentPattern);
+            sb.Append($"--contains {escapedPattern} ");
+            Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
         }
-        
+
         // Add line numbers option
         if (showLineNumbers)
         {
             sb.Append("--line-numbers ");
         }
-        
+
         // Add context lines
         if (contextLines.HasValue)
         {
             sb.Append($"--lines {contextLines.Value} ");
         }
-        
+
         // Add processing instructions
         if (!string.IsNullOrEmpty(processingInstructions))
         {
             sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
         }
-        
-        return sb.ToString().Trim();
+
+        var args = sb.ToString().Trim();
+        Logger.Verbose($"Built search codebase arguments: {args}");
+        // Log the complete command at Info level
+        Logger.Info($"Final search codebase command: cycodmd {args}");
+        return args;
     }
     
     /// <summary>
@@ -215,6 +229,10 @@ public class CycoDmdCliWrapper
         string[]? excludePatterns = null,
         string? processingInstructions = null)
     {
+        // Log the content pattern at Info level for better tracking
+        Logger.Info($"Building find files command with regex pattern: '{contentPattern}'");
+        Logger.Verbose($"Building find files arguments with filePatterns: [{string.Join(", ", filePatterns)}], contentPattern: {contentPattern}, excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns) : "")}], processingInstructions: {processingInstructions}");
+        
         var sb = new StringBuilder();
         
         // Add file patterns
@@ -236,7 +254,9 @@ public class CycoDmdCliWrapper
         // Add content pattern for searching within files
         if (!string.IsNullOrEmpty(contentPattern))
         {
-            sb.Append($"--contains {EscapeArgument(contentPattern)} ");
+            var escapedPattern = EscapeArgument(contentPattern);
+            sb.Append($"--contains {escapedPattern} ");
+            Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
         }
         
         // Add processing instructions

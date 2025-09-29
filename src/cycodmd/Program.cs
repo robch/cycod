@@ -455,6 +455,25 @@ class Program
         try
         {
             ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
+            
+            // Log the regex patterns being used for better tracking
+            if (includeLineContainsPatternList.Count > 0)
+            {
+                Logger.Info($"Using {includeLineContainsPatternList.Count} include regex patterns on '{fileName}':");
+                foreach (var pattern in includeLineContainsPatternList)
+                {
+                    Logger.Info($"  Include pattern: '{pattern}'");
+                }
+            }
+            
+            if (removeAllLineContainsPatternList.Count > 0)
+            {
+                Logger.Info($"Using {removeAllLineContainsPatternList.Count} exclude regex patterns on '{fileName}':");
+                foreach (var pattern in removeAllLineContainsPatternList)
+                {
+                    Logger.Info($"  Exclude pattern: '{pattern}'");
+                }
+            }
             var finalContent = GetFinalFileContent(
                 fileName,
                 wrapInMarkdown,

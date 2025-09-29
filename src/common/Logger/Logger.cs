@@ -42,14 +42,26 @@ public static class Logger
     public static void Error(string message, params object[] args) => 
         LogMessage(LogLevel.Error, "ERROR:", format: message, args: args);
         
+    public static void Error(string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0) => 
+        LogMessage(LogLevel.Error, "ERROR:", fileName, lineNumber, message);
+        
     public static void Warning(string message, params object[] args) => 
         LogMessage(LogLevel.Warning, "WARNING:", format: message, args: args);
+        
+    public static void Warning(string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0) => 
+        LogMessage(LogLevel.Warning, "WARNING:", fileName, lineNumber, message);
         
     public static void Info(string message, params object[] args) => 
         LogMessage(LogLevel.Info, "INFO:", format: message, args: args);
         
+    public static void Info(string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0) => 
+        LogMessage(LogLevel.Info, "INFO:", fileName, lineNumber, message);
+        
     public static void Verbose(string message, params object[] args) => 
         LogMessage(LogLevel.Verbose, "VERBOSE:", format: message, args: args);
+        
+    public static void Verbose(string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0) => 
+        LogMessage(LogLevel.Verbose, "VERBOSE:", fileName, lineNumber, message);
     
     // Conditional logging
     public static void ErrorIf(bool condition, string message, params object[] args)
@@ -57,9 +69,19 @@ public static class Logger
         if (condition) Error(message, args);
     }
     
+    public static void ErrorIf(bool condition, string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        if (condition) Error(message, fileName, lineNumber);
+    }
+    
     public static void WarningIf(bool condition, string message, params object[] args)
     {
         if (condition) Warning(message, args);
+    }
+    
+    public static void WarningIf(bool condition, string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        if (condition) Warning(message, fileName, lineNumber);
     }
     
     // Configuration

@@ -596,10 +596,14 @@ public class CommandLineOptions
     {
         try
         {
-            return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            // Log the regex pattern being created for better tracking
+            Logger.Info($"Creating regex pattern for '{arg}': '{pattern}'");
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            return regex;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.Error($"Failed to create regex pattern for '{arg}': '{pattern}' - {ex.Message}");
             throw new CommandLineException($"Invalid regular expression pattern for {arg}: {pattern}");
         }
     }

@@ -21,6 +21,11 @@ public class CodeExplorationHelperFunctions
         [Description("Include line numbers in results")] bool showLineNumbers = true,
         [Description("Number of context lines to show before and after matches")] int? contextLines = null)
     {
+        Logger.Info($"Searching codebase with regex pattern: '{contentPattern}'");
+        Logger.Info($"File patterns: [{string.Join(", ", filePatterns)}]");
+        if (excludePatterns != null && excludePatterns.Length > 0)
+            Logger.Info($"Exclude patterns: [{string.Join(", ", excludePatterns)}]");
+        
         return await _cycoDmdWrapper.ExecuteSearchCodebaseCommand(
             filePatterns,
             contentPattern,
@@ -36,6 +41,11 @@ public class CodeExplorationHelperFunctions
         [Description("Regex pattern that must exist somewhere in the files")] string contentPattern,
         [Description("File glob patterns to exclude")] string[]? excludePatterns = null)
     {
+        Logger.Info($"Finding files containing regex pattern: '{contentPattern}'");
+        Logger.Info($"File patterns: [{string.Join(", ", filePatterns)}]");
+        if (excludePatterns != null && excludePatterns.Length > 0)
+            Logger.Info($"Exclude patterns: [{string.Join(", ", excludePatterns)}]");
+            
         return await _cycoDmdWrapper.ExecuteFindFilesContainingPatternCommand(filePatterns, contentPattern, excludePatterns);
     }
     

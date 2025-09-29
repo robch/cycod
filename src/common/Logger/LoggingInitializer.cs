@@ -85,6 +85,31 @@ public static class LoggingInitializer
     }
     
     /// <summary>
+    /// Grounds an auto-save log filename if auto-save is enabled.
+    /// </summary>
+    /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
+    public static string? GroundAutoSaveLogFileName()
+    {
+        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveLog).AsBool(true);
+        if (shouldAutoSave)
+        {
+            var logsDir = EnsureLogsDirectory();
+            var fileName = Path.Combine(logsDir, "log-{ProgramName}-{time}.log");
+            return FileHelpers.GetFileNameFromTemplate("log.log", fileName);
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Ensures the logs directory exists and returns its path.
+    /// </summary>
+    /// <returns>The path to the logs directory.</returns>
+    private static string EnsureLogsDirectory()
+    {
+        return ScopeFileHelpers.EnsureDirectoryInScope("logs", ConfigFileScope.User);
+    }
+    
+    /// <summary>
     /// Check if a file is locked (in use by another process)
     /// </summary>
     private static bool IsFileLocked(string filePath)
@@ -145,7 +170,13 @@ public static class LoggingInitializer
                     MemoryLogger.Instance.Level = logConfig.Level;
                 }
                 
-                // Configure file logger if filename was provided
+                // If no explicit log file is provided, check if auto-save is enabled
+                if (string.IsNullOrEmpty(logFileName))
+                {
+                    logFileName = GroundAutoSaveLogFileName();
+                }
+                
+                // Configure file logger if filename was provided or auto-save is enabled
                 if (!string.IsNullOrEmpty(logFileName))
                 {
                     try
