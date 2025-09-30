@@ -90,7 +90,9 @@ public static class LoggingInitializer
     /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
     public static string? GroundAutoSaveLogFileName()
     {
-        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveLog).AsBool(false);
+        // Keep true as the default for backward compatibility with tests
+        // Applications can disable auto-save by setting AppAutoSaveLog to false in configuration
+        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveLog).AsBool(true);
         return shouldAutoSave ? FileHelpers.GetFileNameFromTemplate("log.log", DefaultLogFileNameTemplate) : null;
     }
 
