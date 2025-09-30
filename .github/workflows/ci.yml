@@ -65,6 +65,12 @@ jobs:
         which cycodt
         cycodt run --output-file ./TestResults/test-results-cycodt.trx
     
+    - name: Clean up inception test TRX files
+      run: |
+        # Remove TRX files created by inception tests to avoid interference with CI reporting
+        rm -f tests/cycodt-yaml/inception-layer-1/*.trx
+        echo "Cleaned up inception test TRX files"
+    
     - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()  # Upload test results even if tests fail
