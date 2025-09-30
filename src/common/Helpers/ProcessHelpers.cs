@@ -25,7 +25,7 @@ public static class ProcessHelpers
             ConsoleHelpers.WriteDebugLine($"Script content length: {script?.Length ?? 0} characters");
             
             var scriptFileExt = GetShellScriptFileExtension(shell);
-            var scriptWrapped = WrapScriptContent(shell, script);
+            var scriptWrapped = WrapScriptContent(shell, script!);
             var scriptFileName = FileHelpers.WriteTextToTempFile(scriptWrapped, scriptFileExt)!;
             filesToDelete.Add(scriptFileName);
             ConsoleHelpers.WriteDebugLine($"Created temporary script file: {scriptFileName}");

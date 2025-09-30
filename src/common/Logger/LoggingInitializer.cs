@@ -15,12 +15,12 @@ public static class LoggingInitializer
     {
         if (_memoryLogInitialized)
             return;
-            
+
         lock (_initLock)
         {
             if (_memoryLogInitialized)
                 return;
-                
+
             try
             {
                 // Configure memory logger
@@ -34,7 +34,7 @@ public static class LoggingInitializer
             }
         }
     }
-    
+
     /// <summary>
     /// Dump memory logs to the configured exception file
     /// </summary>
@@ -45,37 +45,37 @@ public static class LoggingInitializer
         {
             // Access the memory logger instance directly
             var memory = (MemoryLogger)MemoryLogger.Instance;
-            
+
             // Get the current memory log contents
             var logsDir = Path.Combine(Path.GetTempPath(), "cycod-logs");
             string dumpFileName = Path.Combine(
-                logsDir, 
+                logsDir,
                 $"exception-log-{ProgramInfo.Name}-{DateTime.Now:yyyyMMddHHmmss}.log");
-                
+
             // Ensure directory exists
             Directory.CreateDirectory(Path.GetDirectoryName(dumpFileName) ?? "");
-            
+
             // If we have an exception, ensure it gets logged before dumping
             if (exception != null)
             {
                 // Access Exit method using reflection as it's private
-                var exitMethod = typeof(MemoryLogger).GetMethod("Exit", 
-                    System.Reflection.BindingFlags.NonPublic | 
+                var exitMethod = typeof(MemoryLogger).GetMethod("Exit",
+                    System.Reflection.BindingFlags.NonPublic |
                     System.Reflection.BindingFlags.Instance);
-                
+
                 if (exitMethod != null)
                 {
                     exitMethod.Invoke(memory, new object[] { exception });
                     return; // Exit already calls Dump, so we're done
                 }
-                
+
                 // If reflection failed, log directly before dumping
                 Logger.Error($"Unhandled exception: {exception.Message}\n{exception.StackTrace}");
             }
-            
+
             // Dump the memory logs to the file
             memory.Dump(dumpFileName, "LOG", emitToStdOut: false, emitToStdErr: false);
-            
+
             Console.Error.WriteLine($"Exception logs written to: {dumpFileName}");
         }
         catch
@@ -83,56 +83,15 @@ public static class LoggingInitializer
             // Ignore errors in error handler
         }
     }
-    
+
     /// <summary>
     /// Grounds an auto-save log filename if auto-save is enabled.
     /// </summary>
     /// <returns>The grounded auto-save filename, or null if auto-save is disabled</returns>
     public static string? GroundAutoSaveLogFileName()
     {
-        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveLog).AsBool(true);
-        if (shouldAutoSave)
-        {
-            var logsDir = EnsureLogsDirectory();
-            var fileName = Path.Combine(logsDir, "log-{ProgramName}-{time}.log");
-            return FileHelpers.GetFileNameFromTemplate("log.log", fileName);
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Ensures the logs directory exists and returns its path.
-    /// </summary>
-    /// <returns>The path to the logs directory.</returns>
-    private static string EnsureLogsDirectory()
-    {
-        return ScopeFileHelpers.EnsureDirectoryInScope("logs", ConfigFileScope.Local);
-    }
-    
-    /// <summary>
-    /// Check if a file is locked (in use by another process)
-    /// </summary>
-    private static bool IsFileLocked(string filePath)
-    {
-        try
-        {
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-            {
-                // File is not locked
-                stream.Close();
-            }
-            return false;
-        }
-        catch (IOException)
-        {
-            // File is locked
-            return true;
-        }
-        catch (Exception)
-        {
-            // If we can't determine if it's locked, assume it's not
-            return false;
-        }
+        var shouldAutoSave = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoSaveLog).AsBool(false);
+        return shouldAutoSave ? FileHelpers.GetFileNameFromTemplate("log.log", DefaultLogFileNameTemplate) : null;
     }
 
     /// <summary>
@@ -145,12 +104,12 @@ public static class LoggingInitializer
     {
         if (_isInitialized)
             return;
-            
+
         lock (_initLock)
         {
             if (_isInitialized)
                 return;
-                
+
             try
             {
                 // If memory logger not yet initialized, do it now
@@ -158,10 +117,10 @@ public static class LoggingInitializer
                 {
                     InitializeMemoryLogger();
                 }
-                
+
                 // Get log level configuration from environment variable
                 var logConfig = LogConfiguration.GetConfig("default");
-                
+
                 // Apply log level configuration to all loggers immediately
                 if (logConfig.Level != LogLevel.All)
                 {
@@ -169,13 +128,13 @@ public static class LoggingInitializer
                     ConsoleLogger.Instance.Level = logConfig.Level;
                     MemoryLogger.Instance.Level = logConfig.Level;
                 }
-                
+
                 // If no explicit log file is provided, check if auto-save is enabled
                 if (string.IsNullOrEmpty(logFileName))
                 {
                     logFileName = GroundAutoSaveLogFileName();
                 }
-                
+
                 // Configure file logger if filename was provided or auto-save is enabled
                 if (!string.IsNullOrEmpty(logFileName))
                 {
@@ -187,16 +146,16 @@ public static class LoggingInitializer
                         {
                             Directory.CreateDirectory(directory);
                         }
-                        
+
                         // Process any templates in the log filename
                         var processedLogFileName = FileHelpers.GetFileNameFromTemplate("log.log", logFileName) ?? logFileName;
-                        
+
                         // For relative paths, they will be resolved relative to the current working directory
                         // For absolute paths, they will be used as-is
-                        
+
                         Logger.ConfigureFileLogger(processedLogFileName, append: true);
                         Logger.Info($"File logger initialized with file: {processedLogFileName}");
-                        
+
                         // Update the logFileName to the processed version
                         logFileName = processedLogFileName;
                     }
@@ -206,17 +165,17 @@ public static class LoggingInitializer
                         // Continue without file logging, but keep memory logging active
                     }
                 }
-                
+
                 // Configure console logger based on debug mode
                 Logger.ConfigureConsoleLogger(debugMode);
                 if (debugMode)
                 {
                     Logger.Info("Console logger initialized in debug mode.");
                 }
-                
+
                 // Configure memory logger to dump to file on crash with a default filename
                 string crashLogFile;
-                
+
                 if (!string.IsNullOrEmpty(logFileName))
                 {
                     // Use the same directory as the log file
@@ -229,15 +188,15 @@ public static class LoggingInitializer
                     // Create a default exception log filename with template processing
                     string exceptionLogTemplate = "exception-log-{ProgramName}-{time}.log";
                     crashLogFile = FileHelpers.GetFileNameFromTemplate("exception.log", exceptionLogTemplate) ?? "exception-log.log";
-                    
+
                     // Use the current working directory for exception logs when no explicit log file is provided
                 }
-                
+
                 // Access the MemoryLogger directly to configure it with exactly the settings we want
                 MemoryLogger.Instance.EnableLogging(true);
                 MemoryLogger.Instance.DumpOnExit(crashLogFile, emitToStdOut: false, emitToStdErr: false);
                 Logger.Info($"Memory logger configured to dump to {crashLogFile} only on abnormal exit.");
-                
+
                 _isInitialized = true;
                 Logger.Info("Logging system fully initialized.");
             }
@@ -259,10 +218,12 @@ public static class LoggingInitializer
         var processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
         var threadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
         var argsString = string.Join(" ", args);
-        
+
         Logger.Info($"Process Details - PID: {processId}, Name: {processName}, ThreadID: {threadId}");
         Logger.Info($"Working Directory: {currentDir}");
         Logger.Info($"Command Line Args: {argsString}");
         Logger.Info($"Environment Variables: LOG_LEVEL={Environment.GetEnvironmentVariable("LOG_LEVEL") ?? "not set"}");
     }
+
+    private const string DefaultLogFileNameTemplate = "log-{ProgramName}-{time}.log";
 }
