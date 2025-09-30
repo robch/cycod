@@ -1,0 +1,79 @@
+# Test log file rotation: Test log file rotation based on size or duration
+
+workingDirectory: ../../../testresults/cycod/logger/log-file-rotation-tests
+class: log-file-rotation-tests
+tags: [cycod, logger]
+tests:
+
+- name: Test log file rotation based on size limit (once CLI support is added)
+  parallelize: false
+  steps:
+  - name: Test that would check size-based rotation if --log-rotation-size-mb was implemented
+    bash: |
+      # This test would work once CLI options for rotation are added
+      # Example: cycod version --log test-size-rotation.log --log-rotation-size-mb 1
+      # For now, we can only test that normal logging works
+      cycod version --log test-size-rotation.log 2>&1 || true
+      cycodmd test-size-rotation.log
+      echo "Size rotation test completed - functionality not exposed via CLI yet"
+    expect-regex: |
+      test-size-rotation\.log
+      INFO:.*File logger initialized
+      Size rotation test completed
+    not-expect-regex: |
+      test-size-rotation-1\.log
+      
+  - name: Clean up size rotation test files  
+    bash: |
+      rm -f test-size-rotation.log exception-test-size-rotation.log
+      echo "Size rotation test cleanup completed"
+    expect-regex: |
+      Size rotation test cleanup completed
+
+- name: Test log file rotation based on duration limit (once CLI support is added)
+  steps:
+  - name: Test that would check duration-based rotation if --log-rotation-duration-minutes was implemented
+    bash: |
+      # This test would work once CLI options for rotation are added
+      # Example: cycod version --log test-duration-rotation.log --log-rotation-duration-minutes 1
+      # For now, we can only test that normal logging works
+      cycod version --log test-duration-rotation.log 2>&1 || true
+      cycodmd test-duration-rotation.log
+      echo "Duration rotation test completed - functionality not exposed via CLI yet"
+    expect-regex: |
+      test-duration-rotation\.log
+      INFO:.*File logger initialized
+      Duration rotation test completed
+    not-expect-regex: |
+      test-duration-rotation-1\.log
+      
+  - name: Clean up duration rotation test files
+    bash: |
+      rm -f test-duration-rotation.log exception-test-duration-rotation.log
+      echo "Duration rotation test cleanup completed"
+    expect-regex: |
+      Duration rotation test cleanup completed
+
+- name: Test that rotation is currently disabled by default
+  steps:
+  - name: Verify that long-running logging creates only one file (no rotation)
+    bash: |
+      # Generate multiple log entries to confirm no rotation occurs
+      cycod version --log test-no-rotation.log 2>&1 || true
+      cycod config list --log test-no-rotation.log 2>&1 || true
+      cycod version --log test-no-rotation.log 2>&1 || true
+      
+      # Check that only one log file exists (no -1, -2, etc. files)
+      cycodmd test-no-rotation*.log
+    expect-regex: |
+      test-no-rotation\.log
+      INFO:.*File logger initialized
+    not-expect-regex: |
+      test-no-rotation-1\.log|test-no-rotation-2\.log
+      
+  - name: Clean up no rotation test files
+    bash: |
+      rm -f test-no-rotation.log exception-test-no-rotation.log
+      echo "No rotation test cleanup completed"
+    expect-regex: |
+      No rotation test cleanup completed

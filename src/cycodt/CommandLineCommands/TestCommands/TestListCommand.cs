@@ -14,7 +14,7 @@ class TestListCommand : TestBaseCommand
     {
         try
         {
-            Logger.Log(new CycoDtTestFrameworkLogger());
+            TestLogger.Log(new CycoDtTestFrameworkLogger());
             var tests = FindAndFilterTests();
             
             if (ConsoleHelpers.IsVerbose())

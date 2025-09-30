@@ -55,7 +55,10 @@ public static class TrxXmlTestReporter
             writer.WriteStartElement("UnitTestResult");
             writer.WriteAttributeString("executionId", executionId);
             writer.WriteAttributeString("testId", testResult.TestCase.Id.ToString());
-            writer.WriteAttributeString("testName", testResult.TestCase.FullyQualifiedName);
+            var fqNameForResult = testResult.TestCase.FullyQualifiedName;
+            var atIndexResult = fqNameForResult.LastIndexOf('@');
+            if (atIndexResult > -1) fqNameForResult = fqNameForResult.Substring(0, atIndexResult);
+            writer.WriteAttributeString("testName", fqNameForResult);
             writer.WriteAttributeString("computerName", machineName);
             writer.WriteAttributeString("duration", testResult.Duration.ToString());
             writer.WriteAttributeString("startTime", testResult.StartTime.DateTime.ToString("o"));
@@ -116,6 +119,8 @@ public static class TrxXmlTestReporter
             var qualifiedParts = testCase.FullyQualifiedName.Split('.');
             var className = string.Join(".", qualifiedParts.Take(qualifiedParts.Length - 1));
             var name = qualifiedParts.Last();
+            var atIndex = name.LastIndexOf('@');
+            if (atIndex > -1) name = name.Substring(0, atIndex);
             writer.WriteStartElement("UnitTest");
             writer.WriteAttributeString("name", testCase.DisplayName);
             writer.WriteAttributeString("storage", assemblyPath);

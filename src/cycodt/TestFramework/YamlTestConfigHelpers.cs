@@ -2,7 +2,7 @@ public class YamlTestConfigHelpers
 {
     public static FileInfo? FindTestConfigFile(DirectoryInfo checkHereAndParents)
     {
-        Logger.Log($"YamlTestConfigHelpers.GetTestConfigFile: Looking for test config file in {checkHereAndParents.FullName}");
+        TestLogger.Log($"YamlTestConfigHelpers.GetTestConfigFile: Looking for test config file in {checkHereAndParents.FullName}");
 
         var existing = ScopeFileHelpers.FindFileInAnyScope(YamlTestFramework.YamlTestsConfigFileName, YamlTestFramework.YamlTestsConfigDirectoryName, true);
         if (existing == null)
@@ -16,7 +16,7 @@ public class YamlTestConfigHelpers
         var configFile = new FileInfo(existing!);
         if (configFile?.Exists ?? false)
         {
-            Logger.Log($"YamlTestConfigHelpers.GetTestConfigFile: Found test config file at {configFile.FullName}");
+            TestLogger.Log($"YamlTestConfigHelpers.GetTestConfigFile: Found test config file at {configFile.FullName}");
             return configFile;
         }
         
@@ -37,7 +37,7 @@ public class YamlTestConfigHelpers
                 if (testDirectory != null)
                 {
                     testDirectory = PathHelpers.Combine(file.Directory!.FullName, testDirectory);
-                    Logger.Log($"YamlTestConfigHelpers.GetTestDirectory: Found test directory in config file at {testDirectory}");
+                    TestLogger.Log($"YamlTestConfigHelpers.GetTestDirectory: Found test directory in config file at {testDirectory}");
                     return new DirectoryInfo(testDirectory!);
                 }
             }
@@ -53,13 +53,13 @@ public class YamlTestConfigHelpers
                 if (testDirectory != null)
                 {
                     testDirectory = PathHelpers.Combine(file.Directory!.FullName, testDirectory);
-                    Logger.Log($"YamlTestConfigHelpers.GetTestDirectory: Found test directory in default tags file at {testDirectory}");
+                    TestLogger.Log($"YamlTestConfigHelpers.GetTestDirectory: Found test directory in default tags file at {testDirectory}");
                     return new DirectoryInfo(testDirectory!);
                 }
             }
         }
 
-        Logger.Log($"YamlTestConfigHelpers.GetTestDirectory: No test directory found; using {checkHereAndParents.FullName}");
+        TestLogger.Log($"YamlTestConfigHelpers.GetTestDirectory: No test directory found; using {checkHereAndParents.FullName}");
         return checkHereAndParents;
     }
 }

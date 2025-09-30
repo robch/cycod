@@ -1,0 +1,130 @@
+# Test log file directory creation: Test that the log directory is created if it doesn't exist
+
+workingDirectory: ../../../testresults/cycod/logger/log-directory-creation-tests
+class: log-directory-creation-tests
+tags: [cycod, logger]
+tests:
+
+- name: Test log directory creation with nested path for cycod
+  parallelize: false
+  steps:
+  - name: Remove test directory and run cycod with nested log path
+    bash: |
+      # Ensure test directory doesn't exist
+      rm -rf ./test-log-dir
+      # Run cycod with a log file in a nested directory that doesn't exist
+      cycod version --log ./test-log-dir/nested/subdir/test-nested.log
+      # Verify the directory was created and log file exists
+      ls -la ./test-log-dir/nested/subdir/
+      cycodmd ./test-log-dir/nested/subdir/test-nested.log
+    expect-regex: |
+      test-nested\.log
+      File logger initialized with file:
+      Logging system fully initialized
+  
+  - name: Clean up nested directory test files
+    bash: |
+      rm -rf ./test-log-dir
+      echo "Nested directory test cleanup completed"
+    expect-regex: |
+      Nested directory test cleanup completed
+
+- name: Test log directory creation with absolute path for cycod
+  steps:
+  - name: Remove test directory and run cycod with absolute log path
+    bash: |
+      # Create a unique temporary directory name
+      TEST_DIR="$(pwd)/abs-log-test-$(date +%s)"
+      # Ensure test directory doesn't exist
+      rm -rf "$TEST_DIR"
+      # Run cycod with a log file in an absolute path that doesn't exist
+      cycod version --log "$TEST_DIR/logs/cycod-abs.log"
+      # Verify the directory was created and log file exists
+      ls -la "$TEST_DIR/logs/"
+      cycodmd "$TEST_DIR/logs/cycod-abs.log"
+    expect-regex: |
+      cycod-abs\.log
+      File logger initialized with file:
+      Logging system fully initialized
+  
+  - name: Clean up absolute path test files
+    bash: |
+      TEST_DIR="$(pwd)/abs-log-test-"*
+      rm -rf $TEST_DIR 2>/dev/null || true
+      echo "Absolute path test cleanup completed"
+    expect-regex: |
+      Absolute path test cleanup completed
+
+- name: Test exception log directory creation for cycod
+  steps:
+  - name: Test log directory creation with valid command
+    bash: |
+      # Ensure test directory doesn't exist
+      rm -rf ./exception-test-dir
+      # Run cycod with a valid command that will initialize logging
+      # This tests that the main log directory gets created
+      cycod version --log ./exception-test-dir/logs/test.log
+      # Check if directories were created
+      ls -la ./exception-test-dir/
+      ls -la ./exception-test-dir/logs/
+      cycodmd ./exception-test-dir/logs/test.log
+    expect-regex: |
+      logs
+      test\.log
+      File logger initialized with file:
+      Logging system fully initialized
+  
+  - name: Clean up log directory test files
+    bash: |
+      rm -rf ./exception-test-dir
+      rm -f ./exception-log-*.log
+      echo "Log directory test cleanup completed"
+    expect-regex: |
+      Log directory test cleanup completed
+
+- name: Test memory logger dump directory creation for cycod
+  steps:
+  - name: Test memory logger directory creation during dump
+    bash: |
+      # Remove test directory
+      rm -rf ./memory-dump-test
+      # Run cycod version command (should complete successfully but create memory logs)
+      cycod version --log ./memory-dump-test/logs/main.log
+      # Check if the log directory was created
+      ls -la ./memory-dump-test/logs/
+      cycodmd ./memory-dump-test/logs/main.log
+    expect-regex: |
+      main\.log
+      File logger initialized with file:
+      Memory logger configured to dump to
+      Logging system fully initialized
+  
+  - name: Clean up memory dump test files
+    bash: |
+      rm -rf ./memory-dump-test
+      echo "Memory dump test cleanup completed"
+    expect-regex: |
+      Memory dump test cleanup completed
+
+- name: Test deep nested directory creation for cycod
+  steps:
+  - name: Test with very deep directory structure
+    bash: |
+      # Remove test directory
+      rm -rf ./deep-test
+      # Create a very deep nested path for log file
+      cycod version --log ./deep-test/level1/level2/level3/level4/level5/deep.log
+      # Verify the deep directory structure was created
+      ls -la ./deep-test/level1/level2/level3/level4/level5/
+      cycodmd ./deep-test/level1/level2/level3/level4/level5/deep.log
+    expect-regex: |
+      deep\.log
+      File logger initialized with file:
+      Logging system fully initialized
+  
+  - name: Clean up deep directory test files
+    bash: |
+      rm -rf ./deep-test
+      echo "Deep directory test cleanup completed"
+    expect-regex: |
+      Deep directory test cleanup completed

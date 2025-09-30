@@ -3,34 +3,34 @@ using System.Diagnostics;
 
 public class YamlTestFrameworkTestAdapterMessageLogger : IYamlTestFrameworkLogger
 {
-    public YamlTestFrameworkTestAdapterMessageLogger(IMessageLogger logger)
+    public YamlTestFrameworkTestAdapterMessageLogger(IMessageLogger TestLogger)
     {
-        this.logger = logger;
+        this.TestLogger = TestLogger;
     }
 
     public void LogVerbose(string text)
     {
-        logger.SendMessage(TestMessageLevel.Informational, text);
+        TestLogger.SendMessage(TestMessageLevel.Informational, text);
     }
 
     public void LogInfo(string text)
     {
         var dt = $"{DateTime.Now}";
-        logger?.SendMessage(TestMessageLevel.Informational, $"{dt}: {text}");
+        TestLogger?.SendMessage(TestMessageLevel.Informational, $"{dt}: {text}");
         File.AppendAllText(_logPath, $"{dt}: INFO: {text}\n");
     }
 
     public void LogWarning(string text)
     {
         var dt = $"{DateTime.Now}";
-        logger?.SendMessage(TestMessageLevel.Warning, $"{dt}: {text}");
+        TestLogger?.SendMessage(TestMessageLevel.Warning, $"{dt}: {text}");
         File.AppendAllText(_logPath, $"{dt}: WARNING: {text}\n");
     }
 
     public void LogError(string text)
     {
         var dt = $"{DateTime.Now}";
-        logger?.SendMessage(TestMessageLevel.Error, $"{dt}: {text}");
+        TestLogger?.SendMessage(TestMessageLevel.Error, $"{dt}: {text}");
         File.AppendAllText(_logPath, $"{dt}: ERROR: {text}\n");
     }
 
@@ -43,7 +43,7 @@ public class YamlTestFrameworkTestAdapterMessageLogger : IYamlTestFrameworkLogge
         return $"log-cycodt-cli-test-framework-{time}-{pid}.log";
     }
 
-    private IMessageLogger logger;
+    private IMessageLogger TestLogger;
 
     private static string _logPath = GetLogPath();
 

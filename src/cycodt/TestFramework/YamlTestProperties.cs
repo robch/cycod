@@ -4,7 +4,7 @@ public class YamlTestProperties
 {
     public static void Set(TestCase test, string name, string value)
     {
-        Logger.Log($"YamlTestProperties.Set('{name}'='{value.Replace("\n", "\\n")}')");
+        TestLogger.Log($"YamlTestProperties.Set('{name}'='{value.Replace("\n", "\\n")}')");
         if (!string.IsNullOrEmpty(value))
         {
             var property = properties[name];
@@ -15,7 +15,7 @@ public class YamlTestProperties
     public static string? Get(TestCase test, string name, string? defaultValue = null)
     {
         var value = test.GetPropertyValue(properties[name], defaultValue);
-        Logger.LogIf(!string.IsNullOrEmpty(value), $"TestCaseProperties.Get('{name}') = '{value?.Replace("\n", "\\n")}'");
+        TestLogger.LogIf(!string.IsNullOrEmpty(value), $"TestCaseProperties.Get('{name}') = '{value?.Replace("\n", "\\n")}'");
         return value;
     }
 

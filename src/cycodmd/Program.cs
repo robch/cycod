@@ -14,6 +14,10 @@ class Program
     {
         CycoDmdProgramInfo _programInfo = new ();
 
+        LoggingInitializer.InitializeMemoryLogger();
+        LoggingInitializer.LogStartupDetails(args);
+        Logger.Info($"Starting {ProgramInfo.Name}, version {VersionInfo.GetVersion()}");
+
         var playwrightCommand = args.Length >= 1 && args[0] == "playwright";
         if (playwrightCommand) return PlaywrightHelpers.RunCli(args.Skip(1).ToArray());
 
@@ -22,12 +26,14 @@ class Program
             DisplayBanner();
             if (ex != null)
             {
+                Logger.Error($"Command line error: {ex.Message}");
                 DisplayException(ex);
                 HelpHelpers.DisplayUsage(ex.GetHelpTopic());
                 return 2;
             }
             else
             {
+                Logger.Warning("Displaying help due to command line parsing issue");
                 HelpHelpers.DisplayUsage(commandLineOptions!.HelpTopic);
                 return 1;
             }
@@ -37,6 +43,8 @@ class Program
         var verbose = ConsoleHelpers.IsVerbose() || commandLineOptions!.Verbose;
         var quiet = ConsoleHelpers.IsQuiet() || commandLineOptions!.Quiet;
         ConsoleHelpers.Configure(debug, verbose, quiet);
+        
+        LoggingInitializer.InitializeLogging(commandLineOptions?.LogFile, debug);
 
         BingApiWebSearchHelpers.ConfigureEndpoint(
             EnvironmentHelpers.FindEnvVar("BING_SEARCH_V7_ENDPOINT", searchDotEnvFile: true),
@@ -132,6 +140,15 @@ class Program
     private static void DisplayBanner()
     {
         var programNameUppercase = Program.Name.ToUpper();
+        
+		// TODO: Do we really need this?
+        // Make sure ProgramInfo is initialized before accessing VersionInfo
+        // (This method may be called before _programInfo is initialized in Main)
+        if (ProgramInfo.Assembly == null)
+        {
+            new CycoDmdProgramInfo();
+        }
+        
         ConsoleHelpers.WriteLine(
             $"{programNameUppercase} - The AI-Powered Markdown Generator CLI, Version {VersionInfo.GetVersion()}\n" +
             "Copyright(c) 2025, Rob Chambers. All rights reserved.\n");
@@ -313,6 +330,13 @@ class Program
 
     private static List<Task<string>> HandleVersionCommand(CommandLineOptions commandLineOptions, VersionCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
     {
+		// TODO: Do we really need this?
+        // Make sure ProgramInfo is initialized before accessing VersionInfo
+        if (ProgramInfo.Assembly == null)
+        {
+            new CycoDmdProgramInfo();
+        }
+        
         var version = command.ExecuteAsync(false).Result.ToString()!;
         var tasks = new List<Task<string>>();
         tasks.Add(Task.FromResult(version));
@@ -433,6 +457,25 @@ class Program
         try
         {
             ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
+            
+            if (includeLineContainsPatternList.Count > 0)
+            {
+                Logger.Info($"Using {includeLineContainsPatternList.Count} include regex patterns on '{fileName}':");
+                foreach (var pattern in includeLineContainsPatternList)
+                {
+                    Logger.Info($"  Include pattern: '{pattern}'");
+                }
+            }
+            
+            if (removeAllLineContainsPatternList.Count > 0)
+            {
+                Logger.Info($"Using {removeAllLineContainsPatternList.Count} exclude regex patterns on '{fileName}':");
+                foreach (var pattern in removeAllLineContainsPatternList)
+                {
+                    Logger.Info($"  Exclude pattern: '{pattern}'");
+                }
+            }
+
             var finalContent = GetFinalFileContent(
                 fileName,
                 wrapInMarkdown,
