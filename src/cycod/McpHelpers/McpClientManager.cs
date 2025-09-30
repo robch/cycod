@@ -14,7 +14,6 @@ public static class McpClientManager
     /// <returns>An instance of IMcpClient if created successfully, null otherwise</returns>
     public static async Task<IMcpClient?> CreateClientAsync(string serverName, IMcpServerConfigItem serverConfig)
     {
-        // Log the client creation attempt
         Logger.Info($"MCP: Creating client for server '{serverName}' of type '{serverConfig.Type}'");
         
         IMcpClient? created = null;

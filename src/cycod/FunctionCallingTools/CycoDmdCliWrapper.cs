@@ -159,12 +159,8 @@ public class CycoDmdCliWrapper
             
         var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
         
-        // Apply truncation to the output
         var truncatedOutput = TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
-        
-        // Handle no matches messaging (existing code)
-        var noFilesFound = truncatedOutput.Contains("No files matched criteria") || 
-                          truncatedOutput.Contains("No files found");
+        var noFilesFound = truncatedOutput.Contains("No files matched criteria") || truncatedOutput.Contains("No files found");
         var wasntRecursive = !contentPattern.Contains("**");
         
         if (noFilesFound && wasntRecursive)
@@ -345,8 +341,6 @@ public class CycoDmdCliWrapper
             showLineNumbers);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
-        
-        // Apply truncation to the output
         return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
@@ -407,8 +401,6 @@ public class CycoDmdCliWrapper
             processingInstructions);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
-        
-        // Apply truncation to the output
         return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
@@ -476,8 +468,6 @@ public class CycoDmdCliWrapper
             finalProcessingInstructions);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
-        
-        // Apply truncation to the output
         return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
@@ -542,8 +532,6 @@ public class CycoDmdCliWrapper
             processingInstructions);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
-        
-        // Apply truncation to the output
         return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     

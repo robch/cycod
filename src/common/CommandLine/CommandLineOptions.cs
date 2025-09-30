@@ -596,7 +596,6 @@ public class CommandLineOptions
     {
         try
         {
-            // Log the regex pattern being created for better tracking
             Logger.Info($"Creating regex pattern for '{arg}': '{pattern}'");
             var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             return regex;

@@ -12,7 +12,6 @@ public class YamlTestFramework
         
         Logger.Info($"YamlTestFramework.GetTestsFromYaml: PARSED {testsList.Count} tests from {file.FullName}");
         
-        // Log each TestCase created from this file
         for (int i = 0; i < testsList.Count; i++)
         {
             Logger.Verbose($"YamlTestFramework.GetTestsFromYaml: File={file.Name} TestCase[{i}] ID={testsList[i].Id}, Name={testsList[i].DisplayName}");

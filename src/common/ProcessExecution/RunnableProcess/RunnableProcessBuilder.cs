@@ -4,10 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
-
 using System.IO;
-
-
 
 /// <summary>
 /// Builder for configuring and creating RunnableProcess instances.

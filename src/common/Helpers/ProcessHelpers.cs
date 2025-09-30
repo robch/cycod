@@ -20,7 +20,6 @@ public static class ProcessHelpers
 
         try
         {
-            // Log shell script execution at Info level
             Logger.Info($"Executing {shell} shell script {(scriptArgs != null ? $"with args: {scriptArgs}" : "")}");
             ConsoleHelpers.WriteDebugLine($"Script content length: {script?.Length ?? 0} characters");
             
@@ -68,11 +67,11 @@ public static class ProcessHelpers
             
             return result;
         }
-        catch (Exception ex)
-        {
-            Logger.Error($"Shell script execution failed: {ex.Message}");
-            throw;
-        }
+        // catch (Exception ex)
+        // {
+        //     Logger.Error($"Shell script execution failed: {ex.Message}");
+        //     throw;
+        // }
         finally
         {
             var skipDelete = ConsoleHelpers.IsDebug();
@@ -90,10 +89,6 @@ public static class ProcessHelpers
                         Logger.Warning($"Failed to delete temporary script file {x}: {ex.Message}");
                     }
                 });
-            }
-            else
-            {
-                ConsoleHelpers.WriteDebugLine($"Debug mode: Keeping temporary script files");
             }
         }
     }

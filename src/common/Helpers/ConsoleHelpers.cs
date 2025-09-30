@@ -4,10 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-// Added for Logger integration
 using System.Runtime.CompilerServices;
-// Add reference to Logger
-// Logger is a static class in the global namespace
 
 public class ConsoleHelpers
 {

@@ -17,7 +17,6 @@ public class RunnableTestCase
             _items.Add(new RunnableTestCaseItem(this, matrixItem));
         }
         
-        // Demote detailed test case creation info to Debug level
         ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: CREATED - {_test.DisplayName} with {_items.Count} items");
         ConsoleHelpers.WriteDebugLine($"TestCase-{_test.Id}: SOURCE - File: {_test.CodeFilePath ?? "null"}, FullyQualifiedName: {_test.FullyQualifiedName ?? "null"}");
         for (int i = 0; i < _items.Count; i++)

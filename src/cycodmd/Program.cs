@@ -141,6 +141,7 @@ class Program
     {
         var programNameUppercase = Program.Name.ToUpper();
         
+		// TODO: Do we really need this?
         // Make sure ProgramInfo is initialized before accessing VersionInfo
         // (This method may be called before _programInfo is initialized in Main)
         if (ProgramInfo.Assembly == null)
@@ -329,6 +330,7 @@ class Program
 
     private static List<Task<string>> HandleVersionCommand(CommandLineOptions commandLineOptions, VersionCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
     {
+		// TODO: Do we really need this?
         // Make sure ProgramInfo is initialized before accessing VersionInfo
         if (ProgramInfo.Assembly == null)
         {
@@ -456,7 +458,6 @@ class Program
         {
             ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
             
-            // Log the regex patterns being used for better tracking
             if (includeLineContainsPatternList.Count > 0)
             {
                 Logger.Info($"Using {includeLineContainsPatternList.Count} include regex patterns on '{fileName}':");
@@ -474,6 +475,7 @@ class Program
                     Logger.Info($"  Exclude pattern: '{pattern}'");
                 }
             }
+
             var finalContent = GetFinalFileContent(
                 fileName,
                 wrapInMarkdown,

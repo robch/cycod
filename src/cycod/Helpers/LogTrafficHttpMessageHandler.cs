@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 public class LogTrafficHttpMessageHandler : HttpClientHandler
 {
-    // Regular expressions for sensitive data masking
     private static readonly Regex _authHeaderPattern = new(@"(Authorization|Bearer|api-key):\s*([^\s]+)", RegexOptions.IgnoreCase);
     private static readonly Regex _tokenPattern = new(@"(token|apiKey|password|secret|key)(\s*[=:]\s*)([^\s&,"";]+)", RegexOptions.IgnoreCase);
     
@@ -47,7 +46,6 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
             var headerName = header.Key;
             var headerValue = string.Join(", ", header.Value);
             
-            // Mask sensitive values in headers
             string logHeaderValue = headerValue;
             if (headerName.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
                 headerName.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
@@ -56,11 +54,8 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
                 logHeaderValue = "[REDACTED]";
             }
             
-            // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {logHeaderValue}");
         }
-        
-        // No additional logging needed for sensitive headers note
 
         // If the request has content, log it
         if (request.Content != null)
@@ -73,10 +68,7 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
             var line = requestData.ToString().Replace("\n", "\\n").Replace("\r", "");
             if (!string.IsNullOrWhiteSpace(line))
             {
-                // Mask sensitive data in request body
                 string logLine = MaskSensitiveData(line);
-                
-                // Console debug output
                 ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {logLine}");
             }
         }
@@ -86,8 +78,6 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
     {
         // Log the response status code and reason phrase
         ConsoleHelpers.WriteDebugLine($"===== RESPONSE: {response.StatusCode} ({response.ReasonPhrase})");
-        
-        // Always log HTTP responses at Info level (important for operations tracking)
         Logger.Info($"HTTP Response: {(int)response.StatusCode} {response.StatusCode} ({response.ReasonPhrase})");
 
         // Log each response header
@@ -96,7 +86,6 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
         {
             var headerValue = string.Join(", ", header.Value);
             
-            // Mask sensitive values in headers
             if (header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
                 header.Key.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
                 header.Key.Contains("Token", StringComparison.OrdinalIgnoreCase))
@@ -110,7 +99,6 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
         var headers = sb.ToString().Replace("\n", "\\n").Replace("\r", "");
         if (!string.IsNullOrWhiteSpace(headers))
         {
-            // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE HEADERS: {headers}");
         }
 
@@ -120,13 +108,9 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
             var content = await response.Content.ReadAsStringAsync();
             var line = content.Replace("\n", "\\n")?.Replace("\r", "");
             
-            // Mask sensitive data in response body
             string logLine = MaskSensitiveData(line ?? string.Empty);
-            
-            // Console debug output
             ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {logLine}");
             
-            // If we got a non-success status code, log at Warning level
             if (!response.IsSuccessStatusCode)
             {
                 Logger.Warning($"HTTP request failed with status {(int)response.StatusCode} {response.StatusCode}: {logLine.Substring(0, Math.Min(500, logLine.Length))}");
@@ -134,20 +118,11 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
         }
     }
     
-    /// <summary>
-    /// Masks sensitive data such as tokens, keys and passwords in the text to be logged
-    /// </summary>
-    /// <param name="input">The input text to mask</param>
-    /// <returns>The masked text</returns>
     private string MaskSensitiveData(string input)
     {
-        if (string.IsNullOrEmpty(input))
-            return input;
+        if (string.IsNullOrEmpty(input)) return input;
         
-        // Replace Authorization headers
         var result = _authHeaderPattern.Replace(input, m => $"{m.Groups[1].Value}: [REDACTED]");
-        
-        // Replace tokens/keys/passwords in JSON or query strings
         result = _tokenPattern.Replace(result, m => $"{m.Groups[1].Value}{m.Groups[2].Value}[REDACTED]");
         
         return result;

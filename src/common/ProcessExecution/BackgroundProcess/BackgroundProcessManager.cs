@@ -8,11 +8,6 @@ using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.IO;
 
-
-
-
-
-
 /// <summary>
 /// Manages long-running background processes.
 /// </summary>
@@ -55,10 +50,7 @@ public static class BackgroundProcessManager
             throw new ArgumentException("Process name cannot be null or empty", nameof(processName));
         }
 
-        // Generate a unique handle for this process
-        string handle = Guid.NewGuid().ToString("N");
-
-        // Log process start attempt at Info level
+        var handle = Guid.NewGuid().ToString("N");
         Logger.Info($"Starting background process: {processName} {processArguments ?? ""} (handle: {handle})");
         if (!string.IsNullOrEmpty(workingDirectory))
         {
@@ -158,7 +150,6 @@ public static class BackgroundProcessManager
 
         try
         {
-            // Get process info for logging
             var processName = processInfo.Process.FileName;
             var runTime = DateTime.Now - processInfo.StartTime;
             
