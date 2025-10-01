@@ -144,13 +144,14 @@ public class CycoDmdCliWrapper
     {
         if (string.IsNullOrEmpty(pattern)) return "\"\"";
 
-        // Process the pattern directly to avoid ProcessHelpers.EscapeProcessArgument
-        // which would double-escape backslashes
+        // Double backslashes in regex patterns intentionally
+        // This is to counter the unescaping that happens when processing command-line arguments
+        // So \d becomes \\d in the command line, which then becomes \d in cycodmd
+        var escaped = pattern
+            .Replace("\\", "\\\\")  // Double backslashes first
+            .Replace("\"", "\\\""); // Then escape quotes
         
-        // 1. Escape double quotes
-        var escaped = pattern.Replace("\"", "\\\"");
-        
-        // 2. Always wrap in quotes to handle spaces and other special characters
+        // Always wrap in quotes to handle spaces and other special characters
         return $"\"{escaped}\"";
     }
 
