@@ -144,15 +144,17 @@ public class CycoDmdCliWrapper
     {
         if (string.IsNullOrEmpty(pattern)) return "\"\"";
 
-        // Special handling for regex patterns
-        // 1. Replace all backslashes with double backslashes
-        var escaped = pattern.Replace("\\", "\\\\");
+        // Only escape quotes and leave backslashes as they are for regex patterns
+        var escaped = pattern.Replace("\"", "\\\"");
         
-        // 2. Escape quotes
-        escaped = escaped.Replace("\"", "\\\"");
+        // Add surrounding quotes if needed
+        if (escaped.Contains(' ') || escaped.Contains('\t') || escaped.Contains('|') || 
+            escaped.Contains('<') || escaped.Contains('>') || escaped.Contains('&'))
+        {
+            escaped = $"\"{escaped}\"";
+        }
         
-        // 3. Always quote the pattern to preserve spaces and special characters
-        return $"\"{escaped}\"";
+        return escaped;
     }
 
     #region Search Codebase Methods
@@ -240,20 +242,12 @@ public class CycoDmdCliWrapper
         
         if (IsValidParameter(searchPattern))
         {
-            // Debug to see the actual pattern that will be used
-            Console.WriteLine($"DEBUG: Using search pattern: {searchPattern}");
-            Console.WriteLine($"DEBUG: Escaped as: {EscapeRegexPattern(searchPattern!)}");
-            
             sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
         }
         else if (IsValidParameter(lineContains))
         {
-            // Debug to see the actual pattern that will be used
-            Console.WriteLine($"DEBUG: Using line contains pattern: {lineContains}");
-            Console.WriteLine($"DEBUG: Escaped as: {EscapeRegexPattern(lineContains!)}");
-            
             sb.Append($"--line-contains {EscapeRegexPattern(lineContains!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
