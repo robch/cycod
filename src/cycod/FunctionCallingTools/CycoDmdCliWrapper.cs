@@ -144,12 +144,13 @@ public class CycoDmdCliWrapper
     {
         if (string.IsNullOrEmpty(pattern)) return "\"\"";
 
-        // Always quote regex patterns to preserve backslashes
-        // Escape only quotes within the pattern
+        // Process the pattern directly to avoid ProcessHelpers.EscapeProcessArgument
+        // which would double-escape backslashes
+        
+        // 1. Escape double quotes
         var escaped = pattern.Replace("\"", "\\\"");
         
-        // For regex patterns, always use quotes to prevent further escaping
-        // This ensures \d is passed as \d and not \\d
+        // 2. Always wrap in quotes to handle spaces and other special characters
         return $"\"{escaped}\"";
     }
 
@@ -238,12 +239,20 @@ public class CycoDmdCliWrapper
         
         if (IsValidParameter(searchPattern))
         {
+            // Debug to see the actual pattern that will be used
+            Console.WriteLine($"DEBUG: Using search pattern: {searchPattern}");
+            Console.WriteLine($"DEBUG: Escaped as: {EscapeRegexPattern(searchPattern!)}");
+            
             sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
         }
         else if (IsValidParameter(lineContains))
         {
+            // Debug to see the actual pattern that will be used
+            Console.WriteLine($"DEBUG: Using line contains pattern: {lineContains}");
+            Console.WriteLine($"DEBUG: Escaped as: {EscapeRegexPattern(lineContains!)}");
+            
             sb.Append($"--line-contains {EscapeRegexPattern(lineContains!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
