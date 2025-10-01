@@ -134,6 +134,29 @@ public class CycoDmdCliWrapper
         return ProcessHelpers.EscapeProcessArgument(arg);
     }
 
+    /// <summary>
+    /// Escapes a regex pattern for use in command line arguments.
+    /// Specifically designed to prevent double-escaping backslashes in regex patterns.
+    /// </summary>
+    /// <param name="pattern">The regex pattern to escape</param>
+    /// <returns>The escaped regex pattern</returns>
+    public string EscapeRegexPattern(string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern)) return "\"\"";
+
+        // Only escape quotes and leave backslashes as they are for regex patterns
+        var escaped = pattern.Replace("\"", "\\\"");
+        
+        // Add surrounding quotes if needed
+        if (escaped.Contains(' ') || escaped.Contains('\t') || escaped.Contains('|') || 
+            escaped.Contains('<') || escaped.Contains('>') || escaped.Contains('&'))
+        {
+            escaped = $"\"{escaped}\"";
+        }
+        
+        return escaped;
+    }
+
     #region Search Codebase Methods
     
     /// <summary>
@@ -206,10 +229,10 @@ public class CycoDmdCliWrapper
         }
         
         if (IsValidParameter(fileContains))
-            sb.Append($"--file-contains {EscapeArgument(fileContains!)} ");
+            sb.Append($"--file-contains {EscapeRegexPattern(fileContains!)} ");
             
         if (IsValidParameter(fileNotContains))
-            sb.Append($"--file-not-contains {EscapeArgument(fileNotContains!)} ");
+            sb.Append($"--file-not-contains {EscapeRegexPattern(fileNotContains!)} ");
             
         if (IsValidParameter(modifiedAfter))
             sb.Append($"--modified-after {EscapeArgument(modifiedAfter!)} ");
@@ -219,19 +242,19 @@ public class CycoDmdCliWrapper
         
         if (IsValidParameter(searchPattern))
         {
-            sb.Append($"--contains {EscapeArgument(searchPattern!)} ");
+            sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
         }
         else if (IsValidParameter(lineContains))
         {
-            sb.Append($"--line-contains {EscapeArgument(lineContains!)} ");
+            sb.Append($"--line-contains {EscapeRegexPattern(lineContains!)} ");
             if (contextLines > 0)
                 sb.Append($"--lines {contextLines} ");
         }
         
         if (IsValidParameter(removeAllLines))
-            sb.Append($"--remove-all-lines {EscapeArgument(removeAllLines!)} ");
+            sb.Append($"--remove-all-lines {EscapeRegexPattern(removeAllLines!)} ");
             
         if (lineNumbers)
             sb.Append("--line-numbers ");
