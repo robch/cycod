@@ -12,6 +12,22 @@ public static class TrxXmlTestReporter
         var startTime = testRun.StartTime;
         var endTime = testRun.EndTime;
 
+        // EVIDENCE GATHERING - detect collection desynchronization
+        var missingTestCases = testResults
+            .Where(tr => !testCases.Any(tc => tc.Id == tr.TestCase.Id))
+            .ToList();
+        
+        if (missingTestCases.Any())
+        {
+            ConsoleHelpers.WriteDebugLine($"[TRX EVIDENCE] {missingTestCases.Count} TestResults missing TestCases:");
+            foreach (var missing in missingTestCases)
+            {
+                ConsoleHelpers.WriteDebugLine($"[TRX EVIDENCE] Missing: {missing.TestCase.Id} - {missing.TestCase.DisplayName}");
+            }
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"[TRX EVIDENCE] Generation: {testResults.Count} results -> {testCases.Count} definitions");
+
         var assemblyPath = FileHelpers.GetProgramAssemblyFileInfo().DirectoryName;
 
         var testRunId = Guid.NewGuid().ToString();
