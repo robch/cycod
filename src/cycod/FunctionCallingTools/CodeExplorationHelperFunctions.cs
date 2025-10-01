@@ -13,53 +13,44 @@ public class CodeExplorationHelperFunctions
     #region Code Exploration Functions
     
     [ReadOnly(true)]
-    [Description("Search across files in a codebase to find content matching specific patterns. Returns formatted markdown with file matches, similar to using Ctrl+Shift+F in an IDE but with more processing options. Great for exploring unfamiliar codebases.")]
-    public async Task<string> SearchCodebaseForPattern(
-        [Description("File glob patterns to search")] string[] filePatterns,
-        [Description("Regex pattern to search for within files")] string contentPattern,
+    [Description("Search and query files across a codebase with flexible filtering options. Use for discovering files and content matching specific criteria.")]
+    public async Task<string> QueryFiles(
+        [Description("File glob patterns to search (e.g., **/*.cs, src/*.md)")] string[] filePatterns,
         [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
-        [Description("Include line numbers in results")] bool showLineNumbers = true,
-        [Description("Number of context lines to show before and after matches")] int contextLines = 0,
-        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
-        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
-    {
-        Logger.Info($"Searching codebase with regex pattern: '{contentPattern}'");
-        Logger.Info($"File patterns: [{string.Join(", ", filePatterns)}]");
-        if (excludePatterns != null && excludePatterns.Length > 0)
-            Logger.Info($"Exclude patterns: [{string.Join(", ", excludePatterns)}]");
         
-        return await _cycoDmdWrapper.ExecuteSearchCodebaseCommand(
-            filePatterns,
-            contentPattern,
-            excludePatterns,
-            showLineNumbers,
-            contextLines,
-            null, // processingInstructions
-            maxCharsPerLine,
-            maxTotalChars);
-    }
-    
-    [ReadOnly(true)]
-    [Description("Find complete files that contain specific patterns and return their content. Useful for identifying relevant files in a large codebase when you need full file context, not just matching lines.")]
-    public async Task<string> FindFilesContainingPattern(
-        [Description("File glob patterns to search")] string[] filePatterns,
-        [Description("Regex pattern that must exist somewhere in the files")] string contentPattern,
-        [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
+        // File-level filtering (cycodmd --file-contains, time filters)
+        [Description("Only include files containing this regex pattern")] string? fileContains = null,
+        [Description("Exclude files containing this regex pattern")] string? fileNotContains = null,
+        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string? modifiedAfter = null,
+        [Description("Only files modified before this time")] string? modifiedBefore = null,
+        
+        // Content extraction (cycodmd --contains, --line-contains)
+        [Description("Search pattern to find and highlight with context lines")] string? searchPattern = null,
+        [Description("Only show lines containing this regex pattern")] string? lineContains = null,
+        [Description("Remove lines containing this regex pattern")] string? removeAllLines = null,
+        
+        // Presentation
+        [Description("Number of context lines to show around matches. 0 = matches only.")] int contextLines = 0,
+        [Description("Include line numbers in output.")] bool lineNumbers = true,
+        
+        // Limits
+        [Description("Maximum number of files to process.")] int maxFiles = 50,
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        Logger.Info($"Finding files containing regex pattern: '{contentPattern}'");
-        Logger.Info($"File patterns: [{string.Join(", ", filePatterns)}]");
-        if (excludePatterns != null && excludePatterns.Length > 0)
-            Logger.Info($"Exclude patterns: [{string.Join(", ", excludePatterns)}]");
-            
-        return await _cycoDmdWrapper.ExecuteFindFilesContainingPatternCommand(
-            filePatterns, 
-            contentPattern, 
-            excludePatterns,
-            null, // processingInstructions
-            maxCharsPerLine,
-            maxTotalChars);
+        Logger.Info($"QueryFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
+        if (!string.IsNullOrEmpty(searchPattern)) Logger.Info($"Search pattern: '{searchPattern}'");
+        if (!string.IsNullOrEmpty(lineContains)) Logger.Info($"Line contains: '{lineContains}'");
+        if (!string.IsNullOrEmpty(fileContains)) Logger.Info($"File contains: '{fileContains}'");
+        
+        // Determine if we should highlight matches (when contextLines > 0)
+        var shouldHighlight = contextLines > 0;
+        
+        return await _cycoDmdWrapper.ExecuteQueryFilesCommand(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore, searchPattern, lineContains,
+            removeAllLines, contextLines, lineNumbers, shouldHighlight,
+            maxFiles, maxCharsPerLine, maxTotalChars);
     }
     
     #endregion

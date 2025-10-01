@@ -137,188 +137,125 @@ public class CycoDmdCliWrapper
     #region Search Codebase Methods
     
     /// <summary>
-    /// Executes CYCODMD command to search codebase for specific patterns.
+    /// Executes CYCODMD command with flexible query options for files and content.
     /// </summary>
-    public async Task<string> ExecuteSearchCodebaseCommand(
+    public async Task<string> ExecuteQueryFilesCommand(
         string[] filePatterns,
-        string contentPattern,
         string[]? excludePatterns = null,
-        bool showLineNumbers = true,
-        int? contextLines = null,
-        string? processingInstructions = null,
+        
+        // File-level filtering
+        string? fileContains = null,
+        string? fileNotContains = null, 
+        string? modifiedAfter = null,
+        string? modifiedBefore = null,
+        
+        // Content extraction
+        string? searchPattern = null,
+        string? lineContains = null,
+        string? removeAllLines = null,
+        
+        // Presentation
+        int contextLines = 0,
+        bool lineNumbers = true,
+        bool highlightMatches = false, // Internal parameter for highlighting
+        
+        // Limits
+        int maxFiles = 50,
         int maxCharsPerLine = 500,
         int maxTotalChars = 100000)
     {
-        var arguments = BuildSearchCodebaseArguments(
-            filePatterns, 
-            contentPattern, 
-            excludePatterns, 
-            showLineNumbers, 
-            contextLines, 
-            processingInstructions);
+        var arguments = BuildQueryFilesArguments(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore, searchPattern, lineContains, 
+            removeAllLines, contextLines, lineNumbers, highlightMatches);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
-        
-        var truncatedOutput = TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
-        var noFilesFound = truncatedOutput.Contains("No files matched criteria") || truncatedOutput.Contains("No files found");
-        var wasntRecursive = !contentPattern.Contains("**");
-        
-        if (noFilesFound && wasntRecursive)
-        {
-            truncatedOutput += "\n\n<You may want to try using '**' in your file pattern to search recursively.>";
-        }
-
-        return truncatedOutput;
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
-
+    
     /// <summary>
-    /// Builds command arguments for searching codebase.
+    /// Builds command arguments for querying files with flexible options.
     /// </summary>
-    private string BuildSearchCodebaseArguments(
+    private string BuildQueryFilesArguments(
         string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        bool showLineNumbers = true,
-        int? contextLines = null,
-        string? processingInstructions = null)
+        string[]? excludePatterns,
+        string? fileContains,
+        string? fileNotContains, 
+        string? modifiedAfter,
+        string? modifiedBefore,
+        string? searchPattern,
+        string? lineContains,
+        string? removeAllLines,
+        int contextLines,
+        bool lineNumbers,
+        bool highlightMatches)
     {
-        // Log the content pattern at Info level for better tracking
-        Logger.Info($"Building search command with regex pattern: '{contentPattern}'");
-        
-        Logger.Verbose($"Building search codebase arguments with filePatterns: [{string.Join(", ", filePatterns)}], contentPattern: {contentPattern}, excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns) : "")}], showLineNumbers: {showLineNumbers}, contextLines: {contextLines}, processingInstructions: {processingInstructions}");
-
         var sb = new StringBuilder();
-
+        
         // Add file patterns
         foreach (var pattern in filePatterns)
-        {
             sb.Append($"{EscapeArgument(pattern)} ");
-        }
-
+            
         // Add exclude patterns
-        if (excludePatterns != null && excludePatterns.Length > 0)
+        if (excludePatterns?.Length > 0 && !IsNullString(excludePatterns[0]))
         {
             sb.Append("--exclude ");
             foreach (var pattern in excludePatterns)
-            {
-                sb.Append($"{EscapeArgument(pattern)} ");
-            }
+                if (!IsNullString(pattern))
+                    sb.Append($"{EscapeArgument(pattern)} ");
         }
-
-        // Add content pattern for searching within files
-        if (!string.IsNullOrEmpty(contentPattern))
+        
+        if (IsValidParameter(fileContains))
+            sb.Append($"--file-contains {EscapeArgument(fileContains!)} ");
+            
+        if (IsValidParameter(fileNotContains))
+            sb.Append($"--file-not-contains {EscapeArgument(fileNotContains!)} ");
+            
+        if (IsValidParameter(modifiedAfter))
+            sb.Append($"--modified-after {EscapeArgument(modifiedAfter!)} ");
+            
+        if (IsValidParameter(modifiedBefore))
+            sb.Append($"--modified-before {EscapeArgument(modifiedBefore!)} ");
+        
+        if (IsValidParameter(searchPattern))
         {
-            var escapedPattern = EscapeArgument(contentPattern);
-            sb.Append($"--contains {escapedPattern} ");
-            Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
+            sb.Append($"--contains {EscapeArgument(searchPattern!)} ");
+            if (contextLines > 0)
+                sb.Append($"--lines {contextLines} ");
         }
-
-        // Add line numbers option
-        if (showLineNumbers)
+        else if (IsValidParameter(lineContains))
         {
+            sb.Append($"--line-contains {EscapeArgument(lineContains!)} ");
+            if (contextLines > 0)
+                sb.Append($"--lines {contextLines} ");
+        }
+        
+        if (IsValidParameter(removeAllLines))
+            sb.Append($"--remove-all-lines {EscapeArgument(removeAllLines!)} ");
+            
+        if (lineNumbers)
             sb.Append("--line-numbers ");
-        }
-
-        // Add context lines
-        if (contextLines.HasValue)
-        {
-            sb.Append($"--lines {contextLines.Value} ");
-        }
-
-        // Add processing instructions
-        if (!string.IsNullOrEmpty(processingInstructions))
-        {
-            sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
-        }
-
-        var args = sb.ToString().Trim();
-        Logger.Verbose($"Built search codebase arguments: {args}");
-        // Log the complete command at Info level
-        Logger.Info($"Final search codebase command: cycodmd {args}");
-        return args;
-    }
-    
-    /// <summary>
-    /// Executes CYCODMD command to find files containing specific patterns.
-    /// </summary>
-    public async Task<string> ExecuteFindFilesContainingPatternCommand(
-        string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        string? processingInstructions = null,
-        int maxCharsPerLine = 500,
-        int maxTotalChars = 100000)
-    {
-        var arguments = BuildFindFilesContainingPatternArguments(
-            filePatterns, 
-            contentPattern, 
-            excludePatterns,
-            processingInstructions);
             
-        var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
-        
-        // Apply truncation to the output
-        var truncatedOutput = TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
-        
-        // Handle no matches messaging (existing code)
-        var noFilesFound = truncatedOutput.Contains("No files matched criteria") || 
-                          truncatedOutput.Contains("No files found");
-        var wasntRecursive = !contentPattern.Contains("**");
-        
-        if (noFilesFound && wasntRecursive)
-        {
-            truncatedOutput += "\n\n<You may want to try using '**' in your content pattern to search recursively.>";
-        }
-
-        return truncatedOutput;
+        if (highlightMatches)
+            sb.Append("--highlight-matches ");
+            
+        return sb.ToString().Trim();
     }
     
     /// <summary>
-    /// Builds command arguments for finding files containing patterns.
+    /// Helper method to check if a parameter is valid (not null, empty, or the string "null")
     /// </summary>
-    private string BuildFindFilesContainingPatternArguments(
-        string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        string? processingInstructions = null)
+    private static bool IsValidParameter(string? parameter)
     {
-        // Log the content pattern at Info level for better tracking
-        Logger.Info($"Building find files command with regex pattern: '{contentPattern}'");
-        Logger.Verbose($"Building find files arguments with filePatterns: [{string.Join(", ", filePatterns)}], contentPattern: {contentPattern}, excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns) : "")}], processingInstructions: {processingInstructions}");
-        
-        var sb = new StringBuilder();
-        
-        // Add file patterns
-        foreach (var pattern in filePatterns)
-        {
-            sb.Append($"{EscapeArgument(pattern)} ");
-        }
-        
-        // Add exclude patterns
-        if (excludePatterns != null && excludePatterns.Length > 0)
-        {
-            sb.Append("--exclude ");
-            foreach (var pattern in excludePatterns)
-            {
-                sb.Append($"{EscapeArgument(pattern)} ");
-            }
-        }
-        
-        // Add content pattern for searching within files
-        if (!string.IsNullOrEmpty(contentPattern))
-        {
-            var escapedPattern = EscapeArgument(contentPattern);
-            sb.Append($"--contains {escapedPattern} ");
-            Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
-        }
-        
-        // Add processing instructions
-        if (!string.IsNullOrEmpty(processingInstructions))
-        {
-            sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
-        }
-        
-        return sb.ToString().Trim();
+        return !string.IsNullOrEmpty(parameter) && !IsNullString(parameter);
+    }
+    
+    /// <summary>
+    /// Helper method to check if a string is the literal "null" value
+    /// </summary>
+    private static bool IsNullString(string? value)
+    {
+        return string.Equals(value, "null", StringComparison.OrdinalIgnoreCase);
     }
     
     #endregion

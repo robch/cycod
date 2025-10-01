@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 /// <summary>
 /// Provides file and directory editing functionality similar to the TypeScript str_replace_editor tool.
@@ -37,61 +38,184 @@ public class StrReplaceEditorHelperFunctions
     }
 
     [ReadOnly(true)]
-    [Description("If `path` is a file, returns the file content (optionally in a specified line range) with line numbers.")]
+    [Description("View the content of a specific file, optionally with line ranges and content filtering.")]
     public string ViewFile(
-        [Description("Absolute or relative path to file or directory.")] string path,
-        [Description("Start line number (1-indexed) to view. Default: 1")] int startLine = 1,
-        [Description("End line number. Use 0 or -1 to view all remaining lines. Default: 0")] int endLine = 0,
-        [Description("Optional flag to view the file with line numbers.")] bool lineNumbers = false,
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Start line number (1-indexed). Negative numbers count from end (-1 = last line). Default: 1")] int startLine = 1,
+        [Description("End line number. 0 or -1 = end of file. Negative numbers count from end. Default: 0")] int endLine = 0,
+        [Description("Include line numbers in output.")] bool lineNumbers = false,
+        
+        // New filtering options
+        [Description("Only show lines containing this regex pattern.")] string? lineContains = null,
+        [Description("Remove lines containing this regex pattern.")] string? removeAllLines = null,
+        [Description("Number of context lines to show around lineContains matches.")] int contextLines = 0,
+        
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
+        // Basic file validation
         var noFile = Directory.Exists(path) || !File.Exists(path);
         if (noFile) return $"Path {path} does not exist or is not a file.";
 
-        var linesFromFile = File.ReadAllText(path).Split('\n', StringSplitOptions.None)
+        // Read all lines from file
+        var allLines = File.ReadAllText(path).Split('\n', StringSplitOptions.None)
             .Select(line => line.TrimEnd('\r'))
             .ToArray();
+        
+        var fileLength = allLines.Length;
+        
+        // Enhanced line number handling with negative indexing
+        if (endLine == 0) endLine = -1;
+        if (startLine < 0) startLine = Math.Max(1, fileLength + startLine + 1);
+        if (endLine < 0) endLine = Math.Max(1, fileLength + endLine + 1);
+        
+        // Validate and clamp line numbers
+        if (startLine <= 0) startLine = 1;
+        startLine = Math.Min(startLine, fileLength);
+        endLine = Math.Min(endLine, fileLength);
+        
+        if (startLine > fileLength) 
+            return $"Invalid range: start line {startLine} exceeds file line count of {fileLength}";
+        if (startLine > endLine) 
+            return $"Invalid range: startLine ({startLine}) cannot be after endLine ({endLine})";
+        
+        // Apply initial line range
+        var rangeStartIdx = startLine - 1;
+        var rangeEndIdx = endLine - 1;
+        var rangeLines = allLines.Skip(rangeStartIdx).Take(rangeEndIdx - rangeStartIdx + 1).ToArray();
+        
+        // STEP 1: Apply removeAllLines filtering FIRST (completely eliminate unwanted lines)
+        Regex? removeAllLinesRegex = null;
+        int[] currentLineNumbers;
+        
+        if (!string.IsNullOrEmpty(removeAllLines))
+        {
+            try
+            {
+                removeAllLinesRegex = new Regex(removeAllLines, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            }
+            catch (Exception ex)
+            {
+                return $"Invalid regular expression pattern for removeAllLines: {removeAllLines} - {ex.Message}";
+            }
             
-        startLine = Math.Max(1, startLine);
-        var invalidStart = startLine > linesFromFile.Length;
-        if (invalidStart) return $"Invalid range: start line {startLine} exceeds file line count of {linesFromFile.Length}";
-        
-        endLine = (endLine <= 0) ? linesFromFile.Length : Math.Min(endLine, linesFromFile.Length);
-        var requestedLines = linesFromFile.Skip(startLine - 1)
-            .Take(endLine - startLine + 1)
-            .ToArray();
+            // Filter out removed lines completely
+            var lineNumberMapping = new List<int>();
+            var filteredLines = new List<string>();
             
-        var needLineTruncs = requestedLines.Any(line => line.Length > maxCharsPerLine);
-        var linesAfterTrunc = requestedLines.Select(line => 
-            needLineTruncs && line.Length > maxCharsPerLine
-                ? line.Substring(0, maxCharsPerLine - 1) + "…" 
-                : line)
-            .ToArray();
-        
-        var formatted = string.Join("\n", lineNumbers
-            ? linesAfterTrunc.Select((line, idx) => $"{startLine + idx}: {line}")
-            : linesAfterTrunc);
+            for (int i = 0; i < rangeLines.Length; i++)
+            {
+                if (!removeAllLinesRegex.IsMatch(rangeLines[i]))
+                {
+                    filteredLines.Add(rangeLines[i]);
+                    lineNumberMapping.Add(startLine + i); // Original line number
+                }
+            }
             
-        var needTotalTrunc = formatted.Length > maxTotalChars;
-        var formattedAfterTrunc = needTotalTrunc
-            ? formatted.Substring(0, maxTotalChars - 1) + "…"
-            : formatted;
+            rangeLines = filteredLines.ToArray();
+            
+            // If no lines left after removal, handle early
+            if (rangeLines.Length == 0)
+                return "No lines remain after applying removeAllLines filter.";
+                
+            // If no further filtering needed, return cleaned content
+            if (string.IsNullOrEmpty(lineContains))
+            {
+                return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumberMapping.ToArray(), false, null, maxCharsPerLine, maxTotalChars);
+            }
+            
+            // Store the line number mapping for later use
+            currentLineNumbers = lineNumberMapping.ToArray();
+        }
+        else
+        {
+            // No removal, use sequential line numbers
+            currentLineNumbers = Enumerable.Range(startLine, rangeLines.Length).ToArray();
+        }
         
-        var noTruncations = !needLineTruncs && !needTotalTrunc;
-        if (noTruncations) return formattedAfterTrunc;
+        // If no filtering, use the range as-is
+        if (string.IsNullOrEmpty(lineContains))
+        {
+            var lineNumbersArray = Enumerable.Range(startLine, rangeLines.Length).ToArray();
+            return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumbersArray, false, null, maxCharsPerLine, maxTotalChars);
+        }
         
-        var onlyLinesTrunc = needLineTruncs && !needTotalTrunc;
-        if (onlyLinesTrunc) return formattedAfterTrunc + "\n" + $"[Note: Lines with … were truncated ({maxCharsPerLine} char limit)]";
+        // STEP 2: Apply lineContains filtering on the cleaned content
+        Regex lineContainsRegex;
+        try
+        {
+            lineContainsRegex = new Regex(lineContains, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+        }
+        catch (Exception ex)
+        {
+            return $"Invalid regular expression pattern for lineContains: {lineContains} - {ex.Message}";
+        }
         
-        var formattedLineCount = linesAfterTrunc.Count();
-        var truncatedCount = formattedLineCount - formattedAfterTrunc.Split('\n').Length;
-
-        var warning = needLineTruncs
-            ? $"[{truncatedCount} more lines truncated; lines with … exceeded {maxCharsPerLine} char limit]"
-            : $"[{truncatedCount} more lines truncated ({maxTotalChars} char total limit)]";
-
-        return formattedAfterTrunc + "\n" + warning;
+        // Find matching line indices within the cleaned range  
+        var matchedLineIndices = rangeLines.Select((line, index) => new { line, index })
+            .Where(x => lineContainsRegex.IsMatch(x.line))
+            .Select(x => x.index)
+            .ToList();
+            
+        if (matchedLineIndices.Count == 0) 
+            return "No lines matched the specified criteria.";
+        
+        // STEP 3: Expand with context lines if requested (on cleaned content)
+        var linesToInclude = new HashSet<int>(matchedLineIndices);
+        if (contextLines > 0)
+        {
+            foreach (var index in matchedLineIndices)
+            {
+                for (int b = 1; b <= contextLines; b++)
+                {
+                    var idxBefore = index - b;
+                    if (idxBefore >= 0) linesToInclude.Add(idxBefore);
+                }
+                for (int a = 1; a <= contextLines; a++)
+                {
+                    var idxAfter = index + a;
+                    if (idxAfter < rangeLines.Length) linesToInclude.Add(idxAfter);
+                }
+            }
+        }
+        
+        var expandedLineIndices = linesToInclude.OrderBy(i => i).ToList();
+        var selectedLines = expandedLineIndices.Select(i => rangeLines[i]).ToArray();
+        var selectedLineNumbers = expandedLineIndices.Select(i => currentLineNumbers[i]).ToArray();
+        
+        // Determine if we should highlight matches
+        var shouldHighlight = contextLines > 0;
+        var matchedIndicesSet = matchedLineIndices.ToHashSet();
+        
+        return FormatAndTruncateLines(selectedLines, lineNumbers, selectedLineNumbers, shouldHighlight, 
+            expandedLineIndices.Select(i => matchedIndicesSet.Contains(i)).ToArray(), maxCharsPerLine, maxTotalChars);
+    }
+    
+    /// <summary>
+    /// Helper method to format lines with optional line numbers and highlighting, then apply truncation
+    /// </summary>
+    private static string FormatAndTruncateLines(string[] lines, bool lineNumbers, int[] lineNumbersArray, 
+        bool shouldHighlight, bool[]? isMatchingLine, int maxCharsPerLine, int maxTotalChars)
+    {
+        var formattedLines = lines.Select((line, idx) =>
+        {
+            if (lineNumbers)
+            {
+                var actualLineNum = lineNumbersArray[idx];
+                var isMatch = isMatchingLine?[idx] == true;
+                var prefix = shouldHighlight && isMatch ? "*" : " ";
+                return $"{prefix} {actualLineNum}: {line}";
+            }
+            else
+            {
+                var isMatch = isMatchingLine?[idx] == true;
+                var prefix = shouldHighlight && isMatch ? "* " : "";
+                return $"{prefix}{line}";
+            }
+        }).ToArray();
+        
+        var output = string.Join("\n", formattedLines);
+        return TextTruncationHelper.TruncateOutput(output, maxCharsPerLine, maxTotalChars);
     }
 
     [ReadOnly(false)]

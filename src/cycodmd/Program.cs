@@ -194,6 +194,7 @@ class Program
                 findFilesCommand.IncludeLineCountAfter,
                 findFilesCommand.IncludeLineNumbers,
                 findFilesCommand.RemoveAllLineContainsPatternList,
+                findFilesCommand.HighlightMatches,
                 findFilesCommand.FileInstructionsList,
                 findFilesCommand.UseBuiltInFunctions,
                 findFilesCommand.SaveChatHistory,
@@ -417,7 +418,7 @@ class Program
         }
     }
 
-    private static Task<string> GetCheckSaveFileContentAsync(string fileName, SemaphoreSlim throttler, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
+    private static Task<string> GetCheckSaveFileContentAsync(string fileName, SemaphoreSlim throttler, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
     {
         var getCheckSaveFileContent = new Func<string>(() =>
             GetCheckSaveFileContent(
@@ -428,6 +429,7 @@ class Program
                 includeLineCountAfter,
                 includeLineNumbers,
                 removeAllLineContainsPatternList,
+                highlightMatches,
                 fileInstructionsList,
                 useBuiltInFunctions,
                 saveChatHistory,
@@ -452,7 +454,7 @@ class Program
         });
     }
 
-    private static string GetCheckSaveFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
+    private static string GetCheckSaveFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
     {
         try
         {
@@ -484,6 +486,7 @@ class Program
                 includeLineCountAfter,
                 includeLineNumbers,
                 removeAllLineContainsPatternList,
+                highlightMatches,
                 fileInstructionsList,
                 useBuiltInFunctions,
                 saveChatHistory);
@@ -503,7 +506,7 @@ class Program
         }
     }
 
-    private static string GetFinalFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
+    private static string GetFinalFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
     {
         var formatted = GetFormattedFileContent(
             fileName,
@@ -512,7 +515,8 @@ class Program
             includeLineCountBefore,
             includeLineCountAfter,
             includeLineNumbers,
-            removeAllLineContainsPatternList);
+            removeAllLineContainsPatternList,
+            highlightMatches);
 
         var instructionsForThisFile = fileInstructionsList
             .Where(x => FileNameMatchesInstructionsCriteria(fileName, x.Item2))
@@ -533,7 +537,7 @@ class Program
             fileName == fileNameCriteria;
     }
 
-    private static string GetFormattedFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList)
+    private static string GetFormattedFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches)
     {
         try
         {
@@ -554,7 +558,8 @@ class Program
                     includeLineCountAfter,
                     includeLineNumbers,
                     removeAllLineContainsPatternList,
-                    backticks);
+                    backticks,
+                    highlightMatches);
                 wrapInMarkdown = true;
             }
             else if (includeLineNumbers)
@@ -596,7 +601,7 @@ class Program
         return string.Join('\n', lines.Select((line, index) => $"{index + 1}: {line}"));
     }
 
-    private static string GetContentFilteredAndFormatted(string content, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, string backticks)
+    private static string GetContentFilteredAndFormatted(string content, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, string backticks, bool highlightMatches = false)
     {
         // Find the matching lines/indices (line numbers are 1-based, indices are 0-based)
         var allLines = content.Split('\n');
@@ -613,13 +618,31 @@ class Program
             for (int b = 1; b <= includeLineCountBefore; b++)
             {
                 var idxBefore = index - b;
-                if (idxBefore >= 0) linesToInclude.Add(idxBefore);
+                if (idxBefore >= 0)
+                {
+                    // Only add context lines that wouldn't be removed
+                    var contextLine = allLines[idxBefore];
+                    var shouldRemoveContextLine = removeAllLineContainsPatternList.Any(regex => regex.IsMatch(contextLine));
+                    if (!shouldRemoveContextLine)
+                    {
+                        linesToInclude.Add(idxBefore);
+                    }
+                }
             }
 
             for (int a = 1; a <= includeLineCountAfter; a++)
             {
                 var idxAfter = index + a;
-                if (idxAfter < allLines.Length) linesToInclude.Add(idxAfter);
+                if (idxAfter < allLines.Length)
+                {
+                    // Only add context lines that wouldn't be removed  
+                    var contextLine = allLines[idxAfter];
+                    var shouldRemoveContextLine = removeAllLineContainsPatternList.Any(regex => regex.IsMatch(contextLine));
+                    if (!shouldRemoveContextLine)
+                    {
+                        linesToInclude.Add(idxAfter);
+                    }
+                }
             }
         }
         var expandedLineIndices = linesToInclude.OrderBy(i => i).ToList();
@@ -638,18 +661,21 @@ class Program
             }
 
             var line = allLines[index];
-            var shouldRemoveLine = removeAllLineContainsPatternList.Any(regex => regex.IsMatch(line));
+            var isMatchingLine = matchedLineIndices.Contains(index); // Track if this line was an actual match
 
             if (includeLineNumbers)
             {
                 var lineNumber = index + 1;
-                output.Add(shouldRemoveLine
-                    ? $"{lineNumber}:"
-                    : $"{lineNumber}: {line}");
+                // Add * prefix for matching lines when highlighting is enabled
+                var prefix = highlightMatches && isMatchingLine ? "*" : " ";
+                
+                output.Add($"{prefix} {lineNumber}: {line}");
             }
-            else if (!shouldRemoveLine)
+            else
             {
-                output.Add(line);
+                // Add * prefix for matching lines when highlighting is enabled (no line numbers)
+                var prefix = highlightMatches && isMatchingLine ? "* " : "";
+                output.Add($"{prefix}{line}");
             }
 
             previousLineIndex = index;

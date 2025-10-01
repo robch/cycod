@@ -19,6 +19,7 @@ class FindFilesCommand : CycoDmdCommand
         IncludeLineCountBefore = 0;
         IncludeLineCountAfter = 0;
         IncludeLineNumbers = false;
+        HighlightMatches = false;
 
         RemoveAllLineContainsPatternList = new();
         FileInstructionsList = new();
@@ -50,6 +51,7 @@ class FindFilesCommand : CycoDmdCommand
             IncludeLineCountBefore == 0 &&
             IncludeLineCountAfter == 0 &&
             IncludeLineNumbers == false &&
+            HighlightMatches == false &&
             !RemoveAllLineContainsPatternList.Any() &&
             !FileInstructionsList.Any() &&
             ModifiedAfter == null &&
@@ -91,6 +93,7 @@ class FindFilesCommand : CycoDmdCommand
     public int IncludeLineCountBefore;
     public int IncludeLineCountAfter;
     public bool IncludeLineNumbers;
+    public bool HighlightMatches;
     public List<Regex> RemoveAllLineContainsPatternList;
 
     public List<Tuple<string, string>> FileInstructionsList;
