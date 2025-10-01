@@ -162,6 +162,19 @@ class Program
 
     private static List<Task<string>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
     {
+        // Log the search operation being initiated
+        Logger.Info($"Finding files matching glob pattern(s): '{string.Join("', '", findFilesCommand.Globs)}'");
+        
+        // Special logging for content patterns, which is what we're particularly interested in
+        if (findFilesCommand.IncludeFileContainsPatternList.Any())
+        {
+            Logger.Info($"Finding files containing regex pattern(s):");
+            foreach (var pattern in findFilesCommand.IncludeFileContainsPatternList)
+            {
+                Logger.Info($"  Content pattern: '{pattern}'");
+            }
+        }
+        
         var files = FileHelpers.FindMatchingFiles(
             findFilesCommand.Globs,
             findFilesCommand.ExcludeGlobs,

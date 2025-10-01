@@ -133,6 +133,29 @@ public class CycoDmdCliWrapper
     {
         return ProcessHelpers.EscapeProcessArgument(arg);
     }
+    
+    /// <summary>
+    /// Escapes a regex pattern for use in a command line while preserving regex metacharacters.
+    /// This prevents backslash metacharacters from being double-escaped.
+    /// </summary>
+    /// <param name="pattern">The regex pattern to escape</param>
+    /// <returns>The escaped pattern that preserves regex metacharacters</returns>
+    public string EscapeRegexPattern(string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern)) return "\"\"";
+
+        // Only escape quotes and leave backslashes as they are for regex patterns
+        var escaped = pattern.Replace("\"", "\\\"");
+        
+        // Add surrounding quotes if needed
+        if (escaped.Contains(' ') || escaped.Contains('\t') || escaped.Contains('|') || 
+            escaped.Contains('<') || escaped.Contains('>') || escaped.Contains('&'))
+        {
+            escaped = $"\"{escaped}\"";
+        }
+
+        return escaped;
+    }
 
     #region Search Codebase Methods
     
@@ -149,6 +172,7 @@ public class CycoDmdCliWrapper
         int maxCharsPerLine = 500,
         int maxTotalChars = 100000)
     {
+        Logger.Info($"ExecuteSearchCodebaseCommand - Processing content pattern: '{contentPattern}'");
         var arguments = BuildSearchCodebaseArguments(
             filePatterns, 
             contentPattern, 
@@ -208,9 +232,11 @@ public class CycoDmdCliWrapper
         // Add content pattern for searching within files
         if (!string.IsNullOrEmpty(contentPattern))
         {
-            var escapedPattern = EscapeArgument(contentPattern);
+            // Use EscapeRegexPattern to prevent double-escaping backslashes in regex patterns
+            var escapedPattern = EscapeRegexPattern(contentPattern);
             sb.Append($"--contains {escapedPattern} ");
             Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
+            Logger.Info($"SearchCodebase - Original pattern: '{contentPattern}', Escaped pattern: '{escapedPattern}'");
         }
 
         // Add line numbers option
@@ -249,6 +275,7 @@ public class CycoDmdCliWrapper
         int maxCharsPerLine = 500,
         int maxTotalChars = 100000)
     {
+        Logger.Info($"ExecuteFindFilesContainingPatternCommand - Processing content pattern: '{contentPattern}'");
         var arguments = BuildFindFilesContainingPatternArguments(
             filePatterns, 
             contentPattern, 
@@ -284,7 +311,8 @@ public class CycoDmdCliWrapper
     {
         // Log the content pattern at Info level for better tracking
         Logger.Info($"Building find files command with regex pattern: '{contentPattern}'");
-        Logger.Verbose($"Building find files arguments with filePatterns: [{string.Join(", ", filePatterns)}], contentPattern: {contentPattern}, excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns) : "")}], processingInstructions: {processingInstructions}");
+        Logger.Info($"Content pattern details - Type: {contentPattern.GetType().Name}, Pattern: '{contentPattern}'");
+        Logger.Verbose($"Building find files arguments with filePatterns: [{string.Join(", ", filePatterns.Select(p => $"'{p}'"))}], contentPattern: '{contentPattern}', excludePatterns: [{(excludePatterns != null ? string.Join(", ", excludePatterns.Select(p => $"'{p}'")) : "")}], processingInstructions: {processingInstructions}");
         
         var sb = new StringBuilder();
         
@@ -307,9 +335,11 @@ public class CycoDmdCliWrapper
         // Add content pattern for searching within files
         if (!string.IsNullOrEmpty(contentPattern))
         {
-            var escapedPattern = EscapeArgument(contentPattern);
+            // Use EscapeRegexPattern to prevent double-escaping backslashes in regex patterns
+            var escapedPattern = EscapeRegexPattern(contentPattern);
             sb.Append($"--contains {escapedPattern} ");
             Logger.Info($"Adding escaped regex pattern to command: '--contains {escapedPattern}'");
+            Logger.Info($"FindFilesContainingPattern - Original pattern: '{contentPattern}', Escaped pattern: '{escapedPattern}'");
         }
         
         // Add processing instructions
