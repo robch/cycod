@@ -1,0 +1,152 @@
+class: regex-search-tests
+tag: cycod
+tests:
+  - name: Pattern 1 - Function Calling with spaces
+    run: cycod --input "Search for 'Function Calling' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      Function Calling
+    optional: needsAI
+    
+  - name: Pattern 2 - Word followed by 'interprets the function call'
+    run: cycod --input "Search for '\\w+\\s+interprets\\s+the\\s+function\\s+call' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      CycoD interprets the function call
+    optional: needsAI
+    
+  - name: Pattern 3 - Numbered list items
+    run: cycod --input "Search for '\\d+\\.\\s+\\w+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      1\. First
+    optional: needsAI
+    
+  - name: Pattern 4 - Shell command functions
+    run: cycod --input "Search for 'RunBashCommand|RunCmdCommand|RunPowershellCommand' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      RunBashCommand
+    optional: needsAI
+    
+  - name: Pattern 5 - Bold text
+    run: cycod --input "Search for '\\*\\*\\w+\\*\\*' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      \\*\\*bold\\*\\*
+    optional: needsAI
+    
+  - name: Pattern 6 - Markdown file references
+    run: cycod --input "Search for '\\w+\\.md' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      README.md
+    optional: needsAI
+    
+  - name: Pattern 7 - Number with word and timeout
+    run: cycod --input "Search for '\\d+\\s+\\w+\\s+timeout' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      2 minute timeout
+    optional: needsAI
+    
+  - name: Pattern 8 - All caps words with 4+ letters
+    run: cycod --input "Search for '[A-Z]{4,}' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      CYCOD_
+    optional: needsAI
+    
+  - name: Pattern 9 - Auto command options
+    run: cycod --input "Search for '--auto-[a-z]+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      --auto-approve
+    optional: needsAI
+    
+  - name: Pattern 10 - Config commands
+    run: cycod --input "Search for 'cycod\\s+config\\s+\\w+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      cycod config
+    optional: needsAI
+    
+  - name: Pattern 11 - Function behavior text
+    run: cycod --input "Search for 'function\\s+\\w+\\s+\\w+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      function call
+    optional: needsAI
+    
+  - name: Pattern 12 - Template expressions
+    run: cycod --input "Search for '\\{\\{.*\\}\\}' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      {{variable}}
+    optional: needsAI
+    
+  - name: Pattern 13 - Parenthesized words
+    run: cycod --input "Search for '\\(\\w+\\)' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      \(command\)
+    optional: needsAI
+    
+  - name: Pattern 14 - Bold items with colons
+    run: cycod --input "Search for '\\*\\*.*?\\*\\*:\\s*' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      \\*\\*.*?\\*\\*:
+    optional: needsAI
+    
+  - name: Pattern 15 - Environment exports
+    run: cycod --input "Search for 'export\\s+\\w+=' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      export
+    optional: needsAI
+    
+  - name: Pattern 16 - CamelCase words
+    run: cycod --input "Search for '\\b[A-Z][a-z]+[A-Z][a-z]+\\b' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      [A-Z][a-z]+[A-Z][a-z]+
+    optional: needsAI
+    
+  - name: Pattern 17 - Markdown headings
+    run: cycod --input "Search for '#\\s+[A-Z]' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      # Heading
+    optional: needsAI
+    
+  - name: Pattern 18 - Footnote references
+    run: cycod --input "Search for '\\[\\^.*?\\]' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      \\[\\^1\\]
+    optional: needsAI
+    
+  - name: Pattern 19 - Square bracketed text
+    run: cycod --input "Search for '\\[[a-zA-Z\\s]+\\]' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      \\[See more information\\]
+    optional: needsAI
+    
+  - name: Pattern 20 - Single-quoted assignments
+    run: cycod --input "Search for '\\w+=\\'.*?\\'' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      config='default'
+    optional: needsAI
+    
+  - name: Pattern 21 - Words with underscores
+    run: cycod --input "Search for '[A-Za-z]+_[A-Z_]+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      CYCOD_AUTO_APPROVE
+    optional: needsAI
+    
+  - name: Pattern 22 - Permission types
+    run: cycod --input "Search for '\\brun\\b|\\bread\\b|\\bwrite\\b' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      read|write|run
+    optional: needsAI
+    
+  - name: Pattern 23 - Alphanumeric identifiers
+    run: cycod --input "Search for '[a-zA-Z]+\\d+' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      PATTERN1
+    optional: needsAI
+    
+  - name: Pattern 24 - Non-greedy matching
+    run: cycod --input "Search for '.*?' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      .*
+    optional: needsAI
+    
+  - name: Pattern 25 - Capitalized words
+    run: cycod --input "Search for '\\b[A-Z][a-z]{2,}\\b' in the test document in regex-tests folder" --use-copilot --auto-approve "*"
+    expect-regex: |
+      Function|Command|System
+    optional: needsAI
