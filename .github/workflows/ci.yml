@@ -63,7 +63,7 @@ jobs:
         which cycod
         which cycodmd
         which cycodt
-        cycodt run --output-file ./TestResults/test-results-cycodt.trx
+        cycodt run --debug --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
     
     - name: Clean up inception test TRX files
       run: |
@@ -76,7 +76,9 @@ jobs:
       if: always()  # Upload test results even if tests fail
       with:
         name: test-results
-        path: ./TestResults/*.trx
+        path: |
+          ./TestResults/*.trx
+          ./TestResults/test-results-cycodt.log
     
     - name: Publish test results
       uses: dorny/test-reporter@v1
