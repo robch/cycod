@@ -144,17 +144,13 @@ public class CycoDmdCliWrapper
     {
         if (string.IsNullOrEmpty(pattern)) return "\"\"";
 
-        // Only escape quotes and leave backslashes as they are for regex patterns
+        // Always quote regex patterns to preserve backslashes
+        // Escape only quotes within the pattern
         var escaped = pattern.Replace("\"", "\\\"");
         
-        // Add surrounding quotes if needed
-        if (escaped.Contains(' ') || escaped.Contains('\t') || escaped.Contains('|') || 
-            escaped.Contains('<') || escaped.Contains('>') || escaped.Contains('&'))
-        {
-            escaped = $"\"{escaped}\"";
-        }
-        
-        return escaped;
+        // For regex patterns, always use quotes to prevent further escaping
+        // This ensures \d is passed as \d and not \\d
+        return $"\"{escaped}\"";
     }
 
     #region Search Codebase Methods
