@@ -39,10 +39,10 @@ public class CodeExplorationHelperFunctions
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         Logger.Info($"QueryFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
-        if (!string.IsNullOrEmpty(searchPattern)) Logger.Info($"Search pattern: '{searchPattern}'");
-        if (!string.IsNullOrEmpty(lineContains)) Logger.Info($"Line contains: '{lineContains}'");
-        if (!string.IsNullOrEmpty(fileContains)) Logger.Info($"File contains: '{fileContains}'");
-        
+        Logger.InfoIf(!string.IsNullOrEmpty(searchPattern), $"Search pattern: '{searchPattern}'");
+        Logger.InfoIf(!string.IsNullOrEmpty(lineContains), $"Line contains: '{lineContains}'");
+        Logger.InfoIf(!string.IsNullOrEmpty(fileContains), $"File contains: '{fileContains}'");
+
         // Determine if we should highlight matches (when contextLines > 0)
         var shouldHighlight = contextLines > 0;
         

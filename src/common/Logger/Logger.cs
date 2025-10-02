@@ -83,7 +83,27 @@ public static class Logger
     {
         if (condition) Warning(message, fileName, lineNumber);
     }
-    
+
+    public static void InfoIf(bool condition, string message, params object[] args)
+    {
+        if (condition) Info(message, args);
+    }
+
+    public static void InfoIf(bool condition, string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        if (condition) Info(message, fileName, lineNumber);
+    }
+
+    public static void VerboseIf(bool condition, string message, params object[] args)
+    {
+        if (condition) Verbose(message, args);
+    }
+
+    public static void VerboseIf(bool condition, string message, [CallerFilePath] string fileName = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        if (condition) Verbose(message, fileName, lineNumber);
+    }
+
     // Configuration
     public static void ConfigureFileLogger(string fileName, uint durationSeconds = 0, uint sizeMB = 0, bool append = false)
     {
