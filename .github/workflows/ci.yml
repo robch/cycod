@@ -63,7 +63,7 @@ jobs:
         which cycod
         which cycodmd
         which cycodt
-        cycodt run --debug --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
+        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
     
     - name: Clean up inception test TRX files
       run: |

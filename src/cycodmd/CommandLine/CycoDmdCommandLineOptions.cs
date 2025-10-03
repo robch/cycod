@@ -162,6 +162,10 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         {
             command.IncludeLineNumbers = true;
         }
+        else if (arg == "--highlight-matches")
+        {
+            command.HighlightMatches = true;
+        }
         // Time-based filtering options
         else if (arg == "--modified")
         {
