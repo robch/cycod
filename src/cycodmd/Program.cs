@@ -573,6 +573,11 @@ class Program
                     removeAllLineContainsPatternList,
                     backticks,
                     highlightMatches);
+
+                // If no content matches the filter criteria, skip this file entirely
+                var shouldSkipFile = content == null;
+                if (shouldSkipFile) return string.Empty;
+                
                 wrapInMarkdown = true;
             }
             else if (includeLineNumbers)
@@ -600,7 +605,7 @@ class Program
                 }
             }
 
-            return content;
+            return content!;
         }
         catch (Exception ex)
         {
@@ -614,7 +619,7 @@ class Program
         return string.Join('\n', lines.Select((line, index) => $"{index + 1}: {line}"));
     }
 
-    private static string GetContentFilteredAndFormatted(string content, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, string backticks, bool highlightMatches = false)
+    private static string? GetContentFilteredAndFormatted(string content, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, string backticks, bool highlightMatches = false)
     {
         // Find the matching lines/indices (line numbers are 1-based, indices are 0-based)
         var allLines = content.Split('\n');
@@ -622,7 +627,7 @@ class Program
             .Where(x => LineHelpers.IsLineMatch(x.line, includeLineContainsPatternList, removeAllLineContainsPatternList))
             .Select(x => x.index)
             .ToList();
-        if (matchedLineIndices.Count == 0) return string.Empty;
+        if (matchedLineIndices.Count == 0) return null;
 
         // Expand the range of lines, based on before and after counts
         var linesToInclude = new HashSet<int>(matchedLineIndices);

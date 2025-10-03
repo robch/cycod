@@ -178,7 +178,7 @@ public class CycoDmdCliWrapper
         string? removeAllLines = null,
         
         // Presentation
-        int contextLines = 0,
+        int linesBeforeAndAfter = 0,
         bool lineNumbers = true,
         bool highlightMatches = false, // Internal parameter for highlighting
         
@@ -190,7 +190,7 @@ public class CycoDmdCliWrapper
         var arguments = BuildQueryFilesArguments(
             filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains, 
-            removeAllLines, contextLines, lineNumbers, highlightMatches);
+            removeAllLines, linesBeforeAndAfter, lineNumbers, highlightMatches);
             
         var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
         return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
@@ -209,7 +209,7 @@ public class CycoDmdCliWrapper
         string? searchPattern,
         string? lineContains,
         string? removeAllLines,
-        int contextLines,
+        int linesBeforeAndAfter,
         bool lineNumbers,
         bool highlightMatches)
     {
@@ -243,14 +243,14 @@ public class CycoDmdCliWrapper
         if (IsValidParameter(searchPattern))
         {
             sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
-            if (contextLines > 0)
-                sb.Append($"--lines {contextLines} ");
+            if (linesBeforeAndAfter > 0)
+                sb.Append($"--lines {linesBeforeAndAfter} ");
         }
         else if (IsValidParameter(lineContains))
         {
             sb.Append($"--line-contains {EscapeRegexPattern(lineContains!)} ");
-            if (contextLines > 0)
-                sb.Append($"--lines {contextLines} ");
+            if (linesBeforeAndAfter > 0)
+                sb.Append($"--lines {linesBeforeAndAfter} ");
         }
         
         if (IsValidParameter(removeAllLines))
