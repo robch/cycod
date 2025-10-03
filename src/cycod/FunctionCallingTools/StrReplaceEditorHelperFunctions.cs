@@ -62,20 +62,20 @@ public class StrReplaceEditorHelperFunctions
             .Select(line => line.TrimEnd('\r'))
             .ToArray();
         
-        var fileLength = allLines.Length;
+        var fileLineCount = allLines.Length;
         
         // Enhanced line number handling with negative indexing
         if (endLine == 0) endLine = -1;
-        if (startLine < 0) startLine = Math.Max(1, fileLength + startLine + 1);
-        if (endLine < 0) endLine = Math.Max(1, fileLength + endLine + 1);
+        if (startLine < 0) startLine = Math.Max(1, fileLineCount + startLine + 1);
+        if (endLine < 0) endLine = Math.Max(1, fileLineCount + endLine + 1);
         
         // Validate and clamp line numbers
         if (startLine <= 0) startLine = 1;
-        startLine = Math.Min(startLine, fileLength);
-        endLine = Math.Min(endLine, fileLength);
+        startLine = Math.Min(startLine, fileLineCount);
+        endLine = Math.Min(endLine, fileLineCount);
         
-        if (startLine > fileLength) 
-            return $"Invalid range: start line {startLine} exceeds file line count of {fileLength}";
+        if (startLine > fileLineCount) 
+            return $"Invalid range: start line {startLine} exceeds file line count of {fileLineCount}";
         if (startLine > endLine) 
             return $"Invalid range: startLine ({startLine}) cannot be after endLine ({endLine})";
         
