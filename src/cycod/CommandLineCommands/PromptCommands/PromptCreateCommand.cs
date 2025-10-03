@@ -100,7 +100,7 @@ class PromptCreateCommand : PromptBaseCommand
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteErrorLine($"Error creating prompt: {ex.Message}");
+            ConsoleHelpers.LogException(ex, "Error creating prompt");
             return 1;
         }
     }

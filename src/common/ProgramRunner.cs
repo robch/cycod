@@ -12,26 +12,38 @@ abstract public class ProgramRunner
     {
         try
         {
+            LoggingInitializer.InitializeMemoryLogger();
+            LoggingInitializer.LogStartupDetails(args);
+            Logger.Info($"Starting {ProgramInfo.Name}, version {VersionInfo.GetVersion()}");
+            
             SaveConsoleColor();
             return await DoProgram(ProcessDirectives(args));
         }
         catch (EnvVarSettingException ex)
         {
+            Logger.Error($"Environment variable setting error: {ex.Message}");
             ConsoleHelpers.WriteLine($"Error: {ex.Message}");
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 2;
         }
-        catch (GitHubTokenExpiredException)
+        catch (GitHubTokenExpiredException ex)
         {
+            Logger.Error("GitHub token has expired");
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         catch (CalcException ex)
         {
+            Logger.Error($"Calculation error: {ex.Message}\n{ex.StackTrace}");
             ExceptionHelpers.SaveAndDisplayException(ex);
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         catch (Exception ex)
         {
+            Logger.Error($"Unhandled exception: {ex.Message}\n{ex.StackTrace}");
             ExceptionHelpers.SaveAndDisplayException(ex);
+            LoggingInitializer.DumpMemoryLogsOnError(ex);
             return 1;
         }
         finally
@@ -64,6 +76,8 @@ abstract public class ProgramRunner
         var verbose = ConsoleHelpers.IsVerbose() || commandLineOptions!.Verbose;
         var quiet = ConsoleHelpers.IsQuiet() || commandLineOptions!.Quiet;
         ConsoleHelpers.Configure(debug, verbose, quiet);
+        
+        LoggingInitializer.InitializeLogging(commandLineOptions?.LogFile, debug);
 
         var helpCommand = commandLineOptions!.Commands.OfType<HelpCommand>().FirstOrDefault();
         if (helpCommand != null)

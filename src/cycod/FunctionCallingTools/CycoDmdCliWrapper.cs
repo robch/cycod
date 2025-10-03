@@ -9,6 +9,45 @@ using System.Threading.Tasks;
 public class CycoDmdCliWrapper
 {
     /// <summary>
+    /// Truncates command output according to line and total character limits.
+    /// </summary>
+    private string TruncateCommandOutput(string output, int maxCharsPerLine, int maxTotalChars)
+    {
+        var outputLines = output.Split('\n', StringSplitOptions.None)
+            .Select(line => line.TrimEnd('\r'))
+            .ToArray();
+            
+        var needLineTruncs = outputLines.Any(line => line.Length > maxCharsPerLine);
+        var linesAfterTrunc = outputLines.Select(line => 
+            needLineTruncs && line.Length > maxCharsPerLine
+                ? line.Substring(0, maxCharsPerLine - 1) + "…" 
+                : line)
+            .ToArray();
+        
+        var formatted = string.Join("\n", linesAfterTrunc);
+                
+        var needTotalTrunc = formatted.Length > maxTotalChars;
+        var formattedAfterTrunc = needTotalTrunc
+            ? formatted.Substring(0, maxTotalChars - 1) + "…"
+            : formatted;
+        
+        var noTruncations = !needLineTruncs && !needTotalTrunc;
+        if (noTruncations) return formattedAfterTrunc;
+        
+        var onlyLinesTrunc = needLineTruncs && !needTotalTrunc;
+        if (onlyLinesTrunc) return formattedAfterTrunc + "\n" + $"[Note: Lines with … were truncated ({maxCharsPerLine} char limit)]";
+        
+        var formattedLineCount = linesAfterTrunc.Count();
+        var truncatedCount = formattedLineCount - formattedAfterTrunc.Split('\n').Length;
+
+        var warning = needLineTruncs
+            ? $"[{truncatedCount} more lines truncated; lines with … exceeded {maxCharsPerLine} char limit]"
+            : $"[{truncatedCount} more lines truncated ({maxTotalChars} char total limit)]";
+
+        return formattedAfterTrunc + "\n" + warning;
+    }
+    
+    /// <summary>
     /// Executes an CYCODMD command and returns the output.
     /// </summary>
     /// <param name="arguments">The arguments to pass to the CYCODMD command</param>
@@ -18,6 +57,9 @@ public class CycoDmdCliWrapper
     {
         try
         {
+            // Always log the command at Info level for better tracking
+            Logger.Info($"Executing CYCODMD command: cycodmd {arguments}");
+            
             if (ConsoleHelpers.IsVerbose())
             {
                 ConsoleHelpers.WriteLine($"Executing CYCODMD command: cycodmd {arguments}");
@@ -92,160 +134,151 @@ public class CycoDmdCliWrapper
         return ProcessHelpers.EscapeProcessArgument(arg);
     }
 
+    /// <summary>
+    /// Escapes a regex pattern for use in command line arguments.
+    /// Specifically designed to prevent double-escaping backslashes in regex patterns.
+    /// </summary>
+    /// <param name="pattern">The regex pattern to escape</param>
+    /// <returns>The escaped regex pattern</returns>
+    public string EscapeRegexPattern(string pattern)
+    {
+        if (string.IsNullOrEmpty(pattern)) return "\"\"";
+
+        // Only escape quotes and leave backslashes as they are for regex patterns
+        var escaped = pattern.Replace("\"", "\\\"");
+        
+        // Add surrounding quotes if needed
+        if (escaped.Contains(' ') || escaped.Contains('\t') || escaped.Contains('|') || 
+            escaped.Contains('<') || escaped.Contains('>') || escaped.Contains('&'))
+        {
+            escaped = $"\"{escaped}\"";
+        }
+        
+        return escaped;
+    }
+
     #region Search Codebase Methods
     
     /// <summary>
-    /// Executes CYCODMD command to search codebase for specific patterns.
+    /// Executes CYCODMD command with flexible query options for files and content.
     /// </summary>
-    public async Task<string> ExecuteSearchCodebaseCommand(
+    public async Task<string> ExecuteQueryFilesCommand(
         string[] filePatterns,
-        string contentPattern,
         string[]? excludePatterns = null,
-        bool showLineNumbers = true,
-        int? contextLines = null,
-        string? processingInstructions = null)
+        
+        // File-level filtering
+        string? fileContains = null,
+        string? fileNotContains = null, 
+        string? modifiedAfter = null,
+        string? modifiedBefore = null,
+        
+        // Content extraction
+        string? searchPattern = null,
+        string? lineContains = null,
+        string? removeAllLines = null,
+        
+        // Presentation
+        int linesBeforeAndAfter = 0,
+        bool lineNumbers = true,
+        bool highlightMatches = false, // Internal parameter for highlighting
+        
+        // Limits
+        int maxFiles = 50,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 100000)
     {
-        var arguments = BuildSearchCodebaseArguments(
-            filePatterns, 
-            contentPattern, 
-            excludePatterns, 
-            showLineNumbers, 
-            contextLines, 
-            processingInstructions);
+        var arguments = BuildQueryFilesArguments(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore, searchPattern, lineContains, 
+            removeAllLines, linesBeforeAndAfter, lineNumbers, highlightMatches);
             
-        var output = await ExecuteCycoDmdCommandAsync(arguments);
-        var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
-        var wasntRecursive = !contentPattern.Contains("**");
-        if (noFilesFound && wasntRecursive)
-        {
-            output = $"{output}\n\n<You may want to try using '**' in your file pattern to search recursively.>";
-        }
-
-        return output;
+        var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
     /// <summary>
-    /// Builds command arguments for searching codebase.
+    /// Builds command arguments for querying files with flexible options.
     /// </summary>
-    private string BuildSearchCodebaseArguments(
+    private string BuildQueryFilesArguments(
         string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        bool showLineNumbers = true,
-        int? contextLines = null,
-        string? processingInstructions = null)
+        string[]? excludePatterns,
+        string? fileContains,
+        string? fileNotContains, 
+        string? modifiedAfter,
+        string? modifiedBefore,
+        string? searchPattern,
+        string? lineContains,
+        string? removeAllLines,
+        int linesBeforeAndAfter,
+        bool lineNumbers,
+        bool highlightMatches)
     {
         var sb = new StringBuilder();
         
         // Add file patterns
         foreach (var pattern in filePatterns)
-        {
             sb.Append($"{EscapeArgument(pattern)} ");
-        }
-        
+            
         // Add exclude patterns
-        if (excludePatterns != null && excludePatterns.Length > 0)
+        if (excludePatterns?.Length > 0 && !IsNullString(excludePatterns[0]))
         {
             sb.Append("--exclude ");
             foreach (var pattern in excludePatterns)
-            {
-                sb.Append($"{EscapeArgument(pattern)} ");
-            }
+                if (!IsNullString(pattern))
+                    sb.Append($"{EscapeArgument(pattern)} ");
         }
         
-        // Add content pattern for searching within files
-        if (!string.IsNullOrEmpty(contentPattern))
+        if (IsValidParameter(fileContains))
+            sb.Append($"--file-contains {EscapeRegexPattern(fileContains!)} ");
+            
+        if (IsValidParameter(fileNotContains))
+            sb.Append($"--file-not-contains {EscapeRegexPattern(fileNotContains!)} ");
+            
+        if (IsValidParameter(modifiedAfter))
+            sb.Append($"--modified-after {EscapeArgument(modifiedAfter!)} ");
+            
+        if (IsValidParameter(modifiedBefore))
+            sb.Append($"--modified-before {EscapeArgument(modifiedBefore!)} ");
+        
+        if (IsValidParameter(searchPattern))
         {
-            sb.Append($"--contains {EscapeArgument(contentPattern)} ");
+            sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
+            if (linesBeforeAndAfter > 0)
+                sb.Append($"--lines {linesBeforeAndAfter} ");
+        }
+        else if (IsValidParameter(lineContains))
+        {
+            sb.Append($"--line-contains {EscapeRegexPattern(lineContains!)} ");
+            if (linesBeforeAndAfter > 0)
+                sb.Append($"--lines {linesBeforeAndAfter} ");
         }
         
-        // Add line numbers option
-        if (showLineNumbers)
-        {
+        if (IsValidParameter(removeAllLines))
+            sb.Append($"--remove-all-lines {EscapeRegexPattern(removeAllLines!)} ");
+            
+        if (lineNumbers)
             sb.Append("--line-numbers ");
-        }
-        
-        // Add context lines
-        if (contextLines.HasValue)
-        {
-            sb.Append($"--lines {contextLines.Value} ");
-        }
-        
-        // Add processing instructions
-        if (!string.IsNullOrEmpty(processingInstructions))
-        {
-            sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
-        }
-        
-        return sb.ToString().Trim();
-    }
-    
-    /// <summary>
-    /// Executes CYCODMD command to find files containing specific patterns.
-    /// </summary>
-    public async Task<string> ExecuteFindFilesContainingPatternCommand(
-        string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        string? processingInstructions = null)
-    {
-        var arguments = BuildFindFilesContainingPatternArguments(
-            filePatterns, 
-            contentPattern, 
-            excludePatterns,
-            processingInstructions);
             
-        var output = await ExecuteCycoDmdCommandAsync(arguments);
-        var noFilesFound = output.Contains("No files matched criteria") || output.Contains("No files found");
-        var wasntRecursive = !contentPattern.Contains("**");
-        if (noFilesFound && wasntRecursive)
-        {
-            output = $"{output}\n\n<You may want to try using '**' in your content pattern to search recursively.>";
-        }
-
-        return output;
+        if (highlightMatches)
+            sb.Append("--highlight-matches ");
+            
+        return sb.ToString().Trim();
     }
     
     /// <summary>
-    /// Builds command arguments for finding files containing patterns.
+    /// Helper method to check if a parameter is valid (not null, empty, or the string "null")
     /// </summary>
-    private string BuildFindFilesContainingPatternArguments(
-        string[] filePatterns,
-        string contentPattern,
-        string[]? excludePatterns = null,
-        string? processingInstructions = null)
+    private static bool IsValidParameter(string? parameter)
     {
-        var sb = new StringBuilder();
-        
-        // Add file patterns
-        foreach (var pattern in filePatterns)
-        {
-            sb.Append($"{EscapeArgument(pattern)} ");
-        }
-        
-        // Add exclude patterns
-        if (excludePatterns != null && excludePatterns.Length > 0)
-        {
-            sb.Append("--exclude ");
-            foreach (var pattern in excludePatterns)
-            {
-                sb.Append($"{EscapeArgument(pattern)} ");
-            }
-        }
-        
-        // Add content pattern for searching within files
-        if (!string.IsNullOrEmpty(contentPattern))
-        {
-            sb.Append($"--contains {EscapeArgument(contentPattern)} ");
-        }
-        
-        // Add processing instructions
-        if (!string.IsNullOrEmpty(processingInstructions))
-        {
-            sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
-        }
-        
-        return sb.ToString().Trim();
+        return !string.IsNullOrEmpty(parameter) && !IsNullString(parameter);
+    }
+    
+    /// <summary>
+    /// Helper method to check if a string is the literal "null" value
+    /// </summary>
+    private static bool IsNullString(string? value)
+    {
+        return string.Equals(value, "null", StringComparison.OrdinalIgnoreCase);
     }
     
     #endregion
@@ -258,14 +291,17 @@ public class CycoDmdCliWrapper
     public async Task<string> ExecuteConvertFilesToMarkdownCommand(
         string[] filePaths,
         string? formattingInstructions = null,
-        bool showLineNumbers = false)
+        bool showLineNumbers = false,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 100000)
     {
         var arguments = BuildConvertFilesToMarkdownArguments(
             filePaths, 
             formattingInstructions, 
             showLineNumbers);
             
-        return await ExecuteCycoDmdCommandAsync(arguments);
+        var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
     /// <summary>
@@ -312,7 +348,9 @@ public class CycoDmdCliWrapper
         int maxResults = 5,
         string searchEngine = "duckduckgo",
         bool stripHtml = true,
-        string? processingInstructions = null)
+        string? processingInstructions = null,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 100000)
     {
         var arguments = BuildResearchWebTopicArguments(
             searchQuery, 
@@ -322,7 +360,8 @@ public class CycoDmdCliWrapper
             stripHtml, 
             processingInstructions);
             
-        return await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
+        var rawOutput = await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
     /// <summary>
@@ -378,7 +417,9 @@ public class CycoDmdCliWrapper
         string[] urls,
         bool stripHtml = true,
         string? pageProcessingInstructions = null,
-        string? finalProcessingInstructions = null)
+        string? finalProcessingInstructions = null,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 100000)
     {
         var arguments = BuildExtractContentFromWebPagesArguments(
             urls, 
@@ -386,7 +427,8 @@ public class CycoDmdCliWrapper
             pageProcessingInstructions, 
             finalProcessingInstructions);
             
-        return await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
+        var rawOutput = await ExecuteCycoDmdCommandAsync($"{arguments} --firefox");
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
     /// <summary>
@@ -440,14 +482,17 @@ public class CycoDmdCliWrapper
     public async Task<string> ExecuteRunCommandsAndFormatOutputCommand(
         string[] commands,
         string shell = "cmd",
-        string? processingInstructions = null)
+        string? processingInstructions = null,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 100000)
     {
         var arguments = BuildRunCommandsAndFormatOutputArguments(
             commands, 
             shell, 
             processingInstructions);
             
-        return await ExecuteCycoDmdCommandAsync(arguments);
+        var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
+        return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
     }
     
     /// <summary>

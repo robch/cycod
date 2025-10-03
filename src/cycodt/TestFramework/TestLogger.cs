@@ -1,17 +1,17 @@
-public class Logger
+public class TestLogger
 {
     public static void Log(IYamlTestFrameworkLogger logger)
     {
-        Logger.logger = logger;
+        _logger = logger;
     }
 
     public static void Log(string text)
     {
-        using (var mutex = new Mutex(false, "Logger Mutex"))
+        using (var mutex = new Mutex(false, "TestLogger Mutex"))
         {
             mutex.WaitOne();
 #if DEBUG
-            logger?.LogInfo(text);
+            _logger?.LogInfo(text);
 #endif
             mutex.ReleaseMutex();
         }
@@ -26,30 +26,30 @@ public class Logger
 
     public static void LogInfo(string text)
     {
-        using (var mutex = new Mutex(false, "Logger Mutex"))
+        using (var mutex = new Mutex(false, "TestLogger Mutex"))
         {
             mutex.WaitOne();
-            logger?.LogInfo(text);
+            _logger?.LogInfo(text);
             mutex.ReleaseMutex();
         }
     }
 
     public static void LogWarning(string text)
     {
-        using (var mutex = new Mutex(false, "Logger Mutex"))
+        using (var mutex = new Mutex(false, "TestLogger Mutex"))
         {
             mutex.WaitOne();
-            logger?.LogWarning(text);
+            _logger?.LogWarning(text);
             mutex.ReleaseMutex();
         }
     }
 
     public static void LogError(string text)
     {
-        using (var mutex = new Mutex(false, "Logger Mutex"))
+        using (var mutex = new Mutex(false, "TestLogger Mutex"))
         {
             mutex.WaitOne();
-            logger?.LogError(text);
+            _logger?.LogError(text);
             mutex.ReleaseMutex();
         }
     }
@@ -58,7 +58,7 @@ public class Logger
 
     #region private methods and data
 
-    private static IYamlTestFrameworkLogger? logger = null;
+    private static IYamlTestFrameworkLogger? _logger = null;
 
     #endregion
 }

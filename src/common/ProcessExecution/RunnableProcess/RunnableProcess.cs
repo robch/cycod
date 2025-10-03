@@ -24,6 +24,10 @@ public class RunnableProcess
     /// </summary>
     public bool HasExited => _hasExited || (_process?.HasExited ?? false);
 
+    /// <summary>
+    /// Gets the file name (executable) for this process.
+    /// </summary>
+    public string FileName => _fileName;
     #endregion
 
     #region Initialization

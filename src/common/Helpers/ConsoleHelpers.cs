@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Runtime.CompilerServices;
 
 public class ConsoleHelpers
 {
@@ -100,36 +101,46 @@ public class ConsoleHelpers
         WriteLine(message);
     }
 
-    public static void WriteWarning(string message)
+    public static void WriteWarning(string message, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         Write(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+        Logger.LogMessage(LogLevel.Warning, "WARNING:", callerFilePath, callerLineNumber, message);
     }
 
-    public static void WriteWarningLine(string message)
+    public static void WriteWarningLine(string message, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         WriteLine(message, ConsoleColor.Black, ConsoleColor.Yellow, overrideQuiet: true);
+        Logger.LogMessage(LogLevel.Warning, "WARNING:", callerFilePath, callerLineNumber, message);
     }
     
-    public static void WriteError(string message)
+    public static void WriteError(string message, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         Write(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
+        Logger.LogMessage(LogLevel.Error, "ERROR:", callerFilePath, callerLineNumber, message);
     }
 
-    public static void WriteErrorLine(string message)
+    public static void WriteErrorLine(string message, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
         WriteLine(message, ConsoleColor.White, ConsoleColor.Red, overrideQuiet: true);
+        Logger.LogMessage(LogLevel.Error, "ERROR:", callerFilePath, callerLineNumber, message);
     }
 
-    public static void WriteDebug(string message)
+    public static void WriteDebug(string message, [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
-        if (!_debug) return;
-        Write(message, ConsoleColor.Cyan);
+        Logger.LogMessage(LogLevel.Verbose, "VERBOSE:", callerFilePath, callerLineNumber, message);
+        if (_debug)
+        {
+            Write(message, ConsoleColor.Cyan);
+        }
     }
 
-    public static void WriteDebugLine(string message = "")
+    public static void WriteDebugLine(string message = "", [CallerFilePath] string callerFilePath = "", [CallerLineNumber] int callerLineNumber = 0)
     {
-        if (!_debug) return;
-        WriteLine(message, ConsoleColor.Cyan);
+        Logger.LogMessage(LogLevel.Verbose, "VERBOSE:", callerFilePath, callerLineNumber, message);
+        if (_debug)
+        {
+            WriteLine(message, ConsoleColor.Cyan);
+        }
     }
 
     public static void WriteDebugHexDump(string message, string? title = null)
@@ -197,6 +208,41 @@ public class ConsoleHelpers
         }
 
         return Console.ReadKey(intercept);
+    }
+
+
+    /// <summary>
+    /// Logs an exception with detailed information to both the console and logger system.
+    /// </summary>
+    /// <param name="ex">The exception to log</param>
+    /// <param name="contextMessage">Optional context message to prefix the exception</param>
+    /// <param name="showToUser">Whether to show the message to the user on console</param>
+    /// <param name="filePath">Source file where the exception was caught</param>
+    /// <param name="lineNumber">Line number where the exception was caught</param>
+    public static void LogException(Exception ex, string contextMessage = "", bool showToUser = true, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+    {
+        var message = string.IsNullOrEmpty(contextMessage) 
+            ? $"Exception: {ex.Message}" 
+            : $"{contextMessage}: {ex.Message}";
+    
+        // Show in console if requested
+        if (showToUser)
+        {
+            WriteErrorLine(message, filePath, lineNumber);
+        }
+    
+        // Always log to persistent storage with stack trace
+        Logger.LogMessage(LogLevel.Error, "ERROR:", filePath, lineNumber, $"{message}\n{ex.StackTrace}");
+    
+        // Log inner exceptions too
+        var inner = ex.InnerException;
+        int depth = 0;
+        while (inner != null && depth < 5)
+        {
+            Logger.LogMessage(LogLevel.Error, "ERROR:", filePath, lineNumber, $"Inner exception ({depth}): {inner.Message}\n{inner.StackTrace}");
+            inner = inner.InnerException;
+            depth++;
+        }
     }
 
     private static List<string> ReadAllLinesFromStdin()

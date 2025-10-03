@@ -91,3 +91,6 @@
     run: cycod config clear openai.apiKey --local
     expect-regex: |
       OpenAI.ApiKey: \(cleared\)
+
+  - name: Cleanup local test config
+    run: rm -rf .cycod

@@ -1,7 +1,16 @@
+using System;
+using System.IO;
+using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class LogTrafficHttpMessageHandler : HttpClientHandler
 {
+    private static readonly Regex _authHeaderPattern = new(@"(Authorization|Bearer|api-key):\s*([^\s]+)", RegexOptions.IgnoreCase);
+    private static readonly Regex _tokenPattern = new(@"(token|apiKey|password|secret|key)(\s*[=:]\s*)([^\s&,"";]+)", RegexOptions.IgnoreCase);
+    
     public LogTrafficHttpMessageHandler()
     {
         base.AllowAutoRedirect = true;
@@ -29,15 +38,23 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
 
     private async Task LogRequestAsync(HttpRequestMessage request)
     {
-        // Log the request method and URI
         ConsoleHelpers.WriteDebugLine($"===== REQUEST: {request.Method} {request.RequestUri}");
-
-        // Log each request header
+        
+        // Log request headers
         foreach (var header in request.Headers)
         {
             var headerName = header.Key;
             var headerValue = string.Join(", ", header.Value);
-            ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {headerValue}");
+            
+            string logHeaderValue = headerValue;
+            if (headerName.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
+                headerName.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
+                headerName.Contains("Token", StringComparison.OrdinalIgnoreCase))
+            {
+                logHeaderValue = "[REDACTED]";
+            }
+            
+            ConsoleHelpers.WriteDebugLine($"===== REQUEST HEADER: {headerName}: {logHeaderValue}");
         }
 
         // If the request has content, log it
@@ -51,7 +68,8 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
             var line = requestData.ToString().Replace("\n", "\\n").Replace("\r", "");
             if (!string.IsNullOrWhiteSpace(line))
             {
-                ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {line}");
+                string logLine = MaskSensitiveData(line);
+                ConsoleHelpers.WriteDebugLine($"===== REQUEST BODY: {logLine}");
             }
         }
     }
@@ -60,13 +78,24 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
     {
         // Log the response status code and reason phrase
         ConsoleHelpers.WriteDebugLine($"===== RESPONSE: {response.StatusCode} ({response.ReasonPhrase})");
+        Logger.Info($"HTTP Response: {(int)response.StatusCode} {response.StatusCode} ({response.ReasonPhrase})");
 
         // Log each response header
         var sb = new StringBuilder();
         foreach (var header in response.Headers)
         {
-            sb.Append($"{header.Key}: {string.Join(", ", header.Value)}\n");
+            var headerValue = string.Join(", ", header.Value);
+            
+            if (header.Key.Equals("Authorization", StringComparison.OrdinalIgnoreCase) || 
+                header.Key.Contains("Key", StringComparison.OrdinalIgnoreCase) ||
+                header.Key.Contains("Token", StringComparison.OrdinalIgnoreCase))
+            {
+                headerValue = "[REDACTED]";
+            }
+            
+            sb.Append($"{header.Key}: {headerValue}\n");
         }
+        
         var headers = sb.ToString().Replace("\n", "\\n").Replace("\r", "");
         if (!string.IsNullOrWhiteSpace(headers))
         {
@@ -78,7 +107,24 @@ public class LogTrafficHttpMessageHandler : HttpClientHandler
         {
             var content = await response.Content.ReadAsStringAsync();
             var line = content.Replace("\n", "\\n")?.Replace("\r", "");
-            ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {line}");
+            
+            string logLine = MaskSensitiveData(line ?? string.Empty);
+            ConsoleHelpers.WriteDebugLine($"===== RESPONSE BODY: {logLine}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                Logger.Warning($"HTTP request failed with status {(int)response.StatusCode} {response.StatusCode}: {logLine.Substring(0, Math.Min(500, logLine.Length))}");
+            }
         }
+    }
+    
+    private string MaskSensitiveData(string input)
+    {
+        if (string.IsNullOrEmpty(input)) return input;
+        
+        var result = _authHeaderPattern.Replace(input, m => $"{m.Groups[1].Value}: [REDACTED]");
+        result = _tokenPattern.Replace(result, m => $"{m.Groups[1].Value}{m.Groups[2].Value}[REDACTED]");
+        
+        return result;
     }
 }

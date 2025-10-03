@@ -113,6 +113,8 @@ USAGE: cycod [...]
     --debug                               Turn on diagnostics/debug outputs
     --quiet                               Turn off all but the most critical console outputs
     --verbose                             Turn on additional diagnostics/debug outputs
+    --log [PATH]                          Write logs to the specified file
+    --auto-save-log TRUE/FALSE            Control automatic saving of logs (default: true)
     --chat-completion-timeout SECONDS     Set a timeout in seconds for chat completion API calls (see: cycod help timeouts)
 
 SEE ALSO
@@ -123,5 +125,6 @@ SEE ALSO
   cycod help settings
   cycod help function calls
   cycod help timeouts
+  cycod help logging
   cycod help config
   cycod help aliases

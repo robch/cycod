@@ -21,7 +21,7 @@ public class BackgroundProcessHelperFunctions
     public string StartLongRunningProcess(
         [Description("The name of the executable or process to run")] string processName,
         [Description("Optional arguments to pass to the process")] string processArguments = "",
-        [Description("Optional working directory for the process")] string? workingDirectory = null)
+        [Description("Optional working directory for the process")] string workingDirectory = "")
     {
         try
         {
@@ -51,7 +51,9 @@ public class BackgroundProcessHelperFunctions
              "Use this to check progress of a background operation while it continues to run.")]
     public string GetLongRunningProcessOutput(
         [Description("Process cookie obtained from StartLongRunningProcess (not a system process ID)")] string processHandle,
-        [Description("Whether to clear the output buffer after retrieving")] bool clearBuffer = false)
+        [Description("Whether to clear the output buffer after retrieving")] bool clearBuffer = false,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         try
         {
@@ -74,7 +76,7 @@ public class BackgroundProcessHelperFunctions
                 sb.AppendLine(output["stderr"]);
             }
             
-            return sb.ToString();
+            return TextTruncationHelper.TruncateOutput(sb.ToString(), maxCharsPerLine, maxTotalChars);
         }
         catch (Exception ex)
         {
@@ -137,7 +139,9 @@ public class BackgroundProcessHelperFunctions
 
     [Description("Lists all currently running background processes. " +
              "Helps you keep track of what's running and allows you to manage multiple concurrent operations.")]
-    public string ListLongRunningProcesses()
+    public string ListLongRunningProcesses(
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         try
         {
@@ -160,7 +164,7 @@ public class BackgroundProcessHelperFunctions
                 sb.AppendLine(new string('-', 40));
             }
             
-            return sb.ToString();
+            return TextTruncationHelper.TruncateOutput(sb.ToString(), maxCharsPerLine, maxTotalChars);
         }
         catch (Exception ex)
         {

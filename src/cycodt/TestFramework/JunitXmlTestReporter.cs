@@ -35,7 +35,10 @@ public static class JunitXmlTestReporter
         {
             writer.WriteStartElement("testcase");
             writer.WriteAttributeString("name", testResult.TestCase.DisplayName);
-            writer.WriteAttributeString("classname", testResult.TestCase.FullyQualifiedName);
+            var junitClassName = testResult.TestCase.FullyQualifiedName;
+            var atIndexJunit = junitClassName.LastIndexOf('@');
+            if (atIndexJunit > -1) junitClassName = junitClassName.Substring(0, atIndexJunit);
+            writer.WriteAttributeString("classname", junitClassName);
             writer.WriteAttributeString("time", testResult.Duration.TotalSeconds.ToString());
 
             var stdout = testResult.Messages.FirstOrDefault(x => x.Category == TestResultMessage.StandardOutCategory)?.Text;

@@ -1,3 +1,7 @@
+using System.IO;
+using System;
+using System.Security.Cryptography;
+
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using YamlDotNet.RepresentationModel;
@@ -43,6 +47,7 @@ public partial class YamlTestCaseParser
                 tests.AddRange(fromDocument);
             }
         }
+
         return tests;
     }
 
@@ -106,16 +111,16 @@ public partial class YamlTestCaseParser
         }
         else
         {
-            Logger.LogInfo($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File not found '{fileName}'");
+            TestLogger.LogInfo($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File not found '{fileName}'");
             var check = PropertyInterpolationHelpers.Interpolate(fileName, context.Matrix.Last());
             if (File.Exists(check))
             {
-                Logger.LogInfo($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File found '{check}'");
+                TestLogger.LogInfo($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File found '{check}'");
                 return UpdateExpandMatrixFromFile(context, check);
             }
             else
             {
-                Logger.LogError($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File not found '{check}'");
+                TestLogger.LogError($"YamlTestCaseParser.UpdateExpandMatrixFromFile: File not found '{check}'");
             }
         }
 
@@ -149,7 +154,7 @@ public partial class YamlTestCaseParser
             var key = (kvp.Key as YamlScalarNode)?.Value;
             if (key == null)
             {
-                Logger.LogError($"Error parsing YAML: expected scalar key at at {context.File.FullName}({kvp.Key.Start.Line})");
+                TestLogger.LogError($"Error parsing YAML: expected scalar key at at {context.File.FullName}({kvp.Key.Start.Line})");
                 continue;
             }
 
@@ -174,7 +179,7 @@ public partial class YamlTestCaseParser
             var asSequence = kvp.Value as YamlSequenceNode;
             if (asSequence == null)
             {
-                Logger.LogError($"Error parsing YAML: expected string or sequence at at {context.File.FullName}({kvp.Value.Start.Line})");
+                TestLogger.LogError($"Error parsing YAML: expected string or sequence at at {context.File.FullName}({kvp.Value.Start.Line})");
                 continue;
             }
 
@@ -183,7 +188,7 @@ public partial class YamlTestCaseParser
                 value = (item as YamlScalarNode)?.Value;
                 if (value == null)
                 {
-                    Logger.LogError($"Error parsing YAML: expected scalar value at at {context.File.FullName}({item.Start.Line})");
+                    TestLogger.LogError($"Error parsing YAML: expected scalar value at at {context.File.FullName}({item.Start.Line})");
                     continue;
                 }
 
@@ -209,7 +214,7 @@ public partial class YamlTestCaseParser
             var asMapping = item as YamlMappingNode;
             if (asMapping == null)
             {
-                Logger.LogError($"Error parsing YAML: expected mapping at at {context.File.FullName}({item.Start.Line})");
+                TestLogger.LogError($"Error parsing YAML: expected mapping at at {context.File.FullName}({item.Start.Line})");
                 continue;
             }
 
@@ -221,14 +226,14 @@ public partial class YamlTestCaseParser
                     var key = (kvp.Key as YamlScalarNode)?.Value;
                     if (key == null)
                     {
-                        Logger.LogError($"Error parsing YAML: expected scalar key at at {context.File.FullName}({kvp.Key.Start.Line})");
+                        TestLogger.LogError($"Error parsing YAML: expected scalar key at at {context.File.FullName}({kvp.Key.Start.Line})");
                         continue;
                     }
 
                     var value = (kvp.Value as YamlScalarNode)?.Value;
                     if (value == null)
                     {
-                        Logger.LogError($"Error parsing YAML: expected scalar value at at {context.File.FullName}({kvp.Value.Start.Line})");
+                        TestLogger.LogError($"Error parsing YAML: expected scalar value at at {context.File.FullName}({kvp.Value.Start.Line})");
                         continue;
                     }
 
@@ -253,7 +258,7 @@ public partial class YamlTestCaseParser
             if (mapping == null)
             {
                 var message = $"Error parsing YAML: expected mapping at {context.File.FullName}({node.Start.Line})";
-                Logger.LogError(message);
+                TestLogger.LogError(message);
                 return null;
             }
 
@@ -316,16 +321,18 @@ public partial class YamlTestCaseParser
         if (neitherOrBoth)
         {
             var message = $"Error parsing YAML: expected/unexpected key ('name', 'run', 'script', 'shell', 'bash', 'pwsh', 'powershell', 'cmd', 'arguments') at {context.File.FullName}({mapping.Start.Line})";
-            Logger.LogWarning(message);
+            TestLogger.LogWarning(message);
             return null;
         }
 
-        Logger.Log($"YamlTestCaseParser.GetTests(): new TestCase('{fullyQualifiedName}')");
+        TestLogger.Log($"YamlTestCaseParser.GetTests(): new TestCase('{fullyQualifiedName}')");
         var test = new TestCase(fullyQualifiedName, new Uri(YamlTestFramework.FakeExecutor), context.Source)
         {
             CodeFilePath = context.File.FullName,
             LineNumber = (int)mapping.Start.Line
         };
+
+        AppendDeterministicUniquenessSuffix(test);
 
         SetTestCaseProperty(test, "cli", cli);
         SetTestCaseProperty(test, "run", runProcess);
@@ -431,7 +438,7 @@ public partial class YamlTestCaseParser
             {
                 var error = $"Error parsing YAML: Unexpected YAML key/value ('{key.Value}', '{test.DisplayName}') in {context.File.FullName}({mapping[key].Start.Line})";
                 test.DisplayName = error;
-                Logger.LogError(error);
+                TestLogger.LogError(error);
             }
         }
     }
@@ -505,8 +512,8 @@ public partial class YamlTestCaseParser
             .ToArray();
         if (keys.Length < kvs.Count())
         {
-            Logger.Log($"keys.Length={keys.Length}, kvs.Count={kvs.Count()}");
-            Logger.Log($"keys='{string.Join(",", keys)}'");
+            TestLogger.Log($"keys.Length={keys.Length}, kvs.Count={kvs.Count()}");
+            TestLogger.Log($"keys='{string.Join(",", keys)}'");
 
             var values = new List<string>();
             foreach (var items in kvss)
@@ -546,7 +553,7 @@ public partial class YamlTestCaseParser
             if (text == null)
             {
                 text = $"Invalid key at {test.CodeFilePath}({key.Start.Line},{key.Start.Column})";
-                Logger.Log(text);
+                TestLogger.Log(text);
             }
             else if (text.Contains('\t'))
             {
@@ -572,7 +579,7 @@ public partial class YamlTestCaseParser
             }
         }
 
-        Logger.Log($"YamlTestCaseParser.NormalizeToScalarKeyValuePair: key='{(key as YamlScalarNode)?.Value}', value='{(value as YamlScalarNode)?.Value}'");
+        TestLogger.Log($"YamlTestCaseParser.NormalizeToScalarKeyValuePair: key='{(key as YamlScalarNode)?.Value}', value='{(value as YamlScalarNode)?.Value}'");
         return new KeyValuePair<YamlNode, YamlNode>(key, value);
     }
 
@@ -590,7 +597,7 @@ public partial class YamlTestCaseParser
                 filePath = Path.Combine(workingDirectory, fileName);
             }
 
-            Logger.Log($"YamlTestCaseParser.TryGetFileContentFromScalar: Read file contents from {filePath}");
+            TestLogger.Log($"YamlTestCaseParser.TryGetFileContentFromScalar: Read file contents from {filePath}");
             if (File.Exists(filePath))
             {
                 fileContent = File.ReadAllText(filePath);
@@ -628,8 +635,10 @@ public partial class YamlTestCaseParser
 
     private static string GetRootArea(FileInfo file)
     {
-        return $"{file.Extension.TrimStart('.')}.{file.Name.Remove(file.Name.LastIndexOf(file.Extension))}";
+        return $"{file.Extension.TrimStart('.')}.{Path.GetFileNameWithoutExtension(file.Name)}";
     }
+
+
 
     private static string UpdateArea(YamlMappingNode mapping, string area)
     {
@@ -686,6 +695,8 @@ public partial class YamlTestCaseParser
             }
         }
     }
+    
+
 
     private static string UpdateWorkingDirectory(YamlMappingNode mapping, string currentWorkingDirectory)
     {
@@ -698,6 +709,30 @@ public partial class YamlTestCaseParser
         if (string.IsNullOrEmpty(workingDirectory)) return currentWorkingDirectory;
         return PathHelpers.Combine(currentWorkingDirectory, workingDirectory) ?? currentWorkingDirectory;
     }
+
+    private static void AppendDeterministicUniquenessSuffix(TestCase test)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(test.CodeFilePath)) return;
+
+            var fileInfo = new FileInfo(test.CodeFilePath);
+            var rel = fileInfo.FullName.Replace('\\', '/').ToLowerInvariant();
+            var seed = $"{rel}:{test.LineNumber}";
+            using var sha1 = System.Security.Cryptography.SHA1.Create();
+            var bytes = sha1.ComputeHash(Encoding.UTF8.GetBytes(seed));
+            var h6 = BitConverter.ToString(bytes).Replace("-", string.Empty).Substring(0, 6).ToLowerInvariant();
+            if (!test.FullyQualifiedName.EndsWith("@" + h6, StringComparison.Ordinal))
+            {
+                test.FullyQualifiedName += "@" + h6;
+            }
+        }
+        catch (Exception ex)
+        {
+            TestLogger.LogWarning($"AppendDeterministicUniquenessSuffix failed: {ex.Message}");
+        }
+    }
+
 
     private const string defaultClassName = "TestCases";
 

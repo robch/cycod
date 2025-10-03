@@ -70,8 +70,7 @@ class GitHubModelsCommand : Command
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteLine($"Error fetching GitHub Copilot models: {ex.Message}", ConsoleColor.Red, overrideQuiet: true);
-            ConsoleHelpers.WriteDebugLine(ex.ToString());
+            ConsoleHelpers.LogException(ex, "Error fetching GitHub Copilot models");
             return Task.FromResult<object>(1);
         }
     }

@@ -1,0 +1,155 @@
+# Test multiple log instances: Test that running multiple instances of the application creates separate log files
+
+workingDirectory: ../../../testresults/cycod/logger/multiple-log-instances-tests
+class: multiple-log-instances-tests
+tags: [cycod, logger]
+tests:
+
+- name: Test multiple cycod instances create separate log files with default naming
+  parallelize: false
+  steps:
+  - name: Run two cycod instances sequentially and verify separate log files
+    bash: |
+      # Run first instance with unique log name
+      cycod version --log multi-test-1.log
+      
+      # Wait 2 seconds to ensure different timestamps  
+      sleep 2
+      
+      # Run second instance with unique log name
+      cycod version --log multi-test-2.log
+      
+      # List all log files created
+      cycodmd multi-test-*.log
+    expect-regex: |
+      Version:
+      ## multi-test-1\.log
+      File logger initialized with file:
+      ## multi-test-2\.log
+      File logger initialized with file:
+    not-expect-regex: |
+      ## exception-log-.*\.log
+  
+  - name: Clean up default instance test files
+    bash: |
+      rm -f multi-test-*.log exception-multi-test-*.log
+      echo "Default instance test cleanup completed"
+    expect-regex: |
+      Default instance test cleanup completed
+
+- name: Test multiple cycod instances create separate log files with custom naming
+  steps:
+  - name: Run two cycod instances with time-stamped custom log names
+    bash: |
+      # Run first instance with custom log file
+      cycod version --log "test-instance-{time}.log" &
+      FIRST_PID=$!
+      
+      # Small delay to ensure different timestamps  
+      sleep 1
+      
+      # Run second instance with same custom log pattern
+      cycod version --log "test-instance-{time}.log" &
+      SECOND_PID=$!
+      
+      # Wait for both to complete
+      wait $FIRST_PID
+      wait $SECOND_PID
+      
+      # List all log files created
+      cycodmd test-instance-*.log exception-test-instance-*.log
+    expect-regex: |
+      Version:
+      ## test-instance-[0-9]+\.log
+      File logger initialized with file: test-instance-[0-9]+\.log
+      ## test-instance-[0-9]+\.log
+      File logger initialized with file: test-instance-[0-9]+\.log
+    not-expect-regex: |
+      ## exception-test-instance-.*\.log
+      
+  - name: Clean up custom instance test files
+    bash: |
+      rm -f test-instance-*.log exception-test-instance-*.log
+      echo "Custom instance test cleanup completed"
+    expect-regex: |
+      Custom instance test cleanup completed
+
+- name: Test multiple cycod instances don't overwrite each other's logs
+  steps:
+  - name: Run instances with same base name but different content
+    bash: |
+      # Run first instance that will log specific content
+      cycod version --log "shared-base-{time}.log" > /dev/null &
+      FIRST_PID=$!
+      
+      # Small delay to ensure different timestamps
+      sleep 1
+      
+      # Run second instance 
+      cycod version --log "shared-base-{time}.log" > /dev/null &
+      SECOND_PID=$!
+      
+      # Wait for both to complete
+      wait $FIRST_PID
+      wait $SECOND_PID
+      
+      # Count the number of log files created
+      LOG_COUNT=$(ls shared-base-*.log 2>/dev/null | wc -l)
+      echo "Created $LOG_COUNT separate log files"
+      
+      # Verify each file contains the expected startup sequence
+      cycodmd shared-base-*.log
+    expect-regex: |
+      Created [2-9] separate log files
+      ## shared-base-[0-9]+\.log
+      File logger initialized with file: shared-base-[0-9]+\.log
+      Memory logger configured to dump to exception-shared-base-[0-9]+\.log
+      Logging system fully initialized
+      ## shared-base-[0-9]+\.log
+      File logger initialized with file: shared-base-[0-9]+\.log
+      Memory logger configured to dump to exception-shared-base-[0-9]+\.log
+      Logging system fully initialized
+      
+  - name: Clean up shared base test files
+    bash: |
+      rm -f shared-base-*.log exception-shared-base-*.log
+      echo "Shared base test cleanup completed"
+    expect-regex: |
+      Shared base test cleanup completed
+
+- name: Test rapid successive instances create unique log files
+  # Note: This test checks that at least 4 unique log files are created
+  # when 5 instances are launched rapidly. In high-concurrency environments,
+  # timestamps might occasionally collide even with small delays.
+  steps:
+  - name: Launch multiple instances in quick succession
+    bash: |
+      # Launch 5 instances rapidly to test timestamp uniqueness
+      for i in {1..5}; do
+        # Sleep briefly between launches to ensure unique timestamps
+        sleep 0.1
+        cycod version --log "rapid-test-{time}.log" > /dev/null &
+      done
+      
+      # Wait for all background jobs to complete
+      wait
+      
+      # Count unique log files
+      LOG_COUNT=$(ls rapid-test-*.log 2>/dev/null | wc -l)
+      echo "Rapid test created $LOG_COUNT unique log files"
+      
+      # Verify content of log files
+      cycodmd rapid-test-*.log
+    expect-regex: |
+      Rapid test created [4-9]|1[0-9] unique log files
+      ## rapid-test-[0-9]+\.log
+      File logger initialized with file: rapid-test-[0-9]+\.log
+    not-expect-regex: |
+      ## exception-rapid-test-.*\.log
+      
+  - name: Clean up rapid test files
+    bash: |
+      rm -f rapid-test-*.log exception-rapid-test-*.log
+      echo "Rapid test cleanup completed"  
+    expect-regex: |
+      Rapid test cleanup completed

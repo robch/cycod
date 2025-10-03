@@ -1,0 +1,56 @@
+LOGGING IN CYCOD
+
+  Logs capture detailed information about the application's operations,
+  which is useful for debugging and troubleshooting issues.
+
+LOG FILE LOCATION
+
+  By default, log files are saved in the logs directory within your user profile:
+
+  Windows: %USERPROFILE%\.cycod\logs\
+  Mac/Linux: ~/.cycod/logs/
+
+  Files are saved with timestamp-based names:
+    - Default log format: log-{ProgramName}-{time}.log
+    - Exception logs: exception-log-{ProgramName}-{time}.log
+
+MANAGE AUTO-SAVING OF LOGS
+
+  You can disable automatic saving of logs using the config command with the appropriate scope:
+
+  DISABLE FOR THE CURRENT DIRECTORY ONLY (LOCAL SCOPE):
+    cycod config set App.AutoSaveLog false --local
+
+  DISABLE FOR ALL DIRECTORIES FOR CURRENT USER (USER SCOPE):
+    cycod config set App.AutoSaveLog false --user
+
+  DISABLE FOR ALL USERS ON THIS COMPUTER (GLOBAL SCOPE):
+    cycod config set App.AutoSaveLog false --global
+
+  To re-enable automatic saving, use the same commands with 'true' instead of 'false'.
+
+  CHOOSING THE RIGHT SCOPE:
+    - Use --local when you want to disable logging only for a specific project
+    - Use --user when you want to disable logging for all your projects
+    - Use --global when managing a shared system or setting company policy
+
+  VERIFY YOUR SETTINGS:
+    cycod config get App.AutoSaveLog
+
+MANUAL LOGGING
+
+  You can also specify a log file path explicitly using the CLI option:
+
+    --log <path>    Write logs to the specified file
+
+  When you provide this option, it takes precedence over automatic saving.
+
+ENVIRONMENT VARIABLES
+
+  You can control logging behavior using environment variables:
+
+  CYCOD_AUTO_SAVE_LOG="true"    Enable automatic log saving (default)
+  CYCOD_AUTO_SAVE_LOG="false"   Disable automatic log saving
+
+  LOG_LEVEL=Debug               Set the logging level (Debug, Info, Warning, Error, Fatal)
+  LOG_LEVEL=Info                Default log level

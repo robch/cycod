@@ -274,7 +274,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 }
                 catch (Exception ex)
                 {
-                    ConsoleHelpers.WriteWarning($"Failed to load image {imageFile}: {ex.Message}");
+                    ConsoleHelpers.LogException(ex, $"Failed to load image {imageFile}");
                 }
             }
         }
