@@ -46,9 +46,9 @@ public class StrReplaceEditorHelperFunctions
         [Description("Include line numbers in output.")] bool lineNumbers = false,
         
         // New filtering options
-        [Description("Only show lines containing this regex pattern.")] string? lineContains = null,
-        [Description("Remove lines containing this regex pattern.")] string? removeAllLines = null,
-        [Description("Number of context lines to show around lineContains matches.")] int contextLines = 0,
+        [Description("Only show lines containing this regex pattern. Applied after removeAllLines filter.")] string lineContains = "",
+        [Description("Remove lines containing this regex pattern. Applied first, before other filters.")] string removeAllLines = "",
+        [Description("Number of lines to show before and after lineContains matches.")] int linesBeforeAndAfter = 0,
         
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
@@ -162,16 +162,16 @@ public class StrReplaceEditorHelperFunctions
         
         // STEP 3: Expand with context lines if requested (on cleaned content)
         var linesToInclude = new HashSet<int>(matchedLineIndices);
-        if (contextLines > 0)
+        if (linesBeforeAndAfter > 0)
         {
             foreach (var index in matchedLineIndices)
             {
-                for (int b = 1; b <= contextLines; b++)
+                for (int b = 1; b <= linesBeforeAndAfter; b++)
                 {
                     var idxBefore = index - b;
                     if (idxBefore >= 0) linesToInclude.Add(idxBefore);
                 }
-                for (int a = 1; a <= contextLines; a++)
+                for (int a = 1; a <= linesBeforeAndAfter; a++)
                 {
                     var idxAfter = index + a;
                     if (idxAfter < rangeLines.Length) linesToInclude.Add(idxAfter);
@@ -184,7 +184,7 @@ public class StrReplaceEditorHelperFunctions
         var selectedLineNumbers = expandedLineIndices.Select(i => currentLineNumbers[i]).ToArray();
         
         // Determine if we should highlight matches
-        var shouldHighlight = contextLines > 0;
+        var shouldHighlight = linesBeforeAndAfter > 0;
         var matchedIndicesSet = matchedLineIndices.ToHashSet();
         
         return FormatAndTruncateLines(selectedLines, lineNumbers, selectedLineNumbers, shouldHighlight, 
@@ -309,7 +309,7 @@ public class StrReplaceEditorHelperFunctions
     [ReadOnly(false)]
     [Description("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
     public string Insert(
-        [Description("Absolute path to file.")] string path,
+        [Description("Absolute or relative path to file.")] string path,
         [Description("Line number (1-indexed) after which to insert the new string.")] int insertLine,
         [Description("The string to insert into the file.")] string newStr)
     {
@@ -338,7 +338,7 @@ public class StrReplaceEditorHelperFunctions
     [ReadOnly(false)]
     [Description("Reverts the last edit made to the file at `path`, undoing the last change if available.")]
     public string UndoEdit(
-        [Description("Absolute path to file.")] string path)
+        [Description("Absolute or relative path to file.")] string path)
     {
         if (!EditHistory.ContainsKey(path))
         {

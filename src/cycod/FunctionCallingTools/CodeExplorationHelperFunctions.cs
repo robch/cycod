@@ -19,18 +19,18 @@ public class CodeExplorationHelperFunctions
         [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
         
         // File-level filtering (cycodmd --file-contains, time filters)
-        [Description("Only include files containing this regex pattern")] string? fileContains = null,
-        [Description("Exclude files containing this regex pattern")] string? fileNotContains = null,
-        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string? modifiedAfter = null,
-        [Description("Only files modified before this time")] string? modifiedBefore = null,
+        [Description("Only include files containing this regex pattern")] string fileContains = "",
+        [Description("Exclude files containing this regex pattern")] string fileNotContains = "",
+        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string modifiedAfter = "",
+        [Description("Only files modified before this time")] string modifiedBefore = "",
         
         // Content extraction (cycodmd --contains, --line-contains)
-        [Description("Search pattern to find and highlight with context lines")] string? searchPattern = null,
-        [Description("Only show lines containing this regex pattern")] string? lineContains = null,
-        [Description("Remove lines containing this regex pattern")] string? removeAllLines = null,
-        
+        [Description("Search pattern to find and highlight with context lines")] string searchPattern = "",
+        [Description("Only show lines containing this regex pattern. Applied after removeAllLines filter.")] string lineContains = "",
+        [Description("Remove lines containing this regex pattern. Applied first, before other filters.")] string removeAllLines = "",
+
         // Presentation
-        [Description("Number of context lines to show around matches. 0 = matches only.")] int contextLines = 0,
+        [Description("Number of lines to show before and after matches. 0 = matches only.")] int linesBeforeAndAfter = 0,
         [Description("Include line numbers in output.")] bool lineNumbers = true,
         
         // Limits
@@ -43,13 +43,13 @@ public class CodeExplorationHelperFunctions
         Logger.InfoIf(!string.IsNullOrEmpty(lineContains), $"Line contains: '{lineContains}'");
         Logger.InfoIf(!string.IsNullOrEmpty(fileContains), $"File contains: '{fileContains}'");
 
-        // Determine if we should highlight matches (when contextLines > 0)
-        var shouldHighlight = contextLines > 0;
+        // Determine if we should highlight matches (when linesBeforeAndAfter > 0)
+        var shouldHighlight = linesBeforeAndAfter > 0;
         
         return await _cycoDmdWrapper.ExecuteQueryFilesCommand(
             filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains,
-            removeAllLines, contextLines, lineNumbers, shouldHighlight,
+            removeAllLines, linesBeforeAndAfter, lineNumbers, shouldHighlight,
             maxFiles, maxCharsPerLine, maxTotalChars);
     }
     
@@ -61,7 +61,7 @@ public class CodeExplorationHelperFunctions
     [Description("Convert various file types to well-formatted markdown. Supports documentation files, source code, images, PDFs, and more. Useful for generating documentation or reports from existing files.")]
     public async Task<string> ConvertFilesToMarkdown(
         [Description("Specific file paths or glob patterns to convert (e.g. [\"README.md\", \"*.pdf\", \"docs/*.docx\")")] string[] filePaths,
-        [Description("Instructions for AI to format or structure the output (e.g. \"create a table of contents\" or \"highlight important sections\")")] string? formattingInstructions = null,
+        [Description("Instructions for AI to format or structure the output (e.g. \"create a table of contents\" or \"highlight important sections\")")] string formattingInstructions = "",
         [Description("Whether to include line numbers for code files")] bool showLineNumbers = false,
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
