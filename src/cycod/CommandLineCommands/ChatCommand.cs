@@ -93,6 +93,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
         factory.AddFunctions(new ImageHelperFunctions(this));
+        factory.AddFunctions(new UnifiedShellAndProcessHelperFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);

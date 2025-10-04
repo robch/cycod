@@ -28,6 +28,11 @@ public class RunnableProcess
     /// Gets the file name (executable) for this process.
     /// </summary>
     public string FileName => _fileName;
+    
+    /// <summary>
+    /// Gets the underlying system process.
+    /// </summary>
+    public System.Diagnostics.Process? Process => _process;
     #endregion
 
     #region Initialization

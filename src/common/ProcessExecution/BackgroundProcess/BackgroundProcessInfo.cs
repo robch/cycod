@@ -13,6 +13,16 @@ public class BackgroundProcessInfo
     public string Handle { get; }
 
     /// <summary>
+    /// Gets or sets the display name for this process.
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether the process has a custom name.
+    /// </summary>
+    public bool HasCustomName { get; set; }
+
+    /// <summary>
     /// Gets the time when the process was started.
     /// </summary>
     public DateTime StartTime { get; }
@@ -56,6 +66,8 @@ public class BackgroundProcessInfo
     {
         Handle = handle ?? throw new ArgumentNullException(nameof(handle));
         Process = process ?? throw new ArgumentNullException(nameof(process));
+        Name = handle;  // Default name is the handle
+        HasCustomName = false;
         StartTime = DateTime.Now;
 
         // Set up callbacks to capture output in real-time
