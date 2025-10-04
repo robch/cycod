@@ -540,6 +540,49 @@ public abstract class PersistentShellProcess
         _shellProcess?.ForceShutdown();
     }
 
+    /// <summary>
+    /// Sends input to the shell process.
+    /// </summary>
+    /// <param name="input">The input text to send.</param>
+    /// <returns>True if the input was sent successfully, false otherwise.</returns>
+    public bool SendInput(string input)
+    {
+        try
+        {
+            if (_shellProcess == null || HasExited)
+            {
+                return false;
+            }
+            
+            // Add a newline if not already present
+            if (!input.EndsWith("\n"))
+            {
+                input += "\n";
+            }
+            
+            _shellProcess.SendInputAsync(input).Wait();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Gets the current output and error from the shell process.
+    /// </summary>
+    /// <returns>A tuple containing stdout and stderr.</returns>
+    public (string Stdout, string Stderr) GetOutput()
+    {
+        return (_shellProcess.GetCurrentOutput(), _shellProcess.GetCurrentError());
+    }
+
+    /// <summary>
+    /// Gets the underlying Process object.
+    /// </summary>
+    public Process Process => _shellProcess.Process!;
+
     protected readonly RunnableProcess _shellProcess;
     protected readonly string _marker;
     protected bool _shellVerified = false;
