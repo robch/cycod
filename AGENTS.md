@@ -14,11 +14,16 @@ This is a cycod CLI application written in C#. It consists of multiple component
 
 ## Code Style
 
+For detailed coding style guidance, refer to our:
+- [C# Coding Style Essential Guide](docs/C%23-Coding-Style-Essential.md) - Concise reference for experienced developers
+- [C# Coding Style Expanded Guide](docs/C%23-Coding-Style-Expanded.md) - In-depth explanations for those new to C#
+
 ### General Guidelines
 - Follow Microsoft C# coding guidelines
 - Avoid magic strings and numbers
 - Use meaningful variable and method names
 - "When in Rome, do as the Romans do" - match the style of the file you're modifying
+- Organize code by feature/functionality rather than by type (e.g., group files by feature in directories)
 
 ### Variables and Types
 - Use `var` consistently for local variable declarations
@@ -64,6 +69,17 @@ This is a cycod CLI application written in C#. It consists of multiple component
 - When adding error handling, try to keep the original code flow intact
 - Create specific types (e.g., custom exceptions) rather than using string checking or other workarounds
 - Keep changes backward compatible when possible
+
+### Asynchronous Programming
+- Use async/await consistently throughout the codebase
+- Return Task or Task<T> from async methods, not void (except for event handlers)
+- Always name async methods with the "Async" suffix
+- Never use ConfigureAwait(false) in application code - it complicates debugging and can lead to bugs
+
+### Resource Management
+- Use `using` statements/declarations for all disposable resources
+- Prefer using declarations (C# 8.0+) for simple resource cleanup
+- Use try/finally blocks only for complex cleanup scenarios with multiple steps
 
 ## PR Instructions
 - Run tests before submitting PRs
