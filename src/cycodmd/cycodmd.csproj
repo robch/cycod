@@ -12,7 +12,7 @@
     <OutputType>Exe</OutputType>
     
     <!-- Cross-platform support -->
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64;osx-arm64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
     <PackageId>CycoDmd</PackageId>
@@ -27,6 +27,9 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>cycodmd</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <!-- Enable Playwright code generation -->
+    <PlaywrightPlatform>all</PlaywrightPlatform>
   </PropertyGroup>
 
   <ItemGroup>
