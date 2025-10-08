@@ -29,7 +29,6 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
     <!-- Enable Playwright code generation -->
-    <PlaywrightPlatform>all</PlaywrightPlatform>
   </PropertyGroup>
 
   <ItemGroup>
