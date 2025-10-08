@@ -671,7 +671,7 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteDebugLine("Requesting initial title generation");
                 
                 // Add the generation request as a system message and process it
-                await RequestMetadataGeneration(chat, prompt);
+                RequestMetadataGeneration(chat, prompt);
             }
             
             return true;
@@ -691,29 +691,89 @@ public class ChatCommand : CommandWithVariables
     }
 
     /// <summary>
-    /// Requests metadata generation from the AI using a system prompt.
+    /// Requests metadata generation from the AI using a separate, clean chat context.
     /// </summary>
     private async Task RequestMetadataGeneration(FunctionCallingChat chat, string prompt)
     {
         try
         {
-            ConsoleHelpers.WriteDebugLine($"Requesting metadata generation with prompt: {prompt}");
+            ConsoleHelpers.WriteDebugLine($"Creating clean context for metadata generation");
             
-            // Send the metadata generation request as a user message but make it clear it's a system request
-            var systemPrompt = $"[System Request] {prompt}";
+            // Create a completely separate chat client for metadata generation
+            var chatClient = ChatClientFactory.CreateChatClient(out var options);
             
-            // Use the existing streaming completion method to handle the metadata generation
-            await CompleteChatStreamingAsync(chat, systemPrompt, new List<string>(),
-                (messages) => HandleUpdateMessages(messages),
-                (update) => { }, // No need for streaming callback for metadata generation
+            // Create a clean chat with a focused system prompt for metadata generation
+            var metadataSystemPrompt = "You are an AI assistant that analyzes conversations and generates appropriate metadata. " +
+                                     "You have access to UpdateConversationTitle and UpdateConversationDescription functions. " +
+                                     "Generate concise, accurate titles and descriptions based on the conversation content provided.";
+            
+            var metadataChat = new FunctionCallingChat(chatClient, metadataSystemPrompt, _functionFactory!, options);
+            
+            // Read the current conversation from the auto-save file to get clean context
+            var cleanConversationSummary = await GetCleanConversationSummary();
+            
+            // Request metadata generation with the clean conversation context
+            var fullPrompt = $"{prompt}\n\nConversation context:\n{cleanConversationSummary}";
+            
+            await metadataChat.CompleteChatStreamingAsync(fullPrompt,
+                (messages) => { }, // Don't pollute main conversation with metadata generation
+                (update) => { }, // No streaming output needed
                 (name, args) => HandleFunctionCallApproval(_functionFactory!, name, args!),
                 (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                
+            // Clean up
+            await metadataChat.DisposeAsync();
+            
+            ConsoleHelpers.WriteDebugLine("Metadata generation completed in clean context");
         }
         catch (Exception ex)
         {
             ConsoleHelpers.WriteDebugLine($"Error during metadata generation: {ex.Message}");
             throw;
         }
+    }
+
+    /// <summary>
+    /// Gets a clean summary of the conversation for metadata generation.
+    /// </summary>
+    private Task<string> GetCleanConversationSummary()
+    {
+        try
+        {
+            // If we have an auto-save file, read the actual conversation from there
+            if (!string.IsNullOrEmpty(AutoSaveOutputChatHistory) && File.Exists(AutoSaveOutputChatHistory))
+            {
+                var conversationData = AIExtensionsChatHelpers.ReadConversationFromFile(AutoSaveOutputChatHistory);
+                
+                // Filter out any fake system request messages and build a clean summary
+                var cleanMessages = conversationData.Messages
+                    .Where(m => !(m.Role == ChatRole.User && GetMessageText(m).StartsWith("[System Request]")))
+                    .Take(10) // Limit to recent messages for context
+                    .ToList();
+                
+                var summary = string.Join("\n", cleanMessages.Select(m => 
+                    $"{m.Role}: {GetMessageText(m).Substring(0, Math.Min(200, GetMessageText(m).Length))}"));
+                
+                return Task.FromResult(summary);
+            }
+            
+            return Task.FromResult("New conversation - no prior context available.");
+        }
+        catch (Exception)
+        {
+            return Task.FromResult("Unable to read conversation context.");
+        }
+    }
+
+    /// <summary>
+    /// Extracts text content from a chat message.
+    /// </summary>
+    private string GetMessageText(ChatMessage message)
+    {
+        return string.Join("", message.Contents
+            .Where(c => c is TextContent)
+            .Cast<TextContent>()
+            .Select(c => c.Text));
     }
 
     /// <summary>
@@ -931,8 +991,23 @@ public class ChatCommand : CommandWithVariables
         {
             var text = result as String ?? "non-string result";
             ConsoleHelpers.WriteLine(text, ConsoleColor.DarkGray);
-            DisplayAssistantLabel();
+            
+            // Only redisplay assistant label for non-silent functions
+            if (!IsSilentFunction(name))
+            {
+                DisplayAssistantLabel();
+            }
         }
+    }
+
+    /// <summary>
+    /// Determines if a function should be handled silently (no assistant label redisplay)
+    /// </summary>
+    /// <param name="functionName">The name of the function to check</param>
+    /// <returns>True if the function should be silent, false otherwise</returns>
+    private static bool IsSilentFunction(string functionName)
+    {
+        return _silentFunctionNames.Contains(functionName);
     }
 
     private string ProcessTemplate(string template)
@@ -1265,4 +1340,14 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+    
+    /// <summary>
+    /// Function names that should be handled silently without redisplaying assistant label
+    /// </summary>
+    private static readonly HashSet<string> _silentFunctionNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "UpdateConversationTitle",
+        "UpdateConversationDescription", 
+        "GetConversationMetadata"
+    };
 }

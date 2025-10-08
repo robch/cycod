@@ -19,12 +19,16 @@ public class ConversationMetadataHelperFunctions
         _chatCommand = chatCommand ?? throw new ArgumentNullException(nameof(chatCommand));
     }
     
-    [Description("Updates the title of the current conversation. Use this when you want to give the conversation a descriptive, concise title based on the main topic or purpose.")]
+    [Description("Updates the title of the current conversation. You should only use this function when the conversation has no title, or when the conversation has shifted significantly from the previous title. NEVER update a title more than once in a single reply.")]
     public string UpdateConversationTitle(
         [Description("A concise, descriptive title for the conversation (max 200 characters)")] string title)
     {
         try
         {
+            if (title.Equals(_chatCommand.ConversationMetadata.Title, StringComparison.OrdinalIgnoreCase))
+            {
+                return "Title is already set to the specified value.";
+            }
             _chatCommand.UpdateConversationTitle(title);
             return $"Successfully updated conversation title to: \"{title}\"";
         }
