@@ -8,7 +8,9 @@ public class ShellCommandToolHelperFunctions
         "WARNING: This is a blocking operation that waits for command completion before returning.")]
     public async Task<string> RunBashCommand(
         [Description("The bash command to run.")] string command,
-        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000)
+        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         try
         {
@@ -24,7 +26,7 @@ public class ShellCommandToolHelperFunctions
                 output += Environment.NewLine + $"<exited with exit code {result.ExitCode}>";
             }
 
-            return output;
+            return TextTruncationHelper.TruncateOutput(output, maxCharsPerLine, maxTotalChars);
         }
         catch (Exception ex)
         {
@@ -38,7 +40,9 @@ public class ShellCommandToolHelperFunctions
         "WARNING: This is a blocking operation that waits for command completion before returning.")]
     public async Task<string> RunCmdCommand(
         [Description("The cmd command to run.")] string command,
-        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000)
+        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         try
         {
@@ -54,7 +58,7 @@ public class ShellCommandToolHelperFunctions
                 output += Environment.NewLine + $"<exited with exit code {result.ExitCode}>";
             }
 
-            return output;
+            return TextTruncationHelper.TruncateOutput(output, maxCharsPerLine, maxTotalChars);
         }
         catch (Exception ex)
         {
@@ -68,7 +72,9 @@ public class ShellCommandToolHelperFunctions
         "WARNING: This is a blocking operation that waits for command completion before returning.")]
     public async Task<string> RunPowershellCommand(
         [Description("The PowerShell command to run.")] string command,
-        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000)
+        [Description("Timeout in milliseconds for the command execution.")] int timeoutMs = 60000,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
         try
         {
@@ -84,7 +90,7 @@ public class ShellCommandToolHelperFunctions
                 output += Environment.NewLine + $"<exited with exit code {result.ExitCode}>";
             }
 
-            return output;
+            return TextTruncationHelper.TruncateOutput(output, maxCharsPerLine, maxTotalChars);
         }
         catch (Exception ex)
         {

@@ -1,0 +1,30 @@
+# Test custom log file name
+
+workingDirectory: ../../../testresults/cycodt/logger/log-file-tests
+class: log-file-tests
+tags: [cycodt, logger]
+tests:
+
+- name: Test log file creation with custom filename for cycodt
+  parallelize: false
+  steps:
+  - name: Run cycodt with custom log file and verify
+    bash: |
+      cycodt version --log cycodt-test-custom.log
+      cycodmd cycodt-test-custom.log exception-log-*.log
+    expect-regex: |
+      Version:
+      cycodt-test-custom\.log
+      File logger initialized with file:
+      Memory logger configured to dump to
+      exception-cycodt-test-custom\.log
+      Logging system fully initialized
+    not-expect-regex: |
+      ## exception-log-.*\.log
+
+  - name: Clean up test log files
+    bash: |
+      rm -f cycodt-test-custom.log exception-cycodt-test-custom.log
+      echo "Cleanup completed"
+    expect-regex: |
+      Cleanup completed

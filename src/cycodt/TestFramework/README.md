@@ -2,6 +2,155 @@
 
 `cycodt` is a YAML-based test framework/runner that can be used to run tests on any command-line tool or script. It is designed to be simple to use and understand, and to be able to run tests in parallel.
 
+## Command Line Usage
+
+### Listing Tests
+```bash
+dotnet run --project src/cycodt/cycodt.csproj list --file <test_file.yaml>
+```
+
+### Running Tests
+Run a specific test:
+```bash
+dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml> --test "<test_name>"
+```
+
+Run all tests in a file:
+```bash
+dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml>
+```
+
+Run tests containing specific text (searches all content including test names, tags, commands, etc.):
+```bash
+dotnet run --project src/cycodt/cycodt.csproj run --contains "<search_text>"
+```
+
+Run tests from multiple files matching a pattern:
+```bash
+dotnet run --project src/cycodt/cycodt.csproj run --files "**/log-*.yaml"
+```
+
+### Test Identification
+Tests are identified using a fully qualified name format:
+`yaml.<filename>.<classname>.<testname>`
+
+### Test Results
+By default, test results are saved to a `test-results.trx` file in the directory where the command is run. You can specify a different output file using the `--output-file` parameter.
+
+### Best Practices for Test Creation
+
+#### YAML Formatting
+- Use `|` (pipe) for multi-line scripts where line breaks need to be preserved:
+  ```yaml
+  bash: |
+    echo "Line 1"
+    echo "Line 2"
+  ```
+- Use `>` (folded) when line breaks should be replaced with spaces
+- Indentation is significant - maintain consistent indentation for each block
+
+#### Regex Expectations
+- Each line in a multi-line `expect-regex` is a separate pattern
+- Patterns match substrings of output lines (not necessarily entire lines)
+- Don't include quotes around patterns unless they're part of what you're matching
+- For complex patterns, escape special characters (e.g., `\.` for literal periods)
+  ```yaml
+  expect-regex: |
+    File logger initialized with file: .*custom\.log
+    Memory logger configured to dump to .*exception-custom\.log
+  ```
+
+#### Test Structure
+- Include clear test names that describe what's being tested
+- Use the `steps` feature for tests that require multiple operations
+- Add cleanup steps to remove files or resources created during tests
+- Group related tests using `class` and `area`
+- Use tags to categorize tests for selective execution
+
+#### Effective Testing Patterns
+
+**File Creation and Content Verification:**
+Use `cycodmd` with patterns to verify both file creation AND content in one clean step:
+```yaml
+- name: Test file creation and content
+  steps:
+  - name: Run command and verify file
+    bash: |
+      my-command --output my-file.log
+      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- my-file.log
+    expect-regex: |
+      Expected content pattern
+      Another expected pattern
+```
+
+**Side Effect Detection:**
+Use `not-expect-regex` to ensure unwanted files or outputs don't appear:
+```yaml
+- name: Test no unwanted side effects
+  steps:
+  - name: Run command and check for clean execution
+    bash: |
+      my-command --create files
+      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- "*.log" "exception-*.log"
+    expect-regex: |
+      Expected file pattern
+    not-expect-regex: |
+      ## exception-.*\.log
+```
+
+**Cleanup Strategy:**
+Do all verification first, then clean up in the final step to allow debugging of failed tests:
+```yaml
+- name: Test with proper cleanup
+  steps:
+  - name: Run command and verify results
+    bash: |
+      my-command --create files
+      dotnet run --project ../../src/cycodmd/cycodmd.csproj -- "*.log"
+    expect-regex: |
+      Expected patterns
+    not-expect-regex: |
+      Unwanted patterns
+  
+  - name: Clean up test files
+    bash: |
+      rm -f *.log
+      echo "Cleanup completed"
+    expect-regex: |
+      Cleanup completed
+```
+
+**Debugging Failed Tests:**
+To see the full output when debugging, temporarily add an impossible pattern to `expect-regex`:
+```yaml
+expect-regex: |
+  Normal patterns...
+  THIS-WONT-BE-THERE-SO-WE-SEE-FULL-OUTPUT
+```
+
+**Comments and Documentation:**
+- Keep bash comments minimal - step names should be self-documenting
+- Avoid redundant comments that just repeat what the command does
+- Focus comments on complex logic or non-obvious requirements
+
+**Handling Tests for Broken Product Functionality:**
+When writing tests that discover broken product functionality, mark them as optional with a descriptive category:
+```yaml
+class: broken-feature-tests
+tag: cycod
+optional: broken-test
+tests:
+- name: Test that should pass but fails due to product bug
+  # Test content here
+```
+
+This approach:
+- Documents the expected behavior through comprehensive tests
+- Excludes broken tests from normal test runs to avoid noise
+- Allows running broken tests selectively with `--include-optional broken-test`
+- Provides reproduction steps and evidence for bug reports
+- Keeps tests ready for when the functionality is fixed
+
 Example:
 
 ```yaml

@@ -20,7 +20,7 @@ public class ConfigStore
     {
         EnsureLoaded();
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
+        Logger.Info($"Loading config file: {fileName}");
         var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
         _configFiles.Add(configFile);
     }
@@ -31,7 +31,7 @@ public class ConfigStore
 
         foreach (var fileName in fileNames)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {fileName}");
+            Logger.Info($"Loading config file: {fileName}");
             var configFile = ConfigFile.FromFile(fileName, ConfigFileScope.FileName);
             _configFiles.Add(configFile);
         }
@@ -184,7 +184,11 @@ public class ConfigStore
         if (keyParts.Length == 0) return false;
 
         SetNestedValue(configFile.Settings, keyParts, value);
-        if (save) configFile.Save();
+        if (save) 
+        {
+            configFile.Save();
+            Logger.Info($"Config: Updated '{key}' in {configFile.FileName}");
+        }
 
         return true;
     }
@@ -215,7 +219,11 @@ public class ConfigStore
             if (configFile.Settings.ContainsKey(keyParts[0]))
             {
                 configFile.Settings.Remove(keyParts[0]);
-                if (save) configFile.Save();
+                if (save)
+                {
+                    configFile.Save();
+                    Logger.Info($"Config: Cleared '{key}' in {configFile.FileName}");
+                }
 
                 return true;
             }
@@ -238,7 +246,11 @@ public class ConfigStore
         if (parent.ContainsKey(lastKey))
         {
             parent.Remove(lastKey);
-            if (save) configFile.Save();
+            if (save)
+            {
+                configFile.Save();
+                Logger.Info($"Config: Cleared nested key '{key}' in {configFile.FileName}");
+            }
 
             return true;
         }
@@ -273,7 +285,7 @@ public class ConfigStore
             return true;
         }
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; '{value}' already exists in '{key}' list");        
+        ConsoleHelpers.WriteDebugLine($"ConfigStore.AddToList; '{value}' already exists in '{key}' list");
         return false;
     }
 
@@ -373,7 +385,8 @@ public class ConfigStore
     {
         var dotNotationKey = KnownSettings.ToDotNotation(key);
         _commandLineSettings[dotNotationKey] = value;
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.SetFromCommandLine; set '{dotNotationKey}' to '{value}'");
+        var displayValue = KnownSettings.IsSecret(dotNotationKey) ? "<secret>" : value?.ToString();
+        Logger.Info($"Config: Set command line setting '{dotNotationKey}' to '{displayValue}'");
         return true;
     }
     
@@ -518,11 +531,11 @@ public class ConfigStore
         var configPath = ConfigFileHelpers.FindConfigFile(scope);
         if (configPath == null)
         {
-            ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; no config file found for {scope} scope");
+            Logger.Info($"Config: No config file found for {scope} scope");
             return;
         }
 
-        ConsoleHelpers.WriteDebugLine($"ConfigStore.LoadConfig; loading config file from {configPath}");
+        Logger.Info($"Config: Loading config file from {configPath} for {scope} scope");
         var configFile = ConfigFile.FromFile(configPath, scope);
         _configFiles.Add(configFile);
     }

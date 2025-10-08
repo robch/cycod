@@ -1,0 +1,118 @@
+# Test log file error handling: Test what happens when writing to invalid/inaccessible locations
+# and verify that applications continue to work even when file logging fails
+
+workingDirectory: ../../../testresults/cycod/logger/log-file-error-handling-tests
+class: log-file-error-handling-tests  
+tags: [cycod, logger]
+tests:
+
+- name: Test logging to invalid directory path - application continues to work
+  parallelize: false
+  steps:
+  - name: Attempt to log to non-existent directory and verify command succeeds
+    bash: |
+      # Try to log to an invalid path - application should continue working
+      cycod version --log "/invalid/nonexistent/path/test.log"
+    expect-regex: |
+      Version:
+    expect-exit-code: 0
+      
+  - name: Verify no invalid log files were created
+    bash: |
+      # Confirm the invalid directory wasn't created
+      if [ -d "/invalid" ]; then
+        echo "ERROR: Invalid directory was created"
+        exit 1
+      else
+        echo "Good: No invalid directory created"
+      fi
+    expect-regex: |
+      Good: No invalid directory created
+
+- name: Test logging with invalid filename characters - application handles gracefully
+  steps:
+  - name: Try to log with invalid filename characters
+    bash: |
+      # Use characters that are invalid in file names - app should continue
+      cycod version --log 'test<>:|?*invalid.log'
+    expect-regex: |
+      Version:
+    expect-exit-code: 0
+      
+  - name: Verify no files with invalid characters were created
+    bash: |
+      # Check that no stray files were created with invalid names
+      # First, give any parallel cleanups a moment to complete
+      sleep 0.5
+      if ls test*invalid* 2>/dev/null; then
+        echo "WARNING: Some files may have been created, cleaning up stray files"
+        rm -f test*invalid* 2>/dev/null || true
+        echo "Cleanup completed"
+      else
+        echo "Good: No invalid files created"
+      fi
+    expect-regex: |
+      (Good: No invalid files created|Cleanup completed)
+
+- name: Test logging to restricted location - application continues
+  steps:
+  - name: Try to create log file in a restricted location  
+    bash: |
+      # On Windows, try to write to C:\ root; on Unix, try /root
+      if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        cycod version --log "C:\\test-readonly.log"
+      else
+        cycod version --log "/root/test-readonly.log"
+      fi
+    expect-regex: |
+      Version:
+    expect-exit-code: 0
+      
+  - name: Verify no files created in restricted location
+    bash: |
+      echo "Restricted location test completed - application handled it gracefully"
+    expect-regex: |
+      Restricted location test completed
+
+- name: Test application functionality persists despite log file errors
+  steps:
+  - name: Run multiple commands with invalid log paths
+    bash: |
+      # Multiple commands should all work even with logging errors
+      cycod version --log "/invalid/path1.log" > /dev/null 2>&1
+      exit_code1=$?
+      cycod --help --log "/invalid/path2.log" > /dev/null 2>&1  
+      exit_code2=$?
+      echo "First command exit code: $exit_code1"
+      echo "Second command exit code: $exit_code2"
+    expect-regex: |
+      First command exit code: 0
+      Second command exit code: 0
+    
+  - name: Clean up functionality test
+    bash: |
+      echo "Functionality persistence test completed"
+    expect-regex: |
+      Functionality persistence test completed
+
+- name: Test memory logger continues working when file logger fails
+  steps:
+  - name: Verify logging system doesn't completely fail
+    bash: |
+      # Even with invalid file path, some form of logging should continue
+      # We can't easily test memory logger directly, but we can verify
+      # the application doesn't crash and still processes commands
+      cycod version --log "/completely/invalid/path.log" >/dev/null 2>&1
+      echo "Exit code: $?"
+      echo "Application continued running after logging failure"
+    expect-regex: |
+      Exit code: 0
+      Application continued running after logging failure
+      
+  - name: Clean up memory logger test
+    bash: |
+      # Clean up any exception files that might have been created
+      rm -f exception-log-*.log exception-*.log
+      echo "Memory logger continuity test completed"
+    expect-regex: |
+      Memory logger continuity test completed

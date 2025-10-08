@@ -8,7 +8,7 @@ public class YamlTestCaseRunner
 {
     public static IEnumerable<TestResult> TestCaseGetResults(TestCase test, string cli, string? runProcess, string? script, string? shell, string? arguments, string? input, string? expectGpt, string? expectRegex, string? notExpectRegex, string? env, string? workingDirectory, int timeout, int expectExitCode, bool skipOnFailure, string? @foreach)
     {
-        Logger.Log($"YamlTestCaseRunner.TestCaseGetResults: ENTER");
+        TestLogger.Log($"YamlTestCaseRunner.TestCaseGetResults: ENTER");
 
         foreach (var foreachItem in ExpandForEachGroups(@foreach))
         {
@@ -20,7 +20,7 @@ public class YamlTestCaseRunner
             yield return result;
         }
 
-        Logger.Log($"YamlTestCaseRunner.TestCaseGetResults: EXIT");
+        TestLogger.Log($"YamlTestCaseRunner.TestCaseGetResults: EXIT");
     }
 
     #region private methods
@@ -121,7 +121,7 @@ public class YamlTestCaseRunner
                 .ToList();
         }
 
-        Logger.Log($"YamlTestCaseRunner.ExpandForEachGroups: expanded count = {dicts.Count()}");
+        TestLogger.Log($"YamlTestCaseRunner.ExpandForEachGroups: expanded count = {dicts.Count()}");
 
         return dicts.Select(d =>
         {
@@ -215,7 +215,7 @@ public class YamlTestCaseRunner
         var kvs = new List<KeyValuePair<string, string>>();
         if (!string.IsNullOrEmpty(json))
         {
-            Logger.Log($"KeyValuePairsFromJson: 'json'='{json}'");
+            TestLogger.Log($"KeyValuePairsFromJson: 'json'='{json}'");
             using JsonDocument document = JsonDocument.Parse(json);
             var parsed = document.RootElement;
             if (parsed.ValueKind == JsonValueKind.String && allowSimpleString)
@@ -227,7 +227,7 @@ public class YamlTestCaseRunner
             else if (parsed.ValueKind != JsonValueKind.Object)
             {
                 // if it's not a simple string, it must be an object... if it's not, we'll just log and continue
-                Logger.Log("KeyValuePairsFromJson: Invalid json (only supports `\"string\"`, or `{\"mapItem1\": \"value1\", \"...\": \"...\"}`!");
+                TestLogger.Log("KeyValuePairsFromJson: Invalid json (only supports `\"string\"`, or `{\"mapItem1\": \"value1\", \"...\": \"...\"}`!");
             }
             else
             {
@@ -300,7 +300,7 @@ public class YamlTestCaseRunner
 
     private static TestResult CreateTestResult(TestCase test, DateTime start, DateTime stop, string stdOut, string stdErr, string errorMessage, string stackTrace, string additional, string debugTrace, TestOutcome outcome)
     {
-        Logger.Log($"YamlTestCaseRunner.CreateTestResult({test.DisplayName})");
+        TestLogger.Log($"YamlTestCaseRunner.CreateTestResult({test.DisplayName})");
 
         var result = new TestResult(test) { Outcome = outcome };
         result.Messages.Add(new TestResultMessage(TestResultMessage.StandardOutCategory, stdOut));
@@ -313,15 +313,15 @@ public class YamlTestCaseRunner
         result.EndTime = stop;
         result.Duration = stop - start;
 
-        Logger.Log("----------------------------\n\n");
-        Logger.Log($"    STDOUT: {stdOut}");
-        Logger.Log($"    STDERR: {stdErr}");
-        Logger.Log($"     STACK: {stackTrace}");
-        Logger.Log($"     ERROR: {errorMessage}");
-        Logger.Log($"   OUTCOME: {outcome}");
-        Logger.Log($"ADDITIONAL: {additional}");
-        Logger.Log($"DEBUGTRACE: {debugTrace}");
-        Logger.Log("----------------------------\n\n");
+        TestLogger.Log("----------------------------\n\n");
+        TestLogger.Log($"    STDOUT: {stdOut}");
+        TestLogger.Log($"    STDERR: {stdErr}");
+        TestLogger.Log($"     STACK: {stackTrace}");
+        TestLogger.Log($"     ERROR: {errorMessage}");
+        TestLogger.Log($"   OUTCOME: {outcome}");
+        TestLogger.Log($"ADDITIONAL: {additional}");
+        TestLogger.Log($"DEBUGTRACE: {debugTrace}");
+        TestLogger.Log("----------------------------\n\n");
 
         return result;
     }

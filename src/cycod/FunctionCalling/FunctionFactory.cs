@@ -154,7 +154,8 @@ public class FunctionFactory
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"Error calling function '{function.Name}': {ex.Message}");
+            // Log the error but don't show to user in console since this will be returned as function result
+            ConsoleHelpers.LogException(ex, $"Error calling function '{function.Name}'", showToUser: false);
             return "Exception: " + ex.Message;
         }
     }

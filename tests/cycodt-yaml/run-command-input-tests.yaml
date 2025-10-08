@@ -14,9 +14,6 @@ tests:
     ^user-function: /file => \.\.\.\r?$\n
     ^user-function: /file => ## README\.md\r?$\n
     ^\r?$\n
-    ^Modified: .*\r?$\n
-    ^Size: .*\r?$\n
-    ^\r?$\n
     ^```markdown\r?$\n
     ^# README\.md\r?$\n
     ^\r?$\n
@@ -26,4 +23,3 @@ tests:
     ^\r?$\n
     ^User: \r?$\n
     ^User: exit\r?$\n
-

@@ -114,15 +114,28 @@ public class FileHelpers
         try
         {
             ConsoleHelpers.DisplayStatus($"Processing: {fileName} ...");
+            
+            foreach (var pattern in includeFileContainsPatternList)
+            {
+                Logger.Info($"Checking file '{fileName}' against include content pattern: '{pattern}'");
+            }
+            
+            foreach (var pattern in excludeFileContainsPatternList)
+            {
+                Logger.Info($"Checking file '{fileName}' against exclude content pattern: '{pattern}'");
+            }
 
             var content = ReadAllText(fileName);
             var includeFile = includeFileContainsPatternList.All(regex => regex.IsMatch(content));
             var excludeFile = excludeFileContainsPatternList.Count > 0 && excludeFileContainsPatternList.Any(regex => regex.IsMatch(content));
+            
+            Logger.Info($"File '{fileName}' content match result: {includeFile && !excludeFile}");
 
             return includeFile && !excludeFile;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.Error($"Error checking file '{fileName}' for pattern match: {ex.Message}");
             return false;
         }
         finally
@@ -147,17 +160,26 @@ public class FileHelpers
         ConsoleHelpers.WriteDebugLine($"timeStamp: {timeStamp}");
 
         return template
+            .Replace("{FileName}", fileName)
             .Replace("{fileName}", fileName)
             .Replace("{filename}", fileName)
+            .Replace("{FilePath}", filePath)
             .Replace("{filePath}", filePath)
             .Replace("{filepath}", filePath)
+            .Replace("{FileBase}", fileBase)
             .Replace("{fileBase}", fileBase)
             .Replace("{filebase}", fileBase)
+            .Replace("{FileExt}", fileExt)
             .Replace("{fileExt}", fileExt)
             .Replace("{fileext}", fileExt)
+            .Replace("{TimeStamp}", timeStamp)
             .Replace("{timeStamp}", timeStamp)
             .Replace("{timestamp}", timeStamp)
+            .Replace("{Time}", time)
             .Replace("{time}", time)
+            .Replace("{ProgramName}", ProgramInfo.Name)
+            .Replace("{programName}", ProgramInfo.Name)
+            .Replace("{programname}", ProgramInfo.Name)
             .TrimEnd(' ', '/', '\\');
     }
 
@@ -247,6 +269,34 @@ public class FileHelpers
         excludeFileNamePatternList ??= new List<Regex>();
         includeFileContainsPatternList ??= new List<Regex>();
         excludeFileContainsPatternList ??= new List<Regex>();
+        
+        // Log search parameters
+        Logger.Info($"Finding files with {globs.Count} glob pattern(s): '{string.Join("', '", globs)}'");
+        
+        if (excludeGlobs.Any())
+            Logger.Info($"Using {excludeGlobs.Count} exclude glob(s): '{string.Join("', '", excludeGlobs)}'");
+            
+        if (excludeFileNamePatternList.Any())
+            Logger.Info($"Using {excludeFileNamePatternList.Count} exclude filename pattern(s): '{string.Join("', '", excludeFileNamePatternList)}'");
+        
+        // Log content patterns (most important for our debugging)
+        if (includeFileContainsPatternList.Any())
+        {
+            Logger.Info($"Using {includeFileContainsPatternList.Count} include content pattern(s):");
+            foreach (var pattern in includeFileContainsPatternList)
+            {
+                Logger.Info($"  Include content pattern: '{pattern}'");
+            }
+        }
+        
+        if (excludeFileContainsPatternList.Any())
+        {
+            Logger.Info($"Using {excludeFileContainsPatternList.Count} exclude content pattern(s):");
+            foreach (var pattern in excludeFileContainsPatternList)
+            {
+                Logger.Info($"  Exclude content pattern: '{pattern}'");
+            }
+        }
         
         var excludeFiles = new HashSet<string>(FilesFromGlobs(excludeGlobs));
         var files = FilesFromGlobs(globs)

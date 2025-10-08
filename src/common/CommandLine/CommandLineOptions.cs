@@ -33,6 +33,7 @@ public class CommandLineOptions
 
     public int ThreadCount { get; private set; }
     public string? WorkingDirectory { get; set; }
+    public string? LogFile { get; set; }
     public List<Command> Commands;
 
     public string[] AllOptions;
@@ -399,6 +400,13 @@ public class CommandLineOptions
             this.WorkingDirectory = dirPath;
             i += max1Arg.Count();
         }
+        else if (arg == "--log")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var logFile = max1Arg.FirstOrDefault() ?? DefaultLogFileNameTemplate;
+            this.LogFile = logFile;
+            i += max1Arg.Count();
+        }
         else
         {
             parsed = false;
@@ -588,10 +596,13 @@ public class CommandLineOptions
     {
         try
         {
-            return new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            Logger.Info($"Creating regex pattern for '{arg}': '{pattern}'");
+            var regex = new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            return regex;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            Logger.Error($"Failed to create regex pattern for '{arg}': '{pattern}' - {ex.Message}");
             throw new CommandLineException($"Invalid regular expression pattern for {arg}: {pattern}");
         }
     }
@@ -662,4 +673,6 @@ public class CommandLineOptions
         var message = $"Invalid argument: {arg}";
         return new CommandLineException(message, command?.GetHelpTopic() ?? "");
     }
+
+    private const string DefaultLogFileNameTemplate = "log-{ProgramName}-{time}.log";
 }

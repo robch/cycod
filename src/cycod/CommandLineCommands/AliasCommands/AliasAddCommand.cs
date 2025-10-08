@@ -111,7 +111,7 @@ class AliasAddCommand : AliasBaseCommand
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteErrorLine($"Error creating alias: {ex.Message}");
+            ConsoleHelpers.LogException(ex, "Error creating alias");
             return 1;
         }
     }
