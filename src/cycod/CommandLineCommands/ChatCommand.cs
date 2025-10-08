@@ -48,6 +48,16 @@ public class ChatCommand : CommandWithVariables
         clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
         clone.ImagePatterns = new List<string>(this.ImagePatterns);
         
+        // Copy metadata properties
+        clone.ConversationMetadata = new ConversationMetadata
+        {
+            Title = this.ConversationMetadata.Title,
+            Description = this.ConversationMetadata.Description,
+            CreatedAt = this.ConversationMetadata.CreatedAt,
+            UpdatedAt = this.ConversationMetadata.UpdatedAt
+        };
+        clone.AutoGenerateMetadata = this.AutoGenerateMetadata;
+        
         return clone;
     }
 
@@ -93,6 +103,10 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
         factory.AddFunctions(new ImageHelperFunctions(this));
+        factory.AddFunctions(new ConversationMetadataHelperFunctions(this));
+        
+        // Store factory reference for metadata generation
+        _functionFactory = factory;
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -113,11 +127,19 @@ public class ChatCommand : CommandWithVariables
             var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
             if (loadChatHistory)
             {
-                chat.LoadChatHistory(InputChatHistory!,
+                var loadedMetadata = chat.LoadChatHistory(InputChatHistory!,
                     maxPromptTokenTarget: MaxPromptTokenTarget,
                     maxToolTokenTarget: MaxToolTokenTarget,
                     maxChatTokenTarget: MaxChatTokenTarget,
-                    useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                    useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat,
+                    returnMetadata: true);
+                    
+                if (loadedMetadata != null)
+                {
+                    ConversationMetadata = loadedMetadata;
+                    _hasGeneratedInitialTitle = !string.IsNullOrEmpty(loadedMetadata.Title);
+                    ConsoleHelpers.WriteDebugLine($"Loaded conversation metadata - Title: '{loadedMetadata.Title}', Description: '{loadedMetadata.Description}'");
+                }
             }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
@@ -153,7 +175,11 @@ public class ChatCommand : CommandWithVariables
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+                
+                // Process any pending metadata generation requests
+                await ProcessPendingMetadataGeneration(chat);
             }
 
             return 0;
@@ -507,10 +533,15 @@ public class ChatCommand : CommandWithVariables
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
-        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
+        // Increment exchange counter and check for metadata updates
+        _exchangeCount++;
+        CheckAndUpdateMetadata(messages);
+
+        // Save with metadata
+        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory, ConversationMetadata);
         if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            TrySaveChatHistoryToFile(messages, OutputChatHistory);
+            TrySaveChatHistoryToFile(messages, OutputChatHistory, ConversationMetadata);
         }
         
         var lastMessage = messages.LastOrDefault();
@@ -530,6 +561,197 @@ public class ChatCommand : CommandWithVariables
         {
             ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
         }
+    }
+
+    private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath, ConversationMetadata metadata)
+    {
+        if (filePath == null) return;
+        
+        try
+        {
+            messages.SaveChatHistoryToFile(filePath, metadata, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
+        }
+    }
+
+    /// <summary>
+    /// Checks if metadata should be updated and schedules generation if needed.
+    /// </summary>
+    private void CheckAndUpdateMetadata(IList<ChatMessage> messages)
+    {
+        if (!AutoGenerateMetadata) return;
+        
+        // Generate initial title after first exchange
+        if (!_hasGeneratedInitialTitle && _exchangeCount >= InitialTitleGenerationThreshold)
+        {
+            ScheduleMetadataGeneration(MetadataGenerationType.InitialTitle, messages);
+            _hasGeneratedInitialTitle = true;
+        }
+    }
+
+    /// <summary>
+    /// Types of metadata generation operations.
+    /// </summary>
+    private enum MetadataGenerationType
+    {
+        InitialTitle,
+        ManualUpdate
+    }
+
+    /// <summary>
+    /// Configuration settings for metadata generation.
+    /// </summary>
+    public static class MetadataGenerationSettings
+    {
+        public const string InitialTitlePrompt = "Based on our conversation so far, please generate a concise, descriptive title (max 200 characters) that captures the main topic or purpose. Use the UpdateConversationTitle function.";
+        
+        public const int MaxGenerationAttempts = 2;
+        public const int GenerationTimeoutSeconds = 30;
+    }
+
+    /// <summary>
+    /// Represents a pending metadata generation request.
+    /// </summary>
+    private class PendingMetadataGeneration
+    {
+        public MetadataGenerationType Type { get; set; }
+        public DateTime ScheduledAt { get; set; } = DateTime.UtcNow;
+        public int AttemptCount { get; set; } = 0;
+    }
+
+    /// <summary>
+    /// Queue for pending metadata generation requests.
+    /// </summary>
+    private readonly Queue<PendingMetadataGeneration> _pendingMetadataUpdates = new();
+
+    /// <summary>
+    /// Schedules metadata generation for later processing.
+    /// </summary>
+    private void ScheduleMetadataGeneration(MetadataGenerationType type, IList<ChatMessage> messages)
+    {
+        // Don't queue duplicates
+        if (_pendingMetadataUpdates.Any(p => p.Type == type))
+        {
+            return;
+        }
+        
+        _pendingMetadataUpdates.Enqueue(new PendingMetadataGeneration { Type = type });
+        ConsoleHelpers.WriteDebugLine($"Scheduled metadata generation: {type}");
+    }
+
+    /// <summary>
+    /// Processes any pending metadata generation requests.
+    /// </summary>
+    private async Task<bool> ProcessPendingMetadataGeneration(FunctionCallingChat chat)
+    {
+        if (!_pendingMetadataUpdates.Any())
+        {
+            return false;
+        }
+        
+        var pending = _pendingMetadataUpdates.Dequeue();
+        
+        if (pending.AttemptCount >= MetadataGenerationSettings.MaxGenerationAttempts)
+        {
+            ConsoleHelpers.WriteDebugLine($"Max attempts reached for metadata generation: {pending.Type}");
+            return false;
+        }
+        
+        pending.AttemptCount++;
+        
+        try
+        {
+            // Only handle InitialTitle now - description updates are entirely AI-driven
+            if (pending.Type == MetadataGenerationType.InitialTitle)
+            {
+                var prompt = MetadataGenerationSettings.InitialTitlePrompt;
+                ConsoleHelpers.WriteDebugLine("Requesting initial title generation");
+                
+                // Add the generation request as a system message and process it
+                await RequestMetadataGeneration(chat, prompt);
+            }
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Failed to generate metadata ({pending.Type}): {ex.Message}");
+            
+            // Re-queue if under max attempts
+            if (pending.AttemptCount < MetadataGenerationSettings.MaxGenerationAttempts)
+            {
+                _pendingMetadataUpdates.Enqueue(pending);
+            }
+            
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Requests metadata generation from the AI using a system prompt.
+    /// </summary>
+    private async Task RequestMetadataGeneration(FunctionCallingChat chat, string prompt)
+    {
+        try
+        {
+            ConsoleHelpers.WriteDebugLine($"Requesting metadata generation with prompt: {prompt}");
+            
+            // Send the metadata generation request as a user message but make it clear it's a system request
+            var systemPrompt = $"[System Request] {prompt}";
+            
+            // Use the existing streaming completion method to handle the metadata generation
+            await CompleteChatStreamingAsync(chat, systemPrompt, new List<string>(),
+                (messages) => HandleUpdateMessages(messages),
+                (update) => { }, // No need for streaming callback for metadata generation
+                (name, args) => HandleFunctionCallApproval(_functionFactory!, name, args!),
+                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Error during metadata generation: {ex.Message}");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Reference to the function factory for metadata generation.
+    /// </summary>
+    private McpFunctionFactory? _functionFactory;
+
+    /// <summary>
+    /// Updates the conversation title.
+    /// </summary>
+    public void UpdateConversationTitle(string title)
+    {
+        if (string.IsNullOrWhiteSpace(title) || title.Length > ConversationMetadata.MaxTitleLength)
+        {
+            throw new ArgumentException($"Title must be between 1 and {ConversationMetadata.MaxTitleLength} characters");
+        }
+        
+        ConversationMetadata.Title = title.Trim();
+        ConversationMetadata.UpdateTimestamp();
+        
+        ConsoleHelpers.WriteDebugLine($"Updated conversation title: {title}");
+    }
+
+    /// <summary>
+    /// Updates the conversation description.
+    /// </summary>
+    public void UpdateConversationDescription(string description)
+    {
+        if (description?.Length > ConversationMetadata.MaxDescriptionLength)
+        {
+            throw new ArgumentException($"Description must be no more than {ConversationMetadata.MaxDescriptionLength} characters");
+        }
+        
+        ConversationMetadata.Description = description?.Trim();
+        ConversationMetadata.UpdateTimestamp();
+        
+        // Keep it silent as per user request
+        ConsoleHelpers.WriteDebugLine($"AI updated conversation description: {description}");
     }
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
@@ -939,6 +1161,11 @@ public class ChatCommand : CommandWithVariables
     private void AddAutoApproveToolDefaults()
     {
         _approvedFunctionCallNames.Add("Think");
+        
+        // Auto-approve metadata functions for silent operation
+        _approvedFunctionCallNames.Add("UpdateConversationTitle");
+        _approvedFunctionCallNames.Add("UpdateConversationDescription");
+        _approvedFunctionCallNames.Add("GetConversationMetadata");
 
         var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApprove).AsList();
         foreach (var item in items)
@@ -1006,6 +1233,19 @@ public class ChatCommand : CommandWithVariables
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
     
     public List<string> ImagePatterns = new();
+
+    // Conversation metadata properties
+    public ConversationMetadata ConversationMetadata { get; private set; } = new();
+    
+    // Configuration properties for metadata
+    public bool AutoGenerateMetadata { get; set; } = true;
+    
+    // Tracking properties for metadata generation
+    private int _exchangeCount = 0;
+    private bool _hasGeneratedInitialTitle = false;
+    
+    // Constants for metadata behavior
+    private const int InitialTitleGenerationThreshold = 1;
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;

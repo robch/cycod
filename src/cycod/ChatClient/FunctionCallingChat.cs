@@ -69,9 +69,42 @@ public class FunctionCallingChat : IAsyncDisposable
         _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
     }
 
+    /// <summary>
+    /// Loads chat history from file and returns the conversation metadata.
+    /// </summary>
+    public ConversationMetadata? LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, bool returnMetadata = true)
+    {
+        if (returnMetadata)
+        {
+            var conversationData = AIExtensionsChatHelpers.ReadConversationFromFile(fileName, useOpenAIFormat);
+            
+            // Clear current messages and add loaded messages
+            _messages.Clear();
+            _messages.AddRange(conversationData.Messages);
+            _messages.FixDanglingToolCalls();
+            _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
+            
+            return conversationData.Metadata;
+        }
+        else
+        {
+            // Use the old method for backward compatibility
+            LoadChatHistory(fileName, maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget, useOpenAIFormat);
+            return null;
+        }
+    }
+
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
         _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
+    }
+
+    /// <summary>
+    /// Saves chat history to file with conversation metadata.
+    /// </summary>
+    public void SaveChatHistoryToFile(string fileName, ConversationMetadata? metadata, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    {
+        _messages.SaveChatHistoryToFile(fileName, metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)

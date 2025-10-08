@@ -9,6 +9,46 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
 
+/// <summary>
+/// Represents metadata for a conversation, including title and description.
+/// </summary>
+public class ConversationMetadata
+{
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
+    // Validation constants
+    public const int MaxTitleLength = 200;
+    public const int MaxDescriptionLength = 1000;
+    
+    public void UpdateTimestamp() => UpdatedAt = DateTime.UtcNow;
+    
+    public bool IsValid() => 
+        (Title?.Length ?? 0) <= MaxTitleLength && 
+        (Description?.Length ?? 0) <= MaxDescriptionLength;
+}
+
+/// <summary>
+/// Represents a conversation containing both metadata and chat messages.
+/// </summary>
+public class ConversationData
+{
+    public ConversationMetadata? Metadata { get; set; }
+    public IList<ChatMessage> Messages { get; set; } = new List<ChatMessage>();
+}
+
+/// <summary>
+/// Constants for conversation metadata handling.
+/// </summary>
+public static class ConversationConstants
+{
+    public const string MetadataKey = "_meta";
+    public const string DefaultTitle = "Untitled Conversation";
+    public const string DefaultDescription = "A conversation with the AI assistant";
+}
+
 public static class AIExtensionsChatHelpers
 {
     public static ChatMessage? ChatMessageFromJson(string json)
@@ -42,6 +82,123 @@ public static class AIExtensionsChatHelpers
         return messages;
     }
 
+    /// <summary>
+    /// Parses JSONL content and returns both metadata and chat messages.
+    /// </summary>
+    /// <param name="jsonl">The JSONL content to parse</param>
+    /// <returns>ConversationData containing metadata and messages</returns>
+    public static ConversationData ConversationDataFromJsonl(string jsonl)
+    {
+        var result = new ConversationData();
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        var messageLines = lines;
+        
+        // Check first line for metadata
+        if (lines.Length > 0 && IsMetadataLine(lines[0]))
+        {
+            result.Metadata = ExtractMetadataFromFirstLine(lines[0]);
+            messageLines = lines.Skip(1).ToArray();
+            
+            ConsoleHelpers.WriteDebugLine($"Loaded conversation metadata: title='{result.Metadata?.Title}', description='{result.Metadata?.Description}'");
+        }
+        else
+        {
+            ConsoleHelpers.WriteDebugLine("No metadata found in conversation file");
+        }
+        
+        // Process remaining lines as messages
+        result.Messages = ProcessMessageLines(messageLines);
+        
+        return result;
+    }
+
+    /// <summary>
+    /// Determines if a JSONL line contains metadata.
+    /// </summary>
+    /// <param name="line">The line to check</param>
+    /// <returns>True if the line contains metadata</returns>
+    private static bool IsMetadataLine(string line)
+    {
+        if (string.IsNullOrWhiteSpace(line)) return false;
+        
+        try
+        {
+            var jsonObject = JsonDocument.Parse(line);
+            return jsonObject.RootElement.TryGetProperty(ConversationConstants.MetadataKey, out _);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Extracts conversation metadata from the first line of a JSONL file.
+    /// </summary>
+    /// <param name="firstLine">The first line of the JSONL file</param>
+    /// <returns>ConversationMetadata or null if extraction fails</returns>
+    private static ConversationMetadata? ExtractMetadataFromFirstLine(string firstLine)
+    {
+        try
+        {
+            var jsonObject = JsonDocument.Parse(firstLine);
+            if (jsonObject.RootElement.TryGetProperty(ConversationConstants.MetadataKey, out var metadataElement))
+            {
+                return JsonSerializer.Deserialize<ConversationMetadata>(metadataElement.GetRawText(), _jsonlOptions);
+            }
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteLine($"Warning: Failed to parse conversation metadata - {ex.Message}", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteDebugLine($"Failed to parse metadata from line: {ex.Message}");
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Processes message lines from JSONL content.
+    /// </summary>
+    /// <param name="lines">The lines to process as chat messages</param>
+    /// <returns>List of chat messages</returns>
+    private static IList<ChatMessage> ProcessMessageLines(string[] lines)
+    {
+        var messages = new List<ChatMessage>();
+        
+        foreach (var line in lines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+            
+            var message = ChatMessageFromJson(line);
+            if (message != null)
+            {
+                messages.Add(message);
+            }
+        }
+        
+        return messages;
+    }
+
+    /// <summary>
+    /// Serializes conversation metadata into a JSONL line.
+    /// </summary>
+    /// <param name="metadata">The metadata to serialize</param>
+    /// <returns>Serialized metadata line</returns>
+    private static string SerializeMetadataLine(ConversationMetadata metadata)
+    {
+        if (!metadata.IsValid())
+        {
+            throw new ArgumentException("Conversation metadata validation failed");
+        }
+        
+        var metadataWrapper = new Dictionary<string, ConversationMetadata>
+        {
+            [ConversationConstants.MetadataKey] = metadata
+        };
+        
+        return JsonSerializer.Serialize(metadataWrapper, _jsonlOptions);
+    }
+
     public static string? AsJson(this ChatMessage message)
     {
         return JsonSerializer.Serialize(message, _jsonlOptions);
@@ -66,6 +223,54 @@ public static class AIExtensionsChatHelpers
         FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
+    /// <summary>
+    /// Saves chat history to file with conversation metadata.
+    /// </summary>
+    /// <param name="messages">The chat messages to save</param>
+    /// <param name="fileName">The file name to save to</param>
+    /// <param name="metadata">Conversation metadata to include</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    /// <param name="saveToFolderOnAccessDenied">Fallback folder on access denied</param>
+    public static void SaveChatHistoryToFile(this IList<ChatMessage> messages, string fileName, ConversationMetadata? metadata, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    {
+        var messagesJsonl = useOpenAIFormat
+            ? messages.ToOpenAIChatMessages(_jsonlOptions).AsJsonl()
+            : messages.AsJsonl();
+
+        var finalContent = messagesJsonl;
+
+        // Add metadata as first line if provided
+        if (metadata != null)
+        {
+            try
+            {
+                var metadataLine = SerializeMetadataLine(metadata);
+                finalContent = metadataLine + "\n" + messagesJsonl;
+                ConsoleHelpers.WriteDebugLine($"Saving conversation with metadata: title='{metadata.Title}', description='{metadata.Description}'");
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteLine($"Warning: Failed to serialize conversation metadata - {ex.Message}", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteDebugLine($"Failed to serialize metadata: {ex.Message}");
+                // Continue without metadata
+            }
+        }
+
+        FileHelpers.WriteAllText(fileName, finalContent, saveToFolderOnAccessDenied);
+    }
+
+    /// <summary>
+    /// Saves a complete conversation (metadata + messages) to file.
+    /// </summary>
+    /// <param name="conversation">The conversation data to save</param>
+    /// <param name="fileName">The file name to save to</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    /// <param name="saveToFolderOnAccessDenied">Fallback folder on access denied</param>
+    public static void SaveConversationToFile(this ConversationData conversation, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    {
+        conversation.Messages.SaveChatHistoryToFile(fileName, conversation.Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
+    }
+
     public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         var jsonl = FileHelpers.ReadAllText(fileName);
@@ -77,6 +282,52 @@ public static class AIExtensionsChatHelpers
         if (hasSystemMessage) messages.Clear();
 
         messages.AddRange(newMessages);
+    }
+
+    /// <summary>
+    /// Reads conversation data (metadata + messages) from file.
+    /// </summary>
+    /// <param name="fileName">The file name to read from</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    /// <returns>ConversationData containing metadata and messages</returns>
+    public static ConversationData ReadConversationFromFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    {
+        var jsonl = FileHelpers.ReadAllText(fileName);
+        
+        if (useOpenAIFormat)
+        {
+            // For OpenAI format, we need to handle it differently since it doesn't support custom metadata
+            var openAIMessages = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl).ToExtensionsAIChatMessages();
+            var result = new ConversationData();
+            result.Messages = openAIMessages.ToList();
+            
+            // Add default metadata for backward compatibility (per user request: Option B)
+            result.Metadata = new ConversationMetadata
+            {
+                Title = null,
+                Description = null
+            };
+            
+            ConsoleHelpers.WriteDebugLine("Loaded OpenAI format conversation - added default metadata");
+            return result;
+        }
+        else
+        {
+            var conversationData = ConversationDataFromJsonl(jsonl);
+            
+            // Add default metadata for backward compatibility if none exists (per user request: Option B)
+            if (conversationData.Metadata == null)
+            {
+                conversationData.Metadata = new ConversationMetadata
+                {
+                    Title = null,
+                    Description = null
+                };
+                ConsoleHelpers.WriteDebugLine("No existing metadata found - added default metadata");
+            }
+            
+            return conversationData;
+        }
     }
 
     public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
