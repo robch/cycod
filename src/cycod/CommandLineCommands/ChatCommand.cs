@@ -606,7 +606,7 @@ public class ChatCommand : CommandWithVariables
     /// </summary>
     public static class MetadataGenerationSettings
     {
-        public const string InitialTitlePrompt = "Based on our conversation so far, please generate a concise, descriptive title (max 200 characters) that captures the main topic or purpose. Use the UpdateConversationTitle function.";
+        public const string InitialTitlePrompt = "Based on our conversation so far, analyze whether a descriptive title is needed. If the conversation has a clear topic or purpose that would benefit from a title, use the UpdateConversationTitle function to set a concise, descriptive title (max 200 characters). If no meaningful title can be determined or if the conversation is too brief/generic to warrant a title, simply respond with 'No title needed' and do NOT call any functions.";
         
         public const int MaxGenerationAttempts = 2;
         public const int GenerationTimeoutSeconds = 30;
@@ -671,7 +671,7 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteDebugLine("Requesting initial title generation");
                 
                 // Add the generation request as a system message and process it
-                RequestMetadataGeneration(chat, prompt);
+                await RequestMetadataGeneration(chat, prompt);
             }
             
             return true;
@@ -954,6 +954,12 @@ public class ChatCommand : CommandWithVariables
 
     private void DisplayAssistantFunctionCall(string name, string args, object? result)
     {
+        // Skip display entirely for silent functions
+        if (IsSilentFunction(name))
+        {
+            return;
+        }
+        
         EnsureLineFeeds();
         switch (name)
         {
@@ -1241,6 +1247,7 @@ public class ChatCommand : CommandWithVariables
         _approvedFunctionCallNames.Add("UpdateConversationTitle");
         _approvedFunctionCallNames.Add("UpdateConversationDescription");
         _approvedFunctionCallNames.Add("GetConversationMetadata");
+        _approvedFunctionCallNames.Add("DeclineMetadataUpdate");
 
         var items = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppAutoApprove).AsList();
         foreach (var item in items)
@@ -1348,6 +1355,7 @@ public class ChatCommand : CommandWithVariables
     {
         "UpdateConversationTitle",
         "UpdateConversationDescription", 
-        "GetConversationMetadata"
+        "GetConversationMetadata",
+        "DeclineMetadataUpdate"
     };
 }

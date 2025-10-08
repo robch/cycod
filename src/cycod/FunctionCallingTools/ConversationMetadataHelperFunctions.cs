@@ -78,4 +78,12 @@ public class ConversationMetadataHelperFunctions
         
         return result.ToString();
     }
+    
+    [Description("Use this function when you determine that no metadata update is needed for the current conversation. This allows you to explicitly decline updating title or description when the existing metadata is appropriate or when the conversation doesn't warrant specific metadata.")]
+    public string DeclineMetadataUpdate(
+        [Description("Reason why no metadata update is needed (e.g., 'conversation too brief', 'existing title appropriate', 'no clear topic yet')")] string reason)
+    {
+        ConsoleHelpers.WriteDebugLine($"AI declined metadata update: {reason}");
+        return $"Metadata update declined: {reason}";
+    }
 }
