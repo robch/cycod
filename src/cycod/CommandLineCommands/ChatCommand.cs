@@ -660,13 +660,14 @@ public class ChatCommand : CommandWithVariables
             
             ConsoleHelpers.WriteDebugLine($"Created filtered temp file: {tempFilePath}");
             ConsoleHelpers.WriteDebugLine($"Filtered content preview: {filteredContent.Substring(0, Math.Min(200, filteredContent.Length))}...");
-            
+
             // Convert temp file path to Unix-style for bash
             var bashPath = tempFilePath.Replace("\\", "/");
             
             // Since we're using BashShellSession, always use bash commands
-            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"Generate a concise title for this conversation (3-5 words)\"";
-            
+            var titleAgentSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text.";
+            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{titleAgentSystemPrompt}\"";
+
             ConsoleHelpers.WriteDebugLine($"Title generation command: {command}");
             
             var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
