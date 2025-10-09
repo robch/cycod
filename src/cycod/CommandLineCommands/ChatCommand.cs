@@ -625,6 +625,8 @@ public class ChatCommand : CommandWithVariables
         // Set environment variable to prevent infinite loops
         Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
         
+        string? tempFilePath = null;
+        
         try 
         {
             // Check if file exists before trying to process it
@@ -634,14 +636,28 @@ public class ChatCommand : CommandWithVariables
                 return null;
             }
             
-            // Convert Windows paths to Unix-style for bash and properly escape
-            var bashPath = conversationFilePath.Replace("\\", "/");
+            // Create filtered content with only user and assistant messages
+            var filteredContent = CreateFilteredConversationContent(conversationFilePath);
+            if (string.IsNullOrEmpty(filteredContent))
+            {
+                ConsoleHelpers.WriteDebugLine($"❌ No meaningful conversation content found for title generation");
+                return null;
+            }
+            
+            // Write filtered content to temp file
+            tempFilePath = Path.GetTempFileName();
+            await File.WriteAllTextAsync(tempFilePath, filteredContent);
+            
+            ConsoleHelpers.WriteDebugLine($"Created filtered temp file: {tempFilePath}");
+            ConsoleHelpers.WriteDebugLine($"Filtered content preview: {filteredContent.Substring(0, Math.Min(200, filteredContent.Length))}...");
+            
+            // Convert temp file path to Unix-style for bash
+            var bashPath = tempFilePath.Replace("\\", "/");
             
             // Since we're using BashShellSession, always use bash commands
             var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"Generate a concise title for this conversation (3-5 words)\"";
             
             ConsoleHelpers.WriteDebugLine($"Title generation command: {command}");
-            ConsoleHelpers.WriteDebugLine($"Reading file: {conversationFilePath}");
             
             var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
             
@@ -667,8 +683,65 @@ public class ChatCommand : CommandWithVariables
         }
         finally
         {
+            // Clean up temp file
+            if (tempFilePath != null && File.Exists(tempFilePath))
+            {
+                try
+                {
+                    File.Delete(tempFilePath);
+                    ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
+                }
+                catch (Exception ex)
+                {
+                    ConsoleHelpers.WriteDebugLine($"Warning: Failed to delete temp file {tempFilePath}: {ex.Message}");
+                }
+            }
+            
             // Clean up environment variable
             Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", null);
+        }
+    }
+
+    /// <summary>
+    /// Creates filtered conversation content containing only user and assistant messages.
+    /// </summary>
+    private string CreateFilteredConversationContent(string conversationFilePath)
+    {
+        try
+        {
+            // Load and parse the conversation
+            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            
+            // Filter to only user and assistant messages
+            var filteredMessages = messages
+                .Where(m => m.Role == ChatRole.User || m.Role == ChatRole.Assistant)
+                .ToList();
+            
+            ConsoleHelpers.WriteDebugLine($"Filtered {messages.Count} total messages down to {filteredMessages.Count} user/assistant messages");
+            
+            if (filteredMessages.Count == 0)
+            {
+                return string.Empty;
+            }
+            
+            // Convert to simple text format for title generation
+            var content = new System.Text.StringBuilder();
+            content.AppendLine("Conversation between User and Assistant:");
+            content.AppendLine();
+            
+            foreach (var message in filteredMessages)
+            {
+                var roleLabel = message.Role == ChatRole.User ? "User" : "Assistant";
+                content.AppendLine($"{roleLabel}: {message.Text}");
+                content.AppendLine();
+            }
+            
+            return content.ToString();
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Failed to create filtered conversation content: {ex.Message}");
+            return string.Empty;
         }
     }
 
