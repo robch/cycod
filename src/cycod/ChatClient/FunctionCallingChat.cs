@@ -2,6 +2,11 @@ using Microsoft.Extensions.AI;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
+    /// <summary>
+    /// Metadata for the current conversation.
+    /// </summary>
+    public ConversationMetadata? Metadata { get; private set; }
+
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
@@ -64,14 +69,42 @@ public class FunctionCallingChat : IAsyncDisposable
 
     public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        // Load messages and metadata
+        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(fileName, useOpenAIFormat);
+        
+        // Store metadata
+        Metadata = metadata;
+        
+        // If no metadata found, create default using current time
+        if (Metadata == null)
+        {
+            Metadata = ConversationMetadataHelpers.CreateDefault();
+        }
+
+        // Clear and repopulate messages
+        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
+        if (hasSystemMessage) _messages.Clear();
+
+        _messages.AddRange(messages);
         _messages.FixDanglingToolCalls();
         _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
     }
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
+        // Initialize metadata if not present
+        if (Metadata == null)
+        {
+            Metadata = ConversationMetadataHelpers.CreateDefault();
+        }
+        else
+        {
+            // Update timestamp for existing metadata
+            ConversationMetadataHelpers.UpdateTimestamp(Metadata);
+        }
+
+        // Save with metadata
+        _messages.SaveChatHistoryToFile(fileName, Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)

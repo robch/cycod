@@ -100,6 +100,7 @@ public class ChatCommand : CommandWithVariables
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient(out var options);
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
+        _currentChat = chat;
 
         try
         {
@@ -507,10 +508,11 @@ public class ChatCommand : CommandWithVariables
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
-        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
+        // Auto-save with metadata support
+        TrySaveChatHistoryToFileWithMetadata(AutoSaveOutputChatHistory);
         if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            TrySaveChatHistoryToFile(messages, OutputChatHistory);
+            TrySaveChatHistoryToFileWithMetadata(OutputChatHistory);
         }
         
         var lastMessage = messages.LastOrDefault();
@@ -529,6 +531,23 @@ public class ChatCommand : CommandWithVariables
         catch (Exception ex)
         {
             ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
+        }
+    }
+
+    /// <summary>
+    /// Saves chat history to file with metadata support. Updates metadata timestamps.
+    /// </summary>
+    private void TrySaveChatHistoryToFileWithMetadata(string? filePath)
+    {
+        if (filePath == null || _currentChat == null) return;
+        
+        try
+        {
+            _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history with metadata to '{filePath}'", showToUser: true);
         }
     }
 
@@ -1015,6 +1034,7 @@ public class ChatCommand : CommandWithVariables
     private TrajectoryFile _autoSaveTrajectoryFile = null!;
     private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
+    private FunctionCallingChat? _currentChat;
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;

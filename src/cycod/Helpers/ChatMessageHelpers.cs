@@ -79,6 +79,107 @@ public static class AIExtensionsChatHelpers
         messages.AddRange(newMessages);
     }
 
+    /// <summary>
+    /// Parses JSONL content with optional metadata support.
+    /// </summary>
+    /// <param name="jsonl">JSONL content to parse</param>
+    /// <returns>Tuple of (metadata, messages). Metadata is null if not present.</returns>
+    public static (ConversationMetadata? metadata, IList<ChatMessage> messages) ChatMessagesFromJsonlWithMetadata(string jsonl)
+    {
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (lines.Length == 0)
+        {
+            return (null, new List<ChatMessage>());
+        }
+
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+
+        // Parse remaining lines as messages
+        var messageLines = lines.Skip(messageStartIndex);
+        var messages = new List<ChatMessage>();
+
+        foreach (var line in messageLines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+
+            var message = ChatMessageFromJson(line);
+            if (message != null)
+            {
+                messages.Add(message);
+            }
+        }
+
+        return (metadata, messages);
+    }
+
+    /// <summary>
+    /// Converts messages and metadata to JSONL format with metadata as first line.
+    /// </summary>
+    /// <param name="messages">Chat messages to serialize</param>
+    /// <param name="metadata">Optional metadata to include. If null, no metadata line added.</param>
+    /// <returns>JSONL string with optional metadata first line</returns>
+    public static string AsJsonlWithMetadata(this IList<ChatMessage> messages, ConversationMetadata? metadata = null)
+    {
+        var lines = new List<string>();
+
+        // Add metadata as first line if present
+        if (metadata != null)
+        {
+            lines.Add(ConversationMetadataHelpers.SerializeMetadata(metadata));
+        }
+
+        // Add message lines
+        var messageJsons = messages
+            .Select(m => m.AsJson())
+            .Where(m => !string.IsNullOrEmpty(m))
+            .Select(m => m!);
+
+        lines.AddRange(messageJsons);
+
+        return string.Join('\n', lines);
+    }
+
+    /// <summary>
+    /// Saves chat history to file with optional metadata.
+    /// </summary>
+    public static void SaveChatHistoryToFile(
+        this IList<ChatMessage> messages, 
+        string fileName, 
+        ConversationMetadata? metadata,
+        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, 
+        string? saveToFolderOnAccessDenied = null)
+    {
+        var jsonl = useOpenAIFormat
+            ? messages.ToOpenAIChatMessages(_jsonlOptions).AsJsonlWithMetadata(metadata)
+            : messages.AsJsonlWithMetadata(metadata);
+            
+        FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
+    }
+
+    /// <summary>
+    /// Reads chat history from file with metadata support.
+    /// </summary>
+    public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFileWithMetadata(
+        string fileName, 
+        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    {
+        var jsonl = FileHelpers.ReadAllText(fileName);
+        
+        if (useOpenAIFormat)
+        {
+            var (metadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonlWithMetadata(jsonl);
+            var extensionMessages = openAIMessages.ToExtensionsAIChatMessages().ToList();
+            return (metadata, extensionMessages);
+        }
+        else
+        {
+            var (metadata, messages) = ChatMessagesFromJsonlWithMetadata(jsonl);
+            return (metadata, messages.ToList());
+        }
+    }
+
     public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
         try
@@ -382,6 +483,39 @@ public static class OpenAIChatHelpers
         return messages;
     }
 
+    /// <summary>
+    /// Parses JSONL content with optional metadata support (OpenAI format).
+    /// </summary>
+    public static (ConversationMetadata? metadata, IList<OpenAI.Chat.ChatMessage> messages) ChatMessagesFromJsonlWithMetadata(string jsonl)
+    {
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (lines.Length == 0)
+        {
+            return (null, new List<OpenAI.Chat.ChatMessage>());
+        }
+
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+
+        // Parse remaining lines as messages
+        var messageLines = lines.Skip(messageStartIndex);
+        var messages = new List<OpenAI.Chat.ChatMessage>();
+
+        foreach (var line in messageLines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+
+            var message = ChatMessageFromJson(line);
+            if (message != null)
+            {
+                messages.Add(message);
+            }
+        }
+
+        return (metadata, messages);
+    }
+
     public static string? AsJson(this OpenAI.Chat.ChatMessage message)
     {
         return message switch
@@ -403,6 +537,30 @@ public static class OpenAIChatHelpers
             .ToList();
         var history = string.Join('\n', asJsonList);
         return history;
+    }
+
+    /// <summary>
+    /// Converts OpenAI messages and metadata to JSONL format with metadata as first line.
+    /// </summary>
+    public static string AsJsonlWithMetadata(this IEnumerable<OpenAI.Chat.ChatMessage> messages, ConversationMetadata? metadata = null)
+    {
+        var lines = new List<string>();
+
+        // Add metadata as first line if present
+        if (metadata != null)
+        {
+            lines.Add(ConversationMetadataHelpers.SerializeMetadata(metadata));
+        }
+
+        // Add message lines
+        var messageJsons = messages
+            .Select(m => m.AsJson())
+            .Where(m => !string.IsNullOrEmpty(m))
+            .Select(m => m!);
+
+        lines.AddRange(messageJsons);
+
+        return string.Join('\n', lines);
     }
 
     public static IEnumerable<ChatMessage> ToExtensionsAIChatMessages(this IEnumerable<OpenAI.Chat.ChatMessage> messages)
