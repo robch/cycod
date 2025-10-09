@@ -59,6 +59,7 @@ public class ChatCommand : CommandWithVariables
         
         // Initialize slash command handlers
         _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
+        _titleCommandHandler = new SlashTitleCommandHandler();
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -265,7 +266,11 @@ public class ChatCommand : CommandWithVariables
         bool skipAssistant = false;
         string? giveAssistant = null;
 
-        if (userPrompt.StartsWith("/save"))
+        if (_titleCommandHandler?.TryHandle(userPrompt, chat) == true)
+        {
+            skipAssistant = true;
+        }
+        else if (userPrompt.StartsWith("/save"))
         {
             skipAssistant = HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
         }
@@ -515,6 +520,19 @@ public class ChatCommand : CommandWithVariables
             TrySaveChatHistoryToFileWithMetadata(OutputChatHistory);
         }
         
+        // Generate title after first meaningful exchange (unless disabled by environment variable)
+        var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
+        var shouldGenerate = ShouldGenerateTitle(messages);
+        
+        ConsoleHelpers.WriteDebugLine($"Title generation check: attempted={_titleGenerationAttempted}, shouldGenerate={shouldGenerate}, envDisabled={envDisabled}, messageCount={messages.Count}");
+        
+        if (!_titleGenerationAttempted && shouldGenerate && !envDisabled)
+        {
+            _titleGenerationAttempted = true;
+            ConsoleHelpers.WriteDebugLine($"🎯 Triggering title generation for file: {AutoSaveOutputChatHistory}");
+            _ = Task.Run(async () => await TryGenerateAndSaveTitle(AutoSaveOutputChatHistory));
+        }
+        
         var lastMessage = messages.LastOrDefault();
         _autoSaveTrajectoryFile.AppendMessage(lastMessage);
         _trajectoryFile.AppendMessage(lastMessage);
@@ -549,6 +567,153 @@ public class ChatCommand : CommandWithVariables
         {
             ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history with metadata to '{filePath}'", showToUser: true);
         }
+    }
+
+    /// <summary>
+    /// Determines if a title should be generated for this conversation.
+    /// </summary>
+    private bool ShouldGenerateTitle(IList<ChatMessage> messages)
+    {
+        var needsTitle = ConversationMetadataHelpers.ShouldGenerateTitle(_currentChat?.Metadata);
+        
+        return needsTitle;
+    }
+
+    /// <summary>
+    /// Attempts to generate and save a title for the conversation using cycodmd.
+    /// </summary>
+    private async Task TryGenerateAndSaveTitle(string? filePath)
+    {
+        if (filePath == null || _currentChat?.Metadata == null) 
+        {
+            ConsoleHelpers.WriteDebugLine($"Skipping title generation: filePath={filePath}, metadata={_currentChat?.Metadata != null}");
+            return;
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"Starting title generation for: {filePath}");
+        
+        try
+        {
+            var generatedTitle = await GenerateTitleAsync(filePath);
+            if (!string.IsNullOrEmpty(generatedTitle))
+            {
+                ConsoleHelpers.WriteDebugLine($"Generated title: '{generatedTitle}', setting to metadata");
+                ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Metadata, generatedTitle);
+                
+                // Save again with updated title
+                ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
+                _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                ConsoleHelpers.WriteDebugLine($"✅ Successfully generated and saved title: '{generatedTitle}'");
+            }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine("❌ Title generation returned empty result");
+            }
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"❌ Failed to generate title: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Generates a conversation title using cycodmd with environment variable to prevent infinite loops.
+    /// </summary>
+    private async Task<string?> GenerateTitleAsync(string conversationFilePath)
+    {
+        // Set environment variable to prevent infinite loops
+        Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
+        
+        try 
+        {
+            // Check if file exists before trying to process it
+            if (!File.Exists(conversationFilePath))
+            {
+                ConsoleHelpers.WriteDebugLine($"❌ File does not exist for title generation: {conversationFilePath}");
+                return null;
+            }
+            
+            // Convert Windows paths to Unix-style for bash and properly escape
+            var bashPath = conversationFilePath.Replace("\\", "/");
+            
+            // Since we're using BashShellSession, always use bash commands
+            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"Generate a concise title for this conversation (3-5 words)\"";
+            
+            ConsoleHelpers.WriteDebugLine($"Title generation command: {command}");
+            ConsoleHelpers.WriteDebugLine($"Reading file: {conversationFilePath}");
+            
+            var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
+            
+            ConsoleHelpers.WriteDebugLine($"Command exit code: {result.ExitCode}");
+            ConsoleHelpers.WriteDebugLine($"Command output: {result.MergedOutput}");
+            ConsoleHelpers.WriteDebugLine($"Command timeout: {result.IsTimeout}");
+            
+            if (result.ExitCode != 0 || result.IsTimeout)
+            {
+                ConsoleHelpers.WriteDebugLine($"Title generation command failed with exit code {result.ExitCode}");
+                return null;
+            }
+            
+            var title = result.MergedOutput?.Trim();
+            ConsoleHelpers.WriteDebugLine($"Raw title result: '{title}'");
+            
+            return string.IsNullOrEmpty(title) ? null : SanitizeTitle(title);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Title generation failed: {ex.Message}");
+            return null;
+        }
+        finally
+        {
+            // Clean up environment variable
+            Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", null);
+        }
+    }
+
+    /// <summary>
+    /// Cleans and formats a generated title.
+    /// </summary>
+    private string SanitizeTitle(string title)
+    {
+        // Remove quotes and extra whitespace
+        var sanitized = title.Trim('"', '\'', ' ', '\n', '\r', '\t');
+        
+        // Remove any error messages or shell output that got mixed in
+        var lines = sanitized.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        // Find the actual title (skip error lines, bash prompts, etc.)
+        foreach (var line in lines)
+        {
+            var cleanLine = line.Trim();
+            // Skip obvious error/command lines
+            if (cleanLine.StartsWith("/usr/bin/bash:") ||
+                cleanLine.StartsWith("$") ||
+                cleanLine.StartsWith("bash:") ||
+                cleanLine.Contains("command not found") ||
+                string.IsNullOrWhiteSpace(cleanLine))
+            {
+                continue;
+            }
+            
+            // This looks like actual content
+            sanitized = cleanLine;
+            break;
+        }
+        
+        // Final cleanup
+        sanitized = sanitized.Trim('"', '\'', ' ', '\n', '\r', '\t');
+        
+        // Limit length for display
+        if (sanitized.Length > 80)
+        {
+            sanitized = sanitized.Substring(0, 77) + "...";
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"Sanitized title: '{title}' → '{sanitized}'");
+        
+        return sanitized;
     }
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
@@ -1034,7 +1199,9 @@ public class ChatCommand : CommandWithVariables
     private TrajectoryFile _autoSaveTrajectoryFile = null!;
     private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
+    private SlashTitleCommandHandler? _titleCommandHandler;
     private FunctionCallingChat? _currentChat;
+    private bool _titleGenerationAttempted = false;
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;

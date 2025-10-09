@@ -7,6 +7,15 @@ public class FunctionCallingChat : IAsyncDisposable
     /// </summary>
     public ConversationMetadata? Metadata { get; private set; }
 
+    /// <summary>
+    /// Updates the conversation metadata.
+    /// </summary>
+    /// <param name="metadata">New metadata to set</param>
+    public void UpdateMetadata(ConversationMetadata? metadata)
+    {
+        Metadata = metadata;
+    }
+
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;

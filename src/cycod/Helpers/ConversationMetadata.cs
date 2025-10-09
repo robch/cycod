@@ -7,8 +7,19 @@ using System.Text.Json.Serialization;
 public class ConversationMetadata
 {
     /// <summary>
+    /// Human-readable conversation title.
+    /// </summary>
+    [JsonPropertyName("title")]
+    public string? Title { get; set; }
+
+    /// <summary>
+    /// If true, AI should never regenerate title (user has manually edited it).
+    /// </summary>
+    [JsonPropertyName("titleLocked")]
+    public bool TitleLocked { get; set; }
+
+    /// <summary>
     /// Preserves unknown properties for future extensibility.
-    /// When we add title, description, capabilities, etc., they'll go here as proper properties.
     /// </summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement> AdditionalProperties { get; set; } = new();
