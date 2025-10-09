@@ -574,9 +574,10 @@ public class ChatCommand : CommandWithVariables
     /// </summary>
     private bool ShouldGenerateTitle(IList<ChatMessage> messages)
     {
+        var hasUserAssistantExchange = messages.Any(m => m.Role == ChatRole.Assistant);
         var needsTitle = ConversationMetadataHelpers.ShouldGenerateTitle(_currentChat?.Metadata);
-        
-        return needsTitle;
+
+        return hasUserAssistantExchange && needsTitle;
     }
 
     /// <summary>
