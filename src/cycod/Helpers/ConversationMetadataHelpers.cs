@@ -18,26 +18,12 @@ public static class ConversationMetadataHelpers
     };
 
     /// <summary>
-    /// Creates default metadata with current timestamp for both created and updated.
+    /// Creates default empty metadata ready for future properties.
     /// </summary>
-    /// <returns>New ConversationMetadata with current UTC timestamp</returns>
+    /// <returns>New empty ConversationMetadata</returns>
     public static ConversationMetadata CreateDefault()
     {
-        var now = DateTime.UtcNow;
-        return new ConversationMetadata
-        {
-            CreatedAt = now,
-            UpdatedAt = now
-        };
-    }
-
-    /// <summary>
-    /// Updates the UpdatedAt timestamp to current UTC time.
-    /// </summary>
-    /// <param name="metadata">Metadata to update</param>
-    public static void UpdateTimestamp(ConversationMetadata metadata)
-    {
-        metadata.UpdatedAt = DateTime.UtcNow;
+        return new ConversationMetadata();
     }
 
     /// <summary>

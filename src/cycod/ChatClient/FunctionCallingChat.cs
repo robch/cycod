@@ -92,18 +92,13 @@ public class FunctionCallingChat : IAsyncDisposable
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        // Initialize metadata if not present
+        // Initialize metadata if not present (empty for now, ready for future properties)
         if (Metadata == null)
         {
             Metadata = ConversationMetadataHelpers.CreateDefault();
         }
-        else
-        {
-            // Update timestamp for existing metadata
-            ConversationMetadataHelpers.UpdateTimestamp(Metadata);
-        }
 
-        // Save with metadata
+        // Save with metadata (file system handles creation/modification times)
         _messages.SaveChatHistoryToFile(fileName, Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 

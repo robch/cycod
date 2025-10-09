@@ -7,19 +7,8 @@ using System.Text.Json.Serialization;
 public class ConversationMetadata
 {
     /// <summary>
-    /// UTC timestamp when the conversation was created.
-    /// </summary>
-    [JsonPropertyName("createdAt")]
-    public DateTime CreatedAt { get; set; }
-
-    /// <summary>
-    /// UTC timestamp when the conversation was last modified.
-    /// </summary>
-    [JsonPropertyName("updatedAt")]
-    public DateTime UpdatedAt { get; set; }
-
-    /// <summary>
     /// Preserves unknown properties for future extensibility.
+    /// When we add title, description, capabilities, etc., they'll go here as proper properties.
     /// </summary>
     [JsonExtensionData]
     public Dictionary<string, JsonElement> AdditionalProperties { get; set; } = new();

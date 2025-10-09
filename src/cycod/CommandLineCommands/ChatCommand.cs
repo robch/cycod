@@ -535,7 +535,7 @@ public class ChatCommand : CommandWithVariables
     }
 
     /// <summary>
-    /// Saves chat history to file with metadata support. Updates metadata timestamps.
+    /// Saves chat history to file with metadata support.
     /// </summary>
     private void TrySaveChatHistoryToFileWithMetadata(string? filePath)
     {
