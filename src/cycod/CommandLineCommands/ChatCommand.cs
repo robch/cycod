@@ -619,12 +619,21 @@ public class ChatCommand : CommandWithVariables
     }
 
     /// <summary>
-    /// Generates a conversation title using cycodmd with environment variable to prevent infinite loops.
+    /// Generates a conversation title using cycodmd with environment variables to prevent infinite loops and auto-saving.
     /// </summary>
     private async Task<string?> GenerateTitleAsync(string conversationFilePath)
     {
-        // Set environment variable to prevent infinite loops
+        // Save original environment variable values
+        var originalTitleGeneration = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION");
+        var originalAutoSaveChat = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY");
+        var originalAutoSaveTrajectory = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY");
+        var originalAutoSaveLog = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG");
+        
+        // Set environment variables for child process
         Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", "false");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", "false");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", "false");
         
         string? tempFilePath = null;
         
@@ -698,8 +707,13 @@ public class ChatCommand : CommandWithVariables
                 }
             }
             
-            // Clean up environment variable
-            Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", null);
+            // Restore original environment variables
+            Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", originalTitleGeneration);
+            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", originalAutoSaveChat);
+            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", originalAutoSaveTrajectory);
+            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", originalAutoSaveLog);
+            
+            ConsoleHelpers.WriteDebugLine("Restored original environment variables");
         }
     }
 
