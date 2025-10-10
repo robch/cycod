@@ -18,77 +18,77 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Handles the default /title command (no subcommand) - shows title and help.
     /// </summary>
-    protected override bool HandleDefault(FunctionCallingChat chat)
+    protected override SlashCommandResult HandleDefault(FunctionCallingChat chat)
     {
         ShowTitleAndHelp(chat.Metadata);
-        return true;
+        return SlashCommandResult.Handled;
     }
     
     /// <summary>
     /// Handles /title view - shows current title and status only.
     /// </summary>
-    private bool HandleView(string[] args, FunctionCallingChat chat)
+    private SlashCommandResult HandleView(string[] args, FunctionCallingChat chat)
     {
         ShowCurrentTitle(chat.Metadata);
-        return true;
+        return SlashCommandResult.Handled;
     }
     
     /// <summary>
     /// Handles /title set <text> - sets title and locks it.
     /// </summary>
-    private bool HandleSet(string[] args, FunctionCallingChat chat)
+    private SlashCommandResult HandleSet(string[] args, FunctionCallingChat chat)
     {
         if (args.Length == 0)
         {
             ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set <text>\n", ConsoleColor.Red);
-            return true;
+            return SlashCommandResult.Handled;
         }
         
         var title = string.Join(" ", args);
         SetUserTitle(chat, title);
-        return true;
+        return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
     }
     
     /// <summary>
     /// Handles /title lock - locks current title from AI changes.
     /// </summary>
-    private bool HandleLock(string[] args, FunctionCallingChat chat)
+    private SlashCommandResult HandleLock(string[] args, FunctionCallingChat chat)
     {
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (metadata.TitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.Yellow);
+            return SlashCommandResult.Handled;
         }
         else
         {
             metadata.TitleLocked = true;
             chat.UpdateMetadata(metadata);
             ConsoleHelpers.WriteLine("Title locked from AI changes.\n", ConsoleColor.Yellow);
+            return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
         }
-        
-        return true;
     }
     
     /// <summary>
     /// Handles /title unlock - unlocks title to allow AI regeneration.
     /// </summary>
-    private bool HandleUnlock(string[] args, FunctionCallingChat chat)
+    private SlashCommandResult HandleUnlock(string[] args, FunctionCallingChat chat)
     {
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (!metadata.TitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.Yellow);
+            return SlashCommandResult.Handled;
         }
         else
         {
             metadata.TitleLocked = false;
             chat.UpdateMetadata(metadata);
             ConsoleHelpers.WriteLine("Title unlocked - AI can now regenerate the title.\n", ConsoleColor.Yellow);
+            return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
         }
-        
-        return true;
     }
     
     /// <summary>

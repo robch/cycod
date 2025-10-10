@@ -266,9 +266,20 @@ public class ChatCommand : CommandWithVariables
         bool skipAssistant = false;
         string? giveAssistant = null;
 
-        if (_titleCommandHandler?.TryHandle(userPrompt, chat) == true)
+        if (_titleCommandHandler?.TryHandle(userPrompt, chat, out var titleResult) == true)
         {
             skipAssistant = true;
+            
+            // Handle immediate save if requested
+            if (titleResult == SlashCommandResult.NeedsSave)
+            {
+                TrySaveChatHistoryToFileWithMetadata(AutoSaveOutputChatHistory);
+                if (OutputChatHistory != AutoSaveOutputChatHistory)
+                {
+                    TrySaveChatHistoryToFileWithMetadata(OutputChatHistory);
+                }
+                ConsoleHelpers.WriteDebugLine("Title command triggered immediate save");
+            }
         }
         else if (userPrompt.StartsWith("/save"))
         {
