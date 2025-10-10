@@ -76,6 +76,9 @@ public class ChatCommand : CommandWithVariables
         OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
         OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
         
+        // Set the conversation file path for title operations (after it's been grounded)
+        _titleCommandHandler.SetFilePath(AutoSaveOutputChatHistory);
+        
         // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
         _autoSaveTrajectoryFile = new TrajectoryFile(AutoSaveOutputTrajectory);
@@ -120,6 +123,9 @@ public class ChatCommand : CommandWithVariables
                     maxToolTokenTarget: MaxToolTokenTarget,
                     maxChatTokenTarget: MaxChatTokenTarget,
                     useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                // Update console title with loaded conversation title
+                ConsoleTitleHelper.UpdateWindowTitle(chat.Metadata);
             }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
@@ -145,6 +151,7 @@ public class ChatCommand : CommandWithVariables
 
                 var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
+                CheckAndShowPendingNotifications(chat);
                 DisplayAssistantLabel();
                 
                 var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
@@ -616,6 +623,9 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
                 _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
                 
+                // Update console title with new auto-generated title
+                ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Metadata);
+                
                 ConsoleHelpers.WriteDebugLine($"✅ Successfully generated and saved title: '{generatedTitle}'");
             }
             else
@@ -769,6 +779,19 @@ public class ChatCommand : CommandWithVariables
         {
             ConsoleHelpers.WriteDebugLine($"Failed to create filtered conversation content: {ex.Message}");
             return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Checks for and displays any pending title notifications.
+    /// </summary>
+    private void CheckAndShowPendingNotifications(FunctionCallingChat chat)
+    {
+        if (chat.HasPendingTitleNotification())
+        {
+            var newTitle = chat.GetAndClearPendingTitleNotification();
+            ConsoleHelpers.WriteLine($"[Title updated to: \"{newTitle}\"]", ConsoleColor.Green);
+            ConsoleHelpers.WriteLine();
         }
     }
 

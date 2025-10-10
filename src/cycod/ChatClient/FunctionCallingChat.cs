@@ -6,6 +6,11 @@ public class FunctionCallingChat : IAsyncDisposable
     /// Metadata for the current conversation.
     /// </summary>
     public ConversationMetadata? Metadata { get; private set; }
+    
+    /// <summary>
+    /// Pending title notification to show before next assistant response.
+    /// </summary>
+    private string? _pendingTitleNotification;
 
     /// <summary>
     /// Updates the conversation metadata.
@@ -14,6 +19,35 @@ public class FunctionCallingChat : IAsyncDisposable
     public void UpdateMetadata(ConversationMetadata? metadata)
     {
         Metadata = metadata;
+    }
+    
+    /// <summary>
+    /// Sets a pending title notification to show before the next assistant response.
+    /// </summary>
+    /// <param name="newTitle">The new title to notify about</param>
+    public void SetPendingTitleNotification(string newTitle)
+    {
+        _pendingTitleNotification = newTitle;
+    }
+    
+    /// <summary>
+    /// Checks if there's a pending title notification.
+    /// </summary>
+    /// <returns>True if there's a pending notification</returns>
+    public bool HasPendingTitleNotification()
+    {
+        return !string.IsNullOrEmpty(_pendingTitleNotification);
+    }
+    
+    /// <summary>
+    /// Gets and clears the pending title notification.
+    /// </summary>
+    /// <returns>The pending notification, or null if none</returns>
+    public string? GetAndClearPendingTitleNotification()
+    {
+        var notification = _pendingTitleNotification;
+        _pendingTitleNotification = null;
+        return notification;
     }
 
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
