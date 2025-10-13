@@ -14,7 +14,7 @@ public class CycoDevProgramRunner : ProgramRunner
         }
         finally
         {
-            NamedShellManager.Instance.ShutdownAllShells();
+            NamedShellProcessManager.Instance.ShutdownAllShells();
         }
     }
 

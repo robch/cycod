@@ -30,7 +30,29 @@ public class BackgroundProcessInfo
     /// <summary>
     /// Gets a value indicating whether the process is still running.
     /// </summary>
-    public bool IsRunning => Process != null && !Process.HasExited;
+    public bool IsRunning
+    {
+        get
+        {
+            if (Process == null) 
+            {
+                ConsoleHelpers.WriteDebugLine($"[PROCESS] {Name} IsRunning: false (Process is null)");
+                return false;
+            }
+            
+            try
+            {
+                var hasExited = Process.HasExited;
+                ConsoleHelpers.WriteDebugLine($"[PROCESS] {Name} IsRunning: {!hasExited} (HasExited: {hasExited})");
+                return !hasExited;
+            }
+            catch (InvalidOperationException ex)
+            {
+                ConsoleHelpers.WriteDebugLine($"[PROCESS] {Name} IsRunning: true (starting state, exception: {ex.Message})");
+                return true;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets the underlying process.

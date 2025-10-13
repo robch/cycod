@@ -18,11 +18,10 @@ For detailed coding style guidance, refer to our:
 - [C# Coding Style Essential Guide](docs/C%23-Coding-Style-Essential.md) - Concise reference for experienced developers
 - [C# Coding Style Expanded Guide](docs/C%23-Coding-Style-Expanded.md) - In-depth explanations for those new to C#
 
+NOTE 1: Always prioritize these style guides / coding standards over generic C# guidelines.  
+NOTE 2: If there are conflicts between what the code does or what you think, the coding style guides take precedence.  
+
 ### General Guidelines
-- Follow Microsoft C# coding guidelines
-- Avoid magic strings and numbers
-- Use meaningful variable and method names
-- "When in Rome, do as the Romans do" - match the style of the file you're modifying
 - Organize code by feature/functionality rather than by type (e.g., group files by feature in directories)
 
 ### Variables and Types
@@ -122,9 +121,11 @@ Commands follow a consistent pattern:
 ## Testing with cycodt
 The project uses a YAML-based test framework called cycodt. Key operations:
 
-- **List tests**: `dotnet run --project src/cycodt/cycodt.csproj list --file <test_file.yaml>`
-- **Run specific test**: `dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml> --test "<test_name>"`
-- **Run all tests in file**: `dotnet run --project src/cycodt/cycodt.csproj run --file <test_file.yaml>`
+- **List tests**: `cycodt list --file <test_file.yaml>` or `cycodt list --include-optional`
+- **Run specific test**: `cycodt run --file <test_file.yaml> --test "<test_name>"`
+- **Run all tests in file**: `cycodt run --file <test_file.yaml>`
+
+**Note**: Use `cycodt` directly (assumes it's built and in PATH). Only use `dotnet run --project src/cycodt/cycodt.csproj` as a fallback if cycodt isn't available, as the dotnet approach can cause rebuild delays and file locking issues when cycod.exe is running.
 
 Tests are defined in YAML files with:
 - Test name and command/script to run

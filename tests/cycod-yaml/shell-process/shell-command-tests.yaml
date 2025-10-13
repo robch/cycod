@@ -1,0 +1,41 @@
+class: shell-command-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 100.SS.CMD.NORM-001 - Shell command completes normally
+  run: cycod --input "Run a shell command that echoes 'Testing shell command' and then sleeps for 2 seconds and then echoes 'Command completed successfully'. Use RunShellCommand with a 5 second timeout. This tests case 100.SS.CMD.NORM-001 from our test plan." --auto-approve RunShellCommand
+  expect-regex: |
+    User: Run a shell command that echoes 'Testing shell command' and then sleeps for 2 seconds and then echoes 'Command completed successfully'. Use RunShellCommand with a 5 second timeout. This tests case 100.SS.CMD.NORM-001 from our test plan.\r?$\n
+    Assistant:
+    .*RunShellCommand.*echo.*Testing shell command.*sleep 2.*Command completed successfully.*expectedTimeout.*5000.*
+    User: exit\r?$\n
+  not-expect-regex: |
+    Error: Command timed out after \d+ milliseconds
+
+- name: Test case 100.SX.CMD.LONG-002 - Long shell command completes normally
+  run: cycod --input "Run a shell command that sleeps for 8 seconds and then echoes 'Long-running command completed successfully'. Use RunShellCommand with a 15 second timeout. This tests case 100.SX.CMD.LONG-002 from our test plan." --auto-approve RunShellCommand
+  expect-regex: |
+    User: Run a shell command that sleeps for 8 seconds and then echoes 'Long-running command completed successfully'. Use RunShellCommand with a 15 second timeout. This tests case 100.SX.CMD.LONG-002 from our test plan.\r?$\n
+    Assistant:
+    .*RunShellCommand.*sleep 8.*Long-running command completed successfully.*expectedTimeout.*15000.*
+    User: exit\r?$\n
+  not-expect-regex: |
+    Error: Command timed out after \d+ milliseconds
+
+- name: Test case 300.SL.CMD.OVER-025 - Shell command slightly exceeds timeout (simplified)
+  run: cycod --input "Use RunShellCommand to run 'bash -c \"echo Starting; sleep 4; echo StillRunning; sleep 2; echo Complete\"' with expectedTimeout=2000, then use GetShellOrProcessOutput to verify the auto-promoted shell actually captured the output" --auto-approve all
+  timeout: 35000
+  expect-regex: |
+    .*"status": "stillRunning".*
+    .*"shellName": "auto-bash-.*
+    .*GetShellOrProcessOutput.*
+    .*Starting.*
+    .*StillRunning.*
+  not-expect-regex: |
+    Error: Command cannot be empty
+    Error: Unknown shell type
+    Error: Failed to promote shell
+    Error: No shell or process found with name
+    "output": ""
+    "stdout": ""
+    Command.*failed.*to.*execute

@@ -15,9 +15,9 @@ public class CmdShellSession : ShellSession
 
     /// <summary>
     /// Gets the singleton instance of the CmdShellSession.
-    /// For backward compatibility - use NamedShellManager instead for new code.
+    /// For backward compatibility - use NamedShellProcessManager instead for new code.
     /// </summary>
-    [Obsolete("Use NamedShellManager.CreateShell or NamedShellManager.GetShell instead")]
+    [Obsolete("Use NamedShellProcessManager.CreateShell or NamedShellProcessManager.GetShell instead")]
     public static CmdShellSession Instance 
     { 
         get

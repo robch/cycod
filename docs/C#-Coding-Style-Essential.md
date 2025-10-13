@@ -7,23 +7,23 @@ These guidelines offer best practices for common scenarios, but context matters.
 ## 1. Variables and Types
 
 ```csharp
-// Use var for local variables
-var customer = GetCustomerById(123);
-var isValid = Validate(customer);
-var orders = customer.Orders.Where(o => o.IsActive).ToList();
+// Use var for local variables - like universal containers that adapt to contents
+var customerBox = GetCustomerById(123);
+var isContainerValid = ValidateContents(customerBox);
+var orderCrates = customerBox.Orders.Where(o => o.IsActive).ToList();
 
-// Private fields use underscore prefix
-private readonly IUserService _userService;
-private int _retryCount;
-private string _connectionString;
+// Private fields use underscore prefix - like storage facility internal organization
+private readonly IWarehouseService _warehouseService;
+private int _attemptCount;
+private string _storageLocation;
 
-// Constants use PascalCase
-public const int MaxRetryAttempts = 3;
-public const string DefaultRegion = "US-West";
+// Constants use PascalCase - like permanent sealed containers
+public const int MaxStorageAttempts = 3;
+public const string DefaultWarehouse = "US-West";
 
-// Use descriptive names that explain purpose
-var isEligibleForDiscount = customer.Status == CustomerStatus.Premium && order.Total > 1000;
-var hasShippingAddress = !string.IsNullOrEmpty(order.ShippingAddress);
+// Use descriptive names that explain purpose - clear container labeling
+var isEligibleForExpressShipping = customer.Status == CustomerStatus.Premium && order.Total > 1000;
+var hasDeliveryAddress = !string.IsNullOrEmpty(order.ShippingAddress);
 ```
 
 ### Principles:
@@ -32,6 +32,9 @@ var hasShippingAddress = !string.IsNullOrEmpty(order.ShippingAddress);
 - Use PascalCase for constants
 - Use descriptive variable names that indicate purpose
 - Prefix boolean variables with Is, Has, or Can
+- Use explicit types only when var cannot be used or would reduce clarity:
+  - **Nullable reference types initialized to null**: Type cannot be inferred from `null`
+  - **Complex conditional assignment patterns**: When switch expressions aren't practical
 
 ### Notes:
 - Only use explicit types when var would make the type unclear
@@ -95,42 +98,65 @@ public decimal CalculateDiscount(Order order)
 
 ```csharp
 // Early returns with semantic variables reduce nesting
-public ValidationResult Validate(User user)
+public RouteResult CheckTrafficConditions(Vehicle vehicle)
 {
-    var userIsNull = user == null;
-    if (userIsNull) return ValidationResult.Invalid("User cannot be null");
+    var vehicleIsMissing = vehicle == null;
+    if (vehicleIsMissing) return RouteResult.Blocked("Vehicle cannot be null");
     
-    var emailMissing = string.IsNullOrEmpty(user.Email);
-    if (emailMissing) return ValidationResult.Invalid("Email required");
+    var destinationUnknown = string.IsNullOrEmpty(vehicle.Destination);
+    if (destinationUnknown) return RouteResult.Blocked("Destination required");
     
-    var nameMissing = string.IsNullOrEmpty(user.Name);
-    if (nameMissing) return ValidationResult.Invalid("Name required");
+    var fuelInsufficient = vehicle.FuelLevel < 10;
+    if (fuelInsufficient) return RouteResult.Blocked("Insufficient fuel");
     
-    return ValidationResult.Success();
+    return RouteResult.Clear();
 }
 
 // Ternary for simple conditions
-var displayName = user.Name ?? "Guest";
-var statusLabel = user.IsActive ? "Active" : "Inactive";
+var speedLimit = isSchoolZone ? 25 : 55;
+var routeDirection = isGoingNorth ? "North" : "South";
 
 // If/else for complex conditions
-if (user.IsAuthenticated && 
-    user.HasPermission("edit") && 
-    !document.IsLocked) 
+if (trafficIsClear && 
+    hasRightOfWay && 
+    !isRedLight) 
 {
-    document.AllowEditing();
+    ProceedThroughIntersection();
 }
 
 // Single-line if for very simple cases - direct conditions only for the simplest checks
-if (id <= 0) return null;
-if (items.Length > maxAllowed) throw new ArgumentException("Too many items");
+if (passengerCount <= 0) return null;
+if (destinations.Length > maxRoutes) throw new ArgumentException("Too many destinations");
 
 // Meaningful variables for conditions
-var isEligibleForDiscount = user.IsVip && order.Total > 1000;
-var hasRequiredDocuments = passport != null && visa != null;
-if (isEligibleForDiscount && hasRequiredDocuments) 
+var canProceedSafely = trafficIsClear && hasRightOfWay;
+var hasRequiredDocuments = license != null && registration != null;
+if (canProceedSafely && hasRequiredDocuments) 
 {
-    ApplySpecialDiscount();
+    ContinueOnMainRoute();
+}
+
+// Switch expressions for simple value assignments
+var shellType = input.ToLowerInvariant() switch
+{
+    "bash" => PersistentShellType.Bash,
+    "cmd" => PersistentShellType.Cmd,
+    "powershell" => PersistentShellType.PowerShell,
+    _ => throw new ArgumentException($"Invalid shell type: {input}")
+};
+
+// Switch statements for complex multi-action scenarios
+switch (emergencyType)
+{
+    case EmergencyType.Fire:
+        ActivateFireSuppression();
+        NotifyFireDepartment();
+        EvacuateBuilding();
+        break;
+    case EmergencyType.Medical:
+        CallParamedics();
+        ClearEmergencyRoute();
+        break;
 }
 ```
 
@@ -140,6 +166,8 @@ if (isEligibleForDiscount && hasRequiredDocuments)
 - Write single-line if statements for simple guard clauses
 - Create descriptive variables for complex conditions
 - Prefer positive conditions over negative ones
+- Use switch expressions for simple value assignments
+- Use switch statements for complex multi-action scenarios
 
 ### Notes:
 - Multi-line conditions should be indented for readability
@@ -188,47 +216,75 @@ public IReadOnlyList<string> GetAvailableColors()
 
 ```csharp
 // Return null for "not found" scenarios
-public User FindUser(string username)
+public Patient FindPatient(string patientId)
 {
-    return _repository.GetByUsername(username);  // May be null
+    return _patientRepository.GetByPatientId(patientId);  // May be null
 }
 
 // Throw for invalid inputs & exceptional conditions
-public void ProcessPayment(decimal amount)
+public void AdmitPatient(Patient patient, Ward ward)
 {
-    if (amount <= 0) throw new ArgumentException("Amount must be positive", nameof(amount));
+    if (patient.Age > ward.MaxAge) throw new ArgumentException("Patient too old for this ward", nameof(patient));
     
-    if (paymentGateway.IsDown)
+    if (!ward.HasAvailableBeds)
     {
-        throw new PaymentException("Payment gateway unavailable");
+        throw new WardCapacityException("No available beds in ward");
     }
 }
 
 // Try pattern for operations expected to fail sometimes
-public bool TryParseOrderId(string input, out int orderId)
+public bool TryGetMedicalHistory(string patientId, out MedicalHistory history)
 {
-    orderId = 0;
-    if (string.IsNullOrEmpty(input)) return false;
+    history = null;
+    if (string.IsNullOrEmpty(patientId)) return false;
     
-    return int.TryParse(input, out orderId);
+    var patient = _patientRepository.GetByPatientId(patientId);
+    if (patient == null) return false;
+        
+    history = _medicalRecords.FindHistory(patientId);
+    return history != null;
 }
 
 // Only catch exceptions you can handle
 try 
 {
-    ProcessFile(fileName);
+    PerformSurgery(patient, surgeryType);
 }
-catch (FileNotFoundException ex)
+catch (InstrumentFailureException ex)
 {
-    // Handle missing file specifically
-    Logger.Warn($"File not found: {ex.FileName}");
+    // Handle equipment failure specifically
+    Logger.Warn($"Instrument failure: {ex.InstrumentName}");
+    RequestBackupInstruments(ex.InstrumentName);
 }
-catch (IOException ex)
+catch (PowerOutageException ex)
 {
-    // Handle IO issues
-    Logger.Error($"IO error: {ex.Message}");
+    // Handle power issues
+    Logger.Error($"Power issue during surgery: {ex.Message}");
+    ActivateBackupPower();
 }
-// Let other exceptions bubble up
+// Let other medical emergencies bubble up
+
+// Using finally for cleanup
+public void PerformLabTest(Patient patient)
+{
+    LabEquipment equipment = null;
+    try
+    {
+        equipment = ReserveLabEquipment();
+        var sample = CollectSample(patient);
+        AnalyzeSample(equipment, sample);
+    }
+    catch (SampleContaminationException ex)
+    {
+        Logger.Error($"Sample contaminated: {ex.Message}");
+    }
+    finally
+    {
+        // Always clean up equipment
+        equipment?.Sanitize();
+        equipment?.Release();
+    }
+}
 ```
 
 ### Principles:
@@ -240,10 +296,16 @@ catch (IOException ex)
   - Consider the caller's perspective when choosing an approach
 - Catch only exceptions you can meaningfully handle
 - Use specific exception types rather than generic Exception
+- Catch generic `Exception` at AI function calling boundaries (methods with `[Description]` attributes) to ensure no exceptions escape to external systems
+- Always clean up resources with finally blocks or using statements
+- Include parameter names in ArgumentException using nameof()
+- Provide clear error messages that aid troubleshooting
 
 ### Notes:
-- Include the parameter name in ArgumentException using nameof()
-- Add descriptive error messages that help with troubleshooting
+- Exceptions are expensive - don't use them for normal control flow
+- Empty catch blocks hide problems rather than solving them
+- Consider performance implications in hot code paths
+- Use using statements for automatic resource cleanup when possible
 
 ## 6. Class Structure
 
@@ -356,9 +418,9 @@ var topCustomers = customers
     .ToList();
 
 // Extract intermediate variables for complex queries
-var activeAccounts = accounts.Where(a => a.IsActive);
-var highValueAccounts = activeAccounts.Where(a => a.Balance > 100000);
-var riskyAccounts = highValueAccounts.Where(a => a.HasRecentSuspiciousActivity);
+var activeProducts = products.Where(p => p.IsActive);
+var inStockProducts = activeProducts.Where(p => p.StockCount > 0);
+var featuredProducts = inStockProducts.Where(p => p.IsFeatured);
 ```
 
 ### Principles:
@@ -431,37 +493,56 @@ public string GetFormattedAddress()
 
 ```csharp
 // Nullable annotations make intent clear
-public User? FindUser(string username)
+public Ingredient? FindIngredient(string ingredientName)
 {
-    return _repository.GetByUsername(username);
+    return _pantry.GetByName(ingredientName);
 }
 
 // Null-conditional for safe navigation
-var city = address?.City ?? "Unknown";
-var zipCode = order?.ShippingAddress?.ZipCode;
+var garnishName = garnish?.Name ?? "No garnish";
+var spiceLevel = dish?.MainIngredient?.SpiceLevel;
 
 // Null-coalescing for defaults
-var displayName = user.Name ?? "Guest";
-var sortOrder = request.SortOrder ?? DefaultSortOrder;
+var protein = chicken ?? tofu;
+var cookingTime = recipe.CookingTime ?? DefaultCookingTime;
 
 // Null-coalescing assignment for lazy initialization
-private List<Order> _cachedOrders;
-public List<Order> CachedOrders 
+private List<Ingredient> _availableIngredients;
+public List<Ingredient> AvailableIngredients 
 {
     get 
     {
-        _cachedOrders ??= LoadOrdersFromDatabase();
-        return _cachedOrders;
+        _availableIngredients ??= LoadIngredientsFromPantry();
+        return _availableIngredients;
     }
 }
 
 // Explicit checks for important validation
-public void ProcessOrder(Order order)
+public void MakePastaDish(Ingredient pasta, Ingredient sauce)
 {
-    if (order == null) throw new ArgumentNullException(nameof(order));
-    if (order.Customer == null) throw new ArgumentException("Order must have a customer");
+    if (pasta == null) throw new ArgumentNullException(nameof(pasta));
+    if (sauce == null) throw new ArgumentException("Dish must have a sauce");
     
-    // Process order...
+    // Prepare dish...
+}
+
+// Return empty collections instead of null
+public List<Ingredient> GetAvailableVegetables()
+{
+    if (!pantry.HasVegetables)
+        return new List<Ingredient>(); // Empty but not null
+    
+    return pantry.Vegetables;
+}
+
+// Chain null checking with early returns
+public bool CanMakeDish(Chef chef, Recipe recipe)
+{
+    if (chef == null) return false;
+    if (recipe == null) return false;
+    if (recipe.Ingredients == null) return false;
+    
+    return chef.HasAllIngredients(recipe.Ingredients);
 }
 ```
 
@@ -471,31 +552,67 @@ public void ProcessOrder(Order order)
 - Use null-coalescing operator (`??`) for providing default values
 - Use null-coalescing assignment (`??=`) for lazy initialization
 - Use explicit null checks for important validation
-- Use explicit if/else null checks when logic is complex or when clarity is more important than conciseness
+- Return empty collections instead of null to simplify code for callers
+- Use early returns to avoid deep nesting (pyramid of doom)
+- Validate parameters at method entry points
 
 ### Notes:
-- Return empty collections instead of null to simplify code for callers
 - Use pattern matching (`is null`) for more readable null checks in complex conditions
+- Never return null for collections - always return empty collections
+- Consider using nullable reference types (C# 8.0+) for better compile-time checking
 
 ## 12. Asynchronous Programming
 
 ```csharp
 // Use async/await throughout
-public async Task<User> GetUserAsync(int id)
+public async Task<Meal> PrepareFullMealAsync()
 {
-    var user = await _repository.GetByIdAsync(id);
-    var settings = await _settingsService.GetUserSettingsAsync(id);
+    var mainCourse = await CookMainCourseAsync();
+    var sides = await PrepareSideDishesAsync();
     
-    user.Settings = settings;
-    return user;
+    var meal = new Meal(mainCourse, sides);
+    return meal;
+}
+
+// Parallel cooking for independent tasks
+public async Task<Meal> PrepareFullMealParallelAsync()
+{
+    // Start both tasks simultaneously
+    Task<MainCourse> mainCourseTask = CookMainCourseAsync();
+    Task<SideDishes> sidesTask = PrepareSideDishesAsync();
+    
+    // Wait for both to complete
+    var mainCourse = await mainCourseTask;
+    var sides = await sidesTask;
+    
+    return new Meal(mainCourse, sides);
+}
+
+// Proper exception handling in async methods
+public async Task<Dish> CookWithExceptionHandlingAsync(string recipeName)
+{
+    try
+    {
+        if (string.IsNullOrEmpty(recipeName))
+            throw new ArgumentException("Recipe name cannot be empty");
+            
+        var ingredients = await GetIngredientsAsync(recipeName);
+        return await CookDishAsync(ingredients);
+    }
+    catch (IngredientNotFoundException ex)
+    {
+        // Handle specific exception
+        Console.WriteLine($"Missing ingredient: {ex.IngredientName}");
+        return Dish.CreateSubstitute(recipeName);
+    }
 }
 
 // Never use ConfigureAwait(false)
 // BAD:
-var data = await GetDataAsync().ConfigureAwait(false);
+var dish = await CookDishAsync().ConfigureAwait(false);
 
 // GOOD:
-var data = await GetDataAsync();
+var dish = await CookDishAsync();
 ```
 
 ### Principles:
@@ -503,12 +620,16 @@ var data = await GetDataAsync();
 - Return Task or Task<T> from async methods, not void (except for event handlers)
 - Name async methods with the "Async" suffix
 - Never use ConfigureAwait(false) in application code
+- Use Task.WhenAll() for parallel execution of independent operations
+- Handle exceptions appropriately in async methods
+- Don't block on async code (avoid .Result or .Wait())
 
 ### Notes:
 - Avoid async void methods except for event handlers, as exceptions in async void methods can crash the application
 - In application code, ConfigureAwait(false) introduces inconsistent execution context which complicates debugging and can lead to subtle bugs. It's primarily useful in library code
 - Async methods propagate exceptions when awaited, so handle them appropriately
 - Consider adding cancellation support for long-running operations
+- Use parallel execution judiciously - only for truly independent operations
 
 ## 13. Static Methods and Classes
 
@@ -558,6 +679,12 @@ public static class FileHelpers
 - Make utility classes explicitly static
 - Name utility classes with clear descriptive names, often ending in "Helpers" or "Utils"
 - Use static methods within instance classes when they don't rely on instance state
+
+### When NOT to Use Static Classes:
+- **Service classes with [Description] attributes** - These are designed for dependency injection and framework integration
+- **Classes intended for dependency injection** - Even if currently stateless
+- **API boundary classes** - Classes that serve as interfaces to external systems
+- **Framework integration points** - Classes that need to be instantiated by frameworks
 
 ### Notes:
 - Static classes cannot be instantiated or inherited
@@ -665,38 +792,38 @@ public partial class Customer
 
 ```csharp
 // Use early returns with semantic variables to reduce nesting
-public ValidationResult ValidateRegistration(RegistrationRequest request)
+public DeliveryConfirmation ProcessDeliveryRequest(DeliveryRequest request)
 {
-    var requestIsNull = request == null;
-    if (requestIsNull) return ValidationResult.Invalid("Request is required");
+    var requestIsInvalid = request == null;
+    if (requestIsInvalid) return DeliveryConfirmation.Rejected("Request is required");
     
-    var emailMissing = string.IsNullOrEmpty(request.Email);
-    if (emailMissing) return ValidationResult.Invalid("Email is required");
+    var addressIsMissing = string.IsNullOrEmpty(request.DeliveryAddress);
+    if (addressIsMissing) return DeliveryConfirmation.Rejected("Delivery address is required");
     
-    var passwordMissing = string.IsNullOrEmpty(request.Password);
-    if (passwordMissing) return ValidationResult.Invalid("Password is required");
+    var packageIsOversized = request.Package.Weight > 50;
+    if (packageIsOversized) return DeliveryConfirmation.Rejected("Package exceeds weight limit");
     
-    var passwordTooShort = request.Password.Length < 8;
-    if (passwordTooShort) return ValidationResult.Invalid("Password too short");
+    var recipientIsUnavailable = !IsRecipientAvailable(request.RecipientId);
+    if (recipientIsUnavailable) return DeliveryConfirmation.Rescheduled("Recipient not available");
     
-    var emailTaken = _userRepository.EmailExists(request.Email);
-    if (emailTaken) return ValidationResult.Invalid("Email already registered");
+    var deliveryRouteIsBlocked = !CanAccessDeliveryArea(request.DeliveryAddress);
+    if (deliveryRouteIsBlocked) return DeliveryConfirmation.Delayed("Route temporarily blocked");
     
-    return ValidationResult.Success();
+    return DeliveryConfirmation.Successful();
 }
 
 // Use ternary for returns - single line for very simple cases
-public string GetDisplayName(User user)
+public string GetDeliveryStatus(Package package)
 {
-    return !string.IsNullOrEmpty(user.FirstName) ? user.FirstName : user.Email;
+    return !string.IsNullOrEmpty(package.TrackingNumber) ? package.TrackingNumber : package.Reference;
 }
 
 // Multi-line format for more complex ternary returns
-public string GetFormattedAddress(Address address)
+public string GetDeliveryInstructions(DeliveryAddress address)
 {
     return address != null 
         ? $"{address.Street}, {address.City}, {address.State} {address.ZipCode}"
-        : "No address provided";
+        : "No delivery address provided";
 }
 ```
 
@@ -865,47 +992,47 @@ Logger.Debug($"Processing order {order.Id} with {order.Items.Count} items, total
 ## 22. Class Design and Relationships
 
 ```csharp
-// Inheritance for "is-a" relationships
-public abstract class Document
+// Inheritance for "is-a" relationships - buildings sharing foundations
+public abstract class BuildingFoundation
 {
-    public string Id { get; set; }
-    public string Title { get; set; }
-    public abstract string GetDocumentType();
+    public string Address { get; set; }
+    public string ArchitecturalStyle { get; set; }
+    public abstract string GetBuildingType();
 }
 
-public class Invoice : Document
+public class ResidentialBuilding : BuildingFoundation
 {
-    public decimal Amount { get; set; }
-    public override string GetDocumentType() => "Invoice";
+    public int NumberOfUnits { get; set; }
+    public override string GetBuildingType() => "Residential";
 }
 
-// Composition for "has-a" relationships
-public class Order
+// Composition for "has-a" relationships - buildings incorporating systems
+public class SmartBuilding
 {
-    private readonly IPaymentProcessor _paymentProcessor;
-    private readonly IShippingCalculator _shippingCalculator;
+    private readonly IElectricalSystem _electricalSystem;
+    private readonly IPlumbingSystem _plumbingSystem;
     
-    public Order(IPaymentProcessor paymentProcessor, IShippingCalculator shippingCalculator)
+    public SmartBuilding(IElectricalSystem electricalSystem, IPlumbingSystem plumbingSystem)
     {
-        _paymentProcessor = paymentProcessor;
-        _shippingCalculator = shippingCalculator;
+        _electricalSystem = electricalSystem;
+        _plumbingSystem = plumbingSystem;
     }
     
-    public void Process()
+    public void ActivateSystems()
     {
-        _paymentProcessor.ProcessPayment(this);
+        _electricalSystem.PowerOn(this);
     }
     
-    public decimal CalculateShipping()
+    public decimal CalculateUtilityCost()
     {
-        return _shippingCalculator.Calculate(this);
+        return _plumbingSystem.EstimateMonthlyUsage(this);
     }
 }
 ```
 
 ### Principles:
-- Use inheritance for "is-a" relationships
-- Use composition for "has-a" or "uses-a" relationships
+- Use inheritance for "is-a" relationships (ResidentialBuilding is-a BuildingFoundation)
+- Use composition for "has-a" or "uses-a" relationships (SmartBuilding has-a ElectricalSystem)
 - Prefer composition over inheritance for flexibility
 - Keep inheritance hierarchies shallow
 - Program to interfaces rather than concrete implementations
@@ -917,43 +1044,43 @@ public class Order
 ## 23. Condition Checking Style
 
 ```csharp
-// Store conditions in descriptive variables 
-public bool CanUserEditDocument(User user, Document document)
+// Store decision criteria in descriptive variables - clear decision points  
+public bool CanUserAccessResource(User user, Resource resource)
 {
-    var isDocumentOwner = document.OwnerId == user.Id;
-    var hasEditPermission = user.Permissions.Contains("edit");
-    var isAdminUser = user.Role == UserRole.Admin;
-    var isDocumentLocked = document.Status == DocumentStatus.Locked;
+    var userOwnsResource = resource.OwnerId == user.Id;
+    var userHasPermission = user.Permissions.Contains("access");
+    var userIsAdministrator = user.Role == UserRole.Admin;
+    var resourceIsRestricted = resource.Status == ResourceStatus.Restricted;
     
-    return (isDocumentOwner || hasEditPermission || isAdminUser) && !isDocumentLocked;
+    return (userOwnsResource || userHasPermission || userIsAdministrator) && !resourceIsRestricted;
 }
 
-// Use semantic variables for clean single-line returns
-public string ValidateUserFile(string filePath)
+// Use semantic variables for clean single-line decision outcomes
+public string ValidateApplicationFile(string filePath)
 {
-    var fileNotFound = !File.Exists(filePath);
-    if (fileNotFound) return "File not found";
+    var fileIsMissing = !File.Exists(filePath);
+    if (fileIsMissing) return "File not found";
     
-    var hasNoContent = new FileInfo(filePath).Length == 0;
-    if (hasNoContent) return "File is empty";
+    var fileIsEmpty = new FileInfo(filePath).Length == 0;
+    if (fileIsEmpty) return "File contains no data";
     
     return "File is valid";
 }
 
-// Early returns for guard clauses
-public void SendNotification(User user, Notification notification)
+// Early decision branches for guard clauses
+public void ProcessUserRequest(User user, RequestData request)
 {
     if (user == null) throw new ArgumentNullException(nameof(user));
-    if (notification == null) throw new ArgumentNullException(nameof(notification));
+    if (request == null) throw new ArgumentNullException(nameof(request));
     
-    var notifier = _notifierFactory.CreateNotifier(user.PreferredChannel);
-    notifier.Send(notification);
-    _notificationLog.RecordSent(user.Id, notification.Id);
+    var processor = _processorFactory.CreateProcessor(user.PreferredMethod);
+    processor.Handle(request);
+    _requestLog.RecordProcessed(user.Id, request.Id);
 }
 ```
 
 ### Principles:
-- Store condition results in descriptive variables
+- Store condition results in descriptive variables - like clear decision criteria
 - Use semantic variables to keep if-statements short and enable single-line returns
 - Use early returns with clear variable names for validation
 - Prefer positive conditions over negative ones
@@ -967,51 +1094,52 @@ public void SendNotification(User user, Notification notification)
 ## 24. Builder Patterns and Fluent Interfaces
 
 ```csharp
-// Return this from builder methods
-public class EmailBuilder
+// Return this from assembly methods - continue building the custom order
+public class CustomOrderAssembler
 {
-    private readonly Email _email = new Email();
+    private readonly CustomOrder _order = new CustomOrder();
     
-    public EmailBuilder WithSubject(string subject)
+    public CustomOrderAssembler WithMainProduct(string productName)
     {
-        _email.Subject = subject;
+        _order.MainProduct = productName;
         return this;
     }
     
-    public EmailBuilder WithBody(string body)
+    public CustomOrderAssembler WithSpecialInstructions(string instructions)
     {
-        _email.Body = body;
+        _order.SpecialInstructions = instructions;
         return this;
     }
     
-    public EmailBuilder WithRecipient(string recipient)
+    public CustomOrderAssembler AddCustomization(string customization)
     {
-        _email.Recipients.Add(recipient);
+        _order.Customizations.Add(customization);
         return this;
     }
     
-    public Email Build()
+    public CustomOrder CompleteAssembly()
     {
-        return _email;
+        return _order;
     }
 }
 
-// Usage
-var email = new EmailBuilder()
-    .WithSubject("Hello")
-    .WithBody("This is a test")
-    .WithRecipient("user@example.com")
-    .Build();
+// Usage - step-by-step custom order assembly
+var customOrder = new CustomOrderAssembler()
+    .WithMainProduct("Gaming Laptop")
+    .WithSpecialInstructions("Express assembly required")
+    .AddCustomization("RGB lighting")
+    .AddCustomization("Extended warranty")
+    .CompleteAssembly();
 ```
 
 ### Principles:
-- Return `this` from builder methods to enable method chaining
-- Name builder methods with "With" prefix
+- Return `this` from assembly methods to enable method chaining
+- Name assembly methods with "With" or "Add" prefixes
 - Format each method call on a separate line for readability
-- End with a Build() or similar method to create the final object
+- End with a CompleteAssembly() or similar method to create the final object
 
 ### Notes:
-- Builder pattern is useful for objects with many optional parameters
+- Assembly pattern is useful for objects with many optional components
 - Fluent interfaces can make code more readable and self-documenting
 
 ## 25. Using Directives

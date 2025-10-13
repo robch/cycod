@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// Provides helper functions for managing long-running background processes.
-/// DEPRECATED: This class has been replaced by UnifiedShellAndProcessHelperFunctions.
+/// DEPRECATED: This class has been replaced by ShellAndProcessHelperFunctions.
 /// Please use the new unified API for all shell and process operations.
 /// </summary>
 public class BackgroundProcessHelperFunctions
 {
     /*
-    // DEPRECATED: This entire class has been replaced by UnifiedShellAndProcessHelperFunctions.
+    // DEPRECATED: This entire class has been replaced by ShellAndProcessHelperFunctions.
     // The following functions have equivalents in the new unified API:
     // - StartLongRunningProcess → Use StartNamedProcess instead
     // - GetLongRunningProcessOutput → Use GetShellOrProcessOutput instead

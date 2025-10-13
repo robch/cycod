@@ -2,13 +2,13 @@ using System.ComponentModel;
 
 /// <summary>
 /// Provides helper functions for running shell commands.
-/// DEPRECATED: This class has been replaced by UnifiedShellAndProcessHelperFunctions.
+/// DEPRECATED: This class has been replaced by ShellAndProcessHelperFunctions.
 /// Please use the new unified API for all shell and process operations.
 /// </summary>
 public class ShellCommandToolHelperFunctions
 {
     /*
-    // DEPRECATED: This entire class has been replaced by UnifiedShellAndProcessHelperFunctions.
+    // DEPRECATED: This entire class has been replaced by ShellAndProcessHelperFunctions.
     // The following functions have equivalents in the new unified API:
     // - RunBashCommand → Use RunShellCommand with shellType="bash" instead
     // - RunCmdCommand → Use RunShellCommand with shellType="cmd" instead

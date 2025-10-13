@@ -168,7 +168,16 @@ public abstract class PersistentShellProcess
     /// <returns>The current output from the shell process.</returns>
     public string GetCurrentOutput()
     {
-        return _shellProcess.GetCurrentOutput();
+        if (_shellProcess == null)
+        {
+            Logger.Warning($"PersistentShellProcess.GetCurrentOutput: Shell process is null");
+            return string.Empty;
+        }
+        
+        Logger.Info($"PersistentShellProcess.GetCurrentOutput: Getting output from process with marker {_marker}");
+        var output = _shellProcess.GetCurrentOutput();
+        Logger.Info($"PersistentShellProcess.GetCurrentOutput: Output length: {output?.Length ?? 0}, first 100 chars: {(output?.Length > 0 ? output.Substring(0, Math.Min(output.Length, 100)) : "")}");
+        return output ?? string.Empty;
     }
 
     /// <summary>
@@ -177,7 +186,10 @@ public abstract class PersistentShellProcess
     /// <returns>The current error output from the shell process.</returns>
     public string GetCurrentError()
     {
-        return _shellProcess.GetCurrentError();
+        Logger.Info($"PersistentShellProcess.GetCurrentError: Getting error output from process");
+        var error = _shellProcess.GetCurrentError();
+        Logger.Info($"PersistentShellProcess.GetCurrentError: Error output length: {error?.Length ?? 0}, first 100 chars: {(error?.Length > 0 ? error.Substring(0, Math.Min(error.Length, 100)) : "")}");
+        return error ?? string.Empty;
     }
 
     /// <summary>
@@ -186,7 +198,10 @@ public abstract class PersistentShellProcess
     /// <returns>The current merged output from the shell process.</returns>
     public string GetCurrentMergedOutput()
     {
-        return _shellProcess.GetCurrentMergedOutput();
+        Logger.Info($"PersistentShellProcess.GetCurrentMergedOutput: Getting merged output from process");
+        var merged = _shellProcess.GetCurrentMergedOutput();
+        Logger.Info($"PersistentShellProcess.GetCurrentMergedOutput: Merged output length: {merged?.Length ?? 0}, first 100 chars: {(merged?.Length > 0 ? merged.Substring(0, Math.Min(merged.Length, 100)) : "")}");
+        return merged ?? string.Empty;
     }
     
     /// <summary>

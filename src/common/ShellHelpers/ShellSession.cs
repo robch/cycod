@@ -17,7 +17,7 @@ public abstract class ShellSession
     
     // To maintain backwards compatibility, we keep the static sessions list
     // but mark it as obsolete
-    [Obsolete("Use NamedShellManager instead")]
+    [Obsolete("Use NamedShellProcessManager instead")]
     private static readonly List<ShellSession> _sessions = new List<ShellSession>();
 
     /// <summary>
@@ -409,6 +409,49 @@ public abstract class ShellSession
         LastActivityTime = DateTime.Now;
     }
 
+
+    /// <summary>
+    /// Gets the current standard output captured from the shell.
+    /// </summary>
+    public string GetCurrentOutput()
+    {
+        if (_shellProcess == null || _shellProcess.HasExited)
+        {
+            return string.Empty;
+        }
+        
+        var output = _shellProcess.GetCurrentOutput();
+        return output ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Gets the current standard error captured from the shell.
+    /// </summary>
+    public string GetCurrentError()
+    {
+        if (_shellProcess == null || _shellProcess.HasExited)
+        {
+            return string.Empty;
+        }
+        
+        var error = _shellProcess.GetCurrentError();
+        return error ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Gets the current merged output (stdout + stderr) captured from the shell.
+    /// </summary>
+    public string GetCurrentMergedOutput()
+    {
+        if (_shellProcess == null || _shellProcess.HasExited)
+        {
+            return string.Empty;
+        }
+        
+        var merged = _shellProcess.GetCurrentMergedOutput();
+        return merged ?? string.Empty;
+    }
+
     /// <summary>
     /// Renames the shell.
     /// </summary>
@@ -426,7 +469,7 @@ public abstract class ShellSession
     /// <summary>
     /// Shuts down all shells (for backward compatibility).
     /// </summary>
-    [Obsolete("Use NamedShellManager.ShutdownAllShells instead")]
+    [Obsolete("Use NamedShellProcessManager.ShutdownAllShells instead")]
     public static void ShutdownAll()
     {
 #pragma warning disable CS0618 // Type or member is obsolete
