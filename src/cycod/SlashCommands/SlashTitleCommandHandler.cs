@@ -247,7 +247,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
                 ConsoleTitleHelper.UpdateWindowTitle(metadata);
                 
                 // Set pending notification for next assistant response
-                chat.SetPendingTitleNotification(generatedTitle);
+                chat.SetPendingNotification(NotificationType.Title, generatedTitle);
             }
             else
             {

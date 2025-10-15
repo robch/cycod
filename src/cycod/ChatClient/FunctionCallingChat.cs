@@ -1,4 +1,35 @@
+using System.Collections.Concurrent;
 using Microsoft.Extensions.AI;
+
+/// <summary>
+/// Types of notifications that can be sent to the user.
+/// </summary>
+public enum NotificationType
+{
+    Title,
+    Description
+}
+
+/// <summary>
+/// Represents a pending notification message for the user.
+/// </summary>
+public class NotificationMessage
+{
+    /// <summary>
+    /// The type of notification (e.g., "title", "description").
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The content of the notification.
+    /// </summary>
+    public string Content { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// When the notification was created.
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -8,9 +39,9 @@ public class FunctionCallingChat : IAsyncDisposable
     public ConversationMetadata? Metadata { get; private set; }
     
     /// <summary>
-    /// Pending title notification to show before next assistant response.
+    /// Pending notifications to show before next assistant response.
     /// </summary>
-    private string? _pendingTitleNotification;
+    private readonly ConcurrentQueue<NotificationMessage> _pendingNotifications = new();
 
     /// <summary>
     /// Updates the conversation metadata.
@@ -22,32 +53,40 @@ public class FunctionCallingChat : IAsyncDisposable
     }
     
     /// <summary>
-    /// Sets a pending title notification to show before the next assistant response.
+    /// Sets a pending notification to be shown before the next assistant response.
     /// </summary>
-    /// <param name="newTitle">The new title to notify about</param>
-    public void SetPendingTitleNotification(string newTitle)
+    /// <param name="type">The type of notification</param>
+    /// <param name="content">The content of the notification</param>
+    public void SetPendingNotification(NotificationType type, string content)
     {
-        _pendingTitleNotification = newTitle;
+        _pendingNotifications.Enqueue(new NotificationMessage 
+        { 
+            Type = type.ToString().ToLowerInvariant(), 
+            Content = content 
+        });
     }
     
     /// <summary>
-    /// Checks if there's a pending title notification.
+    /// Checks if there are any pending notifications.
     /// </summary>
-    /// <returns>True if there's a pending notification</returns>
-    public bool HasPendingTitleNotification()
+    /// <returns>True if there are pending notifications</returns>
+    public bool HasPendingNotifications()
     {
-        return !string.IsNullOrEmpty(_pendingTitleNotification);
+        return !_pendingNotifications.IsEmpty;
     }
     
     /// <summary>
-    /// Gets and clears the pending title notification.
+    /// Gets and clears all pending notifications.
     /// </summary>
-    /// <returns>The pending notification, or null if none</returns>
-    public string? GetAndClearPendingTitleNotification()
+    /// <returns>Collection of pending notifications</returns>
+    public IEnumerable<NotificationMessage> GetAndClearPendingNotifications()
     {
-        var notification = _pendingTitleNotification;
-        _pendingTitleNotification = null;
-        return notification;
+        var notifications = new List<NotificationMessage>();
+        while (_pendingNotifications.TryDequeue(out var notification))
+        {
+            notifications.Add(notification);
+        }
+        return notifications;
     }
 
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)

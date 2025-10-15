@@ -633,7 +633,7 @@ public class ChatCommand : CommandWithVariables
                 ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Metadata);
                 
                 // Set pending notification for next assistant response
-                _currentChat.SetPendingTitleNotification(generatedTitle);
+                _currentChat.SetPendingNotification(NotificationType.Title, generatedTitle);
                 
                 ConsoleHelpers.WriteDebugLine($"✅ Successfully generated and saved title: '{generatedTitle}'");
             }
@@ -792,15 +792,19 @@ public class ChatCommand : CommandWithVariables
     }
 
     /// <summary>
-    /// Checks for and displays any pending title notifications.
+    /// Checks for and displays any pending notifications.
     /// </summary>
     private void CheckAndShowPendingNotifications(FunctionCallingChat chat)
     {
-        if (chat.HasPendingTitleNotification())
+        if (chat.HasPendingNotifications())
         {
-            var newTitle = chat.GetAndClearPendingTitleNotification();
-            ConsoleHelpers.WriteLine($"[Title updated to: \"{newTitle}\"]", ConsoleColor.DarkGray);
             ConsoleHelpers.WriteLine();
+            var notifications = chat.GetAndClearPendingNotifications();
+            foreach (var notification in notifications)
+            {
+                var message = $"[{char.ToUpper(notification.Type[0])}{notification.Type[1..]} updated to: \"{notification.Content}\"]";
+                ConsoleHelpers.WriteLine(message, ConsoleColor.DarkGray);
+            }
         }
     }
 
