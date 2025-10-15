@@ -1,0 +1,30 @@
+class: output-management-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 110.SS.OUT.STDY-005 - Shell produces steady consistent output stream
+  run: cycod --input "Use RunShellCommand to run a command that produces steady output using a for loop from 1 to 5, echoing each line with a 1 second sleep, with expectedTimeout=10000 and shellType=bash" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Line 1.*
+    .*Line 2.*
+    .*Line 3.*
+    .*Line 4.*
+    .*Line 5.*
+
+- name: Test case 310.PS.OUT.BRST-030 - Process produces burst output after period of silence
+  run: cycod --input "Use StartNamedProcess to start a process with processName='burst-test' that runs 'bash -c sleep 3 && echo Burst1 && echo Burst2'" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: burst-test.*
+
+- name: Test case 610.SL.OUT.HUGE-057 - Shell produces extremely large volume of output
+  run: cycod --input "Use RunShellCommand to run a command that produces 100 lines of output using a for loop with expectedTimeout=15000" --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Line 1 of 100.*
+    .*Line 50 of 100.*
+    .*Line 100 of 100.*

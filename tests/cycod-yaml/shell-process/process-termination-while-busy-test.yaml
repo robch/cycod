@@ -1,0 +1,27 @@
+class: process-termination-while-busy-test
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 710.PL.PRC.TERM-070 - Process handling of termination requests while busy
+  run: cycod --input "Use StartNamedProcess to create a process named 'busy-proc' that runs 'bash -c \"for i in {1..100}; do echo Busy line $i; sleep 0.2; done\"'. Then use TerminateShellOrProcess to terminate the busy-proc process." --auto-approve all
+  timeout: 30000
+  expect: |
+    The test must demonstrate that:
+    1. A process named 'busy-proc' was successfully created and started running
+    2. The process was actually producing output (showing "Busy line" messages)  
+    3. The TerminateShellOrProcess function was called on the busy process
+    4. The process was successfully terminated while it was still running
+    
+    The test must NOT show:
+    - "Error: No shell or background process found" messages when the process should exist
+    - The process terminating prematurely before termination was requested
+    - Any race condition errors where operations fail immediately after process creation
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: busy-proc.*
+    .*TerminateShellOrProcess.*
+    .*terminated.*
+  not-expect-regex: |
+    Error: Executable path cannot be empty
+    Error: No shell or process found with name
+    Failed to terminate

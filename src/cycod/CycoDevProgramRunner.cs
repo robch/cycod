@@ -1,6 +1,7 @@
 using System;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
+using ProcessExecution;
 
 public class CycoDevProgramRunner : ProgramRunner
 {
@@ -13,7 +14,7 @@ public class CycoDevProgramRunner : ProgramRunner
         }
         finally
         {
-            ShellSession.ShutdownAll();
+            NamedShellProcessManager.Instance.ShutdownAllShells();
         }
     }
 

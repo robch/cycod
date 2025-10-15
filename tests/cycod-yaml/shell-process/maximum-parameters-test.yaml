@@ -1,0 +1,12 @@
+class: maximum-parameters-test
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 810.SL.CMD.MAXP-081 - Shell command with maximum allowed parameters
+  run: cycod --input "Use RunShellCommand to run an echo command with many parameters - create a command like 'echo param1 param2 param3...' with at least 50 parameters, with expectedTimeout=10000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*echo.*param.*
+    .*param1.*
+    .*param50.*

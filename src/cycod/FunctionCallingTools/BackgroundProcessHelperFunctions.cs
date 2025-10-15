@@ -8,9 +8,20 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// Provides helper functions for managing long-running background processes.
+/// DEPRECATED: This class has been replaced by ShellAndProcessHelperFunctions.
+/// Please use the new unified API for all shell and process operations.
 /// </summary>
 public class BackgroundProcessHelperFunctions
 {
+    /*
+    // DEPRECATED: This entire class has been replaced by ShellAndProcessHelperFunctions.
+    // The following functions have equivalents in the new unified API:
+    // - StartLongRunningProcess → Use StartNamedProcess instead
+    // - GetLongRunningProcessOutput → Use GetShellOrProcessOutput instead
+    // - IsLongRunningProcessRunning → Use ListShellsAndProcesses to check status
+    // - KillLongRunningProcess → Use TerminateShellOrProcess instead
+    // - ListLongRunningProcesses → Use ListShellsAndProcesses instead
+    
     // Regex pattern to detect shell-specific constructs - only checking for &&
     private static readonly Regex ShellConstructPattern = new Regex(@"&&");
 
@@ -186,4 +197,5 @@ public class BackgroundProcessHelperFunctions
 
         return ShellConstructPattern.IsMatch(input);
     }
+    */
 }

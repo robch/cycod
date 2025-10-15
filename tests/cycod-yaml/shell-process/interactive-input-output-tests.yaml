@@ -1,0 +1,35 @@
+class: interactive-input-output-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 120.SS.INP.RESP-009 - Shell command responds immediately to input
+  run: cycod --input "Use CreateNamedShell to create a shell named input-test, then use ExecuteInShell to run 'echo InputResponse' in that shell, then use GetShellOrProcessOutput to verify the response" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*CreateNamedShell.*
+    .*Shell created with name: input-test.*
+    .*ExecuteInShell.*
+    .*GetShellOrProcessOutput.*
+    .*InputResponse.*
+  not-expect-regex: |
+    Error: Shell name cannot be empty
+    Error: No shell or process found with name
+    Error: Failed to.*execute
+    "output": ""
+    "stdout": ""
+
+- name: Test case 120.PX.INP.DLYD-012 - Long-running process accepts delayed input as expected
+  run: cycod --input "Use StartNamedProcess to start a process named 'delay-test' that runs cat command which waits for input. Then use SendInputToShellOrProcess to send input to it." --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: delay-test.*
+    .*SendInputToShellOrProcess.*
+
+- name: Test case 410.SS.OUT.ERRP-041 - Shell command correctly reports error conditions in output  
+  run: cycod --input "Use RunShellCommand to run a command that will fail by listing a nonexistent directory with expectedTimeout=5000, and verify the error is captured in output" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*ls /.*
+    .*No such file or directory.*

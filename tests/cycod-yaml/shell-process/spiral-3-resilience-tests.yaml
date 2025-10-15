@@ -1,0 +1,26 @@
+class: spiral-3-resilience-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 300.SF.CMD.FAST-026 - Shell command finishes faster than anticipated
+  run: cycod --input "Use RunShellCommand to run a very fast command 'echo FastComplete' with expectedTimeout=10000 that will finish much quicker than the timeout" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*FastComplete.*
+
+- name: Test case 320.PS.RES.GROW-034 - Process shows memory growth and periodic release
+  run: cycod --input "Use StartNamedProcess to start a process named 'grow-proc' that simulates memory patterns with 'bash -c \"echo MemoryGrow1; sleep 1; echo MemoryGrow2; sleep 1; echo MemoryRelease\"'" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: grow-proc.*
+
+- name: Test case 310.SX.OUT.IRVL-031 - Long shell command has irregular output intervals
+  run: cycod --input "Use RunShellCommand to run a command with irregular timing 'bash -c \"echo Output1; sleep 2; echo Output2; sleep 0.5; echo Output3\"' with expectedTimeout=15000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Output1.*
+    .*Output2.*
+    .*Output3.*

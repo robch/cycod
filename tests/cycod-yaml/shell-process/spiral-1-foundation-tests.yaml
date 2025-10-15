@@ -1,0 +1,36 @@
+class: spiral-1-foundation-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 100.PX.PRC.LONG-004 - Long-running process completes normally as expected
+  run: cycod --input "Use StartNamedProcess to start a long-running process named 'long-proc' that runs 'sleep 8' command. Then use WaitForShellOrProcessExit to wait for it to complete." --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: long-proc.*
+    .*WaitForShellOrProcessExit.*
+
+- name: Test case 110.PS.OUT.STDY-007 - Process produces steady consistent output stream
+  run: cycod --input "Use StartNamedProcess to start a process named 'steady-proc' that runs 'bash -c \"for i in {1..5}; do echo Progress $i; sleep 1; done\"'. Then use GetShellOrProcessOutput to get the steady output." --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: steady-proc.*
+    .*GetShellOrProcessOutput.*
+    .*Progress.*
+
+- name: Test case 120.PS.INP.RESP-011 - Process responds immediately to input
+  run: cycod --input "Use StartNamedProcess to start a process named 'input-proc' that runs cat command. Then use SendInputToShellOrProcess to send input to it immediately." --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: input-proc.*
+    .*SendInputToShellOrProcess.*
+
+- name: Test case 120.SX.INP.DLYD-010 - Long-running shell command accepts delayed input as expected
+  run: cycod --input "Use CreateNamedShell to create a shell named 'delay-shell' and then use SendInputToShellOrProcess to send 'echo DelayedInput' to it" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*CreateNamedShell.*
+    .*Shell created with name: delay-shell.*
+    .*SendInputToShellOrProcess.*

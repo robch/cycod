@@ -1,0 +1,39 @@
+class: high-value-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 410.PS.OUT.WARN-042 - Process produces warnings but continues execution
+  run: cycod --input "Use StartNamedProcess to start a process named 'warn-proc' that outputs warnings to stderr but continues execution successfully" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: warn-proc.*
+
+- name: Test case 400.PL.PRC.REST-038 - Process self-restarts components during operation
+  run: cycod --input "Use StartNamedProcess to start a process named 'restart-proc' that runs 'bash -c \"echo Starting && sleep 1 && echo Restarting && sleep 1 && echo Restarted\"'" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: restart-proc.*
+
+- name: Test case 200.PX.OUT.ANSI-016 - Process handles ANSI color and formatting codes correctly
+  run: cycod --input "Use StartNamedProcess to start a process named 'ansi-proc' that runs 'echo Color test complete'" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: ansi-proc.*
+
+- name: Test case 220.PX.RES.LIMT-024 - Long-running process respects resource limits
+  run: cycod --input "Use StartNamedProcess to start a process named 'limit-proc' that runs 'bash -c \"echo Limits && sleep 1 && echo Complete\"'" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: limit-proc.*
+
+- name: Test case 710.SL.CMD.KILL-069 - Shell command handling of SIGKILL signals
+  run: cycod --input "Use RunShellCommand to run a long command 'sleep 10' with expectedTimeout=3000 that will auto-promote, then use TerminateShellOrProcess with force=true to test signal handling" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*"status": "stillRunning".*
+    .*TerminateShellOrProcess.*
