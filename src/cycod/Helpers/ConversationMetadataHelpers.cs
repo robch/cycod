@@ -1,3 +1,4 @@
+using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.AI;
@@ -33,13 +34,9 @@ public static class ConversationMetadataHelpers
     /// <param name="title">User-provided title</param>
     public static void SetUserTitle(ConversationMetadata metadata, string title)
     {
-        if (metadata == null)
-        {
-            ConsoleHelpers.WriteLine("Warning: Metadata was null when setting user title. Creating new metadata.", ConsoleColor.Yellow);
-            metadata = CreateDefault();
-        }
+        if (metadata == null) throw new ArgumentNullException(nameof(metadata));
         metadata.Title = title?.Trim();
-        metadata.TitleLocked = true;
+        metadata.IsTitleLocked = true;
     }
 
     /// <summary>
@@ -49,15 +46,11 @@ public static class ConversationMetadataHelpers
     /// <param name="title">AI-generated title</param>
     public static void SetGeneratedTitle(ConversationMetadata metadata, string title)
     {
-        if (metadata == null)
-        {
-            ConsoleHelpers.WriteLine("Warning: Metadata was null when setting generated title. Creating new metadata.", ConsoleColor.Yellow);
-            metadata = CreateDefault();
-        }
-        if (!metadata.TitleLocked) // Only set if not locked by user
+        if (metadata == null) throw new ArgumentNullException(nameof(metadata));
+        if (!metadata.IsTitleLocked) // Only set if not locked by user
         {
             metadata.Title = title?.Trim();
-            // TitleLocked remains false
+            // IsTitleLocked remains false
         }
     }
 
@@ -96,7 +89,7 @@ public static class ConversationMetadataHelpers
     {
         return metadata != null && 
                string.IsNullOrEmpty(metadata.Title) && 
-               !metadata.TitleLocked;
+               !metadata.IsTitleLocked;
     }
 
     /// <summary>

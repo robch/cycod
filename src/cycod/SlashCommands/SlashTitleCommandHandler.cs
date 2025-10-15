@@ -68,14 +68,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
-        if (metadata.TitleLocked)
+        if (metadata.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
         {
-            metadata.TitleLocked = true;
+            metadata.IsTitleLocked = true;
             chat.UpdateMetadata(metadata);
             
             // Update console title (no change in title text, but ensure it's set)
@@ -93,14 +93,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
-        if (!metadata.TitleLocked)
+        if (!metadata.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
         {
-            metadata.TitleLocked = false;
+            metadata.IsTitleLocked = false;
             chat.UpdateMetadata(metadata);
             
             // Update console title (no change in title text, but ensure it's set)
@@ -117,7 +117,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private SlashCommandResult HandleRefresh(string[] args, FunctionCallingChat chat)
     {
         // Check if title is locked
-        if (chat.Metadata?.TitleLocked == true)
+        if (chat.Metadata?.IsTitleLocked == true)
         {
             ConsoleHelpers.WriteLine("Cannot refresh title: title is locked. Use /title unlock first.\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
@@ -182,7 +182,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         else
         {
-            status = metadata?.TitleLocked == true ? "locked" : "unlocked";
+            status = metadata?.IsTitleLocked == true ? "locked" : "unlocked";
         }
         
         ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.DarkGray);

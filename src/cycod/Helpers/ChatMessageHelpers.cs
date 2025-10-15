@@ -28,7 +28,7 @@ public static class AIExtensionsChatHelpers
     {
         var messages = new List<ChatMessage>();
 
-        var lines = jsonl.Split(new [] { '\n', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = jsonl.Split(new [] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             if (string.IsNullOrEmpty(line)) continue;
@@ -220,35 +220,38 @@ public static class AIExtensionsChatHelpers
             
             foreach (var functionCall in functionCallContents)
             {
-                bool foundMatchingToolMessage = false;
-                for (int j = i + 1; j < messages.Count; j++)
+                if (!HasMatchingToolMessage(messages, functionCall.CallId, i))
                 {
-                    var nextMessage = messages[j];
-                    var notChatToolMessage = nextMessage.Role != ChatRole.Tool;
-                    if (notChatToolMessage) break;
-                    
-                    var hasMatchingToolContent = nextMessage.Contents
-                        .OfType<FunctionResultContent>()
-                        .Any(c => c.CallId == functionCall.CallId);
-                    if (hasMatchingToolContent)
-                    {
-                        foundMatchingToolMessage = true;
-                        break;
-                    }
-                }
-                
-                if (!foundMatchingToolMessage)
-                {
-                    ConsoleHelpers.WriteDebugLine($"Found dangling tool call ID {functionCall.CallId} for function {functionCall.Name}, adding dummy tool message");
-                    
-                    var dummyResult = $"{{\"result\": \"...unknown; tool not called...\"}}";
-                    var dummyToolContent = new FunctionResultContent(functionCall.CallId, dummyResult);
-                    messages.Insert(i + 1, new ChatMessage(ChatRole.Tool, new List<AIContent> { dummyToolContent }));
-
-                    i++;
+                    AddDummyToolMessage(messages, functionCall, ref i);
                 }
             }
         }
+    }
+
+    private static bool HasMatchingToolMessage(List<ChatMessage> messages, string callId, int startIndex)
+    {
+        for (int j = startIndex + 1; j < messages.Count; j++)
+        {
+            var nextMessage = messages[j];
+            if (nextMessage.Role != ChatRole.Tool) break;
+            
+            var hasMatchingToolContent = nextMessage.Contents
+                .OfType<FunctionResultContent>()
+                .Any(c => c.CallId == callId);
+            if (hasMatchingToolContent) return true;
+        }
+        return false;
+    }
+
+    private static void AddDummyToolMessage(List<ChatMessage> messages, FunctionCallContent functionCall, ref int currentIndex)
+    {
+        ConsoleHelpers.WriteDebugLine($"Found dangling tool call ID {functionCall.CallId} for function {functionCall.Name}, adding dummy tool message");
+        
+        var dummyResult = $"{{\"result\": \"...unknown; tool not called...\"}}";
+        var dummyToolContent = new FunctionResultContent(functionCall.CallId, dummyResult);
+        messages.Insert(currentIndex + 1, new ChatMessage(ChatRole.Tool, new List<AIContent> { dummyToolContent }));
+        
+        currentIndex++;
     }
 
     public static bool IsTooBig(this IList<ChatMessage> messages, int maxChatTokenTarget)
@@ -469,7 +472,7 @@ public static class OpenAIChatHelpers
     {
         var messages = new List<OpenAI.Chat.ChatMessage>();
 
-        var lines = jsonl.Split(new [] { '\n', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+        var lines = jsonl.Split(new [] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         foreach (var line in lines)
         {
             if (string.IsNullOrEmpty(line)) continue;
@@ -570,27 +573,36 @@ public static class OpenAIChatHelpers
 
     public static ChatMessage ToExtensionsAIChatMessage(this OpenAI.Chat.ChatMessage message)
     {
-        // Determine the role
-        var role = message switch
-        {
-            OpenAI.Chat.SystemChatMessage => ChatRole.System,
-            OpenAI.Chat.UserChatMessage => ChatRole.User,
-            OpenAI.Chat.AssistantChatMessage => ChatRole.Assistant,
-            OpenAI.Chat.ToolChatMessage => ChatRole.Tool,
-            OpenAI.Chat.DeveloperChatMessage => new ChatRole("developer"),
-            _ => throw new Exception($"Unknown chat message type {message.GetType().Name}")
-        };
-
-        // Create the message
+        var role = DetermineRole(message);
         var extensionsMessage = new ChatMessage { Role = role };
+        
+        SetParticipantNameIfAvailable(message, extensionsMessage);
+        ConvertContentParts(message, extensionsMessage);
+        HandleSpecialMessageTypes(message, extensionsMessage);
+        
+        return extensionsMessage;
+    }
 
-        // Add the participant name if available
+    private static ChatRole DetermineRole(OpenAI.Chat.ChatMessage message) => message switch
+    {
+        OpenAI.Chat.SystemChatMessage => ChatRole.System,
+        OpenAI.Chat.UserChatMessage => ChatRole.User,
+        OpenAI.Chat.AssistantChatMessage => ChatRole.Assistant,
+        OpenAI.Chat.ToolChatMessage => ChatRole.Tool,
+        OpenAI.Chat.DeveloperChatMessage => new ChatRole("developer"),
+        _ => throw new Exception($"Unknown chat message type {message.GetType().Name}")
+    };
+
+    private static void SetParticipantNameIfAvailable(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.UserChatMessage userMessage && !string.IsNullOrEmpty(userMessage.ParticipantName))
         {
             extensionsMessage.AuthorName = userMessage.ParticipantName;
         }
+    }
 
-        // Add the content
+    private static void ConvertContentParts(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         foreach (var contentPart in message.Content)
         {
             if (contentPart.Kind == OpenAI.Chat.ChatMessageContentPartKind.Text)
@@ -606,32 +618,38 @@ public static class OpenAIChatHelpers
                 extensionsMessage.Contents.Add(new DataContent(contentPart.ImageBytes.ToMemory(), contentPart.ImageBytesMediaType ?? "image/*"));
             }
         }
+    }
 
-        // Handle tool message case specifically
+    private static void HandleSpecialMessageTypes(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
+        HandleToolMessage(message, extensionsMessage);
+        HandleAssistantToolCalls(message, extensionsMessage);
+    }
+
+    private static void HandleToolMessage(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.ToolChatMessage toolMessage)
         {
             extensionsMessage.Contents.Add(new FunctionResultContent(toolMessage.ToolCallId, toolMessage.Content[0].Text));
         }
+    }
 
-        // Handle assistant message with tool calls
+    private static void HandleAssistantToolCalls(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.AssistantChatMessage assistantMessage && assistantMessage.ToolCalls.Count > 0)
         {
             foreach (var toolCall in assistantMessage.ToolCalls)
             {
                 if (toolCall.Kind == OpenAI.Chat.ChatToolCallKind.Function)
                 {
-                    // Parse the function arguments
                     var argsBinary = toolCall.FunctionArguments;
                     var args = JsonSerializer.Deserialize<Dictionary<string, object?>>(argsBinary);
                     args ??= new Dictionary<string, object?>();
-
-                    // Create a function call content
+                    
                     extensionsMessage.Contents.Add(new FunctionCallContent(toolCall.Id, toolCall.FunctionName, args));
                 }
             }
         }
-
-        return extensionsMessage;
     }
 
     public static IEnumerable<OpenAI.Chat.ChatMessage> ToOpenAIChatMessages(this IEnumerable<ChatMessage> inputs, JsonSerializerOptions options)

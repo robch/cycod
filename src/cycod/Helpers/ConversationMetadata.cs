@@ -16,7 +16,7 @@ public class ConversationMetadata
     /// If true, AI should never regenerate title (user has manually edited it).
     /// </summary>
     [JsonPropertyName("titleLocked")]
-    public bool TitleLocked { get; set; }
+    public bool IsTitleLocked { get; set; }
 
     /// <summary>
     /// Preserves unknown properties for future extensibility.

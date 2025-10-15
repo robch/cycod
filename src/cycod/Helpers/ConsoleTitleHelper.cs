@@ -3,6 +3,9 @@
 /// </summary>
 public static class ConsoleTitleHelper
 {
+    private const string DefaultTitle = "cycod";
+    private const string NoTitleSetText = "No title set";
+    private const string GeneratedTitlePrefix = "conversation-";
     /// <summary>
     /// Updates the console window title based on conversation metadata.
     /// </summary>
@@ -12,13 +15,17 @@ public static class ConsoleTitleHelper
         try
         {
             var title = GetDisplayTitle(metadata);
-            if (!string.IsNullOrEmpty(title) && title != "No title set" && !title.StartsWith("conversation-"))
+            var titleIsValid = !string.IsNullOrEmpty(title);
+            var titleIsNotDefault = title != NoTitleSetText;
+            var titleIsNotGenerated = !title.StartsWith(GeneratedTitlePrefix);
+
+            if (titleIsValid && titleIsNotDefault && titleIsNotGenerated)
             {
                 Console.Title = title;
             }
             else
             {
-                Console.Title = "cycod";
+                Console.Title = DefaultTitle;
             }
         }
         catch (Exception ex)
@@ -33,8 +40,6 @@ public static class ConsoleTitleHelper
     /// </summary>
     /// <param name="metadata">Conversation metadata</param>
     /// <returns>Display-friendly title</returns>
-    private static string GetDisplayTitle(ConversationMetadata? metadata)
-    {
-        return ConversationMetadataHelpers.GetDisplayTitle(metadata, "");
-    }
+    private static string GetDisplayTitle(ConversationMetadata? metadata) =>
+        ConversationMetadataHelpers.GetDisplayTitle(metadata, "");
 }
