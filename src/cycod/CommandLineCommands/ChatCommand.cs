@@ -147,7 +147,12 @@ public class ChatCommand : CommandWithVariables
                 var userPrompt = interactive
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
-                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
+                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+                {
+                    // Show any pending notifications before exiting
+                    CheckAndShowPendingNotifications(chat);
+                    break;
+                }
 
                 var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
                 if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
