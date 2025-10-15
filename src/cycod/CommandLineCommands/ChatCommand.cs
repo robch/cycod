@@ -622,6 +622,9 @@ public class ChatCommand : CommandWithVariables
         
         ConsoleHelpers.WriteDebugLine($"Starting title generation for: {filePath}");
         
+        // Mark title generation as in progress
+        _currentChat.SetGenerationInProgress(NotificationType.Title);
+        
         try
         {
             var generatedTitle = await GenerateTitleAsync(filePath);
@@ -650,6 +653,11 @@ public class ChatCommand : CommandWithVariables
         catch (Exception ex)
         {
             ConsoleHelpers.WriteDebugLine($"❌ Failed to generate title: {ex.Message}");
+        }
+        finally
+        {
+            // Clear generation status regardless of success or failure
+            _currentChat.ClearGenerationInProgress(NotificationType.Title);
         }
     }
 

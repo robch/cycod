@@ -32,7 +32,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     protected override SlashCommandResult HandleDefault(FunctionCallingChat chat)
     {
-        ShowTitleAndHelp(chat.Metadata);
+        ShowTitleAndHelp(chat);
         return SlashCommandResult.Handled;
     }
     
@@ -41,7 +41,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private SlashCommandResult HandleView(string[] args, FunctionCallingChat chat)
     {
-        ShowCurrentTitle(chat.Metadata);
+        ShowCurrentTitle(chat);
         return SlashCommandResult.Handled;
     }
     
@@ -147,10 +147,10 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Shows current title and available subcommands (default /title behavior).
     /// </summary>
-    private void ShowTitleAndHelp(ConversationMetadata? metadata)
+    private void ShowTitleAndHelp(FunctionCallingChat chat)
     {
-        ShowCurrentTitle(metadata);
-        ShowHelp(metadata);
+        ShowCurrentTitle(chat);
+        ShowHelp(chat.Metadata);
     }
     
     /// <summary>
@@ -169,13 +169,27 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Displays the current title and its lock status.
     /// </summary>
-    private void ShowCurrentTitle(ConversationMetadata? metadata)
+    private void ShowCurrentTitle(FunctionCallingChat chat)
     {
+        var metadata = chat.Metadata;
         var title = metadata?.Title ?? "No title set";
-        var status = metadata?.TitleLocked == true ? "locked" : "unlocked";
+        
+        // Determine status with generation awareness
+        string status;
+        if (chat.IsGenerationInProgress(NotificationType.Title))
+        {
+            status = "AI title generation in progress...";
+        }
+        else
+        {
+            status = metadata?.TitleLocked == true ? "locked" : "unlocked";
+        }
         
         ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine();
+        
+        // Clear any pending title notifications since user just viewed the title
+        chat.ClearPendingNotificationsOfType(NotificationType.Title);
     }
     
     /// <summary>
@@ -228,6 +242,9 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private async Task RefreshTitleAsync(FunctionCallingChat chat, string conversationFilePath)
     {
+        // Mark title generation as in progress
+        chat.SetGenerationInProgress(NotificationType.Title);
+        
         try
         {
             // Reuse existing title generation logic from ChatCommand
@@ -258,6 +275,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
         {
             ConsoleHelpers.WriteDebugLine($"Error during title refresh: {ex.Message}");
             ConsoleHelpers.WriteLine("Failed to refresh title due to an error.\n", ConsoleColor.Red);
+        }
+        finally
+        {
+            // Clear generation status regardless of success or failure
+            chat.ClearGenerationInProgress(NotificationType.Title);  
         }
     }
     

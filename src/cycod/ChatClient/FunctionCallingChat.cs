@@ -42,6 +42,11 @@ public class FunctionCallingChat : IAsyncDisposable
     /// Pending notifications to show before next assistant response.
     /// </summary>
     private readonly ConcurrentQueue<NotificationMessage> _pendingNotifications = new();
+    
+    /// <summary>
+    /// Tracks which types of content are currently being generated.
+    /// </summary>
+    private readonly HashSet<string> _activeGenerations = new();
 
     /// <summary>
     /// Updates the conversation metadata.
@@ -87,6 +92,66 @@ public class FunctionCallingChat : IAsyncDisposable
             notifications.Add(notification);
         }
         return notifications;
+    }
+    
+    /// <summary>
+    /// Clears pending notifications of a specific type.
+    /// </summary>
+    /// <param name="type">The type of notifications to clear</param>
+    public void ClearPendingNotificationsOfType(NotificationType type)
+    {
+        var typeString = type.ToString().ToLowerInvariant();
+        var remainingNotifications = new List<NotificationMessage>();
+        
+        while (_pendingNotifications.TryDequeue(out var notification))
+        {
+            if (notification.Type != typeString)
+            {
+                remainingNotifications.Add(notification);
+            }
+        }
+        
+        foreach (var notification in remainingNotifications)
+        {
+            _pendingNotifications.Enqueue(notification);
+        }
+    }
+    
+    /// <summary>
+    /// Marks a content type as currently being generated.
+    /// </summary>
+    /// <param name="type">The type of content being generated</param>
+    public void SetGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            _activeGenerations.Add(type.ToString().ToLowerInvariant());
+        }
+    }
+    
+    /// <summary>
+    /// Marks a content type as no longer being generated.
+    /// </summary>
+    /// <param name="type">The type of content that finished generating</param>
+    public void ClearGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            _activeGenerations.Remove(type.ToString().ToLowerInvariant());
+        }
+    }
+    
+    /// <summary>
+    /// Checks if a content type is currently being generated.
+    /// </summary>
+    /// <param name="type">The type of content to check</param>
+    /// <returns>True if the content type is currently being generated</returns>
+    public bool IsGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            return _activeGenerations.Contains(type.ToString().ToLowerInvariant());
+        }
     }
 
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
