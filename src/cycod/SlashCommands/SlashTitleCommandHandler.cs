@@ -70,7 +70,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         
         if (metadata.TitleLocked)
         {
-            ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
@@ -81,7 +81,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             // Update console title (no change in title text, but ensure it's set)
             ConsoleTitleHelper.UpdateWindowTitle(metadata);
             
-            ConsoleHelpers.WriteLine("Title locked from AI changes.\n", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("Title locked from AI changes.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
         }
     }
@@ -95,7 +95,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         
         if (!metadata.TitleLocked)
         {
-            ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
@@ -106,7 +106,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             // Update console title (no change in title text, but ensure it's set)
             ConsoleTitleHelper.UpdateWindowTitle(metadata);
             
-            ConsoleHelpers.WriteLine("Title unlocked - AI can now regenerate the title.\n", ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine("Title unlocked - AI can now regenerate the title.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
         }
     }
@@ -138,7 +138,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         
         // Start async title generation
-        ConsoleHelpers.WriteLine("Generating new title...\n", ConsoleColor.Yellow);
+        ConsoleHelpers.WriteLine("Generating new title...\n", ConsoleColor.DarkGray);
         _ = Task.Run(async () => await RefreshTitleAsync(chat, _conversationFilePath));
         
         return SlashCommandResult.Handled; // No immediate save - async operation will handle it
@@ -158,12 +158,12 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     protected override void ShowHelp(ConversationMetadata? metadata)
     {
-        ConsoleHelpers.WriteLine("Available commands:", ConsoleColor.Yellow);
-        ConsoleHelpers.WriteLine("  /title view         Show current title and lock status", ConsoleColor.White);
-        ConsoleHelpers.WriteLine("  /title set <text>   Set title and lock from AI changes", ConsoleColor.White);
-        ConsoleHelpers.WriteLine("  /title lock         Lock current title from AI changes", ConsoleColor.White);
-        ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow AI regeneration", ConsoleColor.White);
-        ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation\n", ConsoleColor.White);
+        ConsoleHelpers.WriteLine("Available commands:", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title view         Show current title and lock status", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title set <text>   Set title and lock from AI changes", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title lock         Lock current title from AI changes", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow AI regeneration", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation\n", ConsoleColor.DarkGray);
     }
     
     /// <summary>
@@ -174,7 +174,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         var title = metadata?.Title ?? "No title set";
         var status = metadata?.TitleLocked == true ? "locked" : "unlocked";
         
-        ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.Yellow);
+        ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine();
     }
     
@@ -195,7 +195,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         // Update console title immediately
         ConsoleTitleHelper.UpdateWindowTitle(metadata);
         
-        ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.Yellow);
+        ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.DarkGray);
     }
     
     /// <summary>

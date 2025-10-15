@@ -33,6 +33,11 @@ public static class ConversationMetadataHelpers
     /// <param name="title">User-provided title</param>
     public static void SetUserTitle(ConversationMetadata metadata, string title)
     {
+        if (metadata == null)
+        {
+            ConsoleHelpers.WriteLine("Warning: Metadata was null when setting user title. Creating new metadata.", ConsoleColor.Yellow);
+            metadata = CreateDefault();
+        }
         metadata.Title = title?.Trim();
         metadata.TitleLocked = true;
     }
@@ -44,6 +49,11 @@ public static class ConversationMetadataHelpers
     /// <param name="title">AI-generated title</param>
     public static void SetGeneratedTitle(ConversationMetadata metadata, string title)
     {
+        if (metadata == null)
+        {
+            ConsoleHelpers.WriteLine("Warning: Metadata was null when setting generated title. Creating new metadata.", ConsoleColor.Yellow);
+            metadata = CreateDefault();
+        }
         if (!metadata.TitleLocked) // Only set if not locked by user
         {
             metadata.Title = title?.Trim();

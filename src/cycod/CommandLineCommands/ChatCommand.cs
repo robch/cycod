@@ -106,6 +106,12 @@ public class ChatCommand : CommandWithVariables
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
         _currentChat = chat;
 
+        // Initialize metadata for new conversations
+        if (chat.Metadata == null)
+        {
+            chat.UpdateMetadata(ConversationMetadataHelpers.CreateDefault());
+        }
+
         try
         {
             // Add the user prompt messages to the chat.
@@ -626,6 +632,9 @@ public class ChatCommand : CommandWithVariables
                 // Update console title with new auto-generated title
                 ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Metadata);
                 
+                // Set pending notification for next assistant response
+                _currentChat.SetPendingTitleNotification(generatedTitle);
+                
                 ConsoleHelpers.WriteDebugLine($"✅ Successfully generated and saved title: '{generatedTitle}'");
             }
             else
@@ -790,7 +799,7 @@ public class ChatCommand : CommandWithVariables
         if (chat.HasPendingTitleNotification())
         {
             var newTitle = chat.GetAndClearPendingTitleNotification();
-            ConsoleHelpers.WriteLine($"[Title updated to: \"{newTitle}\"]", ConsoleColor.Green);
+            ConsoleHelpers.WriteLine($"[Title updated to: \"{newTitle}\"]", ConsoleColor.DarkGray);
             ConsoleHelpers.WriteLine();
         }
     }
