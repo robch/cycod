@@ -175,15 +175,12 @@ public class SlashTitleCommandHandler : SlashCommandBase
         var title = metadata?.Title ?? "No title set";
         
         // Determine status with generation awareness
-        string status;
-        if (chat.IsGenerationInProgress(NotificationType.Title))
-        {
-            status = "AI title generation in progress...";
-        }
-        else
-        {
-            status = metadata?.IsTitleLocked == true ? "locked" : "unlocked";
-        }
+        var titleGenerationInProgress = chat.IsGenerationInProgress(NotificationType.Title);
+        var titleIsLocked = metadata?.IsTitleLocked == true;
+
+        var status = titleGenerationInProgress 
+            ? "AI title generation in progress..."
+            : titleIsLocked ? "locked" : "unlocked";
         
         ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine();
@@ -230,6 +227,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
             // Need at least one assistant message for meaningful conversation
             return messages.Any(m => m.Role == ChatRole.Assistant);
         }
+        catch (FileNotFoundException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Conversation file not found: {ex.Message}");
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Access denied to conversation file: {ex.Message}");
+            return false;
+        }
         catch (Exception ex)
         {
             ConsoleHelpers.WriteDebugLine($"Error checking conversation content: {ex.Message}");
@@ -270,6 +277,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
             {
                 ConsoleHelpers.WriteLine("Failed to generate new title.\n", ConsoleColor.Red);
             }
+        }
+        catch (FileNotFoundException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Conversation file not found during title refresh: {ex.Message}");
+            ConsoleHelpers.WriteLine("Failed to refresh title - conversation file not found.\n", ConsoleColor.Red);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Access denied during title refresh: {ex.Message}");
+            ConsoleHelpers.WriteLine("Failed to refresh title - access denied.\n", ConsoleColor.Red);
         }
         catch (Exception ex)
         {
@@ -329,7 +346,8 @@ public class SlashTitleCommandHandler : SlashCommandBase
             var bashPath = tempFilePath.Replace("\\", "/");
             
             // Generate title using cycodmd
-            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"Generate a concise title for this conversation (3-5 words)\"";
+            var instructions = "Generate a concise title for this conversation (3-5 words)";
+            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{instructions}\"";
             
             ConsoleHelpers.WriteDebugLine($"Title refresh command: {command}");
             
@@ -347,6 +365,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
             var title = result.MergedOutput?.Trim();
             return string.IsNullOrEmpty(title) ? null : SanitizeTitle(title);
         }
+        catch (FileNotFoundException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Required file not found for title generation: {ex.Message}");
+            return null;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Access denied during title generation: {ex.Message}");
+            return null;
+        }
         catch (Exception ex)
         {
             ConsoleHelpers.WriteDebugLine($"Title refresh failed: {ex.Message}");
@@ -361,6 +389,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
                 {
                     File.Delete(tempFilePath);
                     ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
+                }
+                catch (IOException ex)
+                {
+                    ConsoleHelpers.WriteDebugLine($"Warning: IO error deleting temp file {tempFilePath}: {ex.Message}");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    ConsoleHelpers.WriteDebugLine($"Warning: Access denied deleting temp file {tempFilePath}: {ex.Message}");
                 }
                 catch (Exception ex)
                 {
@@ -413,6 +449,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
             }
             
             return content.ToString();
+        }
+        catch (FileNotFoundException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Conversation file not found for content filtering: {ex.Message}");
+            return string.Empty;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Access denied reading conversation file for filtering: {ex.Message}");
+            return string.Empty;
         }
         catch (Exception ex)
         {

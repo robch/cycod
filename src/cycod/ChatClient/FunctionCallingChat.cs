@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using Microsoft.Extensions.AI;
 
 /// <summary>
@@ -6,8 +7,8 @@ using Microsoft.Extensions.AI;
 /// </summary>
 public enum NotificationType
 {
-    Title,
-    Description
+    Title = 0,
+    Description = 1
 }
 
 /// <summary>
@@ -178,8 +179,6 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? maxOutputTokens.Value
                 : options?.MaxOutputTokens,
         };
-
-        if (maxOutputTokens.HasValue) _options.MaxOutputTokens = maxOutputTokens.Value;
 
         ClearChatHistory();
     }
@@ -379,8 +378,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
 
-            var asDataContent = functionResult as DataContent;
-            if (asDataContent != null)
+            if (functionResult is DataContent asDataContent)
             {
                 functionResultContents.Add(asDataContent);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
@@ -447,9 +445,21 @@ public class FunctionCallingChat : IAsyncDisposable
                     var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
                     message.Contents.Add(new DataContent(imageBytes, mediaType));
                 }
-                catch (Exception ex)
+                catch (FileNotFoundException ex)
                 {
-                    ConsoleHelpers.LogException(ex, $"Failed to load image {imageFile}");
+                    ConsoleHelpers.LogException(ex, $"Image file not found: {imageFile}");
+                }
+                catch (IOException ex)
+                {
+                    ConsoleHelpers.LogException(ex, $"Failed to read image file {imageFile}");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    ConsoleHelpers.LogException(ex, $"Access denied reading image file {imageFile}");
+                }
+                catch (Exception ex)  // Safety net for unexpected exceptions
+                {
+                    ConsoleHelpers.LogException(ex, $"Unexpected error loading image {imageFile}");
                 }
             }
         }

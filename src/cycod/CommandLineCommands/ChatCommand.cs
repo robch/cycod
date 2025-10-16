@@ -3,6 +3,14 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 
+public class ChatCompletionCallbacks
+{
+    public Action<IList<ChatMessage>>? MessageCallback { get; set; }
+    public Action<ChatResponseUpdate>? StreamingCallback { get; set; }
+    public Func<string, string?, bool>? ApproveFunctionCall { get; set; }
+    public Action<string, string, object?>? FunctionCallCallback { get; set; }
+}
+
 public class ChatCommand : CommandWithVariables
 {
     public ChatCommand()
@@ -141,40 +149,7 @@ public class ChatCommand : CommandWithVariables
                 return 1;
             }
 
-            while (true)
-            {
-                DisplayUserPrompt();
-                var userPrompt = interactive
-                    ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
-                    : ReadLineOrSimulateInput(InputInstructions, "exit");
-                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
-                {
-                    // Show any pending notifications before exiting
-                    CheckAndShowPendingNotifications(chat);
-                    break;
-                }
-
-                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
-                if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
-
-                var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
-                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
-
-                var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
-
-                CheckAndShowPendingNotifications(chat);
-                DisplayAssistantLabel();
-                
-                var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
-                ImagePatterns.Clear();
-                
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
-                    (messages) => HandleUpdateMessages(messages),
-                    (update) => HandleStreamingChatCompletionUpdate(update),
-                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
-                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-                ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
-            }
+            await RunInteractiveChatLoop(chat, factory, interactive);
 
             return 0;
         }
@@ -188,6 +163,47 @@ public class ChatCommand : CommandWithVariables
             {
                 await mcpFactory.DisposeAsync();
             }
+        }
+    }
+
+    private async Task RunInteractiveChatLoop(FunctionCallingChat chat, McpFunctionFactory factory, bool interactive)
+    {
+        while (true)
+        {
+            DisplayUserPrompt();
+            var userPrompt = interactive
+                ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
+                : ReadLineOrSimulateInput(InputInstructions, "exit");
+            if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+            {
+                // Show any pending notifications before exiting
+                CheckAndShowPendingNotifications(chat);
+                break;
+            }
+
+            var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
+            if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
+
+            var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
+            if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
+
+            var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
+
+            CheckAndShowPendingNotifications(chat);
+            DisplayAssistantLabel();
+            
+            var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+            ImagePatterns.Clear();
+            
+            var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
+                new ChatCompletionCallbacks
+                {
+                    MessageCallback = (messages) => HandleUpdateMessages(messages),
+                    StreamingCallback = (update) => HandleStreamingChatCompletionUpdate(update),
+                    ApproveFunctionCall = (name, args) => HandleFunctionCallApproval(factory, name, args!),
+                    FunctionCallCallback = (name, args, result) => HandleFunctionCallCompleted(name, args, result)
+                });
+            ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
         }
     }
 
@@ -409,6 +425,15 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("PROMPTS");
         helpBuilder.AppendLine();
         
+        AppendUserDefinedPromptsToHelp(helpBuilder);
+        
+        var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
+        ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
+        return true;
+    }
+
+    private void AppendUserDefinedPromptsToHelp(StringBuilder helpBuilder)
+    {
         // Get all scopes for prompt files
         bool foundPrompts = false;
         foreach (var scope in new[] { ConfigFileScope.Local, ConfigFileScope.User, ConfigFileScope.Global })
@@ -457,21 +482,19 @@ public class ChatCommand : CommandWithVariables
             helpBuilder.AppendLine("  No custom prompts found.");
             helpBuilder.AppendLine();
         }
-        
-        var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
-        ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
-        return true;
     }
 
     private async Task<string> CompleteChatStreamingAsync(
         FunctionCallingChat chat,
         string userPrompt,
         IEnumerable<string> imageFiles,
-        Action<IList<ChatMessage>>? messageCallback = null,
-        Action<ChatResponseUpdate>? streamingCallback = null,
-        Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        ChatCompletionCallbacks? callbacks = null)
     {
+        var messageCallback = callbacks?.MessageCallback;
+        var streamingCallback = callbacks?.StreamingCallback;
+        var approveFunctionCall = callbacks?.ApproveFunctionCall;
+        var functionCallCallback = callbacks?.FunctionCallCallback;
+        
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
@@ -666,17 +689,7 @@ public class ChatCommand : CommandWithVariables
     /// </summary>
     private async Task<string?> GenerateTitleAsync(string conversationFilePath)
     {
-        // Save original environment variable values
-        var originalTitleGeneration = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION");
-        var originalAutoSaveChat = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY");
-        var originalAutoSaveTrajectory = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY");
-        var originalAutoSaveLog = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG");
-        
-        // Set environment variables for child process
-        Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", "false");
+        var originalEnvVars = SetupTitleGenerationEnvironment();
         
         string? tempFilePath = null;
         
@@ -737,28 +750,53 @@ public class ChatCommand : CommandWithVariables
         }
         finally
         {
-            // Clean up temp file
-            if (tempFilePath != null && File.Exists(tempFilePath))
-            {
-                try
-                {
-                    File.Delete(tempFilePath);
-                    ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
-                }
-                catch (Exception ex)
-                {
-                    ConsoleHelpers.WriteDebugLine($"Warning: Failed to delete temp file {tempFilePath}: {ex.Message}");
-                }
-            }
-            
-            // Restore original environment variables
-            Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", originalTitleGeneration);
-            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", originalAutoSaveChat);
-            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", originalAutoSaveTrajectory);
-            Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", originalAutoSaveLog);
-            
-            ConsoleHelpers.WriteDebugLine("Restored original environment variables");
+            CleanupTitleGeneration(tempFilePath, originalEnvVars);
         }
+    }
+
+    private Dictionary<string, string?> SetupTitleGenerationEnvironment()
+    {
+        // Save original environment variable values
+        var originalEnvVars = new Dictionary<string, string?>
+        {
+            ["CYCOD_DISABLE_TITLE_GENERATION"] = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION"),
+            ["CYCOD_AUTO_SAVE_CHAT_HISTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY"),
+            ["CYCOD_AUTO_SAVE_TRAJECTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY"),
+            ["CYCOD_AUTO_SAVE_LOG"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG")
+        };
+        
+        // Set environment variables for child process
+        Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", "false");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", "false");
+        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", "false");
+        
+        return originalEnvVars;
+    }
+
+    private void CleanupTitleGeneration(string? tempFilePath, Dictionary<string, string?> originalEnvVars)
+    {
+        // Clean up temp file
+        if (tempFilePath != null && File.Exists(tempFilePath))
+        {
+            try
+            {
+                File.Delete(tempFilePath);
+                ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteDebugLine($"Warning: Failed to delete temp file {tempFilePath}: {ex.Message}");
+            }
+        }
+        
+        // Restore original environment variables
+        foreach (var kvp in originalEnvVars)
+        {
+            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
+        }
+        
+        ConsoleHelpers.WriteDebugLine("Restored original environment variables");
     }
 
     /// <summary>
