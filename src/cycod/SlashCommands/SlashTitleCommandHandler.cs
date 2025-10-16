@@ -7,7 +7,8 @@ using Microsoft.Extensions.AI;
 public class SlashTitleCommandHandler : SlashCommandBase
 {
     public override string CommandName => "title";
-    private string? _conversationFilePath;
+    private string? _inputChatHistoryPath;
+    private string? _autoSaveOutputChatHistoryPath;
     
     public SlashTitleCommandHandler()
     {
@@ -20,11 +21,48 @@ public class SlashTitleCommandHandler : SlashCommandBase
     }
     
     /// <summary>
-    /// Sets the conversation file path for title refresh operations.
+    /// Sets both input and output file paths for smart title operations.
     /// </summary>
-    public void SetFilePath(string? conversationFilePath)
+    public void SetFilePaths(string? inputChatHistoryPath, string? autoSaveOutputChatHistoryPath)
     {
-        _conversationFilePath = conversationFilePath;
+        _inputChatHistoryPath = inputChatHistoryPath;
+        _autoSaveOutputChatHistoryPath = autoSaveOutputChatHistoryPath;
+    }
+    
+    /// <summary>
+    /// Determines the best file to read conversation content from.
+    /// Prefers input file if it has content, falls back to auto-save file.
+    /// </summary>
+    private string? GetConversationReadFilePath()
+    {
+        // If we have an input file and it exists with content, prefer it
+        if (!string.IsNullOrEmpty(_inputChatHistoryPath) && File.Exists(_inputChatHistoryPath))
+        {
+            try
+            {
+                var fileInfo = new FileInfo(_inputChatHistoryPath);
+                if (fileInfo.Length > 0)
+                {
+                    ConsoleHelpers.WriteDebugLine($"Using input file for title operations: {_inputChatHistoryPath}");
+                    return _inputChatHistoryPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteDebugLine($"Error checking input file: {ex.Message}");
+            }
+        }
+        
+        // Fall back to auto-save file
+        if (!string.IsNullOrEmpty(_autoSaveOutputChatHistoryPath))
+        {
+            ConsoleHelpers.WriteDebugLine($"Using auto-save file for title operations: {_autoSaveOutputChatHistoryPath}");
+            return _autoSaveOutputChatHistoryPath;
+        }
+        
+        // No valid file paths available
+        ConsoleHelpers.WriteDebugLine("No valid file paths available for title operations");
+        return null;
     }
     
     /// <summary>
@@ -123,15 +161,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        // Check if we have a file path
-        if (string.IsNullOrEmpty(_conversationFilePath))
+        // Get the file path to read conversation content from
+        var readFilePath = GetConversationReadFilePath();
+        if (string.IsNullOrEmpty(readFilePath))
         {
             ConsoleHelpers.WriteLine("Error: No conversation file available for title refresh.\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
         }
         
         // Validate conversation has enough content
-        if (!HasSufficientContentForTitleGeneration(_conversationFilePath))
+        if (!HasSufficientContentForTitleGeneration(readFilePath))
         {
             ConsoleHelpers.WriteLine("Cannot refresh title: conversation needs at least one assistant message.\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
@@ -139,7 +178,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         
         // Start async title generation
         ConsoleHelpers.WriteLine("Generating new title...\n", ConsoleColor.DarkGray);
-        _ = Task.Run(async () => await RefreshTitleAsync(chat, _conversationFilePath));
+        _ = Task.Run(async () => await RefreshTitleAsync(chat, readFilePath));
         
         return SlashCommandResult.Handled; // No immediate save - async operation will handle it
     }
@@ -247,7 +286,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Asynchronously generates and updates the conversation title.
     /// </summary>
-    private async Task RefreshTitleAsync(FunctionCallingChat chat, string conversationFilePath)
+    private async Task RefreshTitleAsync(FunctionCallingChat chat, string readFilePath)
     {
         // Mark title generation as in progress
         chat.SetGenerationInProgress(NotificationType.Title);
@@ -255,7 +294,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         try
         {
             // Reuse existing title generation logic from ChatCommand
-            var generatedTitle = await GenerateTitleUsingCycodmd(conversationFilePath);
+            var generatedTitle = await GenerateTitleUsingCycodmd(readFilePath);
             
             if (!string.IsNullOrEmpty(generatedTitle))
             {
@@ -264,8 +303,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
                 ConversationMetadataHelpers.SetGeneratedTitle(metadata, generatedTitle);
                 chat.UpdateMetadata(metadata);
                 
-                // Save the updated conversation
-                chat.SaveChatHistoryToFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                // Save the updated conversation to auto-save file (not the input file)
+                var saveFilePath = _autoSaveOutputChatHistoryPath ?? readFilePath;
+                chat.SaveChatHistoryToFile(saveFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                ConsoleHelpers.WriteDebugLine($"Title refresh: read from {readFilePath}, saved to {saveFilePath}");
                 
                 // Update console title immediately
                 ConsoleTitleHelper.UpdateWindowTitle(metadata);

@@ -84,8 +84,8 @@ public class ChatCommand : CommandWithVariables
         OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
         OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
         
-        // Set the conversation file path for title operations (after it's been grounded)
-        _titleCommandHandler.SetFilePath(AutoSaveOutputChatHistory);
+        // Set the conversation file paths for title operations (after it's been grounded)
+        _titleCommandHandler.SetFilePaths(InputChatHistory, AutoSaveOutputChatHistory);
         
         // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
