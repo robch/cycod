@@ -84,7 +84,7 @@ public static class AIExtensionsChatHelpers
         else
         {
             var (metadata, messages) = ChatMessagesFromJsonlWithMetadata(jsonl);
-            return (metadata, messages.ToList());
+            return (metadata, (List<ChatMessage>)messages);
         }
     }
 

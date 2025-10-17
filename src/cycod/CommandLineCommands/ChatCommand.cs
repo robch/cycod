@@ -328,10 +328,10 @@ public class ChatCommand : CommandWithVariables
             // Handle immediate save if requested
             if (titleResult == SlashCommandResult.NeedsSave)
             {
-                TrySaveChatHistoryToFileWithMetadata(AutoSaveOutputChatHistory);
+                TrySaveChatHistoryToFile(AutoSaveOutputChatHistory);
                 if (OutputChatHistory != AutoSaveOutputChatHistory)
                 {
-                    TrySaveChatHistoryToFileWithMetadata(OutputChatHistory);
+                    TrySaveChatHistoryToFile(OutputChatHistory);
                 }
                 ConsoleHelpers.WriteDebugLine("Title command triggered immediate save");
             }
@@ -587,10 +587,10 @@ public class ChatCommand : CommandWithVariables
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
         // Auto-save with metadata support
-        TrySaveChatHistoryToFileWithMetadata(AutoSaveOutputChatHistory);
+        TrySaveChatHistoryToFile(AutoSaveOutputChatHistory);
         if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            TrySaveChatHistoryToFileWithMetadata(OutputChatHistory);
+            TrySaveChatHistoryToFile(OutputChatHistory);
         }
         
         // Generate title after first meaningful exchange (unless disabled by environment variable)
@@ -602,7 +602,7 @@ public class ChatCommand : CommandWithVariables
         if (!_titleGenerationAttempted && shouldGenerate && !envDisabled)
         {
             _titleGenerationAttempted = true;
-            ConsoleHelpers.WriteDebugLine($"🎯 Triggering title generation for file: {AutoSaveOutputChatHistory}");
+            ConsoleHelpers.WriteDebugLine($"Triggering title generation for file: {AutoSaveOutputChatHistory}");
             _ = Task.Run(async () => await TryGenerateAndSaveTitle(AutoSaveOutputChatHistory));
         }
         
@@ -611,24 +611,10 @@ public class ChatCommand : CommandWithVariables
         _trajectoryFile.AppendMessage(lastMessage);
     }
 
-    private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath)
-    {
-        if (filePath == null) return;
-        
-        try
-        {
-            messages.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
-        }
-    }
-
     /// <summary>
     /// Saves chat history to file with metadata support.
     /// </summary>
-    private void TrySaveChatHistoryToFileWithMetadata(string? filePath)
+    private void TrySaveChatHistoryToFile(string? filePath)
     {
         if (filePath == null || _currentChat == null) return;
         
@@ -648,9 +634,9 @@ public class ChatCommand : CommandWithVariables
     private bool ShouldGenerateTitle(IList<ChatMessage> messages)
     {
         var hasUserAssistantExchange = messages.Any(m => m.Role == ChatRole.Assistant);
-        var needsTitle = ConversationMetadataHelpers.ShouldGenerateTitle(_currentChat?.Metadata);
+        var shouldGenerate = ConversationMetadataHelpers.ShouldGenerateTitle(_currentChat?.Metadata);
 
-        return hasUserAssistantExchange && needsTitle;
+        return hasUserAssistantExchange && shouldGenerate;
     }
 
     /// <summary>
@@ -687,16 +673,16 @@ public class ChatCommand : CommandWithVariables
                 // Set pending notification for next assistant response
                 _currentChat.SetPendingNotification(NotificationType.Title, generatedTitle);
                 
-                ConsoleHelpers.WriteDebugLine($"✅ Successfully generated and saved title: '{generatedTitle}'");
+                ConsoleHelpers.WriteDebugLine($"Successfully generated and saved title: '{generatedTitle}'");
             }
             else
             {
-                ConsoleHelpers.WriteDebugLine("❌ Title generation returned empty result");
+                ConsoleHelpers.WriteDebugLine("Title generation returned empty result");
             }
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"❌ Failed to generate title: {ex.Message}");
+            ConsoleHelpers.WriteDebugLine($"Failed to generate title: {ex.Message}");
         }
         finally
         {
@@ -719,7 +705,7 @@ public class ChatCommand : CommandWithVariables
             // Check if file exists before trying to process it
             if (!File.Exists(conversationFilePath))
             {
-                ConsoleHelpers.WriteDebugLine($"❌ File does not exist for title generation: {conversationFilePath}");
+                ConsoleHelpers.WriteDebugLine($"File does not exist for title generation: {conversationFilePath}");
                 return null;
             }
             
@@ -727,7 +713,7 @@ public class ChatCommand : CommandWithVariables
             var filteredContent = CreateFilteredConversationContent(conversationFilePath);
             if (string.IsNullOrEmpty(filteredContent))
             {
-                ConsoleHelpers.WriteDebugLine($"❌ No meaningful conversation content found for title generation");
+                ConsoleHelpers.WriteDebugLine($"No meaningful conversation content found for title generation");
                 return null;
             }
             
@@ -742,11 +728,9 @@ public class ChatCommand : CommandWithVariables
             var bashPath = tempFilePath.Replace("\\", "/");
             
             // Since we're using BashShellSession, always use bash commands
-            var titleAgentSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text.";
             var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{titleAgentSystemPrompt}\"";
 
-            ConsoleHelpers.WriteDebugLine($"Title generation command: {command}");
-            
+            ConsoleHelpers.WriteDebugLine($"Executing title generation command: {command}");
             var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
             
             ConsoleHelpers.WriteDebugLine($"Command exit code: {result.ExitCode}");
@@ -1419,4 +1403,6 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+
+    private readonly string titleAgentSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text. Do not explain your thought process in any way. Simply return the title.";
 }
