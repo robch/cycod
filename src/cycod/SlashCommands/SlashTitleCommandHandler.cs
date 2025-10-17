@@ -244,8 +244,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
         
         // Update console title immediately
         ConsoleTitleHelper.UpdateWindowTitle(metadata);
-        
+
         ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.DarkGray);
+        
+        // Clear any pending title notifications since user just set the title
+        chat.ClearPendingNotificationsOfType(NotificationType.Title);
     }
     
 

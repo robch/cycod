@@ -24,16 +24,10 @@ public static class AIExtensionsChatHelpers
         }
     }
 
-
-
     public static string? AsJson(this ChatMessage message)
     {
         return JsonSerializer.Serialize(message, _jsonlOptions);
     }
-
-
-
-
 
     /// <summary>
     /// Reads chat history from file with metadata support.
@@ -328,7 +322,6 @@ public static class AIExtensionsChatHelpers
                     .ToList());
             }
         }
-
     }
 
     private static bool IsUserChatContentTooBig(ChatMessage userChatMessage, int maxPromptTokenTarget)
@@ -424,8 +417,6 @@ public static class OpenAIChatHelpers
         }
     }
 
-
-
     /// <summary>
     /// Parses JSONL content with optional metadata support (OpenAI format).
     /// </summary>
@@ -470,8 +461,6 @@ public static class OpenAIChatHelpers
             _ => null
         };
     }
-
-
 
     /// <summary>
     /// Converts OpenAI messages and metadata to JSONL format with metadata as first line.
