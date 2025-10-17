@@ -261,7 +261,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             }
             
             // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
             
             // Need at least one assistant message for meaningful conversation
             return messages.Any(m => m.Role == ChatRole.Assistant);
@@ -464,7 +464,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         try
         {
             // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
             
             // Filter to only user and assistant messages
             var filteredMessages = messages

@@ -166,6 +166,13 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
+    /// <summary>
+    /// Runs the interactive chat loop.
+    /// </summary>
+    /// <param name="chat"></param>
+    /// <param name="factory"></param>
+    /// <param name="interactive"></param>
+    /// <returns></returns>
     private async Task RunInteractiveChatLoop(FunctionCallingChat chat, McpFunctionFactory factory, bool interactive)
     {
         while (true)
@@ -177,6 +184,7 @@ public class ChatCommand : CommandWithVariables
             if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
             {
                 // Show any pending notifications before exiting
+                // This prevents title updates from being missed by the user.
                 CheckAndShowPendingNotifications(chat);
                 break;
             }
@@ -191,10 +199,10 @@ public class ChatCommand : CommandWithVariables
 
             CheckAndShowPendingNotifications(chat);
             DisplayAssistantLabel();
-            
+
             var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
             ImagePatterns.Clear();
-            
+
             var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                 new ChatCompletionCallbacks
                 {
@@ -807,7 +815,7 @@ public class ChatCommand : CommandWithVariables
         try
         {
             // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
             
             // Filter to only user and assistant messages
             var filteredMessages = messages

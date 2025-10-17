@@ -216,7 +216,7 @@ public class FunctionCallingChat : IAsyncDisposable
     public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         // Load messages and metadata
-        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFileWithMetadata(fileName, useOpenAIFormat);
+        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
         
         // Store metadata
         Metadata = metadata;

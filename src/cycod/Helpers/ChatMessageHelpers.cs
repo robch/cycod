@@ -66,17 +66,26 @@ public static class AIExtensionsChatHelpers
         FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
-    public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    /// <summary>
+    /// Reads chat history from file with metadata support.
+    /// </summary>
+    public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFile(
+        string fileName, 
+        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         var jsonl = FileHelpers.ReadAllText(fileName);
-        var newMessages = useOpenAIFormat
-            ? OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl).ToExtensionsAIChatMessages()
-            : ChatMessagesFromJsonl(jsonl);
-
-        var hasSystemMessage = newMessages.Any(x => x.Role == ChatRole.System);
-        if (hasSystemMessage) messages.Clear();
-
-        messages.AddRange(newMessages);
+        
+        if (useOpenAIFormat)
+        {
+            var (metadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonlWithMetadata(jsonl);
+            var extensionMessages = openAIMessages.ToExtensionsAIChatMessages().ToList();
+            return (metadata, extensionMessages);
+        }
+        else
+        {
+            var (metadata, messages) = ChatMessagesFromJsonlWithMetadata(jsonl);
+            return (metadata, messages.ToList());
+        }
     }
 
     /// <summary>
@@ -156,28 +165,6 @@ public static class AIExtensionsChatHelpers
             : messages.AsJsonlWithMetadata(metadata);
             
         FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
-    }
-
-    /// <summary>
-    /// Reads chat history from file with metadata support.
-    /// </summary>
-    public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFileWithMetadata(
-        string fileName, 
-        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
-    {
-        var jsonl = FileHelpers.ReadAllText(fileName);
-        
-        if (useOpenAIFormat)
-        {
-            var (metadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonlWithMetadata(jsonl);
-            var extensionMessages = openAIMessages.ToExtensionsAIChatMessages().ToList();
-            return (metadata, extensionMessages);
-        }
-        else
-        {
-            var (metadata, messages) = ChatMessagesFromJsonlWithMetadata(jsonl);
-            return (metadata, messages.ToList());
-        }
     }
 
     public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
