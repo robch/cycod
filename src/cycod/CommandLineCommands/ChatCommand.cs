@@ -197,7 +197,12 @@ public class ChatCommand : CommandWithVariables
 
             var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
-            CheckAndShowPendingNotifications(chat);
+            // Check for notifications before assistant response
+            if (chat.HasPendingNotifications())
+            {
+                ConsoleHelpers.WriteLine("", overrideQuiet: true);
+                CheckAndShowPendingNotifications(chat);
+            }
             DisplayAssistantLabel();
 
             var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
@@ -211,7 +216,15 @@ public class ChatCommand : CommandWithVariables
                     ApproveFunctionCall = (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     FunctionCallCallback = (name, args, result) => HandleFunctionCallCompleted(name, args, result)
                 });
+
+            // Check for notifications that may have been generated during the assistant's response
             ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+            if (chat.HasPendingNotifications())
+            {
+                CheckAndShowPendingNotifications(chat);
+                ConsoleHelpers.WriteLine("", overrideQuiet: true);
+            }
+                
         }
     }
 
@@ -857,7 +870,6 @@ public class ChatCommand : CommandWithVariables
     {
         if (chat.HasPendingNotifications())
         {
-            ConsoleHelpers.WriteLine();
             var notifications = chat.GetAndClearPendingNotifications();
             foreach (var notification in notifications)
             {

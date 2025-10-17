@@ -218,14 +218,8 @@ public class FunctionCallingChat : IAsyncDisposable
         // Load messages and metadata
         var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
         
-        // Store metadata
-        Metadata = metadata;
-        
-        // If no metadata found, create default using current time
-        if (Metadata == null)
-        {
-            Metadata = ConversationMetadataHelpers.CreateDefault();
-        }
+        // Store metadata, create default if missing
+        Metadata = metadata ?? ConversationMetadataHelpers.CreateDefault();
 
         // Clear and repopulate messages
         var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
@@ -238,13 +232,10 @@ public class FunctionCallingChat : IAsyncDisposable
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        // Initialize metadata if not present (empty for now, ready for future properties)
-        if (Metadata == null)
-        {
-            Metadata = ConversationMetadataHelpers.CreateDefault();
-        }
+        // Initialize metadata if not present
+        Metadata ??= ConversationMetadataHelpers.CreateDefault();
 
-        // Save with metadata (file system handles creation/modification times)
+        // Save with metadata
         _messages.SaveChatHistoryToFile(fileName, Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
@@ -378,9 +369,9 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
 
-            if (functionResult is DataContent asDataContent)
+            if (functionResult is DataContent functionResultContent)
             {
-                functionResultContents.Add(asDataContent);
+                functionResultContents.Add(functionResultContent);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
             }
             else
