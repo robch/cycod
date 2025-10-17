@@ -3,14 +3,6 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 
-public class ChatCompletionCallbacks
-{
-    public Action<IList<ChatMessage>>? MessageCallback { get; set; }
-    public Action<ChatResponseUpdate>? StreamingCallback { get; set; }
-    public Func<string, string?, bool>? ApproveFunctionCall { get; set; }
-    public Action<string, string, object?>? FunctionCallCallback { get; set; }
-}
-
 public class ChatCommand : CommandWithVariables
 {
     public ChatCommand()
@@ -422,24 +414,37 @@ public class ChatCommand : CommandWithVariables
         // Built-in chat commands
         helpBuilder.AppendLine("BUILT-IN");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /save     Save chat history to file");
-        helpBuilder.AppendLine("  /clear    Clear chat history");
-        helpBuilder.AppendLine("  /cost     Show token usage statistics");
-        helpBuilder.AppendLine("  /help     Show this help message");
+        helpBuilder.AppendLine("  /save        Save chat history to file");
+        helpBuilder.AppendLine("  /clear       Clear chat history");
+        helpBuilder.AppendLine("  /cost        Show token usage statistics");
+        helpBuilder.AppendLine("  /help        Show this help message");
         helpBuilder.AppendLine();
+
+        // Meta-data commands
+        helpBuilder.AppendLine("META-DATA");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /title             View title and title help");
+        helpBuilder.AppendLine("  /title view        View title");
+        helpBuilder.AppendLine("  /title set {arg}   Set title to a value");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /title refresh     Regenerate title using AI");
+        helpBuilder.AppendLine("  /title lock        Lock title from AI changes");
+        helpBuilder.AppendLine("  /title unlock      Allow AI to change the title");
+        helpBuilder.AppendLine();
+        
         
         // CYCODMD integration commands
         helpBuilder.AppendLine("EXTERNAL");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /files    List files matching pattern");
-        helpBuilder.AppendLine("  /file     Get contents of a file");
-        helpBuilder.AppendLine("  /find     Find content in files");
+        helpBuilder.AppendLine("  /files       List files matching pattern");
+        helpBuilder.AppendLine("  /file        Get contents of a file");
+        helpBuilder.AppendLine("  /find        Find content in files");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /search   Search the web");
-        helpBuilder.AppendLine("  /get      Get content from URL");
+        helpBuilder.AppendLine("  /search      Search the web");
+        helpBuilder.AppendLine("  /get         Get content from URL");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /run      Run a command");
-        helpBuilder.AppendLine("  /image    Add image file(s) to conversation");
+        helpBuilder.AppendLine("  /run         Run a command");
+        helpBuilder.AppendLine("  /image       Add image file(s) to conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
@@ -1152,6 +1157,14 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
+    private class ChatCompletionCallbacks
+    {
+        public Action<IList<ChatMessage>>? MessageCallback { get; set; }
+        public Action<ChatResponseUpdate>? StreamingCallback { get; set; }
+        public Func<string, string?, bool>? ApproveFunctionCall { get; set; }
+        public Action<string, string, object?>? FunctionCallCallback { get; set; }
+    }
+
     public string? SystemPrompt { get; set; }
     public List<string> SystemPromptAdds { get; set; } = new List<string>();
     public List<string> UserPromptAdds { get; set; } = new List<string>();
@@ -1201,3 +1214,4 @@ public class ChatCommand : CommandWithVariables
 
 
 }
+
