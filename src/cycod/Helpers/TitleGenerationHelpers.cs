@@ -11,6 +11,21 @@ public static class TitleGenerationHelpers
     /// Default system prompt for title generation.
     /// </summary>
     private const string DefaultSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text. Do not explain your thought process in any way. Simply return the title.";
+    
+    /// <summary>
+    /// Timeout in milliseconds for title generation command execution.
+    /// </summary>
+    public const int TitleGenerationTimeoutMs = 30000;
+    
+    /// <summary>
+    /// Maximum length for display titles before truncation.
+    /// </summary>
+    public const int MaxTitleDisplayLength = 80;
+    
+    /// <summary>
+    /// Length to truncate to when title exceeds maximum display length.
+    /// </summary>
+    public const int TitleTruncationLength = 77;
 
     /// <summary>
     /// Generates a conversation title using cycodmd with environment variables to prevent infinite loops and auto-saving.
@@ -62,7 +77,7 @@ public static class TitleGenerationHelpers
             var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{prompt}\"";
 
             ConsoleHelpers.WriteDebugLine($"Executing title generation command: {command}");
-            var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
+            var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: TitleGenerationTimeoutMs);
             
             if (result.ExitCode != 0)
             {
@@ -182,14 +197,72 @@ public static class TitleGenerationHelpers
         sanitized = sanitized.Trim('"', '\'', ' ', '\n', '\r', '\t');
         
         // Limit length for display
-        if (sanitized.Length > 80)
+        if (sanitized.Length > MaxTitleDisplayLength)
         {
-            sanitized = sanitized.Substring(0, 77) + "...";
+            sanitized = sanitized.Substring(0, TitleTruncationLength) + "...";
         }
         
         ConsoleHelpers.WriteDebugLine($"Sanitized title: '{title}' → '{sanitized}'");
         
         return sanitized;
+    }
+
+    /// <summary>
+    /// Checks if a conversation file has sufficient content for title generation.
+    /// Requires at least one assistant message for meaningful conversation.
+    /// </summary>
+    /// <param name="conversationFilePath">Path to the conversation file</param>
+    /// <returns>True if the conversation has sufficient content for title generation</returns>
+    public static bool HasSufficientContentForTitleGeneration(string conversationFilePath)
+    {
+        if (string.IsNullOrWhiteSpace(conversationFilePath))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (!File.Exists(conversationFilePath))
+            {
+                return false;
+            }
+            
+            // Load and parse the conversation
+            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            
+            // Need at least one assistant message for meaningful conversation
+            return messages.Any(m => m.Role == ChatRole.Assistant);
+        }
+        catch (FileNotFoundException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Conversation file not found: {ex.Message}");
+            return false;
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Access denied to conversation file: {ex.Message}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Error checking conversation content: {ex.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Determines if a title should be generated based on messages and metadata.
+    /// Combines message content validation with metadata state checking.
+    /// </summary>
+    /// <param name="messages">Chat messages to evaluate</param>
+    /// <param name="metadata">Conversation metadata</param>
+    /// <returns>True if title generation should proceed</returns>
+    public static bool ShouldGenerateTitle(IList<ChatMessage> messages, ConversationMetadata? metadata)
+    {
+        var hasUserAssistantExchange = messages.Any(m => m.Role == ChatRole.Assistant);
+        var shouldGenerate = ConversationMetadataHelpers.ShouldGenerateTitle(metadata);
+
+        return hasUserAssistantExchange && shouldGenerate;
     }
 
     /// <summary>

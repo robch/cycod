@@ -595,7 +595,7 @@ public class ChatCommand : CommandWithVariables
         
         // Generate title after first meaningful exchange (unless disabled by environment variable)
         var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
-        var shouldGenerate = ShouldGenerateTitle(messages);
+        var shouldGenerate = TitleGenerationHelpers.ShouldGenerateTitle(messages, _currentChat?.Metadata);
         
         ConsoleHelpers.WriteDebugLine($"Title generation check: attempted={_titleGenerationAttempted}, shouldGenerate={shouldGenerate}, envDisabled={envDisabled}, messageCount={messages.Count}");
         
@@ -628,16 +628,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    /// <summary>
-    /// Determines if a title should be generated for this conversation.
-    /// </summary>
-    private bool ShouldGenerateTitle(IList<ChatMessage> messages)
-    {
-        var hasUserAssistantExchange = messages.Any(m => m.Role == ChatRole.Assistant);
-        var shouldGenerate = ConversationMetadataHelpers.ShouldGenerateTitle(_currentChat?.Metadata);
 
-        return hasUserAssistantExchange && shouldGenerate;
-    }
 
     /// <summary>
     /// Attempts to generate and save a title for the conversation using cycodmd.

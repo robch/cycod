@@ -170,7 +170,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         
         // Validate conversation has enough content
-        if (!HasSufficientContentForTitleGeneration(readFilePath))
+        if (!TitleGenerationHelpers.HasSufficientContentForTitleGeneration(readFilePath))
         {
             ConsoleHelpers.WriteLine("Cannot refresh title: conversation needs at least one assistant message.\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
@@ -248,40 +248,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.DarkGray);
     }
     
-    /// <summary>
-    /// Checks if the conversation has sufficient content for title generation.
-    /// </summary>
-    private bool HasSufficientContentForTitleGeneration(string conversationFilePath)
-    {
-        try
-        {
-            if (!File.Exists(conversationFilePath))
-            {
-                return false;
-            }
-            
-            // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-            
-            // Need at least one assistant message for meaningful conversation
-            return messages.Any(m => m.Role == ChatRole.Assistant);
-        }
-        catch (FileNotFoundException ex)
-        {
-            ConsoleHelpers.WriteDebugLine($"Conversation file not found: {ex.Message}");
-            return false;
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            ConsoleHelpers.WriteDebugLine($"Access denied to conversation file: {ex.Message}");
-            return false;
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelpers.WriteDebugLine($"Error checking conversation content: {ex.Message}");
-            return false;
-        }
-    }
+
     
     /// <summary>
     /// Asynchronously generates and updates the conversation title.
