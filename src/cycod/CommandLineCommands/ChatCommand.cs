@@ -657,7 +657,7 @@ public class ChatCommand : CommandWithVariables
         
         try
         {
-            var generatedTitle = await GenerateTitleAsync(filePath);
+            var generatedTitle = await TitleGenerationHelpers.GenerateTitleAsync(filePath);
             if (!string.IsNullOrEmpty(generatedTitle))
             {
                 ConsoleHelpers.WriteDebugLine($"Generated title: '{generatedTitle}', setting to metadata");
@@ -691,161 +691,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    /// <summary>
-    /// Generates a conversation title using cycodmd with environment variables to prevent infinite loops and auto-saving.
-    /// </summary>
-    private async Task<string?> GenerateTitleAsync(string conversationFilePath)
-    {
-        var originalEnvVars = SetupTitleGenerationEnvironment();
-        
-        string? tempFilePath = null;
-        
-        try 
-        {
-            // Check if file exists before trying to process it
-            if (!File.Exists(conversationFilePath))
-            {
-                ConsoleHelpers.WriteDebugLine($"File does not exist for title generation: {conversationFilePath}");
-                return null;
-            }
-            
-            // Create filtered content with only user and assistant messages
-            var filteredContent = CreateFilteredConversationContent(conversationFilePath);
-            if (string.IsNullOrEmpty(filteredContent))
-            {
-                ConsoleHelpers.WriteDebugLine($"No meaningful conversation content found for title generation");
-                return null;
-            }
-            
-            // Write filtered content to temp file
-            tempFilePath = Path.GetTempFileName();
-            await File.WriteAllTextAsync(tempFilePath, filteredContent);
-            
-            ConsoleHelpers.WriteDebugLine($"Created filtered temp file: {tempFilePath}");
-            ConsoleHelpers.WriteDebugLine($"Filtered content preview: {filteredContent.Substring(0, Math.Min(200, filteredContent.Length))}...");
 
-            // Convert temp file path to Unix-style for bash
-            var bashPath = tempFilePath.Replace("\\", "/");
-            
-            // Since we're using BashShellSession, always use bash commands
-            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{titleAgentSystemPrompt}\"";
-
-            ConsoleHelpers.WriteDebugLine($"Executing title generation command: {command}");
-            var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: 30000);
-            
-            ConsoleHelpers.WriteDebugLine($"Command exit code: {result.ExitCode}");
-            ConsoleHelpers.WriteDebugLine($"Command output: {result.MergedOutput}");
-            ConsoleHelpers.WriteDebugLine($"Command timeout: {result.IsTimeout}");
-            
-            if (result.ExitCode != 0 || result.IsTimeout)
-            {
-                ConsoleHelpers.WriteDebugLine($"Title generation command failed with exit code {result.ExitCode}");
-                return null;
-            }
-            
-            var title = result.MergedOutput?.Trim();
-            ConsoleHelpers.WriteDebugLine($"Raw title result: '{title}'");
-            
-            return string.IsNullOrEmpty(title) ? null : SanitizeTitle(title);
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelpers.WriteDebugLine($"Title generation failed: {ex.Message}");
-            return null;
-        }
-        finally
-        {
-            CleanupTitleGeneration(tempFilePath, originalEnvVars);
-        }
-    }
-
-    private Dictionary<string, string?> SetupTitleGenerationEnvironment()
-    {
-        // Save original environment variable values
-        var originalEnvVars = new Dictionary<string, string?>
-        {
-            ["CYCOD_DISABLE_TITLE_GENERATION"] = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION"),
-            ["CYCOD_AUTO_SAVE_CHAT_HISTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY"),
-            ["CYCOD_AUTO_SAVE_TRAJECTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY"),
-            ["CYCOD_AUTO_SAVE_LOG"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG")
-        };
-        
-        // Set environment variables for child process
-        Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", "false");
-        
-        return originalEnvVars;
-    }
-
-    private void CleanupTitleGeneration(string? tempFilePath, Dictionary<string, string?> originalEnvVars)
-    {
-        // Clean up temp file
-        if (tempFilePath != null && File.Exists(tempFilePath))
-        {
-            try
-            {
-                File.Delete(tempFilePath);
-                ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelpers.WriteDebugLine($"Warning: Failed to delete temp file {tempFilePath}: {ex.Message}");
-            }
-        }
-        
-        // Restore original environment variables
-        foreach (var kvp in originalEnvVars)
-        {
-            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
-        }
-        
-        ConsoleHelpers.WriteDebugLine("Restored original environment variables");
-    }
-
-    /// <summary>
-    /// Creates filtered conversation content containing only user and assistant messages.
-    /// </summary>
-    private string CreateFilteredConversationContent(string conversationFilePath)
-    {
-        try
-        {
-            // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
-            
-            // Filter to only user and assistant messages
-            var filteredMessages = messages
-                .Where(m => m.Role == ChatRole.User || m.Role == ChatRole.Assistant)
-                .ToList();
-            
-            ConsoleHelpers.WriteDebugLine($"Filtered {messages.Count} total messages down to {filteredMessages.Count} user/assistant messages");
-            
-            if (filteredMessages.Count == 0)
-            {
-                return string.Empty;
-            }
-            
-            // Convert to simple text format for title generation
-            var content = new System.Text.StringBuilder();
-            content.AppendLine("Conversation between User and Assistant:");
-            content.AppendLine();
-            
-            foreach (var message in filteredMessages)
-            {
-                var roleLabel = message.Role == ChatRole.User ? "User" : "Assistant";
-                content.AppendLine($"{roleLabel}: {message.Text}");
-                content.AppendLine();
-            }
-            
-            return content.ToString();
-        }
-        catch (Exception ex)
-        {
-            ConsoleHelpers.WriteDebugLine($"Failed to create filtered conversation content: {ex.Message}");
-            return string.Empty;
-        }
-    }
 
     /// <summary>
     /// Checks for and displays any pending notifications.
@@ -863,49 +709,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    /// <summary>
-    /// Cleans and formats a generated title.
-    /// </summary>
-    private string SanitizeTitle(string title)
-    {
-        // Remove quotes and extra whitespace
-        var sanitized = title.Trim('"', '\'', ' ', '\n', '\r', '\t');
-        
-        // Remove any error messages or shell output that got mixed in
-        var lines = sanitized.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        
-        // Find the actual title (skip error lines, bash prompts, etc.)
-        foreach (var line in lines)
-        {
-            var cleanLine = line.Trim();
-            // Skip obvious error/command lines
-            if (cleanLine.StartsWith("/usr/bin/bash:") ||
-                cleanLine.StartsWith("$") ||
-                cleanLine.StartsWith("bash:") ||
-                cleanLine.Contains("command not found") ||
-                string.IsNullOrWhiteSpace(cleanLine))
-            {
-                continue;
-            }
-            
-            // This looks like actual content
-            sanitized = cleanLine;
-            break;
-        }
-        
-        // Final cleanup
-        sanitized = sanitized.Trim('"', '\'', ' ', '\n', '\r', '\t');
-        
-        // Limit length for display
-        if (sanitized.Length > 80)
-        {
-            sanitized = sanitized.Substring(0, 77) + "...";
-        }
-        
-        ConsoleHelpers.WriteDebugLine($"Sanitized title: '{title}' → '{sanitized}'");
-        
-        return sanitized;
-    }
+
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
@@ -1404,5 +1208,5 @@ public class ChatCommand : CommandWithVariables
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
 
-    private readonly string titleAgentSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text. Do not explain your thought process in any way. Simply return the title.";
+
 }
