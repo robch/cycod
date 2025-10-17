@@ -1,0 +1,27 @@
+﻿EXCEPTION: HTTP 400 (: model_max_prompt_tokens_exceeded)
+
+prompt token count of 90492 exceeds the limit of 90000
+
+  System.ClientModel.ClientResultException
+
+     at OpenAI.ClientPipelineExtensions.ProcessMessageAsync(ClientPipeline pipeline, PipelineMessage message, RequestOptions options)
+     at OpenAI.Chat.ChatClient.CompleteChatAsync(BinaryContent content, RequestOptions options)
+     at OpenAI.Chat.ChatClient.<>c__DisplayClass10_0.<<CompleteChatStreamingAsync>b__0>d.MoveNext()
+  --- End of stack trace from previous location ---
+     at OpenAI.AsyncSseUpdateCollection`1.GetRawPagesAsync()+MoveNext()
+     at OpenAI.AsyncSseUpdateCollection`1.GetRawPagesAsync()+System.Threading.Tasks.Sources.IValueTaskSource<System.Boolean>.GetResult()
+     at System.ClientModel.AsyncCollectionResult`1.GetAsyncEnumerator(CancellationToken cancellationToken)+MoveNext()
+     at System.ClientModel.AsyncCollectionResult`1.GetAsyncEnumerator(CancellationToken cancellationToken)+MoveNext()
+     at System.ClientModel.AsyncCollectionResult`1.GetAsyncEnumerator(CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource<System.Boolean>.GetResult()
+     at Microsoft.Extensions.AI.OpenAIChatClient.FromOpenAIStreamingChatCompletionAsync(IAsyncEnumerable`1 updates, CancellationToken cancellationToken)+MoveNext()
+     at Microsoft.Extensions.AI.OpenAIChatClient.FromOpenAIStreamingChatCompletionAsync(IAsyncEnumerable`1 updates, CancellationToken cancellationToken)+MoveNext()
+     at Microsoft.Extensions.AI.OpenAIChatClient.FromOpenAIStreamingChatCompletionAsync(IAsyncEnumerable`1 updates, CancellationToken cancellationToken)+System.Threading.Tasks.Sources.IValueTaskSource<System.Boolean>.GetResult()
+     at FunctionCallingChat.CompleteChatStreamingAsync(String userPrompt, IEnumerable`1 imageFiles, Action`1 messageCallback, Action`1 streamingCallback, Func`3 approveFunctionCall, Action`3 functionCallCallback) in C:\src\cycod\src\cycod\ChatClient\FunctionCallingChat.cs:line 115
+     at FunctionCallingChat.CompleteChatStreamingAsync(String userPrompt, IEnumerable`1 imageFiles, Action`1 messageCallback, Action`1 streamingCallback, Func`3 approveFunctionCall, Action`3 functionCallCallback) in C:\src\cycod\src\cycod\ChatClient\FunctionCallingChat.cs:line 115
+     at ChatCommand.CompleteChatStreamingAsync(FunctionCallingChat chat, String userPrompt, IEnumerable`1 imageFiles, Action`1 messageCallback, Action`1 streamingCallback, Func`3 approveFunctionCall, Action`3 functionCallCallback) in C:\src\cycod\src\cycod\CommandLineCommands\ChatCommand.cs:line 454
+     at ChatCommand.ExecuteAsync(Boolean interactive) in C:\src\cycod\src\cycod\CommandLineCommands\ChatCommand.cs:line 159
+     at ChatCommand.ExecuteAsync(Boolean interactive) in C:\src\cycod\src\cycod\CommandLineCommands\ChatCommand.cs:line 179
+     at ProgramRunner.<>c__DisplayClass3_0.<<WrapRunAndRelease>b__0>d.MoveNext() in C:\src\cycod\src\common\ProgramRunner.cs:line 139
+  --- End of stack trace from previous location ---
+     at ProgramRunner.DoProgram(String[] args) in C:\src\cycod\src\common\ProgramRunner.cs:line 127
+     at ProgramRunner.RunProgramAsync(String[] args) in C:\src\cycod\src\common\ProgramRunner.cs:line 16
