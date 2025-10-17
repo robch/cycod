@@ -110,8 +110,8 @@ public static class TitleGenerationHelpers
     {
         try
         {
-            // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            // Load and parse the conversation with format auto-detection
+            var (metadata, messages) = TryReadChatHistoryWithFormatDetection(conversationFilePath);
             
             // Filter to only user and assistant messages
             var filteredMessages = messages
@@ -153,6 +153,55 @@ public static class TitleGenerationHelpers
         {
             ConsoleHelpers.WriteDebugLine($"Failed to create filtered conversation content: {ex.Message}");
             return string.Empty;
+        }
+    }
+
+    /// <summary>
+    /// Attempts to read chat history with automatic format detection.
+    /// Tries the default format first, then falls back to the alternate format if no messages are found.
+    /// </summary>
+    /// <param name="filePath">Path to the conversation file</param>
+    /// <returns>Tuple of (metadata, messages) from whichever format successfully parsed content</returns>
+    private static (ConversationMetadata?, List<ChatMessage>) TryReadChatHistoryWithFormatDetection(string filePath)
+    {
+        // Try default format first
+        var (metadata1, messages1) = TryReadWithFormat(filePath, ChatHistoryDefaults.UseOpenAIFormat);
+        if (messages1.Count > 0)
+        {
+            ConsoleHelpers.WriteDebugLine($"Successfully parsed {messages1.Count} messages using default format (OpenAI: {ChatHistoryDefaults.UseOpenAIFormat})");
+            return (metadata1, messages1);
+        }
+        
+        // Try opposite format
+        var alternateFormat = !ChatHistoryDefaults.UseOpenAIFormat;
+        var (metadata2, messages2) = TryReadWithFormat(filePath, alternateFormat);
+        if (messages2.Count > 0)
+        {
+            ConsoleHelpers.WriteDebugLine($"Successfully parsed {messages2.Count} messages using alternate format (OpenAI: {alternateFormat})");
+            return (metadata2, messages2);
+        }
+        
+        // No messages found in either format
+        ConsoleHelpers.WriteDebugLine("No messages found in either format - file may be empty or corrupted");
+        return (metadata1, new List<ChatMessage>());
+    }
+    
+    /// <summary>
+    /// Safely attempts to read chat history with a specific format, catching and logging any exceptions.
+    /// </summary>
+    /// <param name="filePath">Path to the conversation file</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format (true) or Extensions.AI format (false)</param>
+    /// <returns>Tuple of (metadata, messages) - returns empty list on failure</returns>
+    private static (ConversationMetadata?, List<ChatMessage>) TryReadWithFormat(string filePath, bool useOpenAIFormat)
+    {
+        try
+        {
+            return AIExtensionsChatHelpers.ReadChatHistoryFromFile(filePath, useOpenAIFormat);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Failed to read chat history with OpenAI format = {useOpenAIFormat}: {ex.Message}");
+            return (null, new List<ChatMessage>());
         }
     }
 
