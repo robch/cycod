@@ -24,59 +24,110 @@ public static class AIExtensionsChatHelpers
         }
     }
 
-    public static IList<ChatMessage> ChatMessagesFromJsonl(string jsonl)
-    {
-        var messages = new List<ChatMessage>();
-
-        var lines = jsonl.Split(new [] { '\n', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var line in lines)
-        {
-            if (string.IsNullOrEmpty(line)) continue;
-
-            var message = ChatMessageFromJson(line);
-            if (message == null) continue;
-
-            messages.Add(message);
-        }
-
-        return messages;
-    }
-
     public static string? AsJson(this ChatMessage message)
     {
         return JsonSerializer.Serialize(message, _jsonlOptions);
     }
 
-    public static string AsJsonl(this IList<ChatMessage> messages)
-    {
-        var asJsonList = messages
-            .Select(m => m.AsJson())
-            .Where(m => !string.IsNullOrEmpty(m))
-            .Select(m => m!)
-            .ToList();
-        var history = string.Join('\n', asJsonList);
-        return history;
-    }
-
-    public static void SaveChatHistoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
-    {
-        var jsonl = useOpenAIFormat
-            ? messages.ToOpenAIChatMessages(_jsonlOptions).AsJsonl()
-            : messages.AsJsonl();
-        FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
-    }
-
-    public static void ReadChatHistoryFromFile(this List<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    /// <summary>
+    /// Reads chat history from file with metadata support.
+    /// </summary>
+    public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFile(
+        string fileName, 
+        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         var jsonl = FileHelpers.ReadAllText(fileName);
-        var newMessages = useOpenAIFormat
-            ? OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl).ToExtensionsAIChatMessages()
-            : ChatMessagesFromJsonl(jsonl);
+        
+        if (useOpenAIFormat)
+        {
+            var (metadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
+            var extensionMessages = openAIMessages.ToExtensionsAIChatMessages().ToList();
+            return (metadata, extensionMessages);
+        }
+        else
+        {
+            var (metadata, messages) = ChatMessagesFromJsonl(jsonl);
+            return (metadata, (List<ChatMessage>)messages);
+        }
+    }
 
-        var hasSystemMessage = newMessages.Any(x => x.Role == ChatRole.System);
-        if (hasSystemMessage) messages.Clear();
+    /// <summary>
+    /// Parses JSONL content with optional metadata support.
+    /// </summary>
+    /// <param name="jsonl">JSONL content to parse</param>
+    /// <returns>Tuple of (metadata, messages). Metadata is null if not present.</returns>
+    public static (ConversationMetadata? metadata, IList<ChatMessage> messages) ChatMessagesFromJsonl(string jsonl)
+    {
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (lines.Length == 0)
+        {
+            return (null, new List<ChatMessage>());
+        }
 
-        messages.AddRange(newMessages);
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+
+        // Parse remaining lines as messages
+        var messageLines = lines.Skip(messageStartIndex);
+        var messages = new List<ChatMessage>();
+
+        foreach (var line in messageLines)
+        {
+            if (string.IsNullOrEmpty(line)) continue;
+
+            var message = ChatMessageFromJson(line);
+            if (message != null)
+            {
+                messages.Add(message);
+            }
+        }
+
+        return (metadata, messages);
+    }
+
+    /// <summary>
+    /// Converts messages and metadata to JSONL format with metadata as first line.
+    /// </summary>
+    /// <param name="messages">Chat messages to serialize</param>
+    /// <param name="metadata">Optional metadata to include. If null, no metadata line added.</param>
+    /// <returns>JSONL string with optional metadata first line</returns>
+    public static string AsJsonl(this IList<ChatMessage> messages, ConversationMetadata? metadata = null)
+    {
+        var lines = new List<string>();
+
+        // Add metadata as first line if present
+        if (metadata != null)
+        {
+            lines.Add(ConversationMetadataHelpers.SerializeMetadata(metadata));
+        }
+
+        // Add message lines
+        var messageJsons = messages
+            .Select(m => m.AsJson())
+            .Where(m => !string.IsNullOrEmpty(m))
+            .Select(m => m!);
+
+        lines.AddRange(messageJsons);
+
+        return string.Join('\n', lines);
+    }
+
+    /// <summary>
+    /// Saves chat history to file with optional metadata.
+    /// </summary>
+    public static void SaveChatHistoryToFile(
+        this IList<ChatMessage> messages, 
+        string fileName, 
+        ConversationMetadata? metadata,
+        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, 
+        string? saveToFolderOnAccessDenied = null)
+    {
+        var jsonl = useOpenAIFormat
+            ? messages.ToOpenAIChatMessages(_jsonlOptions).AsJsonl(metadata)
+            : messages.AsJsonl(metadata);
+            
+        FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
     public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
@@ -119,35 +170,38 @@ public static class AIExtensionsChatHelpers
             
             foreach (var functionCall in functionCallContents)
             {
-                bool foundMatchingToolMessage = false;
-                for (int j = i + 1; j < messages.Count; j++)
+                if (!HasMatchingToolMessage(messages, functionCall.CallId, i))
                 {
-                    var nextMessage = messages[j];
-                    var notChatToolMessage = nextMessage.Role != ChatRole.Tool;
-                    if (notChatToolMessage) break;
-                    
-                    var hasMatchingToolContent = nextMessage.Contents
-                        .OfType<FunctionResultContent>()
-                        .Any(c => c.CallId == functionCall.CallId);
-                    if (hasMatchingToolContent)
-                    {
-                        foundMatchingToolMessage = true;
-                        break;
-                    }
-                }
-                
-                if (!foundMatchingToolMessage)
-                {
-                    ConsoleHelpers.WriteDebugLine($"Found dangling tool call ID {functionCall.CallId} for function {functionCall.Name}, adding dummy tool message");
-                    
-                    var dummyResult = $"{{\"result\": \"...unknown; tool not called...\"}}";
-                    var dummyToolContent = new FunctionResultContent(functionCall.CallId, dummyResult);
-                    messages.Insert(i + 1, new ChatMessage(ChatRole.Tool, new List<AIContent> { dummyToolContent }));
-
-                    i++;
+                    AddDummyToolMessage(messages, functionCall, ref i);
                 }
             }
         }
+    }
+
+    private static bool HasMatchingToolMessage(List<ChatMessage> messages, string callId, int startIndex)
+    {
+        for (int j = startIndex + 1; j < messages.Count; j++)
+        {
+            var nextMessage = messages[j];
+            if (nextMessage.Role != ChatRole.Tool) break;
+            
+            var hasMatchingToolContent = nextMessage.Contents
+                .OfType<FunctionResultContent>()
+                .Any(c => c.CallId == callId);
+            if (hasMatchingToolContent) return true;
+        }
+        return false;
+    }
+
+    private static void AddDummyToolMessage(List<ChatMessage> messages, FunctionCallContent functionCall, ref int currentIndex)
+    {
+        ConsoleHelpers.WriteDebugLine($"Found dangling tool call ID {functionCall.CallId} for function {functionCall.Name}, adding dummy tool message");
+        
+        var dummyResult = $"{{\"result\": \"...unknown; tool not called...\"}}";
+        var dummyToolContent = new FunctionResultContent(functionCall.CallId, dummyResult);
+        messages.Insert(currentIndex + 1, new ChatMessage(ChatRole.Tool, new List<AIContent> { dummyToolContent }));
+        
+        currentIndex++;
     }
 
     public static bool IsTooBig(this IList<ChatMessage> messages, int maxChatTokenTarget)
@@ -268,7 +322,6 @@ public static class AIExtensionsChatHelpers
                     .ToList());
             }
         }
-
     }
 
     private static bool IsUserChatContentTooBig(ChatMessage userChatMessage, int maxPromptTokenTarget)
@@ -364,22 +417,37 @@ public static class OpenAIChatHelpers
         }
     }
 
-    public static IList<OpenAI.Chat.ChatMessage> ChatMessagesFromJsonl(string jsonl)
+    /// <summary>
+    /// Parses JSONL content with optional metadata support (OpenAI format).
+    /// </summary>
+    public static (ConversationMetadata? metadata, IList<OpenAI.Chat.ChatMessage> messages) ChatMessagesFromJsonl(string jsonl)
     {
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (lines.Length == 0)
+        {
+            return (null, new List<OpenAI.Chat.ChatMessage>());
+        }
+
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+
+        // Parse remaining lines as messages
+        var messageLines = lines.Skip(messageStartIndex);
         var messages = new List<OpenAI.Chat.ChatMessage>();
 
-        var lines = jsonl.Split(new [] { '\n', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var line in lines)
+        foreach (var line in messageLines)
         {
             if (string.IsNullOrEmpty(line)) continue;
 
             var message = ChatMessageFromJson(line);
-            if (message == null) continue;
-
-            messages.Add(message);
+            if (message != null)
+            {
+                messages.Add(message);
+            }
         }
 
-        return messages;
+        return (metadata, messages);
     }
 
     public static string? AsJson(this OpenAI.Chat.ChatMessage message)
@@ -394,15 +462,28 @@ public static class OpenAIChatHelpers
         };
     }
 
-    public static string AsJsonl(this IEnumerable<OpenAI.Chat.ChatMessage> messages)
+    /// <summary>
+    /// Converts OpenAI messages and metadata to JSONL format with metadata as first line.
+    /// </summary>
+    public static string AsJsonl(this IEnumerable<OpenAI.Chat.ChatMessage> messages, ConversationMetadata? metadata = null)
     {
-        var asJsonList = messages
+        var lines = new List<string>();
+
+        // Add metadata as first line if present
+        if (metadata != null)
+        {
+            lines.Add(ConversationMetadataHelpers.SerializeMetadata(metadata));
+        }
+
+        // Add message lines
+        var messageJsons = messages
             .Select(m => m.AsJson())
             .Where(m => !string.IsNullOrEmpty(m))
-            .Select(m => m!)
-            .ToList();
-        var history = string.Join('\n', asJsonList);
-        return history;
+            .Select(m => m!);
+
+        lines.AddRange(messageJsons);
+
+        return string.Join('\n', lines);
     }
 
     public static IEnumerable<ChatMessage> ToExtensionsAIChatMessages(this IEnumerable<OpenAI.Chat.ChatMessage> messages)
@@ -412,27 +493,36 @@ public static class OpenAIChatHelpers
 
     public static ChatMessage ToExtensionsAIChatMessage(this OpenAI.Chat.ChatMessage message)
     {
-        // Determine the role
-        var role = message switch
-        {
-            OpenAI.Chat.SystemChatMessage => ChatRole.System,
-            OpenAI.Chat.UserChatMessage => ChatRole.User,
-            OpenAI.Chat.AssistantChatMessage => ChatRole.Assistant,
-            OpenAI.Chat.ToolChatMessage => ChatRole.Tool,
-            OpenAI.Chat.DeveloperChatMessage => new ChatRole("developer"),
-            _ => throw new Exception($"Unknown chat message type {message.GetType().Name}")
-        };
-
-        // Create the message
+        var role = DetermineRole(message);
         var extensionsMessage = new ChatMessage { Role = role };
+        
+        SetParticipantNameIfAvailable(message, extensionsMessage);
+        ConvertContentParts(message, extensionsMessage);
+        HandleSpecialMessageTypes(message, extensionsMessage);
+        
+        return extensionsMessage;
+    }
 
-        // Add the participant name if available
+    private static ChatRole DetermineRole(OpenAI.Chat.ChatMessage message) => message switch
+    {
+        OpenAI.Chat.SystemChatMessage => ChatRole.System,
+        OpenAI.Chat.UserChatMessage => ChatRole.User,
+        OpenAI.Chat.AssistantChatMessage => ChatRole.Assistant,
+        OpenAI.Chat.ToolChatMessage => ChatRole.Tool,
+        OpenAI.Chat.DeveloperChatMessage => new ChatRole("developer"),
+        _ => throw new Exception($"Unknown chat message type {message.GetType().Name}")
+    };
+
+    private static void SetParticipantNameIfAvailable(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.UserChatMessage userMessage && !string.IsNullOrEmpty(userMessage.ParticipantName))
         {
             extensionsMessage.AuthorName = userMessage.ParticipantName;
         }
+    }
 
-        // Add the content
+    private static void ConvertContentParts(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         foreach (var contentPart in message.Content)
         {
             if (contentPart.Kind == OpenAI.Chat.ChatMessageContentPartKind.Text)
@@ -448,32 +538,38 @@ public static class OpenAIChatHelpers
                 extensionsMessage.Contents.Add(new DataContent(contentPart.ImageBytes.ToMemory(), contentPart.ImageBytesMediaType ?? "image/*"));
             }
         }
+    }
 
-        // Handle tool message case specifically
+    private static void HandleSpecialMessageTypes(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
+        HandleToolMessage(message, extensionsMessage);
+        HandleAssistantToolCalls(message, extensionsMessage);
+    }
+
+    private static void HandleToolMessage(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.ToolChatMessage toolMessage)
         {
             extensionsMessage.Contents.Add(new FunctionResultContent(toolMessage.ToolCallId, toolMessage.Content[0].Text));
         }
+    }
 
-        // Handle assistant message with tool calls
+    private static void HandleAssistantToolCalls(OpenAI.Chat.ChatMessage message, ChatMessage extensionsMessage)
+    {
         if (message is OpenAI.Chat.AssistantChatMessage assistantMessage && assistantMessage.ToolCalls.Count > 0)
         {
             foreach (var toolCall in assistantMessage.ToolCalls)
             {
                 if (toolCall.Kind == OpenAI.Chat.ChatToolCallKind.Function)
                 {
-                    // Parse the function arguments
                     var argsBinary = toolCall.FunctionArguments;
                     var args = JsonSerializer.Deserialize<Dictionary<string, object?>>(argsBinary);
                     args ??= new Dictionary<string, object?>();
-
-                    // Create a function call content
+                    
                     extensionsMessage.Contents.Add(new FunctionCallContent(toolCall.Id, toolCall.FunctionName, args));
                 }
             }
         }
-
-        return extensionsMessage;
     }
 
     public static IEnumerable<OpenAI.Chat.ChatMessage> ToOpenAIChatMessages(this IEnumerable<ChatMessage> inputs, JsonSerializerOptions options)

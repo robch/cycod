@@ -1,7 +1,160 @@
+using System.Collections.Concurrent;
+
 using Microsoft.Extensions.AI;
+
+/// <summary>
+/// Types of notifications that can be sent to the user.
+/// </summary>
+public enum NotificationType
+{
+    Title = 0,
+    Description = 1
+}
+
+/// <summary>
+/// Represents a pending notification message for the user.
+/// </summary>
+public class NotificationMessage
+{
+    /// <summary>
+    /// The type of notification (e.g., "title", "description").
+    /// </summary>
+    public string Type { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// The content of the notification.
+    /// </summary>
+    public string Content { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// When the notification was created.
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
 
 public class FunctionCallingChat : IAsyncDisposable
 {
+    /// <summary>
+    /// Metadata for the current conversation.
+    /// </summary>
+    public ConversationMetadata? Metadata { get; private set; }
+    
+    /// <summary>
+    /// Pending notifications to show before next assistant response.
+    /// </summary>
+    private readonly ConcurrentQueue<NotificationMessage> _pendingNotifications = new();
+    
+    /// <summary>
+    /// Tracks which types of content are currently being generated.
+    /// </summary>
+    private readonly HashSet<string> _activeGenerations = new();
+
+    /// <summary>
+    /// Updates the conversation metadata.
+    /// </summary>
+    /// <param name="metadata">New metadata to set</param>
+    public void UpdateMetadata(ConversationMetadata? metadata)
+    {
+        Metadata = metadata;
+    }
+    
+    /// <summary>
+    /// Sets a pending notification to be shown before the next assistant response.
+    /// </summary>
+    /// <param name="type">The type of notification</param>
+    /// <param name="content">The content of the notification</param>
+    public void SetPendingNotification(NotificationType type, string content)
+    {
+        _pendingNotifications.Enqueue(new NotificationMessage 
+        { 
+            Type = type.ToString().ToLowerInvariant(), 
+            Content = content 
+        });
+    }
+    
+    /// <summary>
+    /// Checks if there are any pending notifications.
+    /// </summary>
+    /// <returns>True if there are pending notifications</returns>
+    public bool HasPendingNotifications()
+    {
+        return !_pendingNotifications.IsEmpty;
+    }
+    
+    /// <summary>
+    /// Gets and clears all pending notifications.
+    /// </summary>
+    /// <returns>Collection of pending notifications</returns>
+    public IEnumerable<NotificationMessage> GetAndClearPendingNotifications()
+    {
+        var notifications = new List<NotificationMessage>();
+        while (_pendingNotifications.TryDequeue(out var notification))
+        {
+            notifications.Add(notification);
+        }
+        return notifications;
+    }
+    
+    /// <summary>
+    /// Clears pending notifications of a specific type.
+    /// </summary>
+    /// <param name="type">The type of notifications to clear</param>
+    public void ClearPendingNotificationsOfType(NotificationType type)
+    {
+        var typeString = type.ToString().ToLowerInvariant();
+        var remainingNotifications = new List<NotificationMessage>();
+        
+        while (_pendingNotifications.TryDequeue(out var notification))
+        {
+            if (notification.Type != typeString)
+            {
+                remainingNotifications.Add(notification);
+            }
+        }
+        
+        foreach (var notification in remainingNotifications)
+        {
+            _pendingNotifications.Enqueue(notification);
+        }
+    }
+    
+    /// <summary>
+    /// Marks a content type as currently being generated.
+    /// </summary>
+    /// <param name="type">The type of content being generated</param>
+    public void SetGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            _activeGenerations.Add(type.ToString().ToLowerInvariant());
+        }
+    }
+    
+    /// <summary>
+    /// Marks a content type as no longer being generated.
+    /// </summary>
+    /// <param name="type">The type of content that finished generating</param>
+    public void ClearGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            _activeGenerations.Remove(type.ToString().ToLowerInvariant());
+        }
+    }
+    
+    /// <summary>
+    /// Checks if a content type is currently being generated.
+    /// </summary>
+    /// <param name="type">The type of content to check</param>
+    /// <returns>True if the content type is currently being generated</returns>
+    public bool IsGenerationInProgress(NotificationType type)
+    {
+        lock (_activeGenerations)
+        {
+            return _activeGenerations.Contains(type.ToString().ToLowerInvariant());
+        }
+    }
+
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
@@ -26,8 +179,6 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? maxOutputTokens.Value
                 : options?.MaxOutputTokens,
         };
-
-        if (maxOutputTokens.HasValue) _options.MaxOutputTokens = maxOutputTokens.Value;
 
         ClearChatHistory();
     }
@@ -64,14 +215,28 @@ public class FunctionCallingChat : IAsyncDisposable
 
     public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        // Load messages and metadata
+        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        
+        // Store metadata, create default if missing
+        Metadata = metadata ?? ConversationMetadataHelpers.CreateDefault();
+
+        // Clear and repopulate messages
+        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
+        if (hasSystemMessage) _messages.Clear();
+
+        _messages.AddRange(messages);
         _messages.FixDanglingToolCalls();
         _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
     }
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
+        // Initialize metadata if not present
+        Metadata ??= ConversationMetadataHelpers.CreateDefault();
+
+        // Save with metadata
+        _messages.SaveChatHistoryToFile(fileName, Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
@@ -204,10 +369,9 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
 
-            var asDataContent = functionResult as DataContent;
-            if (asDataContent != null)
+            if (functionResult is DataContent functionResultContent)
             {
-                functionResultContents.Add(asDataContent);
+                functionResultContents.Add(functionResultContent);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
             }
             else
@@ -272,9 +436,21 @@ public class FunctionCallingChat : IAsyncDisposable
                     var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
                     message.Contents.Add(new DataContent(imageBytes, mediaType));
                 }
-                catch (Exception ex)
+                catch (FileNotFoundException ex)
                 {
-                    ConsoleHelpers.LogException(ex, $"Failed to load image {imageFile}");
+                    ConsoleHelpers.LogException(ex, $"Image file not found: {imageFile}");
+                }
+                catch (IOException ex)
+                {
+                    ConsoleHelpers.LogException(ex, $"Failed to read image file {imageFile}");
+                }
+                catch (UnauthorizedAccessException ex)
+                {
+                    ConsoleHelpers.LogException(ex, $"Access denied reading image file {imageFile}");
+                }
+                catch (Exception ex)  // Safety net for unexpected exceptions
+                {
+                    ConsoleHelpers.LogException(ex, $"Unexpected error loading image {imageFile}");
                 }
             }
         }

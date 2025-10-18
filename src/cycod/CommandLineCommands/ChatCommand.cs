@@ -59,6 +59,7 @@ public class ChatCommand : CommandWithVariables
         
         // Initialize slash command handlers
         _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
+        _titleCommandHandler = new SlashTitleCommandHandler();
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -74,6 +75,9 @@ public class ChatCommand : CommandWithVariables
         AutoSaveOutputTrajectory = ChatHistoryFileHelpers.GroundAutoSaveTrajectoryFileName()?.ReplaceValues(_namedValues);
         OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
         OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
+        
+        // Set the conversation file paths for title operations (after it's been grounded)
+        _titleCommandHandler.SetFilePaths(InputChatHistory, AutoSaveOutputChatHistory);
         
         // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
@@ -100,6 +104,13 @@ public class ChatCommand : CommandWithVariables
         // Create the chat completions object with the external ChatClient and system prompt.
         var chatClient = ChatClientFactory.CreateChatClient(out var options);
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
+        _currentChat = chat;
+
+        // Initialize metadata for new conversations
+        if (chat.Metadata == null)
+        {
+            chat.UpdateMetadata(ConversationMetadataHelpers.CreateDefault());
+        }
 
         try
         {
@@ -118,6 +129,9 @@ public class ChatCommand : CommandWithVariables
                     maxToolTokenTarget: MaxToolTokenTarget,
                     maxChatTokenTarget: MaxChatTokenTarget,
                     useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                // Update console title with loaded conversation title
+                ConsoleTitleHelper.UpdateWindowTitle(chat.Metadata);
             }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
@@ -127,34 +141,7 @@ public class ChatCommand : CommandWithVariables
                 return 1;
             }
 
-            while (true)
-            {
-                DisplayUserPrompt();
-                var userPrompt = interactive
-                    ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
-                    : ReadLineOrSimulateInput(InputInstructions, "exit");
-                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
-
-                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
-                if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
-
-                var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
-                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
-
-                var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
-
-                DisplayAssistantLabel();
-                
-                var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
-                ImagePatterns.Clear();
-                
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
-                    (messages) => HandleUpdateMessages(messages),
-                    (update) => HandleStreamingChatCompletionUpdate(update),
-                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
-                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-                ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
-            }
+            await RunInteractiveChatLoop(chat, factory, interactive);
 
             return 0;
         }
@@ -168,6 +155,68 @@ public class ChatCommand : CommandWithVariables
             {
                 await mcpFactory.DisposeAsync();
             }
+        }
+    }
+
+    /// <summary>
+    /// Runs the interactive chat loop.
+    /// </summary>
+    /// <param name="chat"></param>
+    /// <param name="factory"></param>
+    /// <param name="interactive"></param>
+    /// <returns></returns>
+    private async Task RunInteractiveChatLoop(FunctionCallingChat chat, McpFunctionFactory factory, bool interactive)
+    {
+        while (true)
+        {
+            DisplayUserPrompt();
+            var userPrompt = interactive
+                ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
+                : ReadLineOrSimulateInput(InputInstructions, "exit");
+            if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+            {
+                // Show any pending notifications before exiting
+                // This prevents title updates from being missed by the user.
+                CheckAndShowPendingNotifications(chat);
+                break;
+            }
+
+            var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
+            if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
+
+            var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
+            if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
+
+            var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
+
+            // Check for notifications before assistant response
+            if (chat.HasPendingNotifications())
+            {
+                ConsoleHelpers.WriteLine("", overrideQuiet: true);
+                CheckAndShowPendingNotifications(chat);
+            }
+            DisplayAssistantLabel();
+
+            var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+            ImagePatterns.Clear();
+
+            var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
+                new ChatCompletionCallbacks
+                {
+                    MessageCallback = (messages) => HandleUpdateMessages(messages),
+                    StreamingCallback = (update) => HandleStreamingChatCompletionUpdate(update),
+                    ApproveFunctionCall = (name, args) => HandleFunctionCallApproval(factory, name, args!),
+                    FunctionCallCallback = (name, args, result) => HandleFunctionCallCompleted(name, args, result)
+                });
+
+            // Check for notifications that may have been generated during the assistant's response
+            ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+            if (chat.HasPendingNotifications())
+            {
+                CheckAndShowPendingNotifications(chat);
+                ConsoleHelpers.WriteLine("", overrideQuiet: true);
+            }
+                
         }
     }
 
@@ -264,7 +313,22 @@ public class ChatCommand : CommandWithVariables
         bool skipAssistant = false;
         string? giveAssistant = null;
 
-        if (userPrompt.StartsWith("/save"))
+        if (_titleCommandHandler?.TryHandle(userPrompt, chat, out var titleResult) == true)
+        {
+            skipAssistant = true;
+            
+            // Handle immediate save if requested
+            if (titleResult == SlashCommandResult.NeedsSave)
+            {
+                TrySaveChatHistoryToFile(AutoSaveOutputChatHistory);
+                if (OutputChatHistory != AutoSaveOutputChatHistory)
+                {
+                    TrySaveChatHistoryToFile(OutputChatHistory);
+                }
+                ConsoleHelpers.WriteDebugLine("Title command triggered immediate save");
+            }
+        }
+        else if (userPrompt.StartsWith("/save"))
         {
             skipAssistant = HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
         }
@@ -350,30 +414,52 @@ public class ChatCommand : CommandWithVariables
         // Built-in chat commands
         helpBuilder.AppendLine("BUILT-IN");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /save     Save chat history to file");
-        helpBuilder.AppendLine("  /clear    Clear chat history");
-        helpBuilder.AppendLine("  /cost     Show token usage statistics");
-        helpBuilder.AppendLine("  /help     Show this help message");
+        helpBuilder.AppendLine("  /save        Save chat history to file");
+        helpBuilder.AppendLine("  /clear       Clear chat history");
+        helpBuilder.AppendLine("  /cost        Show token usage statistics");
+        helpBuilder.AppendLine("  /help        Show this help message");
         helpBuilder.AppendLine();
+
+        // Meta-data commands
+        helpBuilder.AppendLine("META-DATA");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /title             View title and title help");
+        helpBuilder.AppendLine("  /title view        View title");
+        helpBuilder.AppendLine("  /title set {arg}   Set title to a value");
+        helpBuilder.AppendLine();
+        helpBuilder.AppendLine("  /title refresh     Regenerate title using AI");
+        helpBuilder.AppendLine("  /title lock        Lock title from AI changes");
+        helpBuilder.AppendLine("  /title unlock      Allow AI to change the title");
+        helpBuilder.AppendLine();
+        
         
         // CYCODMD integration commands
         helpBuilder.AppendLine("EXTERNAL");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /files    List files matching pattern");
-        helpBuilder.AppendLine("  /file     Get contents of a file");
-        helpBuilder.AppendLine("  /find     Find content in files");
+        helpBuilder.AppendLine("  /files       List files matching pattern");
+        helpBuilder.AppendLine("  /file        Get contents of a file");
+        helpBuilder.AppendLine("  /find        Find content in files");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /search   Search the web");
-        helpBuilder.AppendLine("  /get      Get content from URL");
+        helpBuilder.AppendLine("  /search      Search the web");
+        helpBuilder.AppendLine("  /get         Get content from URL");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /run      Run a command");
-        helpBuilder.AppendLine("  /image    Add image file(s) to conversation");
+        helpBuilder.AppendLine("  /run         Run a command");
+        helpBuilder.AppendLine("  /image       Add image file(s) to conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
         helpBuilder.AppendLine("PROMPTS");
         helpBuilder.AppendLine();
         
+        AppendUserDefinedPromptsToHelp(helpBuilder);
+        
+        var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
+        ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
+        return true;
+    }
+
+    private void AppendUserDefinedPromptsToHelp(StringBuilder helpBuilder)
+    {
         // Get all scopes for prompt files
         bool foundPrompts = false;
         foreach (var scope in new[] { ConfigFileScope.Local, ConfigFileScope.User, ConfigFileScope.Global })
@@ -422,21 +508,19 @@ public class ChatCommand : CommandWithVariables
             helpBuilder.AppendLine("  No custom prompts found.");
             helpBuilder.AppendLine();
         }
-        
-        var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
-        ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
-        return true;
     }
 
     private async Task<string> CompleteChatStreamingAsync(
         FunctionCallingChat chat,
         string userPrompt,
         IEnumerable<string> imageFiles,
-        Action<IList<ChatMessage>>? messageCallback = null,
-        Action<ChatResponseUpdate>? streamingCallback = null,
-        Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        ChatCompletionCallbacks? callbacks = null)
     {
+        var messageCallback = callbacks?.MessageCallback;
+        var streamingCallback = callbacks?.StreamingCallback;
+        var approveFunctionCall = callbacks?.ApproveFunctionCall;
+        var functionCallCallback = callbacks?.FunctionCallCallback;
+        
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
@@ -507,10 +591,24 @@ public class ChatCommand : CommandWithVariables
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
-        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
+        // Auto-save with metadata support
+        TrySaveChatHistoryToFile(AutoSaveOutputChatHistory);
         if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            TrySaveChatHistoryToFile(messages, OutputChatHistory);
+            TrySaveChatHistoryToFile(OutputChatHistory);
+        }
+        
+        // Generate title after first meaningful exchange (unless disabled by environment variable)
+        var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
+        var shouldGenerate = TitleGenerationHelpers.ShouldGenerateTitle(messages, _currentChat?.Metadata);
+        
+        ConsoleHelpers.WriteDebugLine($"Title generation check: attempted={_titleGenerationAttempted}, shouldGenerate={shouldGenerate}, envDisabled={envDisabled}, messageCount={messages.Count}");
+        
+        if (!_titleGenerationAttempted && shouldGenerate && !envDisabled)
+        {
+            _titleGenerationAttempted = true;
+            ConsoleHelpers.WriteDebugLine($"Triggering title generation for file: {AutoSaveOutputChatHistory}");
+            _ = Task.Run(async () => await TryGenerateAndSaveTitle(AutoSaveOutputChatHistory));
         }
         
         var lastMessage = messages.LastOrDefault();
@@ -518,19 +616,96 @@ public class ChatCommand : CommandWithVariables
         _trajectoryFile.AppendMessage(lastMessage);
     }
 
-    private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath)
+    /// <summary>
+    /// Saves chat history to file with metadata support.
+    /// </summary>
+    private void TrySaveChatHistoryToFile(string? filePath)
     {
-        if (filePath == null) return;
+        if (filePath == null || _currentChat == null) return;
         
         try
         {
-            messages.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
+            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history with metadata to '{filePath}'", showToUser: true);
         }
     }
+
+
+
+    /// <summary>
+    /// Attempts to generate and save a title for the conversation using cycodmd.
+    /// </summary>
+    private async Task TryGenerateAndSaveTitle(string? filePath)
+    {
+        if (filePath == null || _currentChat?.Metadata == null) 
+        {
+            ConsoleHelpers.WriteDebugLine($"Skipping title generation: filePath={filePath}, metadata={_currentChat?.Metadata != null}");
+            return;
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"Starting title generation for: {filePath}");
+        
+        // Mark title generation as in progress
+        _currentChat.SetGenerationInProgress(NotificationType.Title);
+        
+        try
+        {
+            var generatedTitle = await TitleGenerationHelpers.GenerateTitleAsync(filePath);
+            if (!string.IsNullOrEmpty(generatedTitle))
+            {
+                ConsoleHelpers.WriteDebugLine($"Generated title: '{generatedTitle}', setting to metadata");
+                ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Metadata, generatedTitle);
+                
+                // Save again with updated title
+                ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
+                _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                // Update console title with new auto-generated title
+                ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Metadata);
+                
+                // Set pending notification for next assistant response
+                _currentChat.SetPendingNotification(NotificationType.Title, generatedTitle);
+                
+                ConsoleHelpers.WriteDebugLine($"Successfully generated and saved title: '{generatedTitle}'");
+            }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine("Title generation returned empty result");
+            }
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteDebugLine($"Failed to generate title: {ex.Message}");
+        }
+        finally
+        {
+            // Clear generation status regardless of success or failure
+            _currentChat.ClearGenerationInProgress(NotificationType.Title);
+        }
+    }
+
+
+
+    /// <summary>
+    /// Checks for and displays any pending notifications.
+    /// </summary>
+    private void CheckAndShowPendingNotifications(FunctionCallingChat chat)
+    {
+        if (chat.HasPendingNotifications())
+        {
+            var notifications = chat.GetAndClearPendingNotifications();
+            foreach (var notification in notifications)
+            {
+                var message = $"[{char.ToUpper(notification.Type[0])}{notification.Type[1..]} updated to: \"{notification.Content}\"]";
+                ConsoleHelpers.WriteLine(message, ConsoleColor.DarkGray);
+            }
+        }
+    }
+
+
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
@@ -982,6 +1157,14 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
+    private class ChatCompletionCallbacks
+    {
+        public Action<IList<ChatMessage>>? MessageCallback { get; set; }
+        public Action<ChatResponseUpdate>? StreamingCallback { get; set; }
+        public Func<string, string?, bool>? ApproveFunctionCall { get; set; }
+        public Action<string, string, object?>? FunctionCallCallback { get; set; }
+    }
+
     public string? SystemPrompt { get; set; }
     public List<string> SystemPromptAdds { get; set; } = new List<string>();
     public List<string> UserPromptAdds { get; set; } = new List<string>();
@@ -1015,6 +1198,9 @@ public class ChatCommand : CommandWithVariables
     private TrajectoryFile _autoSaveTrajectoryFile = null!;
     private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
+    private SlashTitleCommandHandler? _titleCommandHandler;
+    private FunctionCallingChat? _currentChat;
+    private bool _titleGenerationAttempted = false;
 
     private long _totalTokensIn = 0;
     private long _totalTokensOut = 0;
@@ -1025,4 +1211,7 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+
+
 }
+
