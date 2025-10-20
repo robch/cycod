@@ -1,0 +1,5 @@
+{"metadata": {"Title": "User Set Title", "IsTitleLocked": true}}
+{"role": "user", "content": "Hello, I need help with something"}
+{"role": "assistant", "content": "Hello! I'd be happy to help you with whatever you need. What can I assist you with today?"}
+{"role": "user", "content": "Can you help me write a short story?"}
+{"role": "assistant", "content": "Of course! What genre or theme would you like the story to be about?"}

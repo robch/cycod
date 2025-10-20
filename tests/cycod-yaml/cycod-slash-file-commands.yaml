@@ -1,4 +1,4 @@
-class: slash-commands
+class: slash-file-commands
 tag: cycod
 tests:
 - name: file_command_test
