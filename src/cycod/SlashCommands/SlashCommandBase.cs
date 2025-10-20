@@ -76,13 +76,60 @@ public abstract class SlashCommandBase
     
     /// <summary>
     /// Parses the argument string into an array of arguments.
-    /// Can be overridden for custom parsing logic.
+    /// Handles quoted strings as single arguments and removes outer quotes.
     /// </summary>
     /// <param name="input">The input string to parse</param>
     /// <returns>Array of parsed arguments</returns>
     protected virtual string[] ParseArgs(string input)
     {
-        return input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (string.IsNullOrWhiteSpace(input))
+            return Array.Empty<string>();
+            
+        var args = new List<string>();
+        var i = 0;
+        
+        while (i < input.Length)
+        {
+            // Skip whitespace
+            while (i < input.Length && char.IsWhiteSpace(input[i]))
+                i++;
+                
+            if (i >= input.Length)
+                break;
+                
+            // Check if this argument starts with a quote
+            if (input[i] == '"')
+            {
+                // Find the closing quote
+                i++; // Skip opening quote
+                var start = i;
+                while (i < input.Length && input[i] != '"')
+                    i++;
+                    
+                if (i < input.Length)
+                {
+                    // Found closing quote - extract the content between quotes
+                    args.Add(input.Substring(start, i - start));
+                    i++; // Skip closing quote
+                }
+                else
+                {
+                    // No closing quote found - treat as regular text from the opening quote
+                    args.Add(input.Substring(start - 1));
+                    break;
+                }
+            }
+            else
+            {
+                // Regular argument - collect until whitespace
+                var start = i;
+                while (i < input.Length && !char.IsWhiteSpace(input[i]))
+                    i++;
+                args.Add(input.Substring(start, i - start));
+            }
+        }
+        
+        return args.ToArray();
     }
     
     /// <summary>

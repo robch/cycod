@@ -95,6 +95,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         
         var title = string.Join(" ", args);
+        
+        // Validate that the title is not empty or just whitespace
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            ConsoleHelpers.WriteLine("Error: Title cannot be empty. Please provide a title.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
         SetUserTitle(chat, title);
         return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
     }
