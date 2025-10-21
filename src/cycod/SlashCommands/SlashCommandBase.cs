@@ -80,6 +80,7 @@ public abstract class SlashCommandBase
     /// <summary>
     /// Parses the argument string into an array of arguments.
     /// Handles quoted strings as single arguments and removes outer quotes.
+    /// For nested quotes, finds the last quote to preserve inner quotes.
     /// </summary>
     /// <param name="input">The input string to parse</param>
     /// <returns>Array of parsed arguments</returns>
@@ -103,17 +104,20 @@ public abstract class SlashCommandBase
             // Check if this argument starts with a quote
             if (input[i] == '"')
             {
-                // Find the closing quote
+                // For nested quotes, find the last quote instead of the first
+                var openQuotePos = i;
                 i++; // Skip opening quote
                 var start = i;
-                while (i < input.Length && input[i] != '"')
-                    i++;
-                    
-                if (i < input.Length)
+                
+                // Find the last quote in the input to handle nested quotes properly
+                var lastQuotePos = input.LastIndexOf('"');
+                
+                if (lastQuotePos > openQuotePos)
                 {
-                    // Found closing quote - extract the content between quotes
-                    args.Add(input.Substring(start, i - start));
-                    i++; // Skip closing quote
+                    // Extract content between first and last quote
+                    var content = input.Substring(start, lastQuotePos - start);
+                    args.Add(content);
+                    i = lastQuotePos + 1; // Move past the closing quote
                 }
                 else
                 {

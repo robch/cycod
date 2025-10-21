@@ -35,7 +35,7 @@ public static class ConversationMetadataHelpers
     public static void SetUserTitle(ConversationMetadata metadata, string title)
     {
         if (metadata == null) throw new ArgumentNullException(nameof(metadata));
-        metadata.Title = title?.Trim();
+        metadata.Title = title;
         metadata.IsTitleLocked = true;
     }
 

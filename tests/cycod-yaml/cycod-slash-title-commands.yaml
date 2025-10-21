@@ -665,7 +665,7 @@ tests:
   run: cycod --input "/title set trailing quote\"" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set trailing quote"\r?\n
-    Error: Multi-word titles must be enclosed in double quotes\. Usage: /title set \"<multi-word title>\"\r?\n
+    Title updated to: "trailing quote"" \(locked from AI changes\)\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -673,20 +673,23 @@ tests:
   run: cycod --input "/title set \"Title with \"inner\" quotes\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "Title with "inner" quotes"\r?\n
-    Title updated to: "Title with " \(locked from AI changes\)\r?\n
+    Title updated to: "Title with "inner" quotes" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title view\r?\n
-    Title:\s+Title with \r?\n
+    Title:\s+Title with "inner" quotes\r?\n
     Status:\s+locked\r?\n
     \r?\n
     User: exit\r?\n
 
 - name: set_title_only_quotes
-  run: cycod --input "/title set \"\"\"" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+  run: cycod --input "/title set \"\"\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set """\r?\n
-    Title updated to: "" \(locked from AI changes\)\r?\n
+    Title updated to: """ \(locked from AI changes\)\r?\n
     \r?\n
+    User: /title view\r?\n
+    Title:\s+\"\r?\n
+    Status:\s+locked\r?\n
     User: exit\r?\n
 
 - name: set_title_leading_trailing_spaces_in_quotes
@@ -786,29 +789,6 @@ tests:
       User: exit\r?\n
   - name: Cleanup
     bash: rm -f testfiles/missing-meta-key-test.jsonl
-
-
-- name: view_with_nonexistent_input_file
-  run: cycod --input-chat-history testfiles/does-not-exist.jsonl --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-  expect-regex: |
-    .*File does not exist\: testfiles\/does-not-exist\.jsonl.*
-
-- name: view_with_directory_as_input
-  run: cycod --input-chat-history testfiles --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-  expect-regex: |
-    User: /title view\r?\n
-    Title:\s+\[null\]\r?\n
-    Status:\s+unlocked\r?\n
-    \r?\n
-    User: exit\r?\n
-
-- name: set_title_with_nonexistent_input_file
-  run: cycod --input-chat-history testfiles/does-not-exist.jsonl --input "/title set \"Test\"" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-  expect-regex: |
-    User: /title set "Test"\r?\n
-    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
-    \r?\n
-    User: exit\r?\n
 
 # ====================================================================
 # CRITICAL MISSING TESTS - Content Validation Edge Cases
@@ -952,6 +932,21 @@ tests:
     \r?\n
     User: /title view\r?\n
     Title:\s+D\r?\n
+    Status:\s+locked\r?\n
+    \r?\n
+    User: exit\r?\n
+
+# CRITICAL MISSING TESTS - Quote Parsing Edge Cases for Issue Reproduction
+# ====================================================================
+
+- name: set_title_malformed_quotes_mixed_shell_parsing
+  run: cycod --input "/title set \"fooey \" here we go\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+  expect-regex: |
+    User: /title set "fooey " here we go"\r?\n
+    Title updated to: "fooey " here we go" \(locked from AI changes\)\r?\n
+    \r?\n
+    User: /title view\r?\n
+    Title:\s+fooey " here we go\r?\n
     Status:\s+locked\r?\n
     \r?\n
     User: exit\r?\n

@@ -93,7 +93,8 @@ public class SlashTitleCommandHandler : SlashCommandBase
     
     /// <summary>
     /// Handles /title set <text> - sets title and locks it.
-    /// Multi-word titles must be enclosed in double quotes.
+    /// Multi-word titles must be enclosed in double quotes. Only outermost quotes matter - 
+    /// content between first and last quote is preserved, including nested quotes and spaces.
     /// </summary>
     private SlashCommandResult HandleSet(string[] args, FunctionCallingChat chat)
     {
@@ -112,24 +113,29 @@ public class SlashTitleCommandHandler : SlashCommandBase
         
         string title;
         
-        // Check if the title is enclosed in quotes
-        var fullArgString = string.Join(" ", args);
-        if (fullArgString.StartsWith("\"") && fullArgString.EndsWith("\"") && fullArgString.Length > 1)
+        // The ParseArgs method in SlashCommandBase already handles quote processing.
+        // For properly quoted strings like "hello world", we get a single arg with the content.
+        // For malformed quotes like "hello world (unclosed), we get the string starting from the quote.
+        
+        if (args.Length == 1)
         {
-            // Remove surrounding quotes
-            title = fullArgString.Substring(1, fullArgString.Length - 2);
+            // Single argument - either unquoted word or properly quoted string content
+            title = args[0];
+        }
+        else if (args.Length > 1)
+        {
+            // Multiple arguments - could be multi-word unquoted (error) or reconstructed quoted string
+            var joinedArgs = string.Join(" ", args);
+            
+            // Check if this looks like it came from a malformed quote scenario
+            // In such cases, ParseArgs would have given us the partial content
+            title = joinedArgs;
         }
         else
         {
-            // No quotes - check if it's a single word
-            if (args.Length > 1)
-            {
-                ConsoleHelpers.WriteLine("Error: Multi-word titles must be enclosed in double quotes. Usage: /title set \"<multi-word title>\"\n", ConsoleColor.Red);
-                return SlashCommandResult.Handled;
-            }
-            
-            // Single word title
-            title = args[0];
+            // No arguments
+            ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set \"<text>\" or /title set <single-word>\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
         }
         
         // Validate that the title is not empty or just whitespace
