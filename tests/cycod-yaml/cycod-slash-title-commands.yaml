@@ -363,7 +363,7 @@ tests:
     run: cycod --input-chat-history testfiles/unlock-no-title-test.jsonl --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
     expect-regex: |
       User: /title unlock\r?\n
-      Title unlocked - AI can now regenerate the title\.\r?\n
+      Title is already unlocked\.\r?\n
       \r?\n
       User: /title view\r?\n
       Title:\s+[null]\r?\n
@@ -413,7 +413,7 @@ tests:
     run: cycod --input-chat-history testfiles/unlock-corrupted-test.jsonl --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
     expect-regex: |
       User: /title unlock\r?\n
-      Title unlocked - AI can now regenerate the title\.\r?\n
+      Title is already unlocked\.\r?\n
       \r?\n
       User: /title view\r?\n
       Title:\s+\[null\]\r?\n
