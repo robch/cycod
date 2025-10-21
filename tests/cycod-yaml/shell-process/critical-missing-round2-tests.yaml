@@ -1,0 +1,25 @@
+class: critical-missing-functionality-round2
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 200.PS.OUT.THRT-014 - Process throttles output at expected rate
+  run: cycod --input "Use StartNamedProcess to start a process named 'throttle-proc' that produces controlled output with 'bash -c \"for i in {1..3}; do echo Throttled$i; sleep 1.5; done\"'" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: throttle-proc.*
+
+- name: Test case 220.SX.RES.GROW-023 - Long-running shell shows expected resource usage pattern
+  run: cycod --input "Use RunShellCommand to run a long resource-using command 'bash -c \"echo ResourceStart; for i in {1..50}; do echo Resource$i > /dev/null; done; echo ResourceEnd\"' with expectedTimeout=10000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*ResourceStart.*
+    .*ResourceEnd.*
+
+- name: Test case 310.PX.OUT.SPRS-032 - Long process produces sparse output with long gaps
+  run: cycod --input "Use StartNamedProcess to start a process named 'sparse-proc' that produces output with long gaps using 'bash -c \"echo Early; sleep 4; echo Late\"'" --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: sparse-proc.*

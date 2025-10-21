@@ -1,7 +1,19 @@
 using System.ComponentModel;
 
+/// <summary>
+/// Provides helper functions for running shell commands.
+/// DEPRECATED: This class has been replaced by ShellAndProcessHelperFunctions.
+/// Please use the new unified API for all shell and process operations.
+/// </summary>
 public class ShellCommandToolHelperFunctions
 {
+    /*
+    // DEPRECATED: This entire class has been replaced by ShellAndProcessHelperFunctions.
+    // The following functions have equivalents in the new unified API:
+    // - RunBashCommand → Use RunShellCommand with shellType="bash" instead
+    // - RunCmdCommand → Use RunShellCommand with shellType="cmd" instead
+    // - RunPowershellCommand → Use RunShellCommand with shellType="powershell" instead
+    
     [Description("Run commands in a bash shell (uses Git Bash on Windows). This persistent session maintains state across commands. " +
         "You can run commands such as Python, Node.js and Go, and install packages with winget (on Windows), pip, npm, or go. " +
         "If a command times out, the session is reset. Otherwise, returns the output of the command. " +
@@ -97,5 +109,6 @@ public class ShellCommandToolHelperFunctions
             return $"<exited with error: {ex.Message}>";
         }
     }
+    */
 }
 
