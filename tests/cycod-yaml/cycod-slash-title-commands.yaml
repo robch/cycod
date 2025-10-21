@@ -213,7 +213,7 @@ tests:
       User: exit\r?\n
   - name: Verify file was recovered with proper metadata
     bash: |
-      head -1 testfiles/corrupted-test-file.jsonl | grep -q '"Title":"Fixed Title"'
+      head -1 testfiles/corrupted-test-file.jsonl | grep -q '"title":"Fixed Title"'
       head -1 testfiles/corrupted-test-file.jsonl | grep -q '"titleLocked":true'
   - name: Cleanup
     bash: rm -f testfiles/corrupted-test-file.jsonl
@@ -506,7 +506,7 @@ tests:
       User: exit\r?\n
   - name: Verify file state after both operations
     bash: |
-      head -1 testfiles/lock-then-set-test.jsonl | grep -q '"Title":"New Title"'
+      head -1 testfiles/lock-then-set-test.jsonl | grep -q '"title":"New Title"'
       head -1 testfiles/lock-then-set-test.jsonl | grep -q '"titleLocked":true'
   - name: Cleanup
     bash: rm -f testfiles/lock-then-set-test.jsonl
