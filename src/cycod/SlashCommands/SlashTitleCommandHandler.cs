@@ -30,6 +30,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
     }
     
     /// <summary>
+    /// Checks if there's a valid conversation file available for saving metadata.
+    /// </summary>
+    private bool HasValidConversationFile()
+    {
+        return !string.IsNullOrEmpty(_inputChatHistoryPath) || !string.IsNullOrEmpty(_autoSaveOutputChatHistoryPath);
+    }
+    
+    /// <summary>
     /// Determines the best file to read conversation content from.
     /// Prefers input file if it has content, falls back to auto-save file.
     /// </summary>
@@ -133,6 +141,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private SlashCommandResult HandleLock(string[] args, FunctionCallingChat chat)
     {
+        // Check if there's a valid conversation file to save metadata to
+        if (!HasValidConversationFile())
+        {
+            ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (metadata.IsTitleLocked)
@@ -158,6 +173,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private SlashCommandResult HandleUnlock(string[] args, FunctionCallingChat chat)
     {
+        // Check if there's a valid conversation file to save metadata to
+        if (!HasValidConversationFile())
+        {
+            ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (!metadata.IsTitleLocked)
