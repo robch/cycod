@@ -2,7 +2,7 @@ class: slash-title-commands
 tag: cycod
 tests:
 - name: title_command_test
-  run: cycod --input "/title set \"My Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"My Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "My Test Title"\r?\n
     Title updated to: "My Test Title" \(locked from AI changes\)\r?\n
@@ -10,6 +10,22 @@ tests:
     User: /title view\r?\n
     Title:\s+My Test Title\r?\n
     Status:\s+locked\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: title_default_shows_title_and_help
+  run: cycod --input "/title" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title\r?\n
+    Title:\s+\[null\]\r?\n
+    Status:\s+unlocked\r?\n
+    \r?\n
+    Available commands:\r?\n
+    \s+/title view\s+Show current title and lock status\r?\n
+    \s+/title set \"<text>\"\s+Set title and lock from AI changes\r?\n
+    \s+/title lock\s+Lock current title from AI changes\r?\n
+    \s+/title unlock\s+Unlock title to allow AI regeneration\r?\n
+    \s+/title refresh\s+Generate new title from current conversation\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -49,15 +65,6 @@ tests:
     \r?\n
     User: exit\r?\n
 
-- name: view_when_no_title_exists_no_file
-  run: cycod --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-  expect-regex: |
-    User: /title view\r?\n
-    Title:\s+\[null\]\r?\n
-    Status:\s+unlocked\r?\n
-    \r?\n
-    User: exit\r?\n
-
 - name: view_with_corrupted_metadata
   run: cycod --input-chat-history testfiles/malformed-metadata.jsonl --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
@@ -66,6 +73,15 @@ tests:
     Status:\s+unlocked\r?\n
     \r?\n
     User: exit\r?\n
+
+- name: title_invalid_subcommand_passes_to_assistant
+  optional:
+    needsAI
+  run: cycod --input "/title invalid" --input exit --auto-save-chat-history 0
+  expect-regex: |
+    User: /title invalid\r?\n
+    \r?\n
+    Assistant: 
 
 # - name: view_with_file_access_error
 #   steps:
@@ -93,6 +109,18 @@ tests:
     \r?\n
     User: /title view\r?\n
     Title:\s+My Test Title\r?\n
+    Status:\s+locked\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: set_single_word_title_without_quotes
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set MyTitle" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title set MyTitle\r?\n
+    Title updated to: "MyTitle" \(locked from AI changes\)\r?\n
+    \r?\n
+    User: /title view\r?\n
+    Title:\s+MyTitle\r?\n
     Status:\s+locked\r?\n
     \r?\n
     User: exit\r?\n
@@ -177,23 +205,23 @@ tests:
     \r?\n
     User: exit\r?\n
 
-# - name: set_title_with_readonly_file
-#   steps:
-#   - name: Create and make readonly file
-#     bash: |
-#       cp testfiles/default-metadata-full-conversation.jsonl testfiles/readonly-test-file.jsonl
-#       chmod 444 testfiles/readonly-test-file.jsonl
-#   - name: Test set title command
-#     run: cycod --input-chat-history testfiles/readonly-test-file.jsonl --input "/title set Test Title" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-#     expect-regex: |
-#       User: /title set Test Title\r?\n
-#       TODO\r?\n
-#       \r?\n
-#       User: exit\r?\n
-#   - name: Cleanup
-#     bash: |
-#       chmod 644 testfiles/readonly-test-file.jsonl
-#       rm -f testfiles/readonly-test-file.jsonl
+- name: set_title_with_readonly_file
+  steps:
+  - name: Create and make readonly file
+    bash: |
+      cp testfiles/default-metadata-full-conversation.jsonl testfiles/readonly-test-file.jsonl
+      chmod 444 testfiles/readonly-test-file.jsonl
+  - name: Test set title command
+    run: cycod --input-chat-history testfiles/readonly-test-file.jsonl --input "/title set \"Test Title\"" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title set "Test Title"\r?\n
+      Title updated to: "Test Title" \(locked from AI changes\)\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Cleanup
+    bash: |
+      chmod 644 testfiles/readonly-test-file.jsonl
+      rm -f testfiles/readonly-test-file.jsonl
 
 - name: set_title_with_corrupted_metadata
   steps:
@@ -272,26 +300,42 @@ tests:
   - name: Cleanup
     bash: rm -f testfiles/lock-no-title-test.jsonl
 
-# - name: lock_with_readonly_file
-#   steps:
-#   - name: Create readonly file
-#     bash: |
-#       cp testfiles/unlocked-title-full-conversation.jsonl testfiles/readonly-lock-test.jsonl
-#       chmod 444 testfiles/readonly-lock-test.jsonl
-#   - name: Test lock command on readonly file
-#     run: cycod --input-chat-history testfiles/readonly-lock-test.jsonl --input "/title lock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-#     expect-regex: |
-#       User: /title lock\r?\n
-#       TODO\r?\n
-#       \r?\n
-#       User: exit\r?\n
-#   - name: Cleanup
-#     bash: |
-#       chmod 644 testfiles/readonly-lock-test.jsonl
-#       rm -f testfiles/readonly-lock-test.jsonl
+- name: lock_with_readonly_file
+  steps:
+  - name: Create readonly file
+    bash: |
+      cp testfiles/unlocked-title-full-conversation.jsonl testfiles/readonly-lock-test.jsonl
+      chmod 444 testfiles/readonly-lock-test.jsonl
+  - name: Test lock command on readonly file
+    run: cycod --input-chat-history testfiles/readonly-lock-test.jsonl --input "/title lock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title lock\r?\n
+      Title locked from AI changes\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Cleanup
+    bash: |
+      chmod 644 testfiles/readonly-lock-test.jsonl
+      rm -f testfiles/readonly-lock-test.jsonl
+
+- name: lock_without_conversation_file_error
+  run: cycod --input "/title lock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title lock\r?\n
+    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: set_without_conversation_file_error
+  run: cycod --input "/title set \"My Title\"" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title set "My Title"\r?\n
+    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
+    \r?\n
+    User: exit\r?\n
 
 - name: lock_with_no_file
-  run: cycod --input "/title set \"My Title\"" --input "/title lock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"My Title\"" --input "/title lock" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "My Title"\r?\n
     Title updated to: "My Title" \(locked from AI changes\)\r?\n
@@ -376,32 +420,40 @@ tests:
   - name: Cleanup
     bash: rm -f testfiles/unlock-no-title-test.jsonl
 
-# - name: unlock_with_readonly_file
-#   steps:
-#   - name: Create readonly file
-#     bash: |
-#       cp testfiles/locked-title-full-conversation.jsonl testfiles/readonly-unlock-test.jsonl
-#       chmod 444 testfiles/readonly-unlock-test.jsonl
-#   - name: Test unlock command on readonly file
-#     run: cycod --input-chat-history testfiles/readonly-unlock-test.jsonl --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-#     expect-regex: |
-#       User: /title unlock\r?\n
-#       TODO\r?\n
-#       \r?\n
-#       User: exit\r?\n
-#   - name: Cleanup
-#     bash: |
-#       chmod 644 testfiles/readonly-unlock-test.jsonl
-#       rm -f testfiles/readonly-unlock-test.jsonl
+- name: unlock_with_readonly_file
+  steps:
+  - name: Create readonly file
+    bash: |
+      cp testfiles/locked-title-full-conversation.jsonl testfiles/readonly-unlock-test.jsonl
+      chmod 444 testfiles/readonly-unlock-test.jsonl
+  - name: Test unlock command on readonly file
+    run: cycod --input-chat-history testfiles/readonly-unlock-test.jsonl --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title unlock\r?\n
+      Title unlocked - AI can now regenerate the title\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Cleanup
+    bash: |
+      chmod 644 testfiles/readonly-unlock-test.jsonl
+      rm -f testfiles/readonly-unlock-test.jsonl
+
+- name: unlock_without_conversation_file_error
+  run: cycod --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title unlock\r?\n
+    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
+    \r?\n
+    User: exit\r?\n
 
 - name: unlock_with_no_file
   run: cycod --input "/title set \"My Title\"" --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title set "My Title"\r?\n
-    Title updated to: "My Title" \(locked from AI changes\)\r?\n
+    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
     \r?\n
     User: /title unlock\r?\n
-    Title unlocked - AI can now regenerate the title\.\r?\n
+    Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -427,7 +479,7 @@ tests:
     bash: rm -f testfiles/unlock-corrupted-test.jsonl
 
 - name: set_view_sequence_test_title
-  run: cycod --input "/title set \"Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "Test Title"\r?\n
     Title updated to: "Test Title" \(locked from AI changes\)\r?\n
@@ -439,7 +491,7 @@ tests:
     User: exit\r?\n
 
 - name: set_unlock_view_sequence
-  run: cycod --input "/title set \"Test Title\"" --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"Test Title\"" --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "Test Title"\r?\n
     Title updated to: "Test Title" \(locked from AI changes\)\r?\n
@@ -454,7 +506,7 @@ tests:
     User: exit\r?\n
 
 - name: set_unlock_lock_view_sequence
-  run: cycod --input "/title set \"Test\"" --input "/title unlock" --input "/title lock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"Test\"" --input "/title unlock" --input "/title lock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "Test"\r?\n
     Title updated to: "Test" \(locked from AI changes\)\r?\n
@@ -472,7 +524,7 @@ tests:
     User: exit\r?\n
 
 - name: set_title_replacement_sequence
-  run: cycod --input "/title set \"First Title\"" --input "/title set \"Second Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input "/title set \"First Title\"" --input "/title set \"Second Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "First Title"\r?\n
     Title updated to: "First Title" \(locked from AI changes\)\r?\n
@@ -580,3 +632,21 @@ tests:
     Status:\s+locked\r?\n
     \r?\n
     User: exit\r?\n
+
+- name: view_with_extra_arguments_ignored
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title view extra arguments ignored" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title view extra arguments ignored\r?\n
+    Title:\s+\[null\]\r?\n
+    Status:\s+unlocked\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: lock_with_extra_arguments_ignored
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title lock extra arguments ignored" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title lock extra arguments ignored\r?\n
+    Title locked from AI changes\.\r?\n
+    \r?\n
+    User: exit\r?\n
+

@@ -103,6 +103,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
+        // Check if there's a valid conversation file to save metadata to
+        if (!HasValidConversationFile())
+        {
+            ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
         string title;
         
         // Check if the title is enclosed in quotes
