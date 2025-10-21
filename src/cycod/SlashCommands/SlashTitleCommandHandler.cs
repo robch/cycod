@@ -219,17 +219,18 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private void ShowCurrentTitle(FunctionCallingChat chat)
     {
         var metadata = chat.Metadata;
-        var title = metadata?.Title ?? "No title set";
+        var title = metadata?.Title ?? "[null]";
         
         // Determine status with generation awareness
         var titleGenerationInProgress = chat.IsGenerationInProgress(NotificationType.Title);
         var titleIsLocked = metadata?.IsTitleLocked == true;
 
-        var status = titleGenerationInProgress 
+        var status = titleGenerationInProgress
             ? "AI title generation in progress..."
             : titleIsLocked ? "locked" : "unlocked";
-        
-        ConsoleHelpers.WriteLine($"Current title: \"{title}\" ({status})", ConsoleColor.DarkGray);
+
+        ConsoleHelpers.WriteLine($"Title:   {title}", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine($"Status:  {status}", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine();
         
         // Clear any pending title notifications since user just viewed the title
