@@ -1,3 +1,5 @@
+using static ConsoleHelpers;
+
 /// <summary>
 /// Result of processing a slash command.
 /// </summary>
@@ -7,12 +9,12 @@ public enum SlashCommandResult
     /// Command was handled successfully, no further action needed.
     /// </summary>
     Handled,
-    
+
     /// <summary>
     /// Command was not recognized, should be passed to the assistant.
     /// </summary>
     PassToAssistant,
-    
+
     /// <summary>
     /// Command was handled and modified conversation metadata - save is needed.
     /// </summary>
@@ -63,8 +65,9 @@ public abstract class SlashCommandBase
         }
         
         // Unknown subcommand - pass to assistant (existing pattern)
-        result = SlashCommandResult.PassToAssistant;
-        return false;
+        ConsoleHelpers.WriteLine($"Unknown subcommand '{subcommand}' for /{CommandName}.\n", ConsoleColor.Yellow);
+        result = SlashCommandResult.Handled;
+        return true;
     }
     
     /// <summary>
