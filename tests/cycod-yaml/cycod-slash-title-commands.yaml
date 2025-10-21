@@ -113,14 +113,10 @@ tests:
     User: exit\r?\n
 
 - name: set_single_word_title_without_quotes
-  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set MyTitle" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set MyTitle" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title set MyTitle\r?\n
-    Title updated to: "MyTitle" \(locked from AI changes\)\r?\n
-    \r?\n
-    User: /title view\r?\n
-    Title:\s+MyTitle\r?\n
-    Status:\s+locked\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -152,7 +148,7 @@ tests:
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title set\r?\n
-    Error: /title set requires a title\. Usage: /title set \"<text>\" or /title set <single-word>\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -176,7 +172,7 @@ tests:
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set Multi Word Title" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title set Multi Word Title\r?\n
-    Error: Multi-word titles must be enclosed in double quotes\. Usage: /title set \"<multi-word title>\"\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -598,9 +594,9 @@ tests:
     User: exit\r?\n
 
 - name: rapid_sequential_commands
-  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set First" --input "/title view" --input "/title unlock" --input "/title lock" --input "/title set Second" --input "/title view" --input "/title unlock" --input "/title set Third" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"First\"" --input "/title view" --input "/title unlock" --input "/title lock" --input "/title set \"Second\"" --input "/title view" --input "/title unlock" --input "/title set \"Third\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
-    User: /title set First\r?\n
+    User: /title set "First"\r?\n
     Title updated to: "First" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title view\r?\n
@@ -613,7 +609,7 @@ tests:
     User: /title lock\r?\n
     Title locked from AI changes\.\r?\n
     \r?\n
-    User: /title set Second\r?\n
+    User: /title set "Second"\r?\n
     Title updated to: "Second" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title view\r?\n
@@ -623,7 +619,7 @@ tests:
     User: /title unlock\r?\n
     Title unlocked - AI can now regenerate the title\.\r?\n
     \r?\n
-    User: /title set Third\r?\n
+    User: /title set "Third"\r?\n
     Title updated to: "Third" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title view\r?\n
@@ -657,7 +653,7 @@ tests:
   run: cycod --input "/title set \"unclosed quote" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set "unclosed quote\r?\n
-    Title updated to: ""unclosed quote" \(locked from AI changes\)\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -665,7 +661,7 @@ tests:
   run: cycod --input "/title set trailing quote\"" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set trailing quote"\r?\n
-    Title updated to: "trailing quote"" \(locked from AI changes\)\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -819,14 +815,10 @@ tests:
     User: exit\r?\n
 
 - name: set_title_single_character
-  run: cycod --input "/title set A" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+  run: cycod --input "/title set A" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
   expect-regex: |
     User: /title set A\r?\n
-    Title updated to: "A" \(locked from AI changes\)\r?\n
-    \r?\n
-    User: /title view\r?\n
-    Title:\s+A\r?\n
-    Status:\s+locked\r?\n
+    Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -904,9 +896,9 @@ tests:
     User: exit\r?\n
 
 - name: rapid_title_operations_stress_test
-  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set A" --input "/title unlock" --input "/title lock" --input "/title set B" --input "/title unlock" --input "/title set C" --input "/title lock" --input "/title set D" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"A\"" --input "/title unlock" --input "/title lock" --input "/title set \"B\"" --input "/title unlock" --input "/title set \"C\"" --input "/title lock" --input "/title set \"D\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
-    User: /title set A\r?\n
+    User: /title set "A"\r?\n
     Title updated to: "A" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title unlock\r?\n
@@ -915,19 +907,19 @@ tests:
     User: /title lock\r?\n
     Title locked from AI changes\.\r?\n
     \r?\n
-    User: /title set B\r?\n
+    User: /title set "B"\r?\n
     Title updated to: "B" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title unlock\r?\n
     Title unlocked - AI can now regenerate the title\.\r?\n
     \r?\n
-    User: /title set C\r?\n
+    User: /title set "C"\r?\n
     Title updated to: "C" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title lock\r?\n
     Title is already locked\.\r?\n
     \r?\n
-    User: /title set D\r?\n
+    User: /title set "D"\r?\n
     Title updated to: "D" \(locked from AI changes\)\r?\n
     \r?\n
     User: /title view\r?\n

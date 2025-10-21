@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using System.Linq;
 
 /// <summary>
 /// Handles the /title slash command for viewing and setting conversation titles.
@@ -12,12 +13,54 @@ public class SlashTitleCommandHandler : SlashCommandBase
     
     public SlashTitleCommandHandler()
     {
-        // Register subcommands
+        // Register subcommands (set is handled specially in TryHandle override)
         _subcommands["view"] = HandleView;
-        _subcommands["set"] = HandleSet;
         _subcommands["lock"] = HandleLock;
         _subcommands["unlock"] = HandleUnlock;
         _subcommands["refresh"] = HandleRefresh;
+    }
+    
+    /// <summary>
+    /// Override to handle "set" subcommand with raw input validation for quotes.
+    /// </summary>
+    public override bool TryHandle(string userPrompt, FunctionCallingChat chat, out SlashCommandResult result)
+    {
+        if (!userPrompt.StartsWith($"/{CommandName}"))
+        {
+            result = SlashCommandResult.PassToAssistant;
+            return false;
+        }
+        
+        var afterCommand = userPrompt.Substring($"/{CommandName}".Length).Trim();
+        var args = ParseArgs(afterCommand);
+        
+        if (args.Length == 0)
+        {
+            result = HandleDefault(chat);
+            return true;
+        }
+        
+        var subcommand = args[0].ToLowerInvariant();
+        
+        // Handle "set" specially with raw input validation
+        if (subcommand == "set")
+        {
+            var afterSet = afterCommand.Substring(3).Trim(); // Remove "set" and trim
+            result = HandleSetWithRawInput(afterSet, chat);
+            return true;
+        }
+        
+        // Handle other subcommands normally
+        if (_subcommands.TryGetValue(subcommand, out var handler))
+        {
+            result = handler(args.Skip(1).ToArray(), chat);
+            return true;
+        }
+        
+        // Unknown subcommand
+        ConsoleHelpers.WriteLine($"Unknown subcommand '{subcommand}' for /{CommandName}.\n", ConsoleColor.Yellow);
+        result = SlashCommandResult.Handled;
+        return true;
     }
     
     /// <summary>
@@ -92,15 +135,22 @@ public class SlashTitleCommandHandler : SlashCommandBase
     }
     
     /// <summary>
-    /// Handles /title set <text> - sets title and locks it.
-    /// Multi-word titles must be enclosed in double quotes. Only outermost quotes matter - 
-    /// content between first and last quote is preserved, including nested quotes and spaces.
+    /// Handles /title set <text> - sets title and locks it. (Legacy method, not used)
     /// </summary>
     private SlashCommandResult HandleSet(string[] args, FunctionCallingChat chat)
     {
-        if (args.Length == 0)
+        // This method is no longer used - HandleSetWithRawInput is used instead
+        throw new NotImplementedException("Use HandleSetWithRawInput instead");
+    }
+    
+    /// <summary>
+    /// Handles /title set with raw input validation - requires surrounding double quotes.
+    /// </summary>
+    private SlashCommandResult HandleSetWithRawInput(string input, FunctionCallingChat chat)
+    {
+        if (string.IsNullOrWhiteSpace(input))
         {
-            ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set \"<text>\" or /title set <single-word>\n", ConsoleColor.Red);
+            ConsoleHelpers.WriteLine("Error: Titles must be enclosed in double quotes. Usage: /title set \"<title>\"\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
         }
         
@@ -111,32 +161,15 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        string title;
-        
-        // The ParseArgs method in SlashCommandBase already handles quote processing.
-        // For properly quoted strings like "hello world", we get a single arg with the content.
-        // For malformed quotes like "hello world (unclosed), we get the string starting from the quote.
-        
-        if (args.Length == 1)
+        // Validate that input starts and ends with double quotes
+        if (!input.StartsWith("\"") || !input.EndsWith("\"") || input.Length < 2)
         {
-            // Single argument - either unquoted word or properly quoted string content
-            title = args[0];
-        }
-        else if (args.Length > 1)
-        {
-            // Multiple arguments - could be multi-word unquoted (error) or reconstructed quoted string
-            var joinedArgs = string.Join(" ", args);
-            
-            // Check if this looks like it came from a malformed quote scenario
-            // In such cases, ParseArgs would have given us the partial content
-            title = joinedArgs;
-        }
-        else
-        {
-            // No arguments
-            ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set \"<text>\" or /title set <single-word>\n", ConsoleColor.Red);
+            ConsoleHelpers.WriteLine("Error: Titles must be enclosed in double quotes. Usage: /title set \"<title>\"\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
         }
+        
+        // Extract content between outermost quotes
+        var title = input.Substring(1, input.Length - 2);
         
         // Validate that the title is not empty or just whitespace
         if (string.IsNullOrWhiteSpace(title))
@@ -148,7 +181,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         SetUserTitle(chat, title);
         return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
     }
-    
+
     /// <summary>
     /// Handles /title lock - locks current title from AI changes.
     /// </summary>

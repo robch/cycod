@@ -41,7 +41,7 @@ public abstract class SlashCommandBase
     /// <param name="chat">The current chat instance</param>
     /// <param name="result">The result of processing the command</param>
     /// <returns>True if the command was handled, false if it should be passed to the assistant</returns>
-    public bool TryHandle(string userPrompt, FunctionCallingChat chat, out SlashCommandResult result)
+    public virtual bool TryHandle(string userPrompt, FunctionCallingChat chat, out SlashCommandResult result)
     {
         if (!userPrompt.StartsWith($"/{CommandName}"))
         {
