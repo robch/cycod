@@ -1,2 +1,2 @@
-{"metadata": {"Title": "User Set Title", "IsTitleLocked": true}}
+{"metadata": {"title": "User Set Title", "titleLocked": true}}
 {"role": "user", "content": "Hello, I need help with something"}
