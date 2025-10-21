@@ -423,13 +423,13 @@ public class ChatCommand : CommandWithVariables
         // Meta-data commands
         helpBuilder.AppendLine("META-DATA");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /title             View title and title help");
-        helpBuilder.AppendLine("  /title view        View title");
-        helpBuilder.AppendLine("  /title set {arg}   Set title to a value");
+        helpBuilder.AppendLine("  /title                View title and title help");
+        helpBuilder.AppendLine("  /title view           View title");
+        helpBuilder.AppendLine("  /title set \"{arg}\"  Set title to a value");
         helpBuilder.AppendLine();
-        helpBuilder.AppendLine("  /title refresh     Regenerate title using AI");
-        helpBuilder.AppendLine("  /title lock        Lock title from AI changes");
-        helpBuilder.AppendLine("  /title unlock      Allow AI to change the title");
+        helpBuilder.AppendLine("  /title refresh        Regenerate title using AI");
+        helpBuilder.AppendLine("  /title lock           Lock title from AI changes");
+        helpBuilder.AppendLine("  /title unlock         Allow AI to change the title");
         helpBuilder.AppendLine();
         
         

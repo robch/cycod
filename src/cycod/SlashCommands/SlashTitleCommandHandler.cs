@@ -85,16 +85,37 @@ public class SlashTitleCommandHandler : SlashCommandBase
     
     /// <summary>
     /// Handles /title set <text> - sets title and locks it.
+    /// Multi-word titles must be enclosed in double quotes.
     /// </summary>
     private SlashCommandResult HandleSet(string[] args, FunctionCallingChat chat)
     {
         if (args.Length == 0)
         {
-            ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set <text>\n", ConsoleColor.Red);
+            ConsoleHelpers.WriteLine("Error: /title set requires a title. Usage: /title set \"<text>\" or /title set <single-word>\n", ConsoleColor.Red);
             return SlashCommandResult.Handled;
         }
         
-        var title = string.Join(" ", args);
+        string title;
+        
+        // Check if the title is enclosed in quotes
+        var fullArgString = string.Join(" ", args);
+        if (fullArgString.StartsWith("\"") && fullArgString.EndsWith("\"") && fullArgString.Length > 1)
+        {
+            // Remove surrounding quotes
+            title = fullArgString.Substring(1, fullArgString.Length - 2);
+        }
+        else
+        {
+            // No quotes - check if it's a single word
+            if (args.Length > 1)
+            {
+                ConsoleHelpers.WriteLine("Error: Multi-word titles must be enclosed in double quotes. Usage: /title set \"<multi-word title>\"\n", ConsoleColor.Red);
+                return SlashCommandResult.Handled;
+            }
+            
+            // Single word title
+            title = args[0];
+        }
         
         // Validate that the title is not empty or just whitespace
         if (string.IsNullOrWhiteSpace(title))
@@ -207,7 +228,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         ConsoleHelpers.WriteLine("Available commands:", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title view         Show current title and lock status", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine("  /title set <text>   Set title and lock from AI changes", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title set \"<text>\" Set title and lock from AI changes", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title lock         Lock current title from AI changes", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow AI regeneration", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation\n", ConsoleColor.DarkGray);
