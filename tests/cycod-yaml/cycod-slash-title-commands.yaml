@@ -152,7 +152,7 @@ tests:
     \r?\n
     User: exit\r?\n
 
-- name: set_title_with_empty_text
+- name: set_title_to_double_quote_character
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"\"" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title set ""\r?\n
