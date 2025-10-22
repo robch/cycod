@@ -943,3 +943,49 @@ tests:
     \r?\n
     User: exit\r?\n
 
+- name: set_preserves_unknown_metadata_fields
+  steps:
+  - name: Create file with extra metadata fields
+    bash: |
+      echo '{"_meta":{"title":"Old Title","titleLocked":false,"customField":"preserved","version":2,"nested":{"data":"value"}}}' > testfiles/metadata-preservation-test.jsonl
+  - name: Set new title and verify preservation
+    run: cycod --chat-history testfiles/metadata-preservation-test.jsonl --input "/title set \"New Title\"" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title set "New Title"\r?\n
+      Title updated to: "New Title" \(locked from AI changes\)\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Verify all fields preserved and title updated
+    bash: |
+      head -1 testfiles/metadata-preservation-test.jsonl | grep -q '"customField":"preserved"' &&
+      head -1 testfiles/metadata-preservation-test.jsonl | grep -q '"version":2' &&
+      head -1 testfiles/metadata-preservation-test.jsonl | grep -q '"nested":{"data":"value"}' &&
+      head -1 testfiles/metadata-preservation-test.jsonl | grep -q '"title":"New Title"' &&
+      head -1 testfiles/metadata-preservation-test.jsonl | grep -q '"titleLocked":true'
+  - name: Cleanup
+    bash: rm -f testfiles/metadata-preservation-test.jsonl
+
+- name: lock_unlock_preserves_unknown_metadata_fields
+  steps:
+  - name: Create file with extra metadata and existing title
+    bash: |
+      echo '{"_meta":{"title":"Existing Title","titleLocked":false,"customData":{"nested":"value"},"appVersion":"1.2.3"}}' > testfiles/lock-unlock-metadata-test.jsonl
+  - name: Lock then unlock and verify preservation
+    run: cycod --chat-history testfiles/lock-unlock-metadata-test.jsonl --input "/title lock" --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title lock\r?\n
+      Title locked from AI changes\.\r?\n
+      \r?\n
+      User: /title unlock\r?\n
+      Title unlocked - AI can now regenerate the title\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Verify all fields preserved and lock status updated
+    bash: |
+      head -1 testfiles/lock-unlock-metadata-test.jsonl | grep -q '"customData":{"nested":"value"}' &&
+      head -1 testfiles/lock-unlock-metadata-test.jsonl | grep -q '"appVersion":"1.2.3"' &&
+      head -1 testfiles/lock-unlock-metadata-test.jsonl | grep -q '"title":"Existing Title"' &&
+      head -1 testfiles/lock-unlock-metadata-test.jsonl | grep -q '"titleLocked":false'
+  - name: Cleanup
+    bash: rm -f testfiles/lock-unlock-metadata-test.jsonl
+
