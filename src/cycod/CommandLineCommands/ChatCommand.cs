@@ -60,6 +60,10 @@ public class ChatCommand : CommandWithVariables
         // Initialize slash command handlers
         _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
 
+        // Initialize click-through display helper
+        var clickThroughEnabled = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppClickThroughMode).AsBool(false);
+        _clickThroughHelper = new ClickThroughDisplayHelper(clickThroughEnabled);
+
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
         if (maxOutputTokens > 0) MaxOutputTokens = maxOutputTokens;
@@ -154,6 +158,14 @@ public class ChatCommand : CommandWithVariables
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                
+                // Process any remaining click-through content
+                if (_clickThroughHelper?.IsEnabled == true)
+                {
+                    await _clickThroughHelper.ProcessRemainingContent();
+                    _clickThroughHelper.Reset();
+                }
+                
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
             }
 
@@ -653,6 +665,9 @@ public class ChatCommand : CommandWithVariables
     {
         ConsoleHelpers.Write("\nAssistant: ", ConsoleColor.Green);
         _assistantResponseCharsSinceLabel = 0;
+        
+        // Reset click-through helper for new response
+        _clickThroughHelper?.Reset();
     }
 
     private void DisplayAssistantResponse(string text)
@@ -662,7 +677,16 @@ public class ChatCommand : CommandWithVariables
             text = text.TrimStart(new char[] { '\n', '\r', ' ' });
         }
 
-        ConsoleHelpers.Write(text, ConsoleColor.White, overrideQuiet: true);
+        // Use click-through mode if enabled
+        if (_clickThroughHelper?.IsEnabled == true)
+        {
+            _clickThroughHelper.AccumulateText(text);
+        }
+        else
+        {
+            // Original behavior
+            ConsoleHelpers.Write(text, ConsoleColor.White, overrideQuiet: true);
+        }
 
         _assistantResponseCharsSinceLabel += text.Length;
         _asssistantResponseNeedsLF = !text.EndsWith("\n");
@@ -1068,4 +1092,5 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+    private ClickThroughDisplayHelper? _clickThroughHelper;
 }

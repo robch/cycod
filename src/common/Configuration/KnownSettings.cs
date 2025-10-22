@@ -60,6 +60,7 @@ public static class KnownSettings
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
+    public const string AppClickThroughMode = "App.ClickThroughMode";
     
     #endregion
     
@@ -151,7 +152,8 @@ public static class KnownSettings
         { AppAutoSaveLog, "CYCOD_AUTO_SAVE_LOG" },
         { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
-        { AppAutoDeny, "CYCOD_AUTO_DENY" }
+        { AppAutoDeny, "CYCOD_AUTO_DENY" },
+        { AppClickThroughMode, "CYCOD_CLICK_THROUGH_MODE" }
     };
     
     /// <summary>
@@ -207,7 +209,8 @@ public static class KnownSettings
         { AppAutoSaveLog, "--auto-save-log" },
         { AppChatCompletionTimeout, "--chat-completion-timeout" },
         { AppAutoApprove, "--auto-approve" },
-        { AppAutoDeny, "--auto-deny" }
+        { AppAutoDeny, "--auto-deny" },
+        { AppClickThroughMode, "--click-through-mode" }
     };
     
     /// <summary>
@@ -325,7 +328,8 @@ public static class KnownSettings
         AppAutoSaveLog,
         AppChatCompletionTimeout,
         AppAutoApprove,
-        AppAutoDeny
+        AppAutoDeny,
+        AppClickThroughMode
     };
     
     #endregion
