@@ -1,17 +1,10 @@
 class: slash-title-commands
 tag: cycod
 tests:
-- name: title_command_test
-  run: cycod --input "/title set \"My Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-  expect-regex: |
-    User: /title set "My Test Title"\r?\n
-    Title updated to: "My Test Title" \(locked from AI changes\)\r?\n
-    \r?\n
-    User: /title view\r?\n
-    Title:\s+My Test Title\r?\n
-    Status:\s+locked\r?\n
-    \r?\n
-    User: exit\r?\n
+
+# ====================================================================
+# Default Command Tests (no subcommand)
+# ====================================================================
 
 - name: title_default_shows_title_and_help
   run: cycod --input "/title" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
@@ -65,15 +58,6 @@ tests:
     \r?\n
     User: exit\r?\n
 
-- name: view_with_corrupted_metadata
-  run: cycod --input-chat-history testfiles/malformed-metadata.jsonl --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-  expect-regex: |
-    User: /title view\r?\n
-    Title:\s+\[null\]\r?\n
-    Status:\s+unlocked\r?\n
-    \r?\n
-    User: exit\r?\n
-
 - name: title_invalid_subcommand_passes_to_assistant
   run: cycod --input "/title invalid" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
@@ -81,24 +65,6 @@ tests:
     Unknown subcommand 'invalid' for /title.\r?\n
     \r?\n
     User: exit\r?\n
-
-# - name: view_with_file_access_error
-#   steps:
-#   - name: Create readonly file
-#     bash: |
-#       cp testfiles/locked-title-full-conversation.jsonl testfiles/readonly-file.jsonl
-#       chmod 000 testfiles/readonly-file.jsonl
-#   - name: Test view command
-#     run: cycod --input-chat-history testfiles/readonly-file.jsonl --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-#     expect-regex: |
-#       User: /title view\r?\n
-#       TODO\r?\n
-#       \r?\n
-#       User: exit\r?\n
-#   - name: Cleanup
-#     bash: |
-#       chmod 644 testfiles/readonly-file.jsonl
-#       rm -f testfiles/readonly-file.jsonl
 
 - name: set_title_when_none_exists_writable_file
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"My Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
@@ -112,36 +78,6 @@ tests:
     \r?\n
     User: exit\r?\n
 
-- name: set_rejects_unquoted_input
-  steps:
-  - name: Test single word without quotes
-    run: cycod --input "/title set MyTitle" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-    expect-regex: |
-      User: /title set MyTitle\r?\n
-      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Test no arguments
-    run: cycod --input "/title set" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-    expect-regex: |
-      User: /title set\r?\n
-      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Test multiple words without quotes
-    run: cycod --input "/title set Multi Word Title" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-    expect-regex: |
-      User: /title set Multi Word Title\r?\n
-      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Test single character without quotes
-    run: cycod --input "/title set A" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-    expect-regex: |
-      User: /title set A\r?\n
-      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
-      \r?\n
-      User: exit\r?\n
 
 - name: set_title_replace_unlocked_title
   run: cycod --input-chat-history testfiles/unlocked-title-full-conversation.jsonl --input "/title set \"New Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
@@ -192,8 +128,6 @@ tests:
       \r?\n
       User: exit\r?\n
 
-
-
 - name: set_handles_various_title_lengths
   steps:
   - name: Test medium length title (150 chars)
@@ -230,7 +164,6 @@ tests:
       \r?\n
       User: exit\r?\n
 
-
 - name: set_title_with_readonly_file
   steps:
   - name: Create and make readonly file
@@ -249,62 +182,6 @@ tests:
       chmod 644 testfiles/readonly-test-file.jsonl
       rm -f testfiles/readonly-test-file.jsonl
 
-- name: commands_handle_corrupted_metadata
-  steps:
-  - name: Setup corrupted metadata file for set test
-    bash: |
-      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-set-test.jsonl
-  - name: Test set command recovers from corrupted metadata
-    run: cycod --chat-history testfiles/corrupted-set-test.jsonl --input "/title set \"Fixed Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-    expect-regex: |
-      User: /title set "Fixed Title"\r?\n
-      Title updated to: "Fixed Title" \(locked from AI changes\)\r?\n
-      \r?\n
-      User: /title view\r?\n
-      Title:\s+Fixed Title\r?\n
-      Status:\s+locked\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Verify set operation created valid metadata
-    bash: |
-      head -1 testfiles/corrupted-set-test.jsonl | grep -q '"title":"Fixed Title"'
-      head -1 testfiles/corrupted-set-test.jsonl | grep -q '"titleLocked":true'
-  - name: Setup corrupted metadata file for lock test
-    bash: |
-      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-lock-test.jsonl
-  - name: Test lock command works with corrupted metadata
-    run: cycod --chat-history testfiles/corrupted-lock-test.jsonl --input "/title lock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-    expect-regex: |
-      User: /title lock\r?\n
-      Title locked from AI changes\.\r?\n
-      \r?\n
-      User: /title view\r?\n
-      Title:\s+\[null\]\r?\n
-      Status:\s+locked\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Verify lock operation created valid metadata
-    bash: |
-      head -1 testfiles/corrupted-lock-test.jsonl | grep -q '"titleLocked":true'
-  - name: Setup corrupted metadata file for unlock test
-    bash: |
-      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-unlock-test.jsonl
-  - name: Test unlock command works with corrupted metadata
-    run: cycod --chat-history testfiles/corrupted-unlock-test.jsonl --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-    expect-regex: |
-      User: /title unlock\r?\n
-      Title is already unlocked\.\r?\n
-      \r?\n
-      User: /title view\r?\n
-      Title:\s+\[null\]\r?\n
-      Status:\s+unlocked\r?\n
-      \r?\n
-      User: exit\r?\n
-  - name: Verify unlock operation created valid metadata
-    bash: |
-      head -1 testfiles/corrupted-unlock-test.jsonl | grep -q '"titleLocked":'
-  - name: Cleanup all corrupted test files
-    bash: rm -f testfiles/corrupted-set-test.jsonl testfiles/corrupted-lock-test.jsonl testfiles/corrupted-unlock-test.jsonl
 
 - name: lock_existing_unlocked_title
   steps:
@@ -426,8 +303,6 @@ tests:
     \r?\n
     User: exit\r?\n
 
-
-
 - name: unlock_existing_locked_title
   steps:
   - name: Create test file with locked title
@@ -448,8 +323,6 @@ tests:
       head -1 testfiles/unlock-test-file.jsonl | grep -q '"titleLocked":false'
   - name: Cleanup
     bash: rm -f testfiles/unlock-test-file.jsonl
-
-
 
 - name: unlock_when_no_title_exists
   steps:
@@ -490,8 +363,6 @@ tests:
       chmod 644 testfiles/readonly-unlock-test.jsonl
       rm -f testfiles/readonly-unlock-test.jsonl
 
-
-
 - name: unlock_with_no_file
   run: cycod --input "/title set \"My Title\"" --input "/title unlock" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
@@ -502,8 +373,6 @@ tests:
     Error: No conversation file to save metadata to\. Use --input-chat-history or create a conversation first\.\r?\n
     \r?\n
     User: exit\r?\n
-
-
 
 - name: set_view_sequence_test_title
   run: cycod --input "/title set \"Test Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
@@ -590,17 +459,6 @@ tests:
   - name: Cleanup
     bash: rm -f testfiles/lock-then-set-test.jsonl
 
-# - name: set_title_with_newlines
-#   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set Title\nwith\nnewlines" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
-#   expect-regex: |
-#     User: /title set Title\\nwith\\nnewlines\r?\n
-#     Title updated to: "Title with newlines" \(locked from AI changes\)\r?\n
-#     \r?\n
-#     User: /title view\r?\n
-#     Current title: "Title with newlines" \(locked\)\r?\n
-#     \r?\n
-#     User: exit\r?\n
-
 - name: set_accepts_various_content_types
   steps:
   - name: Test normal text content
@@ -670,8 +528,6 @@ tests:
       \r?\n
       User: exit\r?\n
 
-
-
 - name: rapid_sequential_commands
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"First\"" --input "/title view" --input "/title unlock" --input "/title lock" --input "/title set \"Second\"" --input "/title view" --input "/title unlock" --input "/title set \"Third\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
@@ -726,7 +582,7 @@ tests:
       User: exit\r?\n
 
 # ====================================================================
-# CRITICAL MISSING TESTS - Quote Parsing Edge Cases
+# Quote Parsing
 # ====================================================================
 
 - name: set_handles_malformed_quotes
@@ -769,10 +625,40 @@ tests:
     Status:\s+locked\r?\n
     User: exit\r?\n
 
+- name: set_rejects_unquoted_input
+  steps:
+  - name: Test single word without quotes
+    run: cycod --input "/title set MyTitle" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+    expect-regex: |
+      User: /title set MyTitle\r?\n
+      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Test no arguments
+    run: cycod --input "/title set" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+    expect-regex: |
+      User: /title set\r?\n
+      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Test multiple words without quotes
+    run: cycod --input "/title set Multi Word Title" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+    expect-regex: |
+      User: /title set Multi Word Title\r?\n
+      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Test single character without quotes
+    run: cycod --input "/title set A" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+    expect-regex: |
+      User: /title set A\r?\n
+      Error: Titles must be enclosed in double quotes\. Usage: /title set \"<title>\"\r?\n
+      \r?\n
+      User: exit\r?\n
 
 
 # ====================================================================
-# CRITICAL MISSING TESTS - Case Sensitivity and Whitespace Handling
+# Case Sensitivity and Whitespace Handling
 # ====================================================================
 
 - name: title_subcommands_case_insensitive
@@ -803,7 +689,7 @@ tests:
     User: exit\r?\n
 
 # ====================================================================
-# CRITICAL MISSING TESTS - Metadata Corruption Recovery
+# Metadata Corruption
 # ====================================================================
 
 - name: view_with_completely_invalid_json
@@ -857,11 +743,71 @@ tests:
   - name: Cleanup
     bash: rm -f testfiles/missing-meta-key-test.jsonl
 
-# ====================================================================
-# CONSOLIDATED TESTS - Content Validation 
-# ====================================================================
+- name: commands_handle_corrupted_metadata
+  steps:
+  - name: Setup corrupted metadata file for set test
+    bash: |
+      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-set-test.jsonl
+  - name: Test set command recovers from corrupted metadata
+    run: cycod --chat-history testfiles/corrupted-set-test.jsonl --input "/title set \"Fixed Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title set "Fixed Title"\r?\n
+      Title updated to: "Fixed Title" \(locked from AI changes\)\r?\n
+      \r?\n
+      User: /title view\r?\n
+      Title:\s+Fixed Title\r?\n
+      Status:\s+locked\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Verify set operation created valid metadata
+    bash: |
+      head -1 testfiles/corrupted-set-test.jsonl | grep -q '"title":"Fixed Title"'
+      head -1 testfiles/corrupted-set-test.jsonl | grep -q '"titleLocked":true'
+  - name: Setup corrupted metadata file for lock test
+    bash: |
+      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-lock-test.jsonl
+  - name: Test lock command works with corrupted metadata
+    run: cycod --chat-history testfiles/corrupted-lock-test.jsonl --input "/title lock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title lock\r?\n
+      Title locked from AI changes\.\r?\n
+      \r?\n
+      User: /title view\r?\n
+      Title:\s+\[null\]\r?\n
+      Status:\s+locked\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Verify lock operation created valid metadata
+    bash: |
+      head -1 testfiles/corrupted-lock-test.jsonl | grep -q '"titleLocked":true'
+  - name: Setup corrupted metadata file for unlock test
+    bash: |
+      cp testfiles/malformed-metadata.jsonl testfiles/corrupted-unlock-test.jsonl
+  - name: Test unlock command works with corrupted metadata
+    run: cycod --chat-history testfiles/corrupted-unlock-test.jsonl --input "/title unlock" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title unlock\r?\n
+      Title is already unlocked\.\r?\n
+      \r?\n
+      User: /title view\r?\n
+      Title:\s+\[null\]\r?\n
+      Status:\s+unlocked\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Verify unlock operation created valid metadata
+    bash: |
+      head -1 testfiles/corrupted-unlock-test.jsonl | grep -q '"titleLocked":'
+  - name: Cleanup all corrupted test files
+    bash: rm -f testfiles/corrupted-set-test.jsonl testfiles/corrupted-lock-test.jsonl testfiles/corrupted-unlock-test.jsonl
 
-
+- name: view_with_corrupted_metadata
+  run: cycod --input-chat-history testfiles/malformed-metadata.jsonl --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title view\r?\n
+    Title:\s+\[null\]\r?\n
+    Status:\s+unlocked\r?\n
+    \r?\n
+    User: exit\r?\n
 
 # ====================================================================
 # CRITICAL MISSING TESTS - Extensibility Testing
@@ -921,24 +867,6 @@ tests:
 
 
 
-# ====================================================================
-# CRITICAL MISSING TESTS - Stress and Boundary Testing
-# ====================================================================
-
-
-  run: cycod --input "/title set \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
-  expect-regex: |
-    User: /title set "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"\r?\n
-    Title updated to: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \(locked from AI changes\)\r?\n
-    \r?\n
-    User: /title view\r?\n
-    Title:\s+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r?\n
-    Status:\s+locked\r?\n
-    \r?\n
-    User: exit\r?\n
-
-
-
 - name: rapid_title_operations_stress_test
   run: cycod --input-chat-history testfiles/default-metadata-full-conversation.jsonl --input "/title set \"A\"" --input "/title unlock" --input "/title lock" --input "/title set \"B\"" --input "/title unlock" --input "/title set \"C\"" --input "/title lock" --input "/title set \"D\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
@@ -971,9 +899,6 @@ tests:
     Status:\s+locked\r?\n
     \r?\n
     User: exit\r?\n
-
-# CRITICAL MISSING TESTS - Quote Parsing Edge Cases for Issue Reproduction
-# ====================================================================
 
 - name: set_title_malformed_quotes_mixed_shell_parsing
   run: cycod --input "/title set \"fooey \" here we go\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
