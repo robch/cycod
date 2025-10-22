@@ -1,8 +1,3 @@
-//
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
-//
-
 using System.Reflection;
 using System.Collections;
 using System.Text;
@@ -122,7 +117,7 @@ public class FunctionFactory
         return null;
     }
 
-    public virtual bool TryCallFunction(string functionName, string functionArguments, out string? result)
+    public virtual bool TryCallFunction(string functionName, string functionArguments, out object? result)
     {
         result = null;
         if (!string.IsNullOrEmpty(functionName) && !string.IsNullOrEmpty(functionArguments))
@@ -146,7 +141,7 @@ public class FunctionFactory
         return newFactory;
     }
 
-    private static string? TryCallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
+    private static object? TryCallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
     {
         try
         {
@@ -154,12 +149,13 @@ public class FunctionFactory
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"Error calling function '{function.Name}': {ex.Message}");
+            // Log the error but don't show to user in console since this will be returned as function result
+            ConsoleHelpers.LogException(ex, $"Error calling function '{function.Name}'", showToUser: false);
             return "Exception: " + ex.Message;
         }
     }
 
-    private static string? CallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
+    private static object? CallFunction(MethodInfo methodInfo, AIFunction function, string argumentsAsJson, object? instance)
     {
         var parsed = JsonDocument.Parse(argumentsAsJson).RootElement;
         var arguments = new List<object?>();
@@ -186,7 +182,7 @@ public class FunctionFactory
 
         var args = arguments.ToArray();
         var result = CallFunction(methodInfo, args, instance);
-        return ConvertFunctionResultToString(result);
+        return ConvertFunctionResultToStringOrAIContent(result);
     }
 
     private static object? CallFunction(MethodInfo methodInfo, object?[] args, object? instance)
@@ -226,8 +222,13 @@ public class FunctionFactory
         return true;
     }
 
-    private static string? ConvertFunctionResultToString(object? result)
+    private static object? ConvertFunctionResultToStringOrAIContent(object? result)
     {
+        if (result is AIContent aiContent)
+        {
+            return aiContent;
+        }
+
         if (result is IEnumerable enumerable && !(result is string))
         {
             using var stream = new MemoryStream();

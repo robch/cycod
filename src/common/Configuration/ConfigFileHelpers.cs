@@ -19,20 +19,21 @@ public static class ConfigFileHelpers
         var yamlPath = GetYamlConfigFileName(scope);
         if (File.Exists(yamlPath))
         {
-            ConsoleHelpers.WriteDebugLine($"Found YAML config file at: {yamlPath}");
+            ConsoleHelpers.WriteDebugLine($"FindConfigFile: Found YAML config file at: {yamlPath}");
             return yamlPath;
         }
 
         var iniPath = GetIniConfigFileName(scope);
         if (File.Exists(iniPath))
         {
-            ConsoleHelpers.WriteDebugLine($"Found INI config file at: {iniPath}");
+            ConsoleHelpers.WriteDebugLine($"FindConfigFile: Found INI config file at: {iniPath}");
             return iniPath;
         }
 
         if (forceCreate && !string.IsNullOrEmpty(yamlPath))
         {
             FileHelpers.WriteAllText(yamlPath!, string.Empty);
+            Logger.Info($"Config: Created new config file at: {yamlPath}");
             return yamlPath;
         }
 

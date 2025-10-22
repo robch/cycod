@@ -1,0 +1,86 @@
+CYCOD MCP EXAMPLES
+
+  Model Context Protocol (MCP) servers extend CYCOD with specialized capabilities
+  like web automation, database access, and API integrations.
+
+BASIC MCP USAGE
+
+  EXAMPLE 1: Use Playwright MCP for web automation (without registration)
+
+    cycod --with-mcp "npx @playwright/mcp@latest" --question "Navigate to github.com and search for 'playwright'"
+
+  EXAMPLE 2: Register Playwright MCP for repeated use
+
+    cycod mcp add playwright --command "npx" --args "@playwright/mcp@latest"
+    cycod --use-mcps playwright --question "Automate testing this web form"
+
+  EXAMPLE 3: Use multiple MCP servers together
+
+    cycod mcp add playwright --command "npx" --args "@playwright/mcp@latest"
+    cycod --use-mcps playwright --question "Analyze this web app and generate test files"
+
+ADVANCED MCP CONFIGURATIONS
+
+  EXAMPLE 4: Playwright MCP with specific browser and capabilities
+
+    cycod mcp add playwright-full --command "npx" --args "@playwright/mcp@latest --browser chrome --caps vision,pdf"
+    cycod --use-mcps playwright-full --question "Take screenshots of this site and generate a PDF report"
+
+  EXAMPLE 5: Combine registered and external MCP servers
+
+    cycod mcp add database --command "npx" --args "@modelcontextprotocol/server-sqlite@latest mydb.sqlite"
+    cycod --use-mcps database --with-mcp "npx @playwright/mcp@latest --headless" --question "Extract data from this website and store in database"
+
+  EXAMPLE 6: Headless Playwright for server environments
+
+    cycod --with-mcp "npx @playwright/mcp@latest --headless --no-sandbox" --question "Scrape data from multiple pages"
+
+MCP MANAGEMENT
+
+  EXAMPLE 7: List and inspect MCP server registrations
+
+    cycod mcp list
+    cycod mcp get playwright
+
+  EXAMPLE 8: Set up team-wide MCP servers
+
+    cycod mcp add playwright --command "npx" --args "@playwright/mcp@latest" --global
+    cycod mcp add database --command "npx" --args "@modelcontextprotocol/server-sqlite@latest" --args "/shared/database.sqlite" --global
+
+  EXAMPLE 9: User-specific MCP configuration
+
+    cycod mcp add personal-browser --command "npx" --args "@playwright/mcp@latest --user-data-dir=/home/user/browser-profile" --user
+
+DEVELOPMENT WORKFLOWS
+
+  EXAMPLE 10: Web testing and automation workflow
+
+    cycod mcp add testing --command "npx" --args "@playwright/mcp@latest --browser chrome"
+    cycod --use-mcps testing --question "Create end-to-end tests for this login flow"
+
+  EXAMPLE 11: API testing with web automation
+
+    cycod --with-mcp "npx @playwright/mcp@latest" --question "Test this REST API by automating the web interface and comparing results"
+
+  EXAMPLE 12: Content generation from web research
+
+    cycod --with-mcp "npx @playwright/mcp@latest --headless" --question "Research competitor pricing pages and generate a comparison report"
+
+TROUBLESHOOTING
+
+  EXAMPLE 13: Debug MCP server issues
+
+    cycod mcp get problematic-server
+    cycod mcp remove problematic-server
+    cycod mcp add problematic-server --command "npx" --args "@playwright/mcp@latest --verbose"
+
+  EXAMPLE 14: Isolated MCP testing
+
+    cycod --with-mcp "npx @playwright/mcp@latest --isolated" --question "Test this workflow without affecting my regular browser profile"
+
+SEE ALSO
+
+  cycod help mcp
+  cycod help mcp add
+  cycod help mcp list
+  cycod help examples

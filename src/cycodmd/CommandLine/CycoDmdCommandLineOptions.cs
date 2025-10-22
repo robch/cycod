@@ -162,6 +162,91 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         {
             command.IncludeLineNumbers = true;
         }
+        else if (arg == "--highlight-matches")
+        {
+            command.HighlightMatches = true;
+        }
+        // Time-based filtering options
+        else if (arg == "--modified")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            var (after, before) = ValidateTimeSpecRange(arg, timeSpec);
+            command.ModifiedAfter = after;
+            command.ModifiedBefore = before;
+            i++;
+        }
+        else if (arg == "--created")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            var (after, before) = ValidateTimeSpecRange(arg, timeSpec);
+            command.CreatedAfter = after;
+            command.CreatedBefore = before;
+            i++;
+        }
+        else if (arg == "--accessed")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            var (after, before) = ValidateTimeSpecRange(arg, timeSpec);
+            command.AccessedAfter = after;
+            command.AccessedBefore = before;
+            i++;
+        }
+        else if (arg == "--modified-after" || arg == "--after" || arg == "--time-after")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.ModifiedAfter = ValidateSingleTimeSpec(arg, timeSpec, isAfter: true);
+            i++;
+        }
+        else if (arg == "--modified-before" || arg == "--before" || arg == "--time-before")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.ModifiedBefore = ValidateSingleTimeSpec(arg, timeSpec, isAfter: false);
+            i++;
+        }
+        else if (arg == "--created-after")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.CreatedAfter = ValidateSingleTimeSpec(arg, timeSpec, isAfter: true);
+            i++;
+        }
+        else if (arg == "--created-before")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.CreatedBefore = ValidateSingleTimeSpec(arg, timeSpec, isAfter: false);
+            i++;
+        }
+        else if (arg == "--accessed-after")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.AccessedAfter = ValidateSingleTimeSpec(arg, timeSpec, isAfter: true);
+            i++;
+        }
+        else if (arg == "--accessed-before")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.AccessedBefore = ValidateSingleTimeSpec(arg, timeSpec, isAfter: false);
+            i++;
+        }
+        else if (arg == "--anytime")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            var (after, before) = ValidateTimeSpecRange(arg, timeSpec);
+            command.AnyTimeAfter = after;
+            command.AnyTimeBefore = before;
+            i++;
+        }
+        else if (arg == "--anytime-after")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.AnyTimeAfter = ValidateSingleTimeSpec(arg, timeSpec, isAfter: true);
+            i++;
+        }
+        else if (arg == "--anytime-before")
+        {
+            var timeSpec = GetInputOptionArgs(i + 1, args, required: 1).FirstOrDefault();
+            command.AnyTimeBefore = ValidateSingleTimeSpec(arg, timeSpec, isAfter: false);
+            i++;
+        }
         else if (arg.StartsWith("--") && arg.EndsWith("file-instructions"))
         {
             var instructions = GetInputOptionArgs(i + 1, args);
@@ -378,4 +463,35 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
     public const string DefaultSaveFileOutputTemplate = "{filePath}/{fileBase}-output.md";
     public const string DefaultSavePageOutputTemplate = "{filePath}/{fileBase}-output.md";
     public const string DefaultSaveOutputTemplate = "output.md";
+    
+    // Validation methods for time specifications
+    private (DateTime? After, DateTime? Before) ValidateTimeSpecRange(string arg, string? timeSpec)
+    {
+        if (string.IsNullOrEmpty(timeSpec))
+            throw new CommandLineException($"Missing time specification for {arg}");
+            
+        try
+        {
+            return TimeSpecHelpers.ParseTimeSpecRange(arg, timeSpec);
+        }
+        catch (Exception ex) when (!(ex is CommandLineException))
+        {
+            throw new CommandLineException($"Invalid time specification for {arg}: {ex.Message}");
+        }
+    }
+
+    private DateTime? ValidateSingleTimeSpec(string arg, string? timeSpec, bool isAfter)
+    {
+        if (string.IsNullOrEmpty(timeSpec))
+            throw new CommandLineException($"Missing time specification for {arg}");
+            
+        try
+        {
+            return TimeSpecHelpers.ParseSingleTimeSpec(arg, timeSpec, isAfter);
+        }
+        catch (Exception ex) when (!(ex is CommandLineException))
+        {
+            throw new CommandLineException($"Invalid time specification for {arg}: {ex.Message}");
+        }
+    }
 }

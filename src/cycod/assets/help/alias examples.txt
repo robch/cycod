@@ -1,0 +1,128 @@
+CYCOD ALIAS EXAMPLES
+
+  Aliases save frequently used command-line options for reuse.
+  Create specialized workflows for development, analysis, and automation tasks.
+
+DEVELOPMENT WORKFLOW ALIASES
+
+  EXAMPLE 1: Create a React development alias
+
+    cycod alias add react-dev "--add-system-prompt \"You are a React expert focusing on modern hooks, TypeScript, and performance optimization\" --auto-approve read write"
+
+  EXAMPLE 2: Create a code review alias
+
+    cycod alias add code-review "--add-user-prompt \"Review this code for bugs, security issues, and best practices. Provide specific examples and fixes.\" --auto-approve read" --user
+
+  EXAMPLE 3: Create a DevOps troubleshooting alias
+
+    cycod alias add devops-debug "--add-system-prompt \"You are a senior DevOps engineer specializing in Kubernetes, Docker, and CI/CD pipelines\" --auto-approve read" --global
+
+SPECIALIZED ANALYSIS ALIASES
+
+  EXAMPLE 4: Create a security analysis alias
+
+    cycod alias add security-audit "--add-system-prompt \"You are a cybersecurity expert specializing in code security, vulnerability assessment, and secure coding practices\" --auto-approve read"
+
+  EXAMPLE 5: Create a performance optimization alias
+
+    cycod alias add perf-optimize "--add-user-prompt \"Analyze this code for performance bottlenecks and suggest optimizations with benchmarks\" --auto-approve read write"
+
+  EXAMPLE 6: Create a documentation generation alias
+
+    cycod alias add doc-gen "--add-user-prompt \"Generate comprehensive documentation including API references, usage examples, and troubleshooting guides\" --auto-approve read write" --user
+
+LANGUAGE-SPECIFIC ALIASES
+
+  EXAMPLE 7: Create a Python expert alias
+
+    cycod alias add python-expert "--add-system-prompt \"You are a Python expert focusing on best practices, performance, and modern Python features\" --auto-approve read write"
+
+  EXAMPLE 8: Create a JavaScript/Node.js alias
+
+    cycod alias add js-expert "--add-system-prompt \"You are a JavaScript expert specializing in Node.js, modern ES features, and web development\" --auto-approve read write"
+
+  EXAMPLE 9: Create a database expert alias
+
+    cycod alias add db-expert "--add-system-prompt \"You are a database expert specializing in SQL optimization, schema design, and performance tuning\" --auto-approve read"
+
+PROJECT MANAGEMENT ALIASES
+
+  EXAMPLE 10: Create a project analysis alias
+
+    cycod alias add project-analyze "--add-user-prompt \"Analyze this project structure, dependencies, and suggest improvements for maintainability\" --auto-approve read"
+
+  EXAMPLE 11: Create a test generation alias
+
+    cycod alias add test-gen "--add-user-prompt \"Generate comprehensive unit tests, integration tests, and test documentation\" --auto-approve read write"
+
+  EXAMPLE 12: Create a refactoring assistant alias
+
+    cycod alias add refactor "--add-user-prompt \"Help refactor this code for better maintainability, performance, and adherence to best practices\" --auto-approve read write"
+
+USING ALIASES
+
+  EXAMPLE 13: Use React development alias for component work
+
+    cycod --react-dev --question "Review this React component and suggest performance improvements"
+
+  EXAMPLE 14: Combine alias with other options
+
+    cycod --verbose --code-review --question "Analyze this authentication module"
+
+  EXAMPLE 15: Use alias with input files
+
+    cycod --python-expert "Optimize this algorithm code.py"
+
+ALIAS MANAGEMENT
+
+  EXAMPLE 16: List all available aliases
+
+    cycod alias list
+
+  EXAMPLE 17: View specific alias definition
+
+    cycod alias get react-dev
+
+  EXAMPLE 18: Remove alias when no longer needed
+
+    cycod alias remove old-alias
+
+  EXAMPLE 19: Update an existing alias
+
+    cycod alias add react-dev "--add-system-prompt \"Updated React expert with Next.js knowledge\" --auto-approve read write" --update
+
+SCOPE MANAGEMENT
+
+  EXAMPLE 20: Create user-wide aliases for personal workflows
+
+    cycod alias add personal-assistant "--add-user-prompt \"Help with coding tasks using my preferred style guide\" --auto-approve read" --user
+
+  EXAMPLE 21: Create team-wide aliases for consistency
+
+    cycod alias add team-review "--add-system-prompt \"Use company coding standards and review guidelines\" --auto-approve read" --global
+
+  EXAMPLE 22: Override global alias with local version
+
+    cycod alias add code-review "--add-user-prompt \"Use strict security review process\" --auto-approve read"
+
+ADVANCED ALIAS PATTERNS
+
+  EXAMPLE 23: Create alias with MCP integration
+
+    cycod alias add web-analysis "--mcp playwright --add-user-prompt \"Analyze websites and generate reports\" --auto-approve read write"
+
+  EXAMPLE 24: Create alias with specific model
+
+    cycod alias add claude-review "--model claude-3-opus-20240229 --add-user-prompt \"Provide detailed code analysis\" --auto-approve read"
+
+  EXAMPLE 25: Create alias with multiple files processing
+
+    cycod alias add multi-analyze "--add-user-prompt \"Analyze multiple files simultaneously\" --auto-approve read"
+
+SEE ALSO
+
+  cycod help alias
+  cycod help alias add
+  cycod help alias list
+  cycod help aliases
+  cycod help configuration

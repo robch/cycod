@@ -1,5 +1,11 @@
 using System.Diagnostics;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Text;
+
 
 public static class ProcessHelpers
 {
@@ -14,10 +20,14 @@ public static class ProcessHelpers
 
         try
         {
+            Logger.Info($"Executing {shell} shell script {(scriptArgs != null ? $"with args: {scriptArgs}" : "")}");
+            ConsoleHelpers.WriteDebugLine($"Script content length: {script?.Length ?? 0} characters");
+            
             var scriptFileExt = GetShellScriptFileExtension(shell);
-            var scriptWrapped = WrapScriptContent(shell, script);
+            var scriptWrapped = WrapScriptContent(shell, script!);
             var scriptFileName = FileHelpers.WriteTextToTempFile(scriptWrapped, scriptFileExt)!;
             filesToDelete.Add(scriptFileName);
+            ConsoleHelpers.WriteDebugLine($"Created temporary script file: {scriptFileName}");
 
             GetShellProcessNameAndArgsFormat(shell, out var processName, out var processArgsFormat);
             ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {processArgsFormat}");
@@ -25,7 +35,12 @@ public static class ProcessHelpers
             ConsoleHelpers.WriteDebugLine($"RunShellScriptAsync: {processName} {shellArgsFormatted}");
 
             var hasScriptFileName = shellArgsFormatted.Contains(scriptFileName);
-            if (!hasScriptFileName) throw new InvalidOperationException($"Script file name not found in shell arguments: {shellArgsFormatted}");
+            if (!hasScriptFileName) 
+            {
+                var error = $"Script file name not found in shell arguments: {shellArgsFormatted}";
+                Logger.Error(error);
+                throw new InvalidOperationException(error);
+            }
 
             var builder = new RunnableProcessBuilder()
                 .WithFileName(processName)
@@ -35,14 +50,45 @@ public static class ProcessHelpers
                 .WithStandardInput(input)
                 .WithTimeout(timeout);
 
-            return await builder.RunAsync();
+            var startTime = DateTime.Now;
+            var result = await builder.RunAsync();
+            var duration = DateTime.Now - startTime;
+            
+            // Additional logging after execution
+            if (result.ExitCode == 0)
+            {
+                Logger.Info($"Shell script executed successfully in {duration.TotalSeconds:F2}s with exit code: {result.ExitCode}");
+            }
+            else
+            {
+                Logger.Warning($"Shell script exited with non-zero code: {result.ExitCode} in {duration.TotalSeconds:F2}s");
+                ConsoleHelpers.WriteDebugLine($"Script stderr: {result.StandardError}");
+            }
+            
+            return result;
         }
+        // catch (Exception ex)
+        // {
+        //     Logger.Error($"Shell script execution failed: {ex.Message}");
+        //     throw;
+        // }
         finally
         {
             var skipDelete = ConsoleHelpers.IsDebug();
             if (!skipDelete)
             {
-                filesToDelete?.ForEach(x => File.Delete(x));
+                filesToDelete?.ForEach(x => 
+                {
+                    try
+                    {
+                        File.Delete(x);
+                        ConsoleHelpers.WriteDebugLine($"Deleted temporary script file: {x}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Warning($"Failed to delete temporary script file {x}: {ex.Message}");
+                    }
+                });
             }
         }
     }
@@ -499,6 +545,84 @@ public static class ProcessHelpers
     }
 
     private static Dictionary<string, string> _cliCache = new Dictionary<string, string>();
+
+    // Common executable and script extensions on Windows
+    private static readonly string[] WindowsExecutableExtensions = { ".exe", ".cmd", ".bat", ".ps1" };
+
+    /// <summary>
+    /// Finds an executable in the PATH with common Windows extensions.
+    /// </summary>
+    /// <param name="baseName">The base name of the executable without extension (e.g., "npm")</param>
+    /// <returns>The full path of the executable if found, or the original name if not found</returns>
+    public static string FindExecutableInPath(string baseName)
+    {
+        if (string.IsNullOrEmpty(baseName))
+        {
+            return baseName;
+        }
+
+        // If we're not on Windows or the file already has an extension or exists, return it
+        if (!OS.IsWindows() || Path.HasExtension(baseName) || File.Exists(baseName))
+        {
+            return baseName;
+        }
+
+        // Check for name in cache
+        if (_cliCache.TryGetValue(baseName, out var cachedPath))
+        {
+            return cachedPath;
+        }
+
+        // Try to find with various extensions
+        foreach (string ext in WindowsExecutableExtensions)
+        {
+            // Skip if already has this extension
+            if (baseName.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string nameWithExt = baseName + ext;
+            
+            // First check local path
+            if (File.Exists(nameWithExt))
+            {
+                _cliCache[baseName] = nameWithExt;
+                return nameWithExt;
+            }
+
+            // Then check in PATH
+            var foundInPath = FileHelpers.FindFilesInOsPath(nameWithExt).FirstOrDefault();
+            if (!string.IsNullOrEmpty(foundInPath))
+            {
+                _cliCache[baseName] = foundInPath;
+                return foundInPath;
+            }
+        }
+
+        // Special handling for common npm and node tools in predictable locations
+        if (baseName.Equals("npm", StringComparison.OrdinalIgnoreCase) || 
+            baseName.Equals("npx", StringComparison.OrdinalIgnoreCase) || 
+            baseName.Equals("node", StringComparison.OrdinalIgnoreCase))
+        {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string nodejsPath = Path.Combine(programFiles, "nodejs");
+            
+            foreach (string ext in WindowsExecutableExtensions)
+            {
+                string fullPath = Path.Combine(nodejsPath, baseName + ext);
+                if (File.Exists(fullPath))
+                {
+                    _cliCache[baseName] = fullPath;
+                    return fullPath;
+                }
+            }
+        }
+
+        // If not found, cache the original name to avoid repeated searches
+        _cliCache[baseName] = baseName;
+        return baseName;
+    }
 
     private static readonly Dictionary<string, string> _argsFormat = new(StringComparer.OrdinalIgnoreCase)
     {

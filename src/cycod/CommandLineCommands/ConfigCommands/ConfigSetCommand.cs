@@ -28,6 +28,19 @@ class ConfigSetCommand : ConfigBaseCommand
         if (string.IsNullOrWhiteSpace(key)) throw new CommandLineException($"Error: No key specified.");
         if (value == null) throw new CommandLineException($"Error: No value specified.");
 
+        // Validate and normalize the key against known settings
+        if (!KnownSettings.IsKnown(key))
+        {
+            var allKnownSettings = string.Join(", ", KnownSettings.GetAllKnownSettings().OrderBy(s => s));
+            Console.WriteLine($"Warning: Unknown setting '{key}'. Valid settings are: {allKnownSettings}");
+            // Continue with the original key without normalization
+        }
+        else
+        {
+            // Use the canonical form for storage of known settings
+            key = KnownSettings.GetCanonicalForm(key);
+        }
+
         // Try to parse as a list if the value is enclosed in brackets
         if (value.StartsWith("[") && value.EndsWith("]"))
         {

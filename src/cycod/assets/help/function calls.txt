@@ -9,8 +9,8 @@ FUNCTION CALL TYPES
   CycoD function calls generally fall into three categories:
 
   * read - Functions that read content (ViewFile, ListFiles, etc.)
-  * write - Functions that modify content (CreateFile, StrReplace, etc.)
-  * run - Functions that execute commands (RunBashCommandAsync, RunCmdCommandAsync, etc.)
+  * write - Functions that modify content (CreateFile, StrReplace, DeleteFile, etc.)
+  * run - Functions that execute commands (RunBashCommand, RunCmdCommand, etc.)
 
 CONTROLLING FUNCTION PERMISSIONS
 
@@ -30,21 +30,21 @@ CONTROLLING FUNCTION PERMISSIONS
 
     EXAMPLES:
 
-      EXAMPLE 1: Automatically approve read-only functions
+      EXAMPLE 1: Auto-approve safe operations for code analysis sessions
 
-        cycod --auto-approve read
+        cycod --auto-approve read --question "Analyze my entire codebase for technical debt"
 
-      EXAMPLE 2: Automatically approve specific functions
+      EXAMPLE 2: Auto-approve specific functions by name
 
-        cycod --auto-approve ViewFile ListFiles
+        cycod --auto-approve ViewFile ListFiles --question "Show me the project structure"
 
-      EXAMPLE 3: Automatically approve all file operations but not command execution
+      EXAMPLE 3: Auto-approve file operations for refactoring tasks
 
-        cycod --auto-approve read write
+        cycod --auto-approve read write --question "Refactor this module to use modern async/await patterns"
 
-      EXAMPLE 4: Automatically approve all functions (use with caution)
+      EXAMPLE 4: Auto-approve all functions for trusted operations (use with caution)
 
-        cycod --auto-approve *
+        cycod --auto-approve * --question "Refactor all code, building and testing after each atomic step"
 
   AUTO-DENY SETTINGS
 
@@ -54,28 +54,33 @@ CONTROLLING FUNCTION PERMISSIONS
     USAGE: cycod --auto-deny PATTERN1 [PATTERN2 [...]]
 
     PATTERNS:
-      * function name - Deny a specific function by name (e.g., "RunBashCommandAsync")
+      * function name - Deny a specific function by name (e.g., "RunBashCommand")
       * read - Deny all read-only functions
       * write - Deny all write functions
       * run - Deny all command execution functions
 
     EXAMPLES:
 
-      EXAMPLE 1: Automatically deny all command execution
+      EXAMPLE 1: Deny dangerous operations during code review sessions
 
-        cycod --auto-deny run
+        cycod --auto-deny run --question "Review this code but don't execute anything"
 
-      EXAMPLE 2: Automatically deny specific functions
+      EXAMPLE 2: Deny specific dangerous functions by name
 
-        cycod --auto-deny CreateFile DeleteFile
+        cycod --auto-deny CreateFile DeleteFile --question "Analyze this code but don't modify files"
 
-      EXAMPLE 3: Automatically deny all write operations
+      EXAMPLE 3: Deny file modification during analysis-only sessions
 
-        cycod --auto-deny write
+        cycod --auto-deny write --question "Analyze this codebase for patterns but don't modify anything"
 
 PERSISTENT CONFIGURATION
 
   You can make your function call preferences persistent using the config commands:
+  
+  CONFIG SCOPES:
+    --local    Apply to current directory only
+    --user     Apply to current user (default)
+    --global   Apply to all users
 
   EXAMPLE 1: Always auto-approve read-only functions
 
@@ -85,12 +90,16 @@ PERSISTENT CONFIGURATION
 
     cycod config set App.AutoDeny run
 
-  EXAMPLE 3: Setting multiple auto-approvals
+  EXAMPLE 3: Setting multiple auto-approvals (individual commands)
 
     cycod config add App.AutoApprove read
     cycod config add App.AutoApprove write
+    
+  EXAMPLE 4: Setting multiple auto-approvals (single command)
+  
+    cycod config set App.AutoApprove "read write"
 
-  EXAMPLE 4: Clear all auto-approvals
+  EXAMPLE 5: Clear all auto-approvals
 
     cycod config clear App.AutoApprove
 
@@ -116,6 +125,6 @@ SECURITY CONSIDERATIONS
 
 SEE ALSO
 
-  cycod help use app
+  cycod help settings
   cycod help options
   cycod help config

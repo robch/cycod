@@ -51,7 +51,7 @@ abstract class TestBaseCommand : Command
 
         var atLeastOneFileSpecified = files.Any();
         var tests = atLeastOneFileSpecified
-            ? files.SelectMany(file => YamlTestFramework.GetTestsFromYaml("cycodt", file))
+            ? files.SelectMany(file => GetTestsFromFile(file))
             : Array.Empty<TestCase>();
 
         var withOrWithoutOptional = FilterOptionalTests(tests, IncludeOptionalCategories).ToList();
@@ -114,13 +114,120 @@ abstract class TestBaseCommand : Command
 
     private IEnumerable<TestCase> FilterOptionalTests(IEnumerable<TestCase> tests, List<string> includeOptionalCategories)
     {
-        var excludeAllOptional = includeOptionalCategories.Count == 0;
-        if (excludeAllOptional) return tests.Where(test => !HasOptionalTrait(test));
-
+        var allTests = tests.ToList();
+        
+        // If we're including all optional tests, just return everything
         var includeAllOptional = includeOptionalCategories.Count == 1 && string.IsNullOrEmpty(includeOptionalCategories[0]);
-        if (includeAllOptional) return tests;
+        if (includeAllOptional) return allTests;
 
-        return tests.Where(test => !HasOptionalTrait(test) || HasMatchingOptionalCategory(test, includeOptionalCategories));
+        // Determine which tests will be excluded
+        var excludeAllOptional = includeOptionalCategories.Count == 0;
+        var excludedTests = allTests
+            .Where(test => HasOptionalTrait(test) && 
+                          (excludeAllOptional || !HasMatchingOptionalCategory(test, includeOptionalCategories)))
+            .ToList();
+
+        if (excludedTests.Count > 0)
+        {
+            // Repair the test chain by updating nextTestCaseId and afterTestCaseId properties
+            RepairTestChain(allTests, excludedTests);
+        }
+
+        // Return the filtered tests (without excluded ones)
+        return allTests.Except(excludedTests);
+    }
+
+    private void RepairTestChain(List<TestCase> allTests, List<TestCase> excludedTests)
+    {
+        // Create a dictionary to quickly look up tests by ID
+        var testsById = allTests.ToDictionary(test => test.Id.ToString());
+        
+        // For each excluded test
+        foreach (var excludedTest in excludedTests)
+        {
+            string? prevTestId = YamlTestProperties.Get(excludedTest, "afterTestCaseId");
+            string? nextTestId = YamlTestProperties.Get(excludedTest, "nextTestCaseId");
+            
+            // Skip if no connections to repair
+            if (string.IsNullOrEmpty(prevTestId) && string.IsNullOrEmpty(nextTestId))
+                continue;
+                
+            // Find previous and next non-excluded tests
+            TestCase? prevTest = null;
+            if (!string.IsNullOrEmpty(prevTestId) && testsById.TryGetValue(prevTestId, out var tempPrevTest))
+            {
+                // Only consider this previous test if it's not also being excluded
+                if (!excludedTests.Contains(tempPrevTest))
+                {
+                    prevTest = tempPrevTest;
+                }
+                else
+                {
+                    // If the previous test is also excluded, walk backward until finding a non-excluded test
+                    string? currentPrevId = prevTestId;
+                    while (!string.IsNullOrEmpty(currentPrevId))
+                    {
+                        if (testsById.TryGetValue(currentPrevId, out var currentPrevTest) && 
+                            !excludedTests.Contains(currentPrevTest))
+                        {
+                            prevTest = currentPrevTest;
+                            break;
+                        }
+                        
+                        // Move to the previous test in the chain
+                        var prevPrevId = testsById.TryGetValue(currentPrevId, out var prevPrevTest) 
+                            ? YamlTestProperties.Get(prevPrevTest, "afterTestCaseId") 
+                            : null;
+                            
+                        if (string.IsNullOrEmpty(prevPrevId)) break;
+                        currentPrevId = prevPrevId;
+                    }
+                }
+            }
+            
+            TestCase? nextTest = null;
+            if (!string.IsNullOrEmpty(nextTestId) && testsById.TryGetValue(nextTestId, out var tempNextTest))
+            {
+                // Only consider this next test if it's not also being excluded
+                if (!excludedTests.Contains(tempNextTest))
+                {
+                    nextTest = tempNextTest;
+                }
+                else
+                {
+                    // If the next test is also excluded, walk forward until finding a non-excluded test
+                    string? currentNextId = nextTestId;
+                    while (!string.IsNullOrEmpty(currentNextId))
+                    {
+                        if (testsById.TryGetValue(currentNextId, out var currentNextTest) && 
+                            !excludedTests.Contains(currentNextTest))
+                        {
+                            nextTest = currentNextTest;
+                            break;
+                        }
+                        
+                        // Move to the next test in the chain
+                        var nextNextId = testsById.TryGetValue(currentNextId, out var nextNextTest) 
+                            ? YamlTestProperties.Get(nextNextTest, "nextTestCaseId") 
+                            : null;
+                            
+                        if (string.IsNullOrEmpty(nextNextId)) break;
+                        currentNextId = nextNextId;
+                    }
+                }
+            }
+            
+            // Update the connections to skip over excluded tests
+            if (prevTest != null && nextTest != null)
+            {
+                // Connect previous test to next test
+                YamlTestProperties.Set(prevTest, "nextTestCaseId", nextTest.Id.ToString());
+                // Connect next test to previous test
+                YamlTestProperties.Set(nextTest, "afterTestCaseId", prevTest.Id.ToString());
+                
+                TestLogger.Log($"Repaired test chain: {prevTest.DisplayName} -> {nextTest.DisplayName} (skipping excluded tests)");
+            }
+        }
     }
 
     private bool HasOptionalTrait(TestCase test)
@@ -132,5 +239,18 @@ abstract class TestBaseCommand : Command
     {
         var optionalTraits = test.Traits.Where(t => t.Name == "optional").Select(t => t.Value);
         return optionalTraits.Any(value => categories.Contains(value));
+    }
+    
+    private IEnumerable<TestCase> GetTestsFromFile(FileInfo file)
+    {
+        try
+        {
+            return YamlTestFramework.GetTestsFromYaml("cycodt", file);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.WriteErrorLine($"ERROR: {ex.Message}");
+            return new List<TestCase>();
+        }
     }
 }

@@ -26,7 +26,7 @@ public class YamlHelpers
 
         if (!string.IsNullOrEmpty(error))
         {
-            Logger.LogError(error);
+            TestLogger.LogError(error);
         }
 
         return stream;

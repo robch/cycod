@@ -1,5 +1,6 @@
 using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
+using System.Diagnostics;
 using System.Text;
 
 public class ChatCommand : CommandWithVariables
@@ -34,11 +35,18 @@ public class ChatCommand : CommandWithVariables
         clone.InputChatHistory = this.InputChatHistory;
         clone.OutputChatHistory = this.OutputChatHistory;
         clone.OutputTrajectory = this.OutputTrajectory;
+        clone.AutoSaveOutputChatHistory = this.AutoSaveOutputChatHistory;
+        clone.AutoSaveOutputTrajectory = this.AutoSaveOutputTrajectory;
         clone.InputInstructions = new List<string>(this.InputInstructions);
         clone.UseTemplates = this.UseTemplates;
         
         // Deep copy variables dictionary
         clone.Variables = new Dictionary<string, string>(this.Variables);
+        
+        // Deep copy UseMcps and ImagePatterns
+        clone.UseMcps = new List<string>(this.UseMcps);
+        clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
+        clone.ImagePatterns = new List<string>(this.ImagePatterns);
         
         return clone;
     }
@@ -47,6 +55,10 @@ public class ChatCommand : CommandWithVariables
     {
         // Setup the named values
         _namedValues = new TemplateVariables(Variables);
+        AddAgentsFileContentToTemplateVariables();
+        
+        // Initialize slash command handlers
+        _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -58,9 +70,14 @@ public class ChatCommand : CommandWithVariables
 
         // Ground the filenames (in case they're templatized, or auto-save is enabled).
         InputChatHistory = ChatHistoryFileHelpers.GroundInputChatHistoryFileName(InputChatHistory, LoadMostRecentChatHistory)?.ReplaceValues(_namedValues);
-        OutputChatHistory = ChatHistoryFileHelpers.GroundOutputChatHistoryFileName(OutputChatHistory)?.ReplaceValues(_namedValues);
-        OutputTrajectory = ChatHistoryFileHelpers.GroundOutputTrajectoryFileName(OutputTrajectory)?.ReplaceValues(_namedValues);
+        AutoSaveOutputChatHistory = ChatHistoryFileHelpers.GroundAutoSaveChatHistoryFileName()?.ReplaceValues(_namedValues);
+        AutoSaveOutputTrajectory = ChatHistoryFileHelpers.GroundAutoSaveTrajectoryFileName()?.ReplaceValues(_namedValues);
+        OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
+        OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
+        
+        // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
+        _autoSaveTrajectoryFile = new TrajectoryFile(AutoSaveOutputTrajectory);
 
         // Ground the system prompt, added user messages, and InputInstructions.
         SystemPrompt = GroundSystemPrompt();
@@ -71,9 +88,12 @@ public class ChatCommand : CommandWithVariables
         var factory = new McpFunctionFactory();
         factory.AddFunctions(new DateAndTimeHelperFunctions());
         factory.AddFunctions(new ShellCommandToolHelperFunctions());
+        factory.AddFunctions(new BackgroundProcessHelperFunctions());
         factory.AddFunctions(new StrReplaceEditorHelperFunctions());
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
+        factory.AddFunctions(new ImageHelperFunctions(this));
+        factory.AddFunctions(new ShellAndProcessHelperFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -111,7 +131,7 @@ public class ChatCommand : CommandWithVariables
             while (true)
             {
                 DisplayUserPrompt();
-                var userPrompt = interactive
+                var userPrompt = interactive && !Console.IsInputRedirected
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
                 if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit") break;
@@ -125,7 +145,11 @@ public class ChatCommand : CommandWithVariables
                 var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
                 DisplayAssistantLabel();
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant,
+                
+                var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+                ImagePatterns.Clear();
+                
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
@@ -154,8 +178,32 @@ public class ChatCommand : CommandWithVariables
         SystemPrompt = GroundPromptName(SystemPrompt);
         SystemPrompt = GroundSlashPrompt(SystemPrompt);
 
-        var processed =  ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
+        var processed = ProcessTemplate(SystemPrompt + "\n\n" + GetSystemPromptAdds());
         return _namedValues != null ? processed.ReplaceValues(_namedValues) : processed;
+    }
+    
+    /// <summary>
+    /// Adds AGENTS.md file content to template variables
+    /// </summary>
+    private void AddAgentsFileContentToTemplateVariables()
+    {
+        if (_namedValues == null)
+            return;
+            
+        var agentsFile = AgentsFileHelpers.FindAgentsFile();
+        if (agentsFile != null)
+        {
+            var agentsContent = FileHelpers.ReadAllText(agentsFile);
+            if (!string.IsNullOrEmpty(agentsContent))
+            {
+                // Store the AGENTS.md content as a template variable
+                _namedValues.Set("agents.md", agentsContent);
+                _namedValues.Set("agents.file", Path.GetFileName(agentsFile));
+                _namedValues.Set("agents.path", agentsFile);
+
+                ConsoleHelpers.WriteDebugLine($"Added AGENTS.md content from {agentsFile} as template variable");
+            }
+        }
     }
 
     private List<string> GroundUserPromptAdds()
@@ -233,7 +281,7 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = HandleHelpCommand();
         }
-        else if (_cycoDmdCommandHandler.IsCommand(userPrompt))
+        else if (_cycoDmdCommandHandler?.IsCommand(userPrompt) == true)
         {
             skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
         }
@@ -259,10 +307,10 @@ public class ChatCommand : CommandWithVariables
 
     private async Task<bool> HandleCycoDmdCommand(FunctionCallingChat chat, string userPrompt)
     {
-        var userFunctionName = _cycoDmdCommandHandler.GetCommandName(userPrompt);
+        var userFunctionName = _cycoDmdCommandHandler?.GetCommandName(userPrompt) ?? "";
         DisplayUserFunctionCall(userFunctionName, null);
 
-        var result = await _cycoDmdCommandHandler.HandleCommand(userPrompt);
+        var result = await _cycoDmdCommandHandler?.HandleCommand(userPrompt)!;
         if (result != null) chat.AddUserMessage(result);
 
         DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
@@ -320,6 +368,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /get      Get content from URL");
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /run      Run a command");
+        helpBuilder.AppendLine("  /image    Add image file(s) to conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
@@ -383,10 +432,11 @@ public class ChatCommand : CommandWithVariables
     private async Task<string> CompleteChatStreamingAsync(
         FunctionCallingChat chat,
         string userPrompt,
+        IEnumerable<string> imageFiles,
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, string?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null)
     {
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
@@ -394,7 +444,7 @@ public class ChatCommand : CommandWithVariables
 
         try
         {
-            var response = await chat.CompleteChatStreamingAsync(userPrompt,
+            var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
@@ -402,8 +452,9 @@ public class ChatCommand : CommandWithVariables
 
             return response;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
             SaveExceptionHistory(chat);
             throw;
         }
@@ -440,19 +491,46 @@ public class ChatCommand : CommandWithVariables
         var input = ReadLineOrSimulateInput(inputInstructions, null);
         if (input != null) return input;
 
-        return Console.ReadLine() ?? defaultOnEndOfInput;
+        string? line = Console.ReadLine();
+        if (line == null) return defaultOnEndOfInput;
+
+        var isMultiLine = MultilineInputHelper.StartsWithBackticks(line);
+        return isMultiLine ? InteractivelyReadMultiLineInput(line) : line;
+    }
+
+    private string? InteractivelyReadMultiLineInput(string firstLine)    
+    {
+        ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
+        return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
 
-        if (OutputChatHistory != null)
+        TrySaveChatHistoryToFile(messages, AutoSaveOutputChatHistory);
+        if (OutputChatHistory != AutoSaveOutputChatHistory)
         {
-            messages.SaveChatHistoryToFile(OutputChatHistory, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            TrySaveChatHistoryToFile(messages, OutputChatHistory);
         }
         
-        _trajectoryFile?.AppendMessage(messages.LastOrDefault());
+        var lastMessage = messages.LastOrDefault();
+        _autoSaveTrajectoryFile.AppendMessage(lastMessage);
+        _trajectoryFile.AppendMessage(lastMessage);
+    }
+
+    private void TrySaveChatHistoryToFile(IList<ChatMessage> messages, string? filePath)
+    {
+        if (filePath == null) return;
+        
+        try
+        {
+            messages.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.LogException(ex, $"Warning: Failed to save chat history to '{filePath}'", showToUser: true);
+        }
     }
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
@@ -483,7 +561,11 @@ public class ChatCommand : CommandWithVariables
 
     private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
     {
+        Logger.Info($"HandleFunctionCallApproval: Function '{name}' called with args: {args}");
+        
         var autoApprove = ShouldAutoApprove(factory, name);
+        Logger.Info($"HandleFunctionCallApproval: Auto-approve result for '{name}': {autoApprove}");
+        
         if (autoApprove) return true;
 
         while (true)
@@ -494,7 +576,10 @@ public class ChatCommand : CommandWithVariables
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
 
-            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : ConsoleHelpers.ReadKey(true);
+            var shouldDeny = ShouldDenyFunctionCall(factory, name);
+            Logger.Info($"HandleFunctionCallApproval: Should deny '{name}': {shouldDeny}");
+            
+            ConsoleKeyInfo? key = shouldDeny ? null : ConsoleHelpers.ReadKey(true);
             DisplayGenericAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
             DisplayGenericAssistantFunctionCall(name, args, null);
@@ -541,7 +626,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void HandleFunctionCallCompleted(string name, string args, string? result)
+    private void HandleFunctionCallCompleted(string name, string args, object? result)
     {
         DisplayAssistantFunctionCall(name, args, result);
     }
@@ -549,7 +634,7 @@ public class ChatCommand : CommandWithVariables
     private void DisplayUserPrompt()
     {
         ConsoleHelpers.Write("\rUser: ", ConsoleColor.Green);
-        Console.ForegroundColor = ConsoleColor.White;
+        ConsoleHelpers.SetForegroundColor(ConsoleColor.White);
     }
 
     private void DisplayUserFunctionCall(string userFunctionName, string? result)
@@ -593,7 +678,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void DisplayAssistantFunctionCall(string name, string args, string? result)
+    private void DisplayAssistantFunctionCall(string name, string args, object? result)
     {
         EnsureLineFeeds();
         switch (name)
@@ -607,29 +692,31 @@ public class ChatCommand : CommandWithVariables
                 break;
         }
     }
-    
-    private void DisplayAssistantThinkFunctionCall(string args, string? result)
+
+    private void DisplayAssistantThinkFunctionCall(string args, object? result)
     {
         var thought = JsonHelpers.GetJsonPropertyValue(args, "thought", args);
         var hasThought = !string.IsNullOrEmpty(thought);
-        var hasResult = !string.IsNullOrEmpty(result);
+        var resultText = result is TextContent textContent ? textContent.Text : result?.ToString();
+        var hasResult = !string.IsNullOrEmpty(resultText);
 
         if (hasThought && !hasResult) ConsoleHelpers.WriteLine($"\n[THINKING]\n{thought}", ConsoleColor.DarkCyan);
         if (hasResult)
         {
-            ConsoleHelpers.WriteLine($"\n{result}", ConsoleColor.DarkGray);
+            ConsoleHelpers.WriteLine($"\n{resultText}", ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
-    
-    private void DisplayGenericAssistantFunctionCall(string name, string args, string? result)
+
+    private void DisplayGenericAssistantFunctionCall(string name, string args, object? result)
     {
         ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
         
         if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
         if (result != null)
         {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
+            var text = result as String ?? "non-string result";
+            ConsoleHelpers.WriteLine(text, ConsoleColor.DarkGray);
             DisplayAssistantLabel();
         }
     }
@@ -662,8 +749,9 @@ public class ChatCommand : CommandWithVariables
             chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Failed to save exception chat history");
             ConsoleHelpers.WriteWarning("Failed to save exception chat history.");
         }
     }
@@ -677,17 +765,24 @@ public class ChatCommand : CommandWithVariables
             chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            ConsoleHelpers.LogException(ex, "Failed to save exception trajectory", showToUser: false);
             ConsoleHelpers.WriteWarning("Failed to save exception trajectory.");
         }
     }
 
     private async Task AddMcpFunctions(McpFunctionFactory factory)
     {
+        Logger.Info("MCP: Initializing MCP functions for chat");
+        
+        var sw = System.Diagnostics.Stopwatch.StartNew();
         var clients = await CreateMcpClientsFromConfig();
         await CreateWithMcpClients(clients);
+        
+        Logger.Info($"MCP: Created {clients.Count} MCP clients in {sw.ElapsedMilliseconds}ms");
 
+        // Add all tools from all clients to the function factory
         foreach (var clientEntry in clients)
         {
             var serverName = clientEntry.Key;
@@ -695,13 +790,17 @@ public class ChatCommand : CommandWithVariables
 
             try
             {
+                Logger.Info($"MCP: Adding tools from server '{serverName}'");
                 await factory.AddMcpClientToolsAsync(client, serverName);
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteErrorLine($"Error adding tools from MCP server '{serverName}': {ex.Message}");
+                ConsoleHelpers.LogException(ex, $"Error adding tools from MCP server '{serverName}'");
             }
         }
+        
+        sw.Stop();
+        Logger.Info($"MCP: Finished initializing MCP functions in {sw.ElapsedMilliseconds}ms");
     }
 
     private async Task<Dictionary<string, IMcpClient>> CreateMcpClientsFromConfig()
@@ -710,18 +809,33 @@ public class ChatCommand : CommandWithVariables
         if (noMcps)
         {
             ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            Logger.Info("MCP: Functions are disabled (no MCPs specified)");
             return new();
         }
 
-        var servers = McpFileHelpers.ListMcpServers(ConfigFileScope.Any)
+        Logger.Info($"MCP: Looking for MCP servers matching criteria: {string.Join(", ", UseMcps)}");
+        
+        var allServers = McpFileHelpers.ListMcpServers(ConfigFileScope.Any);
+        Logger.Verbose($"MCP: Found {allServers.Count} total MCP servers in configuration");
+        
+        var servers = allServers
             .Where(kvp => ShouldUseMcpFromConfig(kvp.Key, kvp.Value))
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+            
+        Logger.Info($"MCP: Selected {servers.Count} MCP servers matching criteria");
+        
+        if (servers.Count > 0)
+        {
+            var serverList = string.Join(", ", servers.Keys);
+            Logger.Info($"MCP: Creating clients for servers: {serverList}");
+        }
 
         var clients = await McpClientManager.CreateClientsAsync(servers);
         if (clients.Count == 0)
         {
             var criteria = string.Join(", ", UseMcps);
             ConsoleHelpers.WriteDebugLine($"Searched {UseMcps.Count} MCPs; found no MCPs matching criteria: {criteria}");
+            Logger.Warning($"MCP: No functioning MCP servers found matching criteria: {criteria}");
             return new();
         }
 
@@ -736,18 +850,26 @@ public class ChatCommand : CommandWithVariables
         if (noMcps)
         {
             ConsoleHelpers.WriteDebugLine("MCP functions are disabled.");
+            Logger.Info("MCP: No ad-hoc MCP servers specified");
             return;
         }
 
+        Logger.Info($"MCP: Creating {servers.Count} ad-hoc MCP server(s)");
+        
         var start = DateTime.Now;
         ConsoleHelpers.Write($"Loading {servers.Count} ad-hoc MCP server(s) ...", ConsoleColor.DarkGray);
 
         var loaded = 0;
+        var failed = 0;
+        
         foreach (var serverName in servers.Keys)
         {
             var stdioConfig = servers[serverName];
             try
             {
+                Logger.Info($"MCP: Creating ad-hoc MCP client '{serverName}' with command: {stdioConfig.Command}");
+                
+                var sw = System.Diagnostics.Stopwatch.StartNew();
                 var client = await McpClientFactory.CreateAsync(new StdioClientTransport(new()
                 {
                     Name = serverName,
@@ -755,35 +877,69 @@ public class ChatCommand : CommandWithVariables
                     Arguments = stdioConfig.Args,
                     EnvironmentVariables = stdioConfig.Env,
                 }));
+                sw.Stop();
 
                 ConsoleHelpers.WriteDebugLine($"Created MCP client for '{serverName}' with command: {stdioConfig.Command}");
+                Logger.Info($"MCP: Successfully created ad-hoc MCP client '{serverName}' in {sw.ElapsedMilliseconds}ms");
+                
                 clients[serverName] = client;
                 loaded++;
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.WriteErrorLine($"Failed to create MCP client for '{serverName}': {ex.Message}");
+                failed++;
+                ConsoleHelpers.LogException(ex, $"Failed to create MCP client for '{serverName}'");
             }
         }
 
         var duration = TimeSpanFormatter.FormatMsOrSeconds(DateTime.Now - start);
-        ConsoleHelpers.WriteLine($"\rLoaded {loaded} ad-hoc MCP server(s) ({duration})", ConsoleColor.DarkGray);
+        var statusMsg = $"Loaded {loaded} ad-hoc MCP server(s) ({duration})";
+        ConsoleHelpers.WriteLine($"\r{statusMsg}", ConsoleColor.DarkGray);
+        
+        if (failed > 0)
+        {
+            Logger.Warning($"MCP: {statusMsg}, {failed} server(s) failed to load");
+        }
+        else
+        {
+            Logger.Info($"MCP: {statusMsg}");
+        }
     }
 
     private bool ShouldUseMcpFromConfig(string name, IMcpServerConfigItem item)
     {
-        return UseMcps.Contains(name) || UseMcps.Contains("*");
+        var shouldUse = UseMcps.Contains(name) || UseMcps.Contains("*");
+        
+        if (shouldUse)
+        {
+            Logger.Verbose($"MCP: Selected server '{name}' of type {item.Type} (matched criteria)");
+        }
+        
+        return shouldUse;
     }
 
     private bool ShouldAutoApprove(McpFunctionFactory factory, string name)
     {
+        Logger.Info($"ShouldAutoApprove: Checking function '{name}'");
+        
         var needToAddAutoApproveToolDefaults = _approvedFunctionCallNames.Count == 0;
-        if (needToAddAutoApproveToolDefaults) AddAutoApproveToolDefaults();
+        if (needToAddAutoApproveToolDefaults) 
+        {
+            Logger.Info("ShouldAutoApprove: Adding auto-approve tool defaults");
+            AddAutoApproveToolDefaults();
+        }
+
+        Logger.Info($"ShouldAutoApprove: Current approved functions: {string.Join(", ", _approvedFunctionCallNames)}");
 
         var approvedByName = _approvedFunctionCallNames.Contains(name);
-        if (approvedByName) return true;
+        if (approvedByName) 
+        {
+            Logger.Info($"ShouldAutoApprove: Function '{name}' approved by name");
+            return true;
+        }
 
-        var approveAll = _approvedFunctionCallNames.Contains("*");
+        // Support both "*" and "all" as wildcards for approving all functions
+        var approveAll = _approvedFunctionCallNames.Contains("*") || _approvedFunctionCallNames.Contains("all");
         if (approveAll) return true;
 
         var approveAllRunFunctions = _approvedFunctionCallNames.Contains("run");
@@ -791,6 +947,8 @@ public class ChatCommand : CommandWithVariables
         var approveAllReadFunctions = approveAllWriteFunctions || _approvedFunctionCallNames.Contains("read");
 
         var isReadonly = factory.IsReadOnlyFunction(name);
+        Logger.Info($"ShouldAutoApprove: Function '{name}' is readonly: {isReadonly}");
+        
         var approved = isReadonly switch
         {
             true => approveAllReadFunctions,
@@ -798,6 +956,7 @@ public class ChatCommand : CommandWithVariables
             null => approveAllRunFunctions
         };
 
+        Logger.Info($"ShouldAutoApprove: Function '{name}' final approval result: {approved}");
         return approved;
     }
 
@@ -814,20 +973,38 @@ public class ChatCommand : CommandWithVariables
 
     private bool ShouldDenyFunctionCall(McpFunctionFactory factory, string name)
     {
+        Logger.Info($"ShouldDenyFunctionCall: Checking function '{name}'");
+        
         var needToAddAutoDenyToolDefaults = _deniedFunctionCallNames.Count == 0;
-        if (needToAddAutoDenyToolDefaults) AddAutoDenyToolDefaults();
+        if (needToAddAutoDenyToolDefaults) 
+        {
+            Logger.Info("ShouldDenyFunctionCall: Adding auto-deny tool defaults");
+            AddAutoDenyToolDefaults();
+        }
+
+        Logger.Info($"ShouldDenyFunctionCall: Current denied functions: {string.Join(", ", _deniedFunctionCallNames)}");
 
         var deniedByName = _deniedFunctionCallNames.Contains(name);
-        if (deniedByName) return true;
+        if (deniedByName) 
+        {
+            Logger.Info($"ShouldDenyFunctionCall: Function '{name}' denied by name");
+            return true;
+        }
 
         var denyAll = _deniedFunctionCallNames.Contains("*");
-        if (denyAll) return true;
+        if (denyAll) 
+        {
+            Logger.Info($"ShouldDenyFunctionCall: Function '{name}' denied by wildcard");
+            return true;
+        }
 
         var denyAllRunFunctions = _deniedFunctionCallNames.Contains("run");
         var denyAllWriteFunctions = _deniedFunctionCallNames.Contains("write");
         var denyAllReadFunctions = _deniedFunctionCallNames.Contains("read");
 
         var isReadonly = factory.IsReadOnlyFunction(name);
+        Logger.Info($"ShouldDenyFunctionCall: Function '{name}' is readonly: {isReadonly}");
+        
         var denied = isReadonly switch
         {
             true => denyAllReadFunctions,
@@ -835,6 +1012,7 @@ public class ChatCommand : CommandWithVariables
             null => denyAllRunFunctions
         };
 
+        Logger.Info($"ShouldDenyFunctionCall: Function '{name}' final denial result: {denied}");
         return denied;
     }
 
@@ -860,19 +1038,25 @@ public class ChatCommand : CommandWithVariables
     public string? InputChatHistory;
     public string? OutputChatHistory;
     public string? OutputTrajectory;
+    
+    public string? AutoSaveOutputChatHistory;
+    public string? AutoSaveOutputTrajectory;
 
     public List<string> InputInstructions = new();
     public bool UseTemplates = true;
 
     public List<string> UseMcps = new();
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
+    
+    public List<string> ImagePatterns = new();
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
 
     private INamedValues? _namedValues;
-    private TrajectoryFile? _trajectoryFile;
-    private SlashCycoDmdCommandHandler _cycoDmdCommandHandler = new();
+    private TrajectoryFile _trajectoryFile = null!;
+    private TrajectoryFile _autoSaveTrajectoryFile = null!;
+    private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
     private SlashPromptCommandHandler _promptCommandHandler = new();
 
     private long _totalTokensIn = 0;

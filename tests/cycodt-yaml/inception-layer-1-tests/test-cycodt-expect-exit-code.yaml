@@ -7,33 +7,33 @@ tests:
   expect-regex: |
     ^Found 4 tests\.\.\.\r?$\n
     ^\r?$\n
-    ^Starting test: yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
-    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
+    ^Starting test: yaml.simple4\.simple4\.fails when exit code is 1@[0-9a-f]{6}\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple4\.simple4\.fails when exit code is 1@[0-9a-f]{6}\r?$\n
     ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(5\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
     ^\r?$\n
-    ^Starting test: yaml\.simple4\.simple4\.successfully expects exit code 1\r?$\n
-    ^Passed \(\d+ ms\): yaml\.simple4\.simple4\.successfully expects exit code 1\r?$\n
-    ^Starting test: yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
-    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
+    ^Starting test: yaml.simple4\.simple4\.successfully expects exit code 1@[0-9a-f]{6}\r?$\n
+    ^Passed \(\d+ ms\): yaml.simple4\.simple4\.successfully expects exit code 1@[0-9a-f]{6}\r?$\n
+    ^Starting test: yaml.simple4\.simple4\.fails when exit code is not 2@[0-9a-f]{6}\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple4\.simple4\.fails when exit code is not 2@[0-9a-f]{6}\r?$\n
     ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(18\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
     ^\r?$\n
-    ^Starting test: yaml\.simple4\.simple4\.successfully expects exit code 2\r?$\n
-    ^Passed \(\d+ ms\): yaml\.simple4\.simple4\.successfully expects exit code 2\r?$\n
+    ^Starting test: yaml.simple4\.simple4\.successfully expects exit code 2@[0-9a-f]{6}\r?$\n
+    ^Passed \(\d+ ms\): yaml.simple4\.simple4\.successfully expects exit code 2@[0-9a-f]{6}\r?$\n
     ^\r?$\n
     ^FAILURE SUMMARY:\r?$\n
-    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is 1\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple4\.simple4\.fails when exit code is 1@[0-9a-f]{6}\r?$\n
     ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(5\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n
     ^EXIT CODE: 1\r?$\n
     ^\r?$\n
-    ^Failed \(\d+ ms\): yaml\.simple4\.simple4\.fails when exit code is not 2\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple4\.simple4\.fails when exit code is not 2@[0-9a-f]{6}\r?$\n
     ^at .*cycodt-yaml[\\/]inception-layer-1[\\/]simple4\.yaml\(18\)\r?$\n
     ^echo hello\r?$\n
     ^exit 1\r?$\n

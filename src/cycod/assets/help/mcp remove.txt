@@ -17,13 +17,13 @@ OPTIONS
 
 EXAMPLES
 
-  EXAMPLE 1: Remove an MCP server registration from any scope
+  EXAMPLE 1: Remove a Playwright MCP server registration from any scope
 
-    cycod mcp remove weather
+    cycod mcp remove playwright
 
-  EXAMPLE 2: Remove an MCP server registration only from the user scope
+  EXAMPLE 2: Remove a Playwright MCP server registration only from the user scope
 
-    cycod mcp remove weather --user
+    cycod mcp remove playwright-headless --user
 
 SEE ALSO
 

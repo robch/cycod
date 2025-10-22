@@ -103,7 +103,7 @@ class AliasDeleteCommand : AliasBaseCommand
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteErrorLine($"Error deleting alias: {ex.Message}");
+            ConsoleHelpers.LogException(ex, "Error deleting alias");
             return 1;
         }
     }

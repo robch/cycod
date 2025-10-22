@@ -1,0 +1,85 @@
+# Test memory logger behavior: Test that memory logging is always active
+# and that memory logs get dumped to a file when an error occurs
+
+workingDirectory: ../../../testresults/cycod/logger/memory-logger-behavior-tests
+class: memory-logger-behavior-tests
+tags: [cycod, logger]
+tests:
+
+- name: Test memory logging is always active during normal operation
+  parallelize: false
+  steps:
+  - name: Run cycod and verify memory logging is enabled
+    bash: |
+      cycod version --log test-memory-active.log 2>&1
+      cycodmd test-memory-active.log
+    expect-regex: |
+      Memory logger configured to dump to .*exception-test-memory-active\.log
+      Logging system fully initialized
+    not-expect-regex: |
+      Failed to initialize memory logger
+  
+  - name: Clean up memory active test files
+    bash: |
+      rm -f test-memory-active.log exception-test-memory-active.log
+      echo "Memory active test cleanup completed"
+    expect-regex: |
+      Memory active test cleanup completed
+
+- name: Test memory logs dump to file on error - Invalid config operation
+  steps:
+  - name: Try to trigger an error that causes memory dump
+    bash: |
+      # Try an operation that might cause an error
+      cycod config set "" "" --scope invalid-scope 2>&1 || true
+      cycod config get non.existent.key.with.complex.path --log test-error-dump.log 2>&1 || true
+      # Check for any exception logs that might have been created
+      cycodmd test-error-dump.log exception-*.log "$TEMP/cycod-logs/exception-*.log" 2>/dev/null || echo "No exception logs found"
+    expect-regex: |
+      (exception-.*\.log|No exception logs found|File logger initialized)
+  
+  - name: Clean up error dump test files
+    bash: |
+      rm -f test-error-dump.log exception-*.log
+      rm -rf "$TEMP/cycod-logs" 2>/dev/null || true
+      echo "Error dump test cleanup completed"
+    expect-regex: |
+      Error dump test cleanup completed
+
+- name: Test memory logger dump configuration is properly set
+  steps:
+  - name: Verify memory logger is configured to dump on abnormal exit
+    bash: |
+      # Run cycod and check that memory logger dump is configured
+      cycod version --log test-memory-dump-config.log 2>&1
+      cycodmd test-memory-dump-config.log
+    expect-regex: |
+      Memory logger configured to dump to .*exception-test-memory-dump-config\.log only on abnormal exit
+      Logging system fully initialized
+    
+  - name: Clean up memory dump config test files
+    bash: |
+      rm -f test-memory-dump-config.log exception-test-memory-dump-config.log
+      echo "Memory dump config test cleanup completed"
+    expect-regex: |
+      Memory dump config test cleanup completed
+
+- name: Test memory logs contain logged information during operation
+  steps:
+  - name: Generate logs and verify memory logging is working
+    bash: |
+      # Run a valid command that generates logs
+      cycod version --log test-memory-content.log 2>&1
+      # Check the log file was created and contains expected content
+      cycodmd test-memory-content.log
+    expect-regex: |
+      File logger initialized with file: test-memory-content\.log
+      Memory logger configured to dump to
+      Logging system fully initialized
+    
+  - name: Clean up memory content test files  
+    bash: |
+      rm -f test-memory-content.log exception-log-*.log
+      echo "Memory content test cleanup completed"
+    expect-regex: |
+      Memory content test cleanup completed

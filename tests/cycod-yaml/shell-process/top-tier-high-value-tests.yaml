@@ -1,0 +1,38 @@
+class: top-tier-high-value-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 200.SX.OUT.CRLF-015 - Mixed line endings handling
+  run: cycod --input "Use RunShellCommand to run a command that produces mixed line endings using 'bash -c \"printf \"Line1\\r\\nLine2\\nLine3\\r\\n\"\"' with expectedTimeout=5000" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Line1.*
+    .*Line2.*
+    .*Line3.*
+
+- name: Test case 410.SX.CMD.DEGR-043 - Shell command degrades gracefully under pressure
+  run: cycod --input "Use RunShellCommand to run a command that handles pressure gracefully using 'bash -c \"echo Starting; sleep 1; echo Reducing frequency; sleep 2; echo Completed gracefully\"' with expectedTimeout=8000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Starting.*
+    .*Reducing frequency.*
+    .*Completed gracefully.*
+
+- name: Test case 620.PL.PRC.HANG-062 - Process appears to hang but is actually processing
+  run: cycod --input "Use StartNamedProcess to start a process named 'hang-proc' that runs 'bash -c \"sleep 4; echo Was working silently; echo Processing complete\"' to simulate a process that appears to hang" --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: hang-proc.*
+
+- name: Test case 800.SS.CMD.CONC-077 - Multiple shell commands executing simultaneously
+  run: cycod --input "Use CreateNamedShell to create two shells named 'conc1' and 'conc2', then use ExecuteInShell to run concurrent commands in both shells" --auto-approve all
+  timeout: 35000
+  expect-regex: |
+    .*CreateNamedShell.*
+    .*Shell created with name: conc1.*
+    .*CreateNamedShell.*
+    .*Shell created with name: conc2.*
+    .*ExecuteInShell.*

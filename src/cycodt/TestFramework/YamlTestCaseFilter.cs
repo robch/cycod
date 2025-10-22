@@ -98,6 +98,7 @@ public class YamlTestCaseFilter
 
             case "fqn":
             case "fullyqualifiedname": return test.FullyQualifiedName;
+            case "fullyqualifiednamebase": return StripHash(test.FullyQualifiedName);
 
             case "cli": return YamlTestProperties.Get(test, "cli");
             case "run": return YamlTestProperties.Get(test, "run");
@@ -127,14 +128,24 @@ public class YamlTestCaseFilter
         return tags.Select(x => x.Value).ToArray();
     }
 
+    private static string StripHash(string fqn)
+    {
+        var at = fqn.LastIndexOf('@');
+        return at > -1 ? fqn.Substring(0, at) : fqn;
+    }
+
+
     private static bool TestContainsText(TestCase test, string text)
     {
+        var fqn = test.FullyQualifiedName;
+        var fqnStripped = StripHash(fqn);
         return test.DisplayName.Contains(text)
-            || test.FullyQualifiedName.Contains(text)
+            || fqn.Contains(text)
+            || fqnStripped.Contains(text)
             || test.Traits.Any(x => x.Name == text || x.Value.Contains(text))
             || supportedFilterProperties.Any(property => GetPropertyValue(test, property)?.ToString()?.Contains(text) == true);
     }
 
 
-    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "Category", "cli", "run", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "expect-exit-code", "parallelize", "skipOnFailure" };
+    private static readonly string[] supportedFilterProperties = { "DisplayName", "FullyQualifiedName", "fullyQualifiedNameBase", "Category", "cli", "run", "script", "bash", "foreach", "arguments", "input", "expect", "expect-regex", "not-expect-regex", "expect-exit-code", "parallelize", "skipOnFailure" };
 }

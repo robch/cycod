@@ -1,0 +1,28 @@
+class: critical-missing-functionality-round1
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 210.SX.CMD.SIGN-019 - Long-running shell command responds to termination signal
+  run: cycod --input "Use RunShellCommand to run a long command 'sleep 15' with expectedTimeout=3000 which will trigger auto-promotion, then use TerminateShellOrProcess to terminate the auto-promoted shell" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*"status": "stillRunning".*
+    .*"shellName": "auto-bash-.*
+    .*TerminateShellOrProcess.*
+
+- name: Test case 110.SX.OUT.PROG-006 - Shell produces expected progress indicators during long operation
+  run: cycod --input "Use RunShellCommand to run a long command that shows progress with a for loop from 1 to 5, showing progress indicators, with expectedTimeout=15000" --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Progress: 1/5.*
+    .*Progress: 2/5.*
+    .*Progress: 5/5.*
+
+- name: Test case 300.PL.PRC.OVER-027 - Process runs slightly longer than expected
+  run: cycod --input "Use StartNamedProcess to start a process named 'overtime-proc' that runs 'sleep 6' which will take longer than a short expected duration" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: overtime-proc.*

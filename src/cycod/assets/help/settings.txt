@@ -14,7 +14,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set maximum prompt tokens via environment variable
 
-      Set CYCOD_MAX_PROMPT_TOKENS environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_MAX_PROMPT_TOKENS="50000"
+
+      # CMD (Windows)
+      set CYCOD_MAX_PROMPT_TOKENS=50000
+
+      # PowerShell (Windows)
+      $env:CYCOD_MAX_PROMPT_TOKENS = "50000"
 
     EXAMPLE 3: Supply maximum prompt tokens via command line
 
@@ -31,7 +38,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set maximum tool tokens via environment variable
 
-      Set CYCOD_MAX_TOOL_TOKENS environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_MAX_TOOL_TOKENS="50000"
+
+      # CMD (Windows)
+      set CYCOD_MAX_TOOL_TOKENS=50000
+
+      # PowerShell (Windows)
+      $env:CYCOD_MAX_TOOL_TOKENS = "50000"
 
     EXAMPLE 3: Supply maximum tool tokens via command line
 
@@ -48,7 +62,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set maximum tokens via environment variable
 
-      Set CYCOD_MAX_OUTPUT_TOKENS environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_MAX_OUTPUT_TOKENS="4000"
+
+      # CMD (Windows)
+      set CYCOD_MAX_OUTPUT_TOKENS=4000
+
+      # PowerShell (Windows)
+      $env:CYCOD_MAX_OUTPUT_TOKENS = "4000"
 
     EXAMPLE 3: Supply maximum tokens via command line
 
@@ -65,7 +86,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set maximum total chat tokensvia environment variable
 
-      Set CYCOD_MAX_CHAT_TOKENS environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_MAX_CHAT_TOKENS="50000"
+
+      # CMD (Windows)
+      set CYCOD_MAX_CHAT_TOKENS=50000
+
+      # PowerShell (Windows)
+      $env:CYCOD_MAX_CHAT_TOKENS = "50000"
 
     EXAMPLE 3: Supply maximum total chat tokens via command line
 
@@ -82,7 +110,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set chat completion timeout via environment variable
 
-      Set CYCOD_CHAT_COMPLETION_TIMEOUT environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_CHAT_COMPLETION_TIMEOUT="120"
+
+      # CMD (Windows)
+      set CYCOD_CHAT_COMPLETION_TIMEOUT=120
+
+      # PowerShell (Windows)
+      $env:CYCOD_CHAT_COMPLETION_TIMEOUT = "120"
 
     EXAMPLE 3: Supply chat completion timeout via command line
 
@@ -99,7 +134,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Control auto-saving chat history via environment variable
 
-      Set CYCOD_AUTO_SAVE_CHAT_HISTORY environment variable to true/false
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_SAVE_CHAT_HISTORY="true"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_SAVE_CHAT_HISTORY=true
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_SAVE_CHAT_HISTORY = "true"
 
     EXAMPLE 3: Control auto-saving chat history via command line
 
@@ -117,12 +159,44 @@ USE APP SETTINGS
 
     EXAMPLE 2: Control auto-saving trajectory via environment variable
 
-      Set CYCOD_AUTO_SAVE_TRAJECTORY environment variable to true/false
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_SAVE_TRAJECTORY="true"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_SAVE_TRAJECTORY=true
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_SAVE_TRAJECTORY = "true"
 
     EXAMPLE 3: Control auto-saving trajectory via command line
 
       cycod chat --auto-save-trajectory true
       cycod chat --auto-save-trajectory false
+
+  AUTO-SAVE LOG
+
+    EXAMPLE 1: Control auto-saving logs via config
+
+      cycod config set App.AutoSaveLog true
+      cycod config set App.AutoSaveLog false --local
+      cycod config set App.AutoSaveLog false --user
+      cycod config set App.AutoSaveLog false --global
+
+    EXAMPLE 2: Control auto-saving logs via environment variable
+
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_SAVE_LOG="true"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_SAVE_LOG=true
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_SAVE_LOG = "true"
+
+    EXAMPLE 3: Control auto-saving logs via command line
+
+      cycod chat --auto-save-log true
+      cycod chat --auto-save-log false
 
   FUNCTION CALL AUTO-APPROVE
 
@@ -135,8 +209,14 @@ USE APP SETTINGS
 
     EXAMPLE 2: Set function auto-approval via environment variable
 
-      Set CYCOD_AUTO_APPROVE environment variable
-      (Use space-separated values for multiple items)
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_APPROVE="read write ViewFile ListFiles"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_APPROVE=read write ViewFile ListFiles
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_APPROVE = "read write ViewFile ListFiles"
 
     EXAMPLE 3: Supply function auto-approval via command line
 
@@ -150,19 +230,25 @@ USE APP SETTINGS
     EXAMPLE 1: Set function auto-denial via config
 
       cycod config set App.AutoDeny run
-      cycod config set App.AutoDeny "DeleteFile RunBashCommandAsync" --local
+      cycod config set App.AutoDeny "DeleteFile RunBashCommand" --local
       cycod config set App.AutoDeny write --user
       cycod config set App.AutoDeny "CreateFile StrReplace" --global
 
     EXAMPLE 2: Set function auto-denial via environment variable
 
-      Set CYCOD_AUTO_DENY environment variable
-      (Use space-separated values for multiple items)
+      # Bash (Linux/macOS)
+      export CYCOD_AUTO_DENY="run DeleteFile"
+
+      # CMD (Windows)
+      set CYCOD_AUTO_DENY=run DeleteFile
+
+      # PowerShell (Windows)
+      $env:CYCOD_AUTO_DENY = "run DeleteFile"
 
     EXAMPLE 3: Supply function auto-denial via command line
 
       cycod chat --auto-deny run
-      cycod chat --auto-deny DeleteFile RunBashCommandAsync
+      cycod chat --auto-deny DeleteFile RunBashCommand
       cycod chat --auto-deny write
       cycod chat --auto-deny "CreateFile StrReplace"
 
@@ -170,21 +256,34 @@ USE APP SETTINGS
 
     EXAMPLE 1: Set preferred AI provider via config
 
-      cycod config set App.PreferredProvider openai
-      cycod config set App.PreferredProvider azure-openai --local
       cycod config set App.PreferredProvider copilot --user
       cycod config set App.PreferredProvider anthropic --global
+      cycod config set App.PreferredProvider azure-openai --local
+      cycod config set App.PreferredProvider bedrock
+      cycod config set App.PreferredProvider gemini
+      cycod config set App.PreferredProvider grok
+      cycod config set App.PreferredProvider openai
 
     EXAMPLE 2: Set preferred AI provider via environment variable
 
-      Set CYCOD_PREFERRED_PROVIDER environment variable
+      # Bash (Linux/macOS)
+      export CYCOD_PREFERRED_PROVIDER="openai"
+
+      # CMD (Windows)
+      set CYCOD_PREFERRED_PROVIDER=openai
+
+      # PowerShell (Windows)
+      $env:CYCOD_PREFERRED_PROVIDER = "openai"
 
     EXAMPLE 3: Use specific provider via command line flags
 
-      cycod chat --use-openai
-      cycod chat --use-azure-openai
       cycod chat --use-copilot
       cycod chat --use-anthropic
+      cycod chat --use-azure-openai
+      cycod chat --use-bedrock
+      cycod chat --use-google
+      cycod chat --use-grok
+      cycod chat --use-openai
 
 SEE ALSO
 

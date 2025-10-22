@@ -23,6 +23,10 @@ BUILT-IN COMMANDS
     /search <query>         Search the web for the given query
     /get <url>              Get and display content from a URL
     /run <command>          Run a command and display the result
+    
+  IMAGE SUPPORT
+  
+    /image <file>           Add an image file to the current conversation (supports glob patterns)
 
 EXAMPLES
 
@@ -45,6 +49,11 @@ EXAMPLES
   EXAMPLE 5: Insert a custom prompt (if defined)
 
     /translate              Insert a custom "translate" prompt
+    
+  EXAMPLE 6: Add an image to the conversation
+
+    /image screenshot.png   Add an image file to discuss
+    /image *.jpg            Add all JPEG files in current directory
 
 NOTES
 

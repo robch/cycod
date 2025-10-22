@@ -33,9 +33,9 @@ ALIASES
     cycod --aliasname
     
   CREATION
-    cycod [...] --save-alias ALIAS            Local scope (default)
-    cycod [...] --save-user-alias ALIAS       User scope
-    cycod [...] --save-global-alias ALIAS     Global scope
+    cycod alias add ALIAS_NAME "COMMAND"          Local scope (default)
+    cycod alias add ALIAS_NAME "COMMAND" --user   User scope
+    cycod alias add ALIAS_NAME "COMMAND" --global Global scope
 
   MANAGEMENT
     cycod alias list                          List all aliases
@@ -87,29 +87,40 @@ PROFILES
   USAGE
     cycod --profile PROFILENAME
     
+  CREATION
+    cycod profile create NAME                     Local scope (default)
+    cycod profile create NAME --user              User scope
+    cycod profile create NAME --global            Global scope
+    
+  MANAGEMENT
+    cycod profile list                            List all profiles
+    cycod profile get PROFILE_NAME                Show a profile
+    cycod profile delete PROFILE_NAME             Delete a profile
+    
   STORAGE
     Profiles are YAML files stored in:
     - .cycod/profiles/ (local)
     - ~/.cycod/profiles/ (user)
-    - [system]/.cycod/profiles/ (global)
+    - /etc/cycod/profiles/ (global, on Linux/macOS)
+    - C:\ProgramData\cycod\profiles\ (global, on Windows)
 
 WHEN TO USE EACH FEATURE
 
   ALIASES
-    When you want to save command-line options for reuse.
-    Example: cycod --python-expert
+    When you want to save command-line options for development workflows.
+    Example: cycod --react-dev (includes React expertise + auto-approve file ops)
 
   PROMPTS
-    When you need quick access to text templates during chat.
-    Example: /code-review
+    When you need specialized analysis templates during development.
+    Example: /code-review (comprehensive security and performance analysis)
 
   CONFIG
-    For persistent application settings.
-    Example: cycod config set default-model gpt-4o
+    For persistent application settings and team configurations.
+    Example: cycod config set OPENAI_CHAT_MODEL_NAME gpt-5-mini
 
   PROFILES
-    When you want to switch between sets of configurations.
-    Example: cycod --profile development
+    When you want to switch between development environments.
+    Example: cycod --profile production (different model + stricter function controls)
 
 SEE ALSO
 
@@ -118,9 +129,12 @@ SEE ALSO
   cycod help config
   cycod help options
   cycod help settings
-  cycod help use openai
-  cycod help use azure openai
   cycod help use github copilot
   cycod help use anthropic
+  cycod help use azure openai
+  cycod help use bedrock
+  cycod help use gemini
+  cycod help use grok
+  cycod help use openai
   cycod help function calls
   cycod help timeouts

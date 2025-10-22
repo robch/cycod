@@ -13,7 +13,7 @@ OPTIONS
 
     --command       The command to execute to start the MCP server (for STDIO transport)
     --arg ARG       An argument to pass to the command (can be used multiple times)
-    --args "ARGS"   Multiple arguments to pass to the command
+    --args "ARGS"   Space-separated arguments to pass to the command (alternative to using multiple --arg)
     --env, -e       An environment variable in KEY=VALUE format (can be used multiple times)
 
   SSE SERVERS
@@ -28,13 +28,29 @@ OPTIONS
 
 EXAMPLES
 
-  EXAMPLE 1: Register a basic stdio MCP server registration
+  EXAMPLE 1: Register Playwright MCP for web automation
 
-    cycod mcp add weather --command cycod-mcp-weather
+    cycod mcp add playwright --command "npx" --args "@playwright/mcp@latest"
 
-  EXAMPLE 2: Register an SSE MCP server registration
+  EXAMPLE 2: Register Playwright MCP in headless mode (for servers)
 
-    cycod mcp add my-sse-mcp --url https://example.com/sse-endpoint
+    cycod mcp add playwright-headless --command "npx" --args "@playwright/mcp@latest --headless"
+
+  EXAMPLE 3: Register Playwright MCP with Chrome browser
+
+    cycod mcp add playwright-chrome --command "npx" --args "@playwright/mcp@latest --browser chrome"
+
+  EXAMPLE 4: Register Playwright MCP with advanced capabilities
+
+    cycod mcp add playwright-full --command "npx" --args "@playwright/mcp@latest --caps vision,pdf"
+
+  EXAMPLE 5: Register a remote MCP server using SSE
+
+    cycod mcp add remote-mcp --url "https://mcp-server.example.com/mcp"
+
+  EXAMPLE 6: Register a local MCP server with specific scope
+
+    cycod mcp add local-playwright --command "npx" --args "@playwright/mcp@latest" --user
 
 SEE ALSO
 

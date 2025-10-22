@@ -74,6 +74,18 @@ public static class ChatClientFactory
         return client;
     }
     
+    public static IChatClient CreateGrokChatClientWithApiKey()
+    {
+        var model = EnvironmentHelpers.FindEnvVar("GROK_MODEL_NAME") ?? "grok-3";
+        var apiKey = EnvironmentHelpers.FindEnvVar("GROK_API_KEY") ?? throw new EnvVarSettingException("GROK_API_KEY is not set.");
+        var endpoint = EnvironmentHelpers.FindEnvVar("GROK_ENDPOINT") ?? "https://api.x.ai/v1";
+
+        var chatClient = new ChatClient(model, new ApiKeyCredential(apiKey), InitOpenAIClientOptions(endpoint));
+
+        ConsoleHelpers.WriteDebugLine("Using Grok API key for authentication");
+        return chatClient.AsIChatClient();
+    }
+    
     public static IChatClient? CreateAWSBedrockChatClient(out ChatOptions? options)
     {
         var accessKey = EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY") ?? throw new EnvVarSettingException("AWS_BEDROCK_ACCESS_KEY is not set.");
@@ -98,7 +110,7 @@ public static class ChatClientFactory
 
     public static IChatClient CreateCopilotChatClientWithGitHubToken()
     {
-        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-3.7-sonnet";
+        var model = EnvironmentHelpers.FindEnvVar("COPILOT_MODEL_NAME") ?? "claude-sonnet-4";
         var endpoint = EnvironmentHelpers.FindEnvVar("COPILOT_API_ENDPOINT") ?? "https://api.githubcopilot.com";
         var githubToken = EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN") ?? throw new EnvVarSettingException("GITHUB_TOKEN is not set. Run 'cycod github login' to authenticate with GitHub Copilot.");
         var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
@@ -123,8 +135,10 @@ public static class ChatClientFactory
             githubToken,
             helper);
 
-        // Add the refresh policy to the pipeline
+        // Add the vision + refresh + interaction policies to the pipeline
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);
+        options.AddPolicy(new VisionHeaderPolicy(), PipelinePosition.BeforeTransport);
+        options.AddPolicy(new InteractionHeadersPolicy(new InteractionService()), PipelinePosition.BeforeTransport);
 
         var integrationIdOk = !string.IsNullOrEmpty(integrationId);
         if (integrationIdOk) options.AddPolicy(new CustomHeaderPolicy("Copilot-Integration-Id", integrationId!), PipelinePosition.BeforeTransport);
@@ -167,6 +181,11 @@ public static class ChatClientFactory
             {
                 return CreateGeminiChatClient(out options);
             }
+            else if ((preferredProvider == "grok" || preferredProvider == "x.ai") && 
+                    !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GROK_API_KEY")))
+            {
+                return CreateGrokChatClientWithApiKey();
+            }
             else if ((preferredProvider == "azure-openai" || preferredProvider == "azure") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_OPENAI_API_KEY")))
             {
                 return CreateAzureOpenAIChatClientWithApiKey();
@@ -202,6 +221,11 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY")))
         {
             return CreateGeminiChatClient(out options);
+        }
+        
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GROK_API_KEY")))
+        {
+            return CreateGrokChatClientWithApiKey();
         }
         
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AWS_BEDROCK_ACCESS_KEY")) && 
@@ -264,6 +288,11 @@ public static class ChatClientFactory
                     - GOOGLE_GEMINI_API_KEY
                     - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
 
+                    To use Grok, please set:
+                    - GROK_API_KEY
+                    - GROK_ENDPOINT (optional, default: https://api.x.ai/v1)
+                    - GROK_MODEL_NAME (optional, default: grok-3)
+
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
                     - OPENAI_ENDPOINT (optional)
@@ -303,6 +332,7 @@ public static class ChatClientFactory
         options.AddPolicy(new CustomJsonPropertyRemovalPolicy("tool_choice"), PipelinePosition.PerCall);
         options.AddPolicy(new FixNullFunctionArgsPolicy(), PipelinePosition.PerCall);
         options.AddPolicy(new LogTrafficEventPolicy(), PipelinePosition.PerCall);
+
         options.RetryPolicy = new ClientRetryPolicy(maxRetries: 10);
 
         // Apply timeout if configured

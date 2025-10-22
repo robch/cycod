@@ -11,7 +11,14 @@ USE OPENAI
 
     EXAMPLE 2: Set OpenAI API key via environment variable
 
-      Set OPENAI_API_KEY environment variable
+      # Bash (Linux/macOS)
+      export OPENAI_API_KEY="YOUR_API_KEY"
+
+      # CMD (Windows)
+      set OPENAI_API_KEY=YOUR_API_KEY
+
+      # PowerShell (Windows)
+      $env:OPENAI_API_KEY = "YOUR_API_KEY"
 
     EXAMPLE 3: Supply OpenAI API key via command line
 
@@ -21,15 +28,22 @@ USE OPENAI
 
     EXAMPLE 1: Set OpenAI model name via config
 
-      cycod config set OpenAI.ChatModelName MODEL_NAME
-      cycod config set OpenAI.ChatModelName MODEL_NAME --local
-      cycod config set OpenAI.ChatModelName MODEL_NAME --user
-      cycod config set OpenAI.ChatModelName MODEL_NAME --global
+      cycod config set OpenAI.ChatModelName gpt-5-mini
+      cycod config set OpenAI.ChatModelName gpt-5-mini --local
+      cycod config set OpenAI.ChatModelName gpt-5-mini --user
+      cycod config set OpenAI.ChatModelName gpt-5-mini --global
 
     EXAMPLE 2: Set OpenAI model name via environment variable
 
-      Set OPENAI_CHAT_MODEL_NAME environment variable
+      # Bash (Linux/macOS)
+      export OPENAI_CHAT_MODEL_NAME="gpt-5-mini"
 
-    EXAMPLE 3: Supply OpenAI model name via command line
+      # CMD (Windows)
+      set OPENAI_CHAT_MODEL_NAME=gpt-5-mini
 
-      cycod chat --openai-chat-model-name MODEL_NAME
+      # PowerShell (Windows)
+      $env:OPENAI_CHAT_MODEL_NAME = "gpt-5-mini"
+
+    EXAMPLE 3: Use a specific model optimized for code generation
+
+      cycod chat --openai-chat-model-name gpt-5-mini

@@ -107,13 +107,13 @@ Alternatively, you can manually set the following environment variables:
 set GITHUB_TOKEN=your_github_token_here
 set COPILOT_INTEGRATION_ID=your_integration_id_here
 set COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-set COPILOT_MODEL_NAME=claude-3.7-sonnet
+set COPILOT_MODEL_NAME=claude-sonnet-4
 
 # Linux/macOS
 export GITHUB_TOKEN=your_github_token_here
 export COPILOT_INTEGRATION_ID=your_integration_id_here
 export COPILOT_API_ENDPOINT=https://api.githubcopilot.com
-export COPILOT_MODEL_NAME=claude-3.7-sonnet
+export COPILOT_MODEL_NAME=claude-sonnet-4
 ```
 
 
@@ -161,7 +161,7 @@ The AI can execute shell commands to help with tasks:
 cycod --input "How much disk space do I have left?"
 ```
 
-The AI might use `RunBashCommandAsync` to execute `df -h` and explain the results.
+The AI might use `RunBashCommand` to execute `df -h` and explain the results.
 
 ## Managing Chat History
 

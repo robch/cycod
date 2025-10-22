@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.IO;
 
 /// <summary>
 /// Builder for configuring and creating RunnableProcess instances.
@@ -23,7 +25,7 @@ public class RunnableProcessBuilder
     /// <returns>This builder instance for method chaining.</returns>
     public RunnableProcessBuilder WithFileName(string fileName)
     {
-        _fileName = fileName;
+        _fileName = ResolveExecutablePath(fileName);
         return this;
     }
 
@@ -102,7 +104,7 @@ public class RunnableProcessBuilder
         }
 
         ProcessHelpers.SplitCommand(commandLine, out string fileName, out string arguments);
-        _fileName = fileName;
+        _fileName = ResolveExecutablePath(fileName);
         _arguments = arguments;
         return this;
     }
@@ -359,16 +361,82 @@ public class RunnableProcessBuilder
     /// <returns>The result of the process execution.</returns>
     public RunnableProcessResult Run()
     {
-        return Build().Run();
+        var process = Build();
+        
+        // Log process execution at Info level
+        Logger.Info($"Executing process: {_fileName} {_arguments}");
+        if (!string.IsNullOrEmpty(_workingDirectory))
+        {
+            ConsoleHelpers.WriteDebugLine($"Process working directory: {_workingDirectory}");
+        }
+        
+        var startTime = DateTime.Now;
+        
+        try
+        {
+            var result = process.Run();
+            var duration = DateTime.Now - startTime;
+            
+            // Log process completion
+            if (result.ExitCode == 0)
+            {
+                Logger.Info($"Process completed successfully: {_fileName} (duration: {duration.TotalSeconds:F2}s, exit code: {result.ExitCode})");
+            }
+            else
+            {
+                Logger.Warning($"Process exited with non-zero code: {_fileName} (duration: {duration.TotalSeconds:F2}s, exit code: {result.ExitCode})");
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var duration = DateTime.Now - startTime;
+            Logger.Error($"Process execution failed: {_fileName} (duration: {duration.TotalSeconds:F2}s) - {ex.Message}");
+            throw;
+        }
     }
 
     /// <summary>
     /// Builds a configured RunnableProcess instance and runs it asynchronously.
     /// </summary>
     /// <returns>A task that completes with the process result.</returns>
-    public Task<RunnableProcessResult> RunAsync()
+    public async Task<RunnableProcessResult> RunAsync()
     {
-        return Build().RunAsync();
+        var process = Build();
+        
+        // Log process execution at Info level
+        Logger.Info($"Executing process asynchronously: {_fileName} {_arguments}");
+        if (!string.IsNullOrEmpty(_workingDirectory))
+        {
+            ConsoleHelpers.WriteDebugLine($"Process working directory: {_workingDirectory}");
+        }
+        
+        var startTime = DateTime.Now;
+        
+        try
+        {
+            var result = await process.RunAsync();
+            var duration = DateTime.Now - startTime;
+            
+            // Log process completion
+            if (result.ExitCode == 0)
+            {
+                Logger.Info($"Process completed successfully: {_fileName} (duration: {duration.TotalSeconds:F2}s, exit code: {result.ExitCode})");
+            }
+            else
+            {
+                Logger.Warning($"Process exited with non-zero code: {_fileName} (duration: {duration.TotalSeconds:F2}s, exit code: {result.ExitCode})");
+            }
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var duration = DateTime.Now - startTime;
+            Logger.Error($"Process execution failed: {_fileName} (duration: {duration.TotalSeconds:F2}s) - {ex.Message}");
+            throw;
+        }
     }
 
     private string? _fileName;
@@ -388,4 +456,26 @@ public class RunnableProcessBuilder
     private Action<int>? _startedCallback;
     private Action? _timeoutCallback;
     private Action<int>? _exitCallback;
+
+    /// <summary>
+    /// Resolves an executable path on Windows by checking for common extensions.
+    /// </summary>
+    /// <param name="path">The original executable path.</param>
+    /// <returns>The resolved path, or the original if not resolved.</returns>
+    private string ResolveExecutablePath(string path)
+    {
+        if (!OS.IsWindows() || string.IsNullOrEmpty(path))
+        {
+            return path;
+        }
+
+        var resolvedPath = ProcessHelpers.FindExecutableInPath(path);
+        if (resolvedPath != path)
+        {
+            ConsoleHelpers.WriteDebugLine($"RunnableProcessBuilder: Resolved '{path}' to '{resolvedPath}'");
+            return resolvedPath;
+        }
+        
+        return path;
+    }
 }

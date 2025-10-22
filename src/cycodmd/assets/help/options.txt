@@ -14,6 +14,33 @@ OPTIONS
     --line-contains REGEX          Match only lines that contain the specified regex pattern
     --remove-all-lines REGEX       Remove lines that contain the specified regex pattern
 
+  TIME-BASED FILTERING
+
+    --modified TIMESPEC            Match files modified on/in the specified date/period
+    --created TIMESPEC             Match files created on/in the specified date/period
+    --accessed TIMESPEC            Match files accessed on/in the specified date/period
+
+    --after TIMESPEC               Alias for --modified-after
+    --before TIMESPEC              Alias for --modified-before
+    --modified-after TIMESPEC      Match files modified after the specified time
+    --modified-before TIMESPEC     Match files modified before the specified time
+    --created-after TIMESPEC       Match files created after the specified time
+    --created-before TIMESPEC      Match files created before the specified time
+    --accessed-after TIMESPEC      Match files accessed after the specified time
+    --accessed-before TIMESPEC     Match files accessed before the specified time
+
+    --anytime TIMESPEC             Match files with any time attribute in the specified period
+    --anytime-after TIMESPEC       Match files with any time attribute after the specified time
+    --anytime-before TIMESPEC      Match files with any time attribute before the specified time
+
+    TIMESPEC formats:
+    
+      - Absolute dates: "2023-09-01", "September 1, 2023"
+      - Relative times: "3d" (3 days ago), "4h" (4 hours ago)
+      - Combined times: "2d4h3m" (2 days, 4 hours, 3 minutes ago)
+      - Keywords: "today", "yesterday"
+      - Ranges: "2023-01-01..2023-12-31", "3d..", "..yesterday"
+
   LINE FORMATTING
 
     --lines N                      Include N lines both before and after matching lines

@@ -17,13 +17,13 @@ OPTIONS
 
 EXAMPLES
 
-  EXAMPLE 1: Display an MCP server registration from any scope
+  EXAMPLE 1: Display a Playwright MCP server registration from any scope
 
-    cycod mcp get weather
+    cycod mcp get playwright
 
-  EXAMPLE 2: Display an MCP server registration from user scope
+  EXAMPLE 2: Display a Playwright MCP server registration from user scope
 
-    cycod mcp get weather-api --user
+    cycod mcp get playwright-headless --user
 
 SEE ALSO
 

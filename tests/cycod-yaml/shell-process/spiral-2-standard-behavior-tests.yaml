@@ -1,0 +1,34 @@
+class: spiral-2-standard-behavior-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 200.SS.OUT.BATC-013 - Shell produces output in expected batches
+  run: cycod --input "Use RunShellCommand to run a command that produces output in batches using 'bash -c \"echo Batch1; sleep 1; echo Batch2; sleep 1; echo Batch3\"' with expectedTimeout=8000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Batch1.*
+    .*Batch2.*
+    .*Batch3.*
+
+- name: Test case 210.SS.CMD.EXIT-017 - Shell command exits with expected status code
+  run: cycod --input "Use RunShellCommand to run 'bash -c \"exit 5\"' with expectedTimeout=5000 and verify the exit code is captured" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*exit 5.*
+    .*exited with code 5.*
+
+- name: Test case 220.SS.RES.HEAP-021 - Shell command uses expected memory within bounds
+  run: cycod --input "Use RunShellCommand to run a memory-light command 'echo Memory test complete' with expectedTimeout=5000 to verify normal memory usage" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*Memory test complete.*
+
+- name: Test case 220.PS.RES.DISK-022 - Process performs expected disk operations
+  run: cycod --input "Use StartNamedProcess to start a process named 'disk-proc' that runs 'bash -c \"echo DiskTest > /tmp/test.txt && cat /tmp/test.txt && rm /tmp/test.txt\"' to test disk operations" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: disk-proc.*

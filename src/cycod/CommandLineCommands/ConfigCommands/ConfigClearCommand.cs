@@ -29,6 +29,12 @@ class ConfigClearCommand : ConfigBaseCommand
             throw new CommandLineException($"Key cannot be null or empty.");
         }
 
+        // Normalize the key if it's a known setting
+        if (KnownSettings.IsKnown(key))
+        {
+            key = KnownSettings.GetCanonicalForm(key);
+        }
+
         var isFileNameScope = scope == ConfigFileScope.FileName && !string.IsNullOrEmpty(configFileName);
         bool cleared = isFileNameScope
             ? _configStore.Clear(key, configFileName!)

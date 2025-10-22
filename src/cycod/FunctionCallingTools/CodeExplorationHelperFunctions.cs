@@ -13,30 +13,44 @@ public class CodeExplorationHelperFunctions
     #region Code Exploration Functions
     
     [ReadOnly(true)]
-    [Description("Search across files in a codebase to find content matching specific patterns. Returns formatted markdown with file matches, similar to using Ctrl+Shift+F in an IDE but with more processing options. Great for exploring unfamiliar codebases.")]
-    public async Task<string> SearchCodebaseForPattern(
-        [Description("File glob patterns to search")] string[] filePatterns,
-        [Description("Regex pattern to search for within files")] string contentPattern,
+    [Description("Search and query files across a codebase with flexible filtering options. Use for discovering files and content matching specific criteria.")]
+    public async Task<string> QueryFiles(
+        [Description("File glob patterns to search (e.g., **/*.cs, src/*.md)")] string[] filePatterns,
         [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
-        [Description("Include line numbers in results")] bool showLineNumbers = true,
-        [Description("Number of context lines to show before and after matches")] int? contextLines = null)
+        
+        // File-level filtering (cycodmd --file-contains, time filters)
+        [Description("Only include files containing this regex pattern")] string fileContains = "",
+        [Description("Exclude files containing this regex pattern")] string fileNotContains = "",
+        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string modifiedAfter = "",
+        [Description("Only files modified before this time")] string modifiedBefore = "",
+        
+        // Content extraction (cycodmd --contains, --line-contains)
+        [Description("Search pattern to find and highlight with context lines")] string searchPattern = "",
+        [Description("Only show lines containing this regex pattern. Applied after removeAllLines filter.")] string lineContains = "",
+        [Description("Remove lines containing this regex pattern. Applied first, before other filters.")] string removeAllLines = "",
+
+        // Presentation
+        [Description("Number of lines to show before and after matches. 0 = matches only.")] int linesBeforeAndAfter = 0,
+        [Description("Include line numbers in output.")] bool lineNumbers = true,
+        
+        // Limits
+        [Description("Maximum number of files to process.")] int maxFiles = 50,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        return await _cycoDmdWrapper.ExecuteSearchCodebaseCommand(
-            filePatterns,
-            contentPattern,
-            excludePatterns,
-            showLineNumbers,
-            contextLines);
-    }
-    
-    [ReadOnly(true)]
-    [Description("Find complete files that contain specific patterns and return their content. Useful for identifying relevant files in a large codebase when you need full file context, not just matching lines.")]
-    public async Task<string> FindFilesContainingPattern(
-        [Description("File glob patterns to search")] string[] filePatterns,
-        [Description("Regex pattern that must exist somewhere in the files")] string contentPattern,
-        [Description("File glob patterns to exclude")] string[]? excludePatterns = null)
-    {
-        return await _cycoDmdWrapper.ExecuteFindFilesContainingPatternCommand(filePatterns, contentPattern, excludePatterns);
+        Logger.Info($"QueryFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
+        Logger.InfoIf(!string.IsNullOrEmpty(searchPattern), $"Search pattern: '{searchPattern}'");
+        Logger.InfoIf(!string.IsNullOrEmpty(lineContains), $"Line contains: '{lineContains}'");
+        Logger.InfoIf(!string.IsNullOrEmpty(fileContains), $"File contains: '{fileContains}'");
+
+        // Determine if we should highlight matches (when linesBeforeAndAfter > 0)
+        var shouldHighlight = linesBeforeAndAfter > 0;
+        
+        return await _cycoDmdWrapper.ExecuteQueryFilesCommand(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore, searchPattern, lineContains,
+            removeAllLines, linesBeforeAndAfter, lineNumbers, shouldHighlight,
+            maxFiles, maxCharsPerLine, maxTotalChars);
     }
     
     #endregion
@@ -47,10 +61,17 @@ public class CodeExplorationHelperFunctions
     [Description("Convert various file types to well-formatted markdown. Supports documentation files, source code, images, PDFs, and more. Useful for generating documentation or reports from existing files.")]
     public async Task<string> ConvertFilesToMarkdown(
         [Description("Specific file paths or glob patterns to convert (e.g. [\"README.md\", \"*.pdf\", \"docs/*.docx\")")] string[] filePaths,
-        [Description("Instructions for AI to format or structure the output (e.g. \"create a table of contents\" or \"highlight important sections\")")] string? formattingInstructions = null,
-        [Description("Whether to include line numbers for code files")] bool showLineNumbers = false)
+        [Description("Instructions for AI to format or structure the output (e.g. \"create a table of contents\" or \"highlight important sections\")")] string formattingInstructions = "",
+        [Description("Whether to include line numbers for code files")] bool showLineNumbers = false,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        return await _cycoDmdWrapper.ExecuteConvertFilesToMarkdownCommand(filePaths, formattingInstructions, showLineNumbers);
+        return await _cycoDmdWrapper.ExecuteConvertFilesToMarkdownCommand(
+            filePaths, 
+            formattingInstructions, 
+            showLineNumbers,
+            maxCharsPerLine,
+            maxTotalChars);
     }
     
     #endregion
@@ -63,33 +84,38 @@ public class CodeExplorationHelperFunctions
         [Description("Whether to download and include actual page content (not just links)")] bool includePageContent = true,
         [Description("Maximum number of search results to process")] int maxResults = 5,
         [Description("Search engine to use: 'google', 'bing', 'duckduckgo', or 'yahoo'")] string searchEngine = "duckduckgo",
-        [Description("Whether to strip HTML formatting from page content")] bool stripHtml = true)
+        [Description("Whether to strip HTML formatting from page content")] bool stripHtml = true,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        return await _cycoDmdWrapper.ExecuteResearchWebTopicCommand(searchQuery, includePageContent, maxResults, searchEngine, stripHtml);
+        return await _cycoDmdWrapper.ExecuteResearchWebTopicCommand(
+            searchQuery, 
+            includePageContent, 
+            maxResults, 
+            searchEngine, 
+            stripHtml,
+            null, // processingInstructions
+            maxCharsPerLine,
+            maxTotalChars);
     }
     
     [Description("Get content from specific web pages and convert to markdown. Useful for extracting information from known websites and creating summaries or documentation.")]
     public async Task<string> ExtractContentFromWebPages(
         [Description("URLs of web pages to extract content from")] string[] urls,
-        [Description("Whether to strip HTML formatting")] bool stripHtml = true)
+        [Description("Whether to strip HTML formatting")] bool stripHtml = true,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        return await _cycoDmdWrapper.ExecuteExtractContentFromWebPagesCommand(urls, stripHtml);
+        return await _cycoDmdWrapper.ExecuteExtractContentFromWebPagesCommand(
+            urls, 
+            stripHtml,
+            null, // pageProcessingInstructions
+            null, // finalProcessingInstructions
+            maxCharsPerLine,
+            maxTotalChars);
     }
     
     #endregion
     
-    #region Command Analysis Functions
-    
-    [Description("Run commands and convert their output to formatted markdown. Useful for analyzing command results, system information, or any command-line tool output.")]
-    public async Task<string> RunCommandsAndFormatOutput(
-        [Description("Commands to execute (each will run separately)")] string[] commands,
-        [Description("Shell to use: 'cmd', 'bash', or 'powershell'")] string shell = "cmd",
-        [Description("Instructions for AI to process the command output (e.g. 'create a table of processes', 'highlight errors')")] string? processingInstructions = null)
-    {
-        return await _cycoDmdWrapper.ExecuteRunCommandsAndFormatOutputCommand(commands, shell, processingInstructions);
-    }
-    
-    #endregion
-
     private readonly CycoDmdCliWrapper _cycoDmdWrapper = new CycoDmdCliWrapper();
 }

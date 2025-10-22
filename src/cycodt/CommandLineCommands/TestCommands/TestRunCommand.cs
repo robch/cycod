@@ -27,7 +27,7 @@ class TestRunCommand : TestBaseCommand
     {
         try
         {
-            Logger.Log(new CycoDtTestFrameworkLogger());
+            TestLogger.Log(new CycoDtTestFrameworkLogger());
 
             var tests = FindAndFilterTests();
             ConsoleHelpers.WriteLine(tests.Count() == 1

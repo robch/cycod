@@ -24,6 +24,15 @@ public class RunnableProcess
     /// </summary>
     public bool HasExited => _hasExited || (_process?.HasExited ?? false);
 
+    /// <summary>
+    /// Gets the file name (executable) for this process.
+    /// </summary>
+    public string FileName => _fileName;
+    
+    /// <summary>
+    /// Gets the underlying system process.
+    /// </summary>
+    public System.Diagnostics.Process? Process => _process;
     #endregion
 
     #region Initialization
@@ -582,8 +591,17 @@ public class RunnableProcess
     {
         if (_process != null && !_process.HasExited)
         {
-            try { _process.Kill(); } catch { }
-            _process.Dispose();
+            try { 
+                _process.Kill();
+                if (_process.WaitForExit(1000))
+                {
+                    _process.Dispose();
+                }
+            } 
+            catch 
+            { 
+                // Ignore exceptions during cleanup
+            }
             _process = null;
         }
     }
@@ -684,7 +702,9 @@ public class RunnableProcess
     {
         lock (_lock)
         {
-            return _stdoutBuffer.ToString();
+            var output = _stdoutBuffer.ToString();
+            Logger.Info($"RunnableProcess.GetCurrentOutput: Output length: {output?.Length ?? 0}, first 100 chars: {(output?.Length > 0 ? output.Substring(0, Math.Min(output.Length, 100)) : "")}");
+            return output ?? string.Empty;
         }
     }
     
@@ -696,7 +716,9 @@ public class RunnableProcess
     {
         lock (_lock)
         {
-            return _stderrBuffer.ToString();
+            var error = _stderrBuffer.ToString();
+            Logger.Info($"RunnableProcess.GetCurrentError: Error length: {error?.Length ?? 0}, first 100 chars: {(error?.Length > 0 ? error.Substring(0, Math.Min(error.Length, 100)) : "")}");
+            return error ?? string.Empty;
         }
     }
     
@@ -708,7 +730,9 @@ public class RunnableProcess
     {
         lock (_lock)
         {
-            return _mergedBuffer.ToString();
+            var merged = _mergedBuffer.ToString();
+            Logger.Info($"RunnableProcess.GetCurrentMergedOutput: Merged output length: {merged?.Length ?? 0}, first 100 chars: {(merged?.Length > 0 ? merged.Substring(0, Math.Min(merged.Length, 100)) : "")}");
+            return merged ?? string.Empty;
         }
     }
 

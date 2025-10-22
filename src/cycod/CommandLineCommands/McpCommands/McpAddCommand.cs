@@ -119,7 +119,7 @@ class McpAddCommand : McpBaseCommand
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteErrorLine($"Error creating MCP server: {ex.Message}");
+            ConsoleHelpers.LogException(ex, "Error creating MCP server");
             return 1;
         }
     }

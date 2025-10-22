@@ -1,5 +1,4 @@
 using Microsoft.Extensions.AI;
-using System.Text.Json;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -85,9 +84,28 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, string?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null)
     {
-        _messages.Add(new ChatMessage(ChatRole.User, userPrompt));
+        return await CompleteChatStreamingAsync(
+            userPrompt, 
+            new List<string>(), 
+            messageCallback, 
+            streamingCallback, 
+            approveFunctionCall, 
+            functionCallCallback);
+    }
+
+    public async Task<string> CompleteChatStreamingAsync(
+        string userPrompt,
+        IEnumerable<string> imageFiles,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, object?>? functionCallCallback = null)
+    {
+        var message = CreateUserMessageWithImages(userPrompt, imageFiles);
+        
+        _messages.Add(message);
         messageCallback?.Invoke(_messages);
 
         var contentToReturn = string.Empty;
@@ -128,34 +146,56 @@ public class FunctionCallingChat : IAsyncDisposable
         }
     }
 
-    private bool TryCallFunctions(string responseContent, Func<string, string?, bool>? approveFunctionCall, Action<string, string, string?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
+    private bool TryCallFunctions(string responseContent, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
     {
         var noFunctionsToCall = !_functionCallDetector.HasFunctionCalls();
         if (noFunctionsToCall) return false;
         
         var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
 
-        var assistentContent = readyToCallFunctionCalls
+        var emptyResponseContent = string.IsNullOrEmpty(responseContent);
+        if (emptyResponseContent) responseContent = "Calling function(s)...";
+
+        var assistantContent = readyToCallFunctionCalls
             .AsAIContentList()
             .Prepend(new TextContent(responseContent))
             .ToList();
-        _messages.Add(new ChatMessage(ChatRole.Assistant, assistentContent));
+        _messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
         messageCallback?.Invoke(_messages);
 
-        var functionResultContents = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
-        var toolContent = functionResultContents.Cast<AIContent>().ToList();
+        var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
 
-        _messages.Add(new ChatMessage(ChatRole.Tool, toolContent));
+        var attachToToolMessage = functionCallResults
+            .Where(c => c is FunctionResultContent)
+            .Cast<AIContent>()
+            .ToList();
+
+        _messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
         messageCallback?.Invoke(_messages);
+
+        var otherContentToAttach = functionCallResults
+            .Where(c => c is not FunctionResultContent)
+            .ToList();
+        if (otherContentToAttach.Any())
+        {
+            var hasTextContent = otherContentToAttach.Any(c => c is TextContent);
+            if (!hasTextContent)
+            {
+                otherContentToAttach.Insert(0, new TextContent("attached content:"));
+            }
+
+            _messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
+            messageCallback?.Invoke(_messages);
+        }
 
         return true;
     }
 
-    private List<FunctionResultContent> CallFunctions(List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls, Func<string, string?, bool>? approveFunctionCall, Action<string, string, string?>? functionCallCallback)
+    private List<AIContent> CallFunctions(List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback)
     {
         ConsoleHelpers.WriteDebugLine($"Calling functions: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
 
-        var functionResultContents = new List<FunctionResultContent>();
+        var functionResultContents = new List<AIContent>();
         foreach (var functionCall in readyToCallFunctionCalls)
         {
             var approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
@@ -163,13 +203,23 @@ public class FunctionCallingChat : IAsyncDisposable
             var functionResult = approved
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
-            functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
+
+            var asDataContent = functionResult as DataContent;
+            if (asDataContent != null)
+            {
+                functionResultContents.Add(asDataContent);
+                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
+            }
+            else
+            {
+                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
+            }
         }
 
         return functionResultContents;
     }
 
-    private string CallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, string?>? functionCallCallback)
+    private object CallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, object?>? functionCallCallback)
     {
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
 
@@ -184,7 +234,7 @@ public class FunctionCallingChat : IAsyncDisposable
         return functionResult;
     }
 
-    private string DontCallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, string?>? functionCallCallback)
+    private object DontCallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, object?>? functionCallCallback)
     {
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
 
@@ -202,6 +252,34 @@ public class FunctionCallingChat : IAsyncDisposable
         {
             await mcpFactory.DisposeAsync();
         }
+    }
+
+    private ChatMessage CreateUserMessageWithImages(string userPrompt, IEnumerable<string> imageFiles)
+    {
+        var hasImages = imageFiles.Any();
+        var needsPrompt = string.IsNullOrEmpty(userPrompt) && !hasImages;
+        var updatedPrompt = needsPrompt ? "=>" : userPrompt;
+
+        var message = new ChatMessage(ChatRole.User, updatedPrompt);
+        
+        foreach (var imageFile in imageFiles)
+        {
+            if (File.Exists(imageFile))
+            {
+                try
+                {
+                    var imageBytes = File.ReadAllBytes(imageFile);
+                    var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
+                    message.Contents.Add(new DataContent(imageBytes, mediaType));
+                }
+                catch (Exception ex)
+                {
+                    ConsoleHelpers.LogException(ex, $"Failed to load image {imageFile}");
+                }
+            }
+        }
+        
+        return message;
     }
 
     private readonly string _systemPrompt;

@@ -21,9 +21,20 @@ USE BEDROCK
 
     EXAMPLE 2: Set AWS Bedrock credentials via environment variables
 
-      Set AWS_BEDROCK_ACCESS_KEY environment variable
-      Set AWS_BEDROCK_SECRET_KEY environment variable
-      Set AWS_BEDROCK_REGION environment variable (default: us-east-1)
+      # Bash (Linux/macOS)
+      export AWS_BEDROCK_ACCESS_KEY="YOUR_ACCESS_KEY"
+      export AWS_BEDROCK_SECRET_KEY="YOUR_SECRET_KEY"
+      export AWS_BEDROCK_REGION="us-east-1"
+
+      # CMD (Windows)
+      set AWS_BEDROCK_ACCESS_KEY=YOUR_ACCESS_KEY
+      set AWS_BEDROCK_SECRET_KEY=YOUR_SECRET_KEY
+      set AWS_BEDROCK_REGION=us-east-1
+
+      # PowerShell (Windows)
+      $env:AWS_BEDROCK_ACCESS_KEY = "YOUR_ACCESS_KEY"
+      $env:AWS_BEDROCK_SECRET_KEY = "YOUR_SECRET_KEY"
+      $env:AWS_BEDROCK_REGION = "us-east-1"
 
     EXAMPLE 3: Supply AWS Bedrock credentials via command line
 
@@ -40,8 +51,15 @@ USE BEDROCK
 
     EXAMPLE 2: Set AWS Bedrock model via environment variable
 
-      Set AWS_BEDROCK_MODEL_ID environment variable
+      # Bash (Linux/macOS)
+      export AWS_BEDROCK_MODEL_ID="anthropic.claude-3-5-sonnet-20241022-v2:0"
 
-    EXAMPLE 3: Supply AWS Bedrock model via command line
+      # CMD (Windows)
+      set AWS_BEDROCK_MODEL_ID=anthropic.claude-3-5-sonnet-20241022-v2:0
 
-      cycod chat --aws-bedrock-model-id MODEL_ID
+      # PowerShell (Windows)
+      $env:AWS_BEDROCK_MODEL_ID = "anthropic.claude-3-5-sonnet-20241022-v2:0"
+
+    EXAMPLE 3: Use Claude 3.5 Sonnet on AWS Bedrock
+
+      cycod chat --aws-bedrock-model-id anthropic.claude-3-5-sonnet-20241022-v2:0

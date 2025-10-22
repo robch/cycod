@@ -23,6 +23,11 @@ public static class KnownSettings
     // Google Gemini settings
     public const string GoogleGeminiApiKey = "Google.Gemini.ApiKey";
     public const string GoogleGeminiModelId = "Google.Gemini.ModelId";
+    
+    // Grok settings
+    public const string GrokApiKey = "Grok.ApiKey";
+    public const string GrokModelName = "Grok.ModelName";
+    public const string GrokEndpoint = "Grok.Endpoint";
 
     // Azure OpenAI settings
     public const string AzureOpenAIApiKey = "Azure.OpenAI.ApiKey";
@@ -51,6 +56,7 @@ public static class KnownSettings
     public const string AppPreferredProvider = "App.PreferredProvider";
     public const string AppAutoSaveChatHistory = "App.AutoSaveChatHistory";
     public const string AppAutoSaveTrajectory = "App.AutoSaveTrajectory";
+    public const string AppAutoSaveLog = "App.AutoSaveLog";
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
@@ -73,6 +79,9 @@ public static class KnownSettings
         
         // Google Gemini secrets
         GoogleGeminiApiKey,
+        
+        // Grok secrets
+        GrokApiKey,
         
         // Azure OpenAI secrets
         AzureOpenAIApiKey,
@@ -107,6 +116,11 @@ public static class KnownSettings
         { GoogleGeminiApiKey, "GOOGLE_GEMINI_API_KEY" },
         { GoogleGeminiModelId, "GOOGLE_GEMINI_MODEL_ID" },
 
+        // Grok mappings
+        { GrokApiKey, "GROK_API_KEY" },
+        { GrokModelName, "GROK_MODEL_NAME" },
+        { GrokEndpoint, "GROK_ENDPOINT" },
+
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "AZURE_OPENAI_API_KEY" },
         { AzureOpenAIEndpoint, "AZURE_OPENAI_ENDPOINT" },
@@ -134,6 +148,7 @@ public static class KnownSettings
         { AppPreferredProvider, "CYCOD_PREFERRED_PROVIDER" },
         { AppAutoSaveChatHistory, "CYCOD_AUTO_SAVE_CHAT_HISTORY" },
         { AppAutoSaveTrajectory, "CYCOD_AUTO_SAVE_TRAJECTORY" },
+        { AppAutoSaveLog, "CYCOD_AUTO_SAVE_LOG" },
         { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
         { AppAutoDeny, "CYCOD_AUTO_DENY" }
@@ -157,6 +172,11 @@ public static class KnownSettings
         // Google Gemini mappings
         { GoogleGeminiApiKey, "--google-gemini-api-key" },
         { GoogleGeminiModelId, "--google-gemini-model-id" },
+
+        // Grok mappings
+        { GrokApiKey, "--grok-api-key" },
+        { GrokModelName, "--grok-model-name" },
+        { GrokEndpoint, "--grok-endpoint" },
 
         // Azure OpenAI mappings
         { AzureOpenAIApiKey, "--azure-openai-api-key" },
@@ -184,6 +204,7 @@ public static class KnownSettings
         { AppMaxChatTokens, "--max-chat-tokens" },
         { AppAutoSaveChatHistory, "--auto-save-chat-history" },
         { AppAutoSaveTrajectory, "--auto-save-trajectory" },
+        { AppAutoSaveLog, "--auto-save-log" },
         { AppChatCompletionTimeout, "--chat-completion-timeout" },
         { AppAutoApprove, "--auto-approve" },
         { AppAutoDeny, "--auto-deny" }
@@ -241,6 +262,16 @@ public static class KnownSettings
     };
     
     /// <summary>
+    /// Collection of settings for Grok integration.
+    /// </summary>
+    public static readonly HashSet<string> GrokSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        GrokApiKey,
+        GrokModelName,
+        GrokEndpoint
+    };
+    
+    /// <summary>
     /// Collection of settings for Azure OpenAI integration.
     /// </summary>
     public static readonly HashSet<string> AzureOpenAISettings = new(StringComparer.OrdinalIgnoreCase)
@@ -291,6 +322,7 @@ public static class KnownSettings
         AppPreferredProvider,
         AppAutoSaveChatHistory,
         AppAutoSaveTrajectory,
+        AppAutoSaveLog,
         AppChatCompletionTimeout,
         AppAutoApprove,
         AppAutoDeny
@@ -347,6 +379,28 @@ public static class KnownSettings
     {
         var dotNotationKey = ToDotNotation(key);
         return _multiValueSettings.Contains(dotNotationKey, StringComparer.OrdinalIgnoreCase);
+    }
+    
+    /// <summary>
+    /// Gets the canonical form of a known setting key.
+    /// </summary>
+    /// <param name="key">The key to normalize (in any format).</param>
+    /// <returns>The canonical form of the key, or the original key if not found.</returns>
+    public static string GetCanonicalForm(string key)
+    {
+        // First normalize to dot notation
+        var normalized = ToDotNotation(key);
+        
+        // Find the exact match in our known settings (case-insensitive)
+        foreach (var knownSetting in _dotToEnvVarMap.Keys)
+        {
+            if (string.Equals(knownSetting, normalized, StringComparison.OrdinalIgnoreCase))
+            {
+                return knownSetting;
+            }
+        }
+        
+        return normalized;
     }
     
     /// <summary>
