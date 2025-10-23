@@ -21,6 +21,7 @@ public class TypewriterDisplayHelper
     
     // Skip ahead functionality
     private volatile bool _skipToNextBreak = false;
+    private volatile bool _skipToEnd = false;
     private volatile bool _isCurrentlyDisplaying = false;
     
     public TypewriterDisplayHelper(bool enabled = false, int typewriterDelayMs = 30)
@@ -90,6 +91,7 @@ public class TypewriterDisplayHelper
         _consumerTask = null;
         _keyboardTask = null;
         _skipToNextBreak = false;
+        _skipToEnd = false;
         _isCurrentlyDisplaying = false;
         
         // Clear any remaining keypresses from the input buffer to prevent bleeding
@@ -123,6 +125,15 @@ public class TypewriterDisplayHelper
                         }
                         // If we can't skip, just ignore the A press (consume it silently)
                     }
+                    else if (keyInfo.KeyChar == 'Q' || keyInfo.KeyChar == 'q')
+                    {
+                        // Skip to end of currently generated content
+                        if (CanSkipToEnd())
+                        {
+                            _skipToEnd = true;
+                        }
+                        // If we can't skip to end, just ignore the Q press (consume it silently)
+                    }
                 }
                 
                 // Wait a short time before checking again
@@ -145,6 +156,12 @@ public class TypewriterDisplayHelper
         return _isCurrentlyDisplaying || !_textQueue.IsEmpty;
     }
 
+    private bool CanSkipToEnd()
+    {
+        // Can skip to end if there's content to skip (same logic as skip ahead)
+        return _isCurrentlyDisplaying || !_textQueue.IsEmpty;
+    }
+
     private async Task ConsumerLoop(CancellationToken cancellationToken)
     {
         try
@@ -158,7 +175,13 @@ public class TypewriterDisplayHelper
                 }
                 else
                 {
-                    // No text in queue, wait a short time before checking again
+                    // No text in queue - if we were skipping to end, we've caught up
+                    if (_skipToEnd)
+                    {
+                        _skipToEnd = false; // Reset skip to end flag when queue is empty
+                    }
+                    
+                    // Wait a short time before checking again
                     await Task.Delay(10, cancellationToken);
                 }
             }
@@ -189,6 +212,12 @@ public class TypewriterDisplayHelper
             {
                 char c = text[i];
                 ConsoleHelpers.Write(c.ToString(), ConsoleColor.White, overrideQuiet: true);
+                
+                // Check if we should skip to end (highest priority)
+                if (_skipToEnd)
+                {
+                    continue; // Skip all delays, show everything instantly
+                }
                 
                 // Check if we should skip to the next breaking character
                 if (_skipToNextBreak)
