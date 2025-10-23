@@ -626,9 +626,10 @@ public class ChatCommand : CommandWithVariables
                 }
             }
         }
-        catch
+        catch (Exception ex)
         {
             // If parsing fails, just return what we have
+            ConsoleHelpers.LogException(ex, "Failed to parse version string", showToUser: false);
         }
 
         return (baseVersion, isDevBuild, developer, buildDate, commitHash);
