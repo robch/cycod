@@ -441,7 +441,7 @@ public class ChatCommand : CommandWithVariables
         var version = VersionInfo.GetVersion();
 
         var bannerText = $"{programNameUppercase} - {programDescription}\n" +
-                         "Copyright(c) 2025, Rob Chambers. All rights reserved.\n\n";
+                         "Copyright (c) 2025, Rob Chambers. All rights reserved.\n\n";
         ConsoleHelpers.WriteLine(bannerText, overrideQuiet: true);
 
         // Parse and display version components
