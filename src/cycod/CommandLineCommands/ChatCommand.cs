@@ -475,6 +475,86 @@ public class ChatCommand : CommandWithVariables
         return true;
     }
 
+    /// <summary>
+    /// Parses a version string into its components.
+    /// 
+    /// <para>
+    /// <b>Expected version string format:</b>
+    /// <code>
+    /// {baseVersion}[-DEV-{developer}-{buildDate}][+{commitHash}]
+    /// </code>
+    /// </para>
+    /// <para>
+    /// <b>Components:</b>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description>
+    ///       <c>baseVersion</c>: The main version number (e.g., "1.0.0").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>-DEV</c>: Optional marker indicating a development build.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>{developer}</c>: Optional developer identifier (e.g., "phs").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>{buildDate}</c>: Optional build date and time in the format "yyyyMMdd.HHmm" (e.g., "20251023.1319").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>+{commitHash}</c>: Optional commit hash (e.g., "4d348df87afc2a42e460aaa3d4056acee19894c4").
+    ///     </description>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Parsing logic:</b>
+    /// <list type="number">
+    ///   <item>
+    ///     <description>
+    ///       If the version string contains a '+', the substring after '+' is treated as the commit hash.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       The main part before '+' is split by '-', and if it contains "DEV", it is considered a development build.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       If present, the developer and build date are extracted from the segments following "DEV".
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       The base version is always the first segment.
+    ///     </description>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Example:</b>
+    /// <code>
+    /// 1.0.0-DEV-phs-20251023.1319+4d348df87afc2a42e460aaa3d4056acee19894c4
+    /// </code>
+    /// </para>
+    /// </summary>
+    /// <param name="version">The version string to parse.</param>
+    /// <returns>
+    /// A tuple containing:
+    ///   - BaseVersion: The main version number.
+    ///   - IsDevBuild: True if this is a development build.
+    ///   - Developer: The developer identifier, if present.
+    ///   - BuildDate: The build date, if present.
+    ///   - CommitHash: The commit hash, if present.
+    /// </returns>
     private (string BaseVersion, bool IsDevBuild, string Developer, string BuildDate, string CommitHash) ParseVersionString(string version)
     {
         // Example: 1.0.0-DEV-phs-20251023.1319+4d348df87afc2a42e460aaa3d4056acee19894c4
