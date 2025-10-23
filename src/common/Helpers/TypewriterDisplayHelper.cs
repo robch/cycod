@@ -15,8 +15,13 @@ public class TypewriterDisplayHelper
     // Producer-Consumer components
     private readonly ConcurrentQueue<string> _textQueue = new ConcurrentQueue<string>();
     private Task? _consumerTask;
+    private Task? _keyboardTask;
     private CancellationTokenSource? _cancellationTokenSource;
     private bool _isRunning = false;
+    
+    // Skip ahead functionality
+    private volatile bool _skipToNextBreak = false;
+    private volatile bool _isCurrentlyDisplaying = false;
     
     public TypewriterDisplayHelper(bool enabled = false, int typewriterDelayMs = 30)
     {
@@ -37,7 +42,7 @@ public class TypewriterDisplayHelper
     }
 
     /// <summary>
-    /// Starts the background consumer that displays queued text
+    /// Starts the background consumer that displays queued text and keyboard monitoring
     /// </summary>
     public void StartDisplaying()
     {
@@ -46,10 +51,11 @@ public class TypewriterDisplayHelper
         _isRunning = true;
         _cancellationTokenSource = new CancellationTokenSource();
         _consumerTask = Task.Run(() => ConsumerLoop(_cancellationTokenSource.Token));
+        _keyboardTask = Task.Run(() => KeyboardMonitorLoop(_cancellationTokenSource.Token));
     }
 
     /// <summary>
-    /// Stops the background consumer and waits for it to finish displaying current queue
+    /// Stops the background consumer and keyboard monitor, waits for them to finish
     /// </summary>
     public async Task StopDisplayingAsync()
     {
@@ -58,11 +64,16 @@ public class TypewriterDisplayHelper
         _isRunning = false;
         _cancellationTokenSource?.Cancel();
         
-        if (_consumerTask != null)
+        // Wait for both tasks to complete
+        var tasks = new List<Task>();
+        if (_consumerTask != null) tasks.Add(_consumerTask);
+        if (_keyboardTask != null) tasks.Add(_keyboardTask);
+        
+        if (tasks.Count > 0)
         {
             try
             {
-                await _consumerTask;
+                await Task.WhenAll(tasks);
             }
             catch (OperationCanceledException)
             {
@@ -70,13 +81,19 @@ public class TypewriterDisplayHelper
             }
             catch (Exception ex)
             {
-                ConsoleHelpers.LogException(ex, "Error in typewriter consumer", showToUser: false);
+                ConsoleHelpers.LogException(ex, "Error stopping typewriter tasks", showToUser: false);
             }
         }
         
         _cancellationTokenSource?.Dispose();
         _cancellationTokenSource = null;
         _consumerTask = null;
+        _keyboardTask = null;
+        _skipToNextBreak = false;
+        _isCurrentlyDisplaying = false;
+        
+        // Clear any remaining keypresses from the input buffer to prevent bleeding
+        ClearInputBuffer();
     }
 
     /// <summary>
@@ -85,6 +102,47 @@ public class TypewriterDisplayHelper
     public void SetEnabled(bool enabled)
     {
         _isEnabled = enabled;
+    }
+
+    private async Task KeyboardMonitorLoop(CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // Check for keyboard input (non-blocking)
+                if (Console.KeyAvailable)
+                {
+                    var keyInfo = Console.ReadKey(true);
+                    if (keyInfo.KeyChar == 'A' || keyInfo.KeyChar == 'a')
+                    {
+                        // Only set skip flag if we can actually skip something
+                        if (CanSkipAhead())
+                        {
+                            _skipToNextBreak = true;
+                        }
+                        // If we can't skip, just ignore the A press (consume it silently)
+                    }
+                }
+                
+                // Wait a short time before checking again
+                await Task.Delay(50, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected when stopping
+        }
+        catch (Exception ex)
+        {
+            ConsoleHelpers.LogException(ex, "Error in keyboard monitor loop", showToUser: false);
+        }
+    }
+
+    private bool CanSkipAhead()
+    {
+        // Can only skip if we're currently displaying text OR there's content in queue
+        return _isCurrentlyDisplaying || !_textQueue.IsEmpty;
     }
 
     private async Task ConsumerLoop(CancellationToken cancellationToken)
@@ -123,18 +181,60 @@ public class TypewriterDisplayHelper
 
     private async Task DisplayWithTypewriterEffect(string text)
     {
-        for (int i = 0; i < text.Length; i++)
+        _isCurrentlyDisplaying = true;
+        
+        try
         {
-            char c = text[i];
-            ConsoleHelpers.Write(c.ToString(), ConsoleColor.White, overrideQuiet: true);
-            
-            // Calculate delay based on character type
-            var delay = CalculateCharacterDelay(text, i);
-            
-            if (delay > 0)
+            for (int i = 0; i < text.Length; i++)
             {
-                await Task.Delay(delay);
+                char c = text[i];
+                ConsoleHelpers.Write(c.ToString(), ConsoleColor.White, overrideQuiet: true);
+                
+                // Check if we should skip to the next breaking character
+                if (_skipToNextBreak)
+                {
+                    // Skip ahead until we find a breaking character
+                    if (IsBreakingCharacter(c))
+                    {
+                        _skipToNextBreak = false; // Reset skip flag when we reach a break
+                    }
+                    continue; // Skip the delay and continue to next character
+                }
+                
+                // Calculate delay based on character type
+                var delay = CalculateCharacterDelay(text, i);
+                
+                if (delay > 0)
+                {
+                    await Task.Delay(delay);
+                }
             }
+        }
+        finally
+        {
+            _isCurrentlyDisplaying = false;
+        }
+    }
+
+    private bool IsBreakingCharacter(char c)
+    {
+        // Breaking characters are sentence endings and major punctuation
+        return c == '.' || c == '!' || c == '?' || c == ':' || c == ';' || c == ',' || c == '\n';
+    }
+
+    private void ClearInputBuffer()
+    {
+        try
+        {
+            // Clear any pending keypresses to prevent them from bleeding into chat input
+            while (Console.KeyAvailable)
+            {
+                Console.ReadKey(true);
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore any errors clearing the buffer
         }
     }
 
