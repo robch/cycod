@@ -912,5 +912,108 @@ tests:
     \r?\n
     User: exit\r?\n
 
+# ====================================================================
+# Refresh Command Tests
+# ====================================================================
+
+- name: refresh_with_no_conversation_file
+  run: cycod --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Error: No conversation file available for title refresh\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_user_only_conversation
+  run: cycod --input-chat-history testfiles/default-metadata-user-only.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Cannot refresh title: conversation needs at least one assistant message\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_empty_conversation
+  run: cycod --input-chat-history testfiles/empty-file.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Error: No conversation file available for title refresh\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_full_conversation_unlocked
+  run: cycod --input-chat-history testfiles/unlocked-title-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_full_conversation_locked
+  run: cycod --input-chat-history testfiles/locked-title-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Cannot refresh title: title is locked\. Use \/title unlock first\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_no_metadata_conversation
+  run: cycod --input-chat-history testfiles/no-metadata-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_with_malformed_metadata
+  run: cycod --input-chat-history testfiles/malformed-metadata-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_command_not_passed_to_assistant
+  run: cycod --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 1 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Cannot refresh title: conversation needs at least one assistant message\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
+- name: refresh_after_manual_set_title
+  steps:
+  - name: Set manual title first
+    run: cycod --input-chat-history testfiles/no-metadata-full-conversation.jsonl --input "/title set \"Manual Title\"" --input "/title view" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title set "Manual Title"\r?\n
+      Title updated to: "Manual Title" \(locked from AI changes\)\r?\n
+      \r?\n
+      User: /title view\r?\n
+      Title:\s+Manual Title\r?\n
+      Status:\s+locked\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Then refresh should unlock and regenerate
+    run: cycod --input-chat-history testfiles/no-metadata-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: exit\r?\n
+
+- name: refresh_multiple_times_idempotent
+  run: cycod --input-chat-history testfiles/unlocked-title-full-conversation.jsonl --input "/title refresh" --input "/title refresh" --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
+  expect-regex: |
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: /title refresh\r?\n
+    Generating new title\.\.\.\r?\n
+    \r?\n
+    User: exit\r?\n
+
 
 
