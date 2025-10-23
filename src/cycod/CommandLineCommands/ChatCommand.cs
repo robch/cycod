@@ -60,9 +60,9 @@ public class ChatCommand : CommandWithVariables
         // Initialize slash command handlers
         _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
 
-        // Initialize click-through display helper
-        var clickThroughEnabled = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppClickThroughMode).AsBool(false);
-        _clickThroughHelper = new ClickThroughDisplayHelper(clickThroughEnabled);
+        // Initialize typewriter display helper
+        var typewriterEnabled = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppClickThroughMode).AsBool(false);
+        _typewriterHelper = new TypewriterDisplayHelper(typewriterEnabled);
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -159,11 +159,10 @@ public class ChatCommand : CommandWithVariables
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
                 
-                // Process any remaining click-through content
-                if (_clickThroughHelper?.IsEnabled == true)
+                // Stop typewriter consumer after streaming completes
+                if (_typewriterHelper?.IsEnabled == true)
                 {
-                    await _clickThroughHelper.ProcessRemainingContent();
-                    _clickThroughHelper.Reset();
+                    await _typewriterHelper.StopDisplayingAsync();
                 }
                 
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
@@ -666,8 +665,8 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.Write("\nAssistant: ", ConsoleColor.Green);
         _assistantResponseCharsSinceLabel = 0;
         
-        // Reset click-through helper for new response
-        _clickThroughHelper?.Reset();
+        // Start typewriter consumer for new response
+        _typewriterHelper?.StartDisplaying();
     }
 
     private void DisplayAssistantResponse(string text)
@@ -677,10 +676,11 @@ public class ChatCommand : CommandWithVariables
             text = text.TrimStart(new char[] { '\n', '\r', ' ' });
         }
 
-        // Use click-through mode if enabled
-        if (_clickThroughHelper?.IsEnabled == true)
+        // Use typewriter mode if enabled
+        if (_typewriterHelper?.IsEnabled == true)
         {
-            _clickThroughHelper.AccumulateText(text);
+            // Producer: Immediately enqueue text for background display
+            _typewriterHelper.EnqueueText(text);
         }
         else
         {
@@ -1092,5 +1092,5 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
-    private ClickThroughDisplayHelper? _clickThroughHelper;
+    private TypewriterDisplayHelper? _typewriterHelper;
 }
