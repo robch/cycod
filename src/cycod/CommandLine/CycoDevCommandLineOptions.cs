@@ -606,6 +606,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
         }
+        else if (arg == "--use-test")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "test");
+        }
         else if (arg == "--use-copilot")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot");
