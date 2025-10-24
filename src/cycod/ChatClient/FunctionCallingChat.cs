@@ -50,6 +50,12 @@ public class FunctionCallingChat : IAsyncDisposable
     private readonly HashSet<string> _activeGenerations = new();
 
     /// <summary>
+    /// Stores the previous title for revert functionality.
+    /// This is memory-only and does not persist across conversation restarts.
+    /// </summary>
+    private string? _oldTitle;
+
+    /// <summary>
     /// Updates the conversation metadata.
     /// </summary>
     /// <param name="metadata">New metadata to set</param>
@@ -153,6 +159,32 @@ public class FunctionCallingChat : IAsyncDisposable
         {
             return _activeGenerations.Contains(type.ToString().ToLowerInvariant());
         }
+    }
+
+    /// <summary>
+    /// Gets the previous title stored for revert functionality.
+    /// </summary>
+    /// <returns>The old title, or null if none is stored</returns>
+    public string? GetOldTitle()
+    {
+        return _oldTitle;
+    }
+    
+    /// <summary>
+    /// Sets the previous title for revert functionality.
+    /// </summary>
+    /// <param name="oldTitle">The title to store as the previous title</param>
+    public void SetOldTitle(string? oldTitle)
+    {
+        _oldTitle = oldTitle;
+    }
+    
+    /// <summary>
+    /// Clears the stored previous title.
+    /// </summary>
+    public void ClearOldTitle()
+    {
+        _oldTitle = null;
     }
 
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)

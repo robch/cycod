@@ -18,6 +18,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         _subcommands["lock"] = HandleLock;
         _subcommands["unlock"] = HandleUnlock;
         _subcommands["refresh"] = HandleRefresh;
+        _subcommands["revert"] = HandleRevert;
     }
     
     /// <summary>
@@ -274,6 +275,52 @@ public class SlashTitleCommandHandler : SlashCommandBase
     }
     
     /// <summary>
+    /// Handles /title revert - reverts to the previous title stored in memory.
+    /// </summary>
+    private SlashCommandResult HandleRevert(string[] args, FunctionCallingChat chat)
+    {
+        // Check if there's a valid conversation file to save metadata to
+        if (!HasValidConversationFile())
+        {
+            ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
+        // Check if there's an old title to revert to
+        var oldTitle = chat.GetOldTitle();
+        if (string.IsNullOrEmpty(oldTitle))
+        {
+            ConsoleHelpers.WriteLine("No previous title to revert to.\n", ConsoleColor.Red);
+            return SlashCommandResult.Handled;
+        }
+        
+        // Get current metadata
+        var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        var currentTitle = metadata.Title;
+        var currentLockStatus = metadata.IsTitleLocked;
+        
+        // Revert to old title while preserving current lock status
+        metadata.Title = oldTitle;
+        // Keep current lock status: metadata.IsTitleLocked remains unchanged
+        
+        // Clear the old title since it's now used
+        chat.ClearOldTitle();
+        
+        // Update the chat's metadata
+        chat.UpdateMetadata(metadata);
+        
+        // Update console title immediately
+        ConsoleTitleHelper.UpdateWindowTitle(metadata);
+        
+        ConsoleHelpers.WriteLine($"Title reverted to: \"{oldTitle}\"\n", ConsoleColor.DarkGray);
+        
+        // Clear any pending title notifications since user just reverted the title
+        chat.ClearPendingNotificationsOfType(NotificationType.Title);
+        
+        return SlashCommandResult.NeedsSave; // Request immediate save
+    }
+    
+    /// <summary>
     /// Shows current title and available subcommands (default /title behavior).
     /// </summary>
     private void ShowTitleAndHelp(FunctionCallingChat chat)
@@ -292,7 +339,8 @@ public class SlashTitleCommandHandler : SlashCommandBase
         ConsoleHelpers.WriteLine("  /title set \"<text>\" Set title and lock from automatic AI changes", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title lock         Lock current title from automatic AI changes", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow automatic AI regeneration", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation\n", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title revert       Revert to previous title (if available)\n", ConsoleColor.DarkGray);
     }
     
     /// <summary>
@@ -302,6 +350,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         var metadata = chat.Metadata;
         var title = metadata?.Title ?? "[null]";
+        var oldTitle = chat.GetOldTitle() ?? "[null]";
         
         // Determine status with generation awareness
         var titleGenerationInProgress = chat.IsGenerationInProgress(NotificationType.Title);
@@ -311,8 +360,10 @@ public class SlashTitleCommandHandler : SlashCommandBase
             ? "AI title generation in progress..."
             : titleIsLocked ? "locked" : "unlocked";
 
-        ConsoleHelpers.WriteLine($"Title:   {title}", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine($"Status:  {status}", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine($"Title:     {title}", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine($"Previous:  {oldTitle}", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine($"Status:    {status}", ConsoleColor.DarkGray);
+        
         ConsoleHelpers.WriteLine();
         
         // Clear any pending title notifications since user just viewed the title
@@ -326,6 +377,9 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         // Initialize metadata if not present
         var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        
+        // Store current title as old title for revert functionality
+        chat.SetOldTitle(metadata.Title);
         
         // Set and lock the title
         ConversationMetadataHelpers.SetUserTitle(metadata, title);
@@ -361,6 +415,10 @@ public class SlashTitleCommandHandler : SlashCommandBase
             {
                 // Update metadata with new title (unlocked since it's AI-generated)
                 var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+                
+                // Store current title as old title for revert functionality
+                chat.SetOldTitle(metadata.Title);
+                
                 ConversationMetadataHelpers.SetGeneratedTitle(metadata, generatedTitle);
                 chat.UpdateMetadata(metadata);
                 

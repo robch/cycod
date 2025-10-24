@@ -657,6 +657,10 @@ public class ChatCommand : CommandWithVariables
             if (!string.IsNullOrEmpty(generatedTitle))
             {
                 ConsoleHelpers.WriteDebugLine($"Generated title: '{generatedTitle}', setting to metadata");
+                
+                // Store current title as old title for revert functionality
+                _currentChat.SetOldTitle(_currentChat.Metadata?.Title);
+                
                 ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Metadata, generatedTitle);
                 
                 // Save again with updated title
