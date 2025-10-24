@@ -232,7 +232,10 @@ public class TypewriterDisplayHelper
                     {
                         _skipToNextBreak = false; // Reset skip flag when we reach a break
                     }
-                    continue; // Skip delay for this character
+                    else
+                    {
+                        continue; // Skip delay for this character
+                    }
                 }
 
                 // Calculate delay based on character type
