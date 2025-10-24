@@ -15,9 +15,9 @@ tests:
     \r?\n
     Available commands:\r?\n
     \s+/title view\s+Show current title and lock status\r?\n
-    \s+/title set \"<text>\"\s+Set title and lock from AI changes\r?\n
-    \s+/title lock\s+Lock current title from AI changes\r?\n
-    \s+/title unlock\s+Unlock title to allow AI regeneration\r?\n
+    \s+/title set \"<text>\"\s+Set title and lock from automatic AI changes\r?\n
+    \s+/title lock\s+Lock current title from automatic AI changes\r?\n
+    \s+/title unlock\s+Unlock title to allow automatic AI regeneration\r?\n
     \s+/title refresh\s+Generate new title from current conversation\r?\n
     \r?\n
     User: exit\r?\n
@@ -952,7 +952,7 @@ tests:
   run: cycod --input-chat-history testfiles/locked-title-full-conversation.jsonl --input "/title refresh" --input exit --openai-api-key fake --auto-save-chat-history 0 --use-openai
   expect-regex: |
     User: /title refresh\r?\n
-    Cannot refresh title: title is locked\. Use \/title unlock first\.\r?\n
+    Generating new title\.\.\.\r?\n
     \r?\n
     User: exit\r?\n
 
@@ -1014,6 +1014,38 @@ tests:
     Generating new title\.\.\.\r?\n
     \r?\n
     User: exit\r?\n
+
+# ====================================================================
+# Refresh Command Integration Tests with Full Verification
+# ====================================================================
+
+- name: refresh_with_full_verification_and_notification
+  steps:
+  - name: Create test file copy for refresh test
+    bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/refresh-verification-test.jsonl
+    
+  - name: Run refresh and continue conversation to trigger notification
+    run: |
+      cycod --chat-history testfiles/refresh-verification-test.jsonl --input "/title refresh" --input "Tell me a long-winded joke" --input "exit" --auto-save-chat-history 1
+    timeout: 35000
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: Tell me a long-winded joke\r?\n
+      .*
+      Assistant: .*
+      \[Title updated to: ".*"\]\r?\n
+      \r?\n
+      User: exit\r?\n
+
+  - name: Verify file was actually updated with new title
+    bash: head -1 testfiles/refresh-verification-test.jsonl
+    expect-regex: |
+      \{"_meta":\{"title":"(?!AI Generated Title).*","titleLocked":false\}\}
+
+  - name: Clean up test file
+    bash: rm -f testfiles/refresh-verification-test.jsonl
 
 
 

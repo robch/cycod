@@ -251,13 +251,6 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private SlashCommandResult HandleRefresh(string[] args, FunctionCallingChat chat)
     {
-        // Check if title is locked
-        if (chat.Metadata?.IsTitleLocked == true)
-        {
-            ConsoleHelpers.WriteLine("Cannot refresh title: title is locked. Use /title unlock first.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
-        }
-        
         // Get the file path to read conversation content from
         var readFilePath = GetConversationReadFilePath();
         if (string.IsNullOrEmpty(readFilePath))
@@ -296,9 +289,9 @@ public class SlashTitleCommandHandler : SlashCommandBase
     {
         ConsoleHelpers.WriteLine("Available commands:", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title view         Show current title and lock status", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine("  /title set \"<text>\" Set title and lock from AI changes", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine("  /title lock         Lock current title from AI changes", ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow AI regeneration", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title set \"<text>\" Set title and lock from automatic AI changes", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title lock         Lock current title from automatic AI changes", ConsoleColor.DarkGray);
+        ConsoleHelpers.WriteLine("  /title unlock       Unlock title to allow automatic AI regeneration", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title refresh      Generate new title from current conversation\n", ConsoleColor.DarkGray);
     }
     
