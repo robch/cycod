@@ -1025,7 +1025,7 @@ tests:
     bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/refresh-verification-test.jsonl
     
   - name: Start title refresh process
-    run: cycod --chat-history testfiles/refresh-verification-test.jsonl --input "hello" --input "/title refresh" --input "waste time" --input "/title view" --input "exit" --auto-save-chat-history 1 --use-test
+    run: cycod --chat-history testfiles/refresh-verification-test.jsonl --input "/title refresh" --input "waste time" --input "/title view" --input "exit" --auto-save-chat-history 1 --use-test
     expect-regex: |
       User: /title refresh\r?\n
       Generating new title\.\.\.\r?\n
@@ -1047,6 +1047,90 @@ tests:
 
   - name: Clean up test file
     bash: rm -f testfiles/refresh-verification-test.jsonl
+
+# ====================================================================
+# New Refresh Command Tests Using Waste Time Feature
+# ====================================================================
+
+- name: refresh_timing_with_waste_time_delay
+  steps:
+  - name: Create test file copy for refresh test
+    bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/refresh-waste-time-test.jsonl
+
+  - name: Start title refresh process with waste time
+    run: cycod --chat-history testfiles/refresh-waste-time-test.jsonl --input "/title refresh" --input "waste time" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: waste time\r?\n
+      \r?\n
+      Assistant: .*TEST_WASTE_TIME_DELAY_MS.*\r?\n
+      \r?\n
+      User: exit\r?\n
+    
+  - name: Clean up test file
+    bash: rm -f testfiles/refresh-waste-time-test.jsonl
+
+- name: refresh_with_custom_waste_time_delay
+  env:
+    TEST_WASTE_TIME_DELAY_MS: "5000"
+  steps:
+  - name: Create test file copy for custom delay test
+    bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/custom-delay-test.jsonl
+  - name: Test refresh with custom delay
+    run: cycod --chat-history testfiles/custom-delay-test.jsonl --input "/title refresh" --input "waste time" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: waste time\r?\n
+      \r?\n
+      Assistant: Waited 5000ms \(TEST_WASTE_TIME_DELAY_MS\)\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Clean up custom delay test file
+    bash: rm -f testfiles/custom-delay-test.jsonl
+
+- name: refresh_fast_response_vs_slow_refresh
+  steps:
+  - name: Create test file copy for response timing test
+    bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/response-timing-test.jsonl
+  - name: Test fast normal response
+    run: cycod --input-chat-history testfiles/response-timing-test.jsonl --input "hello" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: hello\r?\n
+      \r?\n
+      Assistant: This is a test response from TestChatClient\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Test slow refresh operation shows status message
+    run: cycod --chat-history testfiles/response-timing-test.jsonl --input "/title refresh" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Clean up response timing test file
+    bash: rm -f testfiles/response-timing-test.jsonl
+
+- name: refresh_waste_time_delay_verification
+  steps:
+  - name: Create test file copy to avoid modifying shared files
+    bash: cp testfiles/no-metadata-full-conversation.jsonl testfiles/refresh-delay-test.jsonl
+  - name: Test refresh with waste time shows both delays
+    run: cycod --input-chat-history testfiles/refresh-delay-test.jsonl --input "/title refresh" --input "waste time" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: waste time\r?\n
+      \r?\n
+      Assistant: .*TEST_WASTE_TIME_DELAY_MS.*\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Clean up test file
+    bash: rm -f testfiles/refresh-delay-test.jsonl
 
 
 
