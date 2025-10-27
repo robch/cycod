@@ -66,6 +66,45 @@ class AiInstructionProcessor
                 ? $"--input \"@{userPromptFileName}\" --system-prompt \"@{systemPromptFileName}\" --quiet --interactive false --no-templates"
                 : $"chat --user \"@{userPromptFileName}\" --system \"@{systemPromptFileName}\" --quiet true";
 
+            // If using cycod, check for preferred AI provider and add the appropriate flag
+            if (useCycoD)
+            {
+                // Check environment variable first (set by parent cycod process command-line flags)
+                var envProvider = Environment.GetEnvironmentVariable("CYCOD_AI_PROVIDER");
+                
+                // Fall back to ConfigStore (for persistent user preferences)
+                var configProvider = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreferredProvider);
+                
+                // Environment variable takes precedence (command-line session), then config (persistent)
+                var provider = envProvider ?? configProvider?.Value?.ToString();
+                
+                if (!string.IsNullOrEmpty(provider))
+                {
+                    // Get the appropriate flag for the provider
+                    var providerFlag = provider.ToLowerInvariant() switch
+                    {
+                        "test" => "--use-test",
+                        "openai" => "--use-openai", 
+                        "anthropic" => "--use-anthropic",
+                        "azure-openai" => "--use-azure-openai",
+                        "google-gemini" => "--use-gemini",
+                        "grok" => "--use-grok",
+                        "aws-bedrock" => "--use-bedrock",
+                        "copilot" or "copilot-github" => "--use-copilot",
+                        _ => null
+                    };
+
+                    if (providerFlag != null)
+                    {
+                        arguments += $" {providerFlag}";
+                    }
+                }
+                else 
+                {
+                    ConsoleHelpers.WriteDebugLine("No AI Provider specified in environment or ConfigStore.");
+                }
+            }
+
             if (useBuiltInFunctions && !useCycoD) arguments += " --built-in-functions";
 
             if (!string.IsNullOrEmpty(saveChatHistory))
