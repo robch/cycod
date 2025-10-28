@@ -66,7 +66,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
     
     /// <summary>
     /// Sets both input and output file paths for smart title operations.
+    /// Required for scenarios where title commands are used with --continue or --input-chat-history
+    /// but the output file doesn't exist yet (e.g., first command is "/title refresh").
     /// </summary>
+    /// <param name="inputChatHistoryPath">Path to read original conversation from for title generation</param>
+    /// <param name="autoSaveOutputChatHistoryPath">Path to save conversation with updated title</param>
     public void SetFilePaths(string? inputChatHistoryPath, string? autoSaveOutputChatHistoryPath)
     {
         _inputChatHistoryPath = inputChatHistoryPath;

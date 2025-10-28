@@ -76,7 +76,11 @@ public class ChatCommand : CommandWithVariables
         OutputChatHistory = OutputChatHistory != null ? FileHelpers.GetFileNameFromTemplate(OutputChatHistory, OutputChatHistory)?.ReplaceValues(_namedValues) : null;
         OutputTrajectory = OutputTrajectory != null ? FileHelpers.GetFileNameFromTemplate(OutputTrajectory, OutputTrajectory)?.ReplaceValues(_namedValues) : null;
         
-        // Set the conversation file paths for title operations (after it's been grounded)
+        // Set the conversation file paths for title operations (after file paths have been grounded)
+        // Upon `cycod --continue`, if the user types  `/title refresh` as the first command, we need to know:
+        // - InputChatHistory: where to read the original conversation for title generation
+        // - AutoSaveOutputChatHistory: where to save the conversation with the new title
+        // Without these paths, title commands would fail because they wouldn't know where to read from / save to, 
         _titleCommandHandler.SetFilePaths(InputChatHistory, AutoSaveOutputChatHistory);
         
         // Initialize trajectory files
