@@ -208,7 +208,8 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
 
-            if (functionResult is DataContent functionResultContent)
+            var functionResultContent = functionResult as DataContent;
+            if (functionResultContent != null)
             {
                 functionResultContents.Add(functionResultContent);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
