@@ -31,6 +31,7 @@ public static class AIExtensionsChatHelpers
 
     /// <summary>
     /// Reads chat history from file with metadata support.
+    /// Pure I/O operation - loads and returns data without any business logic.
     /// </summary>
     public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFile(
         string fileName, 

@@ -44,19 +44,24 @@ public class Conversation
     /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
     public void LoadFromFile(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        // Load messages and metadata
-        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        // Helper does pure I/O - load and return data
+        var (metadata, newMessages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
         
-        // Store metadata, create default if missing
-        Metadata = metadata ?? ConversationMetadataHelpers.CreateDefault();
-
-        // Clear and repopulate messages
-        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
-        if (hasSystemMessage) Messages.Clear();
-
-        Messages.AddRange(messages);
+        // If loaded messages have system message, do complete replacement
+        var hasSystemMessage = newMessages.Any(x => x.Role == ChatRole.System);
+        if (hasSystemMessage)
+        {
+            Messages.Clear(); // Complete replacement - file contains full conversation
+        }
+        Messages.AddRange(newMessages);
         Messages.FixDanglingToolCalls();
         Messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
+        
+        // Update metadata (use loaded metadata if present, otherwise keep default)
+        if (metadata != null)
+        {
+            Metadata = metadata;
+        }
     }
 
     /// <summary>
