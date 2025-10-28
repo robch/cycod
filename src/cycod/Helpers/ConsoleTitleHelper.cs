@@ -40,6 +40,15 @@ public static class ConsoleTitleHelper
     /// </summary>
     /// <param name="metadata">Conversation metadata</param>
     /// <returns>Display-friendly title</returns>
-    private static string GetDisplayTitle(ConversationMetadata? metadata) =>
-        ConversationMetadataHelpers.GetDisplayTitle(metadata, "");
+    private static string GetDisplayTitle(ConversationMetadata? metadata)
+    {
+        // Use metadata title if available
+        if (!string.IsNullOrEmpty(metadata?.Title))
+        {
+            return metadata.Title;
+        }
+        
+        // Ultimate fallback
+        return "Untitled Conversation";
+    }
 }

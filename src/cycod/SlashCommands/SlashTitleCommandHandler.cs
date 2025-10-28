@@ -195,20 +195,17 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
-        
-        if (metadata.IsTitleLocked)
+        if (chat.Conversation.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
         {
-            metadata.IsTitleLocked = true;
-            chat.Conversation.UpdateMetadata(metadata);
+            chat.Conversation.LockTitle();
             
             // Update console title (no change in title text, but ensure it's set)
-            ConsoleTitleHelper.UpdateWindowTitle(metadata);
+            ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
             
             ConsoleHelpers.WriteLine("Title locked from AI changes.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
@@ -227,20 +224,17 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
-        
-        if (!metadata.IsTitleLocked)
+        if (!chat.Conversation.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.Handled;
         }
         else
         {
-            metadata.IsTitleLocked = false;
-            chat.Conversation.UpdateMetadata(metadata);
+            chat.Conversation.UnlockTitle();
             
             // Update console title (no change in title text, but ensure it's set)
-            ConsoleTitleHelper.UpdateWindowTitle(metadata);
+            ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
             
             ConsoleHelpers.WriteLine("Title unlocked - AI can now regenerate the title.\n", ConsoleColor.DarkGray);
             return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
@@ -294,23 +288,20 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        // Get current metadata
-        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
-        var currentTitle = metadata.Title;
-        var currentLockStatus = metadata.IsTitleLocked;
+        // Get current state for logging
+        var currentTitle = chat.Conversation.Title;
+        var currentLockStatus = chat.Conversation.IsTitleLocked;
         
         // Revert to old title while preserving current lock status
-        metadata.Title = oldTitle;
-        // Keep current lock status: metadata.IsTitleLocked remains unchanged
+        var wasLocked = currentLockStatus;
+        chat.Conversation.Metadata!.Title = oldTitle;
+        chat.Conversation.Metadata!.IsTitleLocked = wasLocked; // Preserve lock status
         
         // Clear the old title since it's now used
         chat.Notifications.ClearOldTitle();
         
-        // Update the chat's metadata
-        chat.Conversation.UpdateMetadata(metadata);
-        
         // Update console title immediately
-        ConsoleTitleHelper.UpdateWindowTitle(metadata);
+        ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
         
         ConsoleHelpers.WriteLine($"Title reverted to: \"{oldTitle}\"\n", ConsoleColor.DarkGray);
         
@@ -348,13 +339,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private void ShowCurrentTitle(FunctionCallingChat chat)
     {
-        var metadata = chat.Conversation.Metadata;
-        var title = metadata?.Title ?? "[null]";
+        var title = chat.Conversation.Title;
+        if (string.IsNullOrEmpty(title)) title = "[null]";
         var oldTitle = chat.Notifications.GetOldTitle() ?? "[null]";
         
         // Determine status with generation awareness
         var titleGenerationInProgress = chat.Notifications.IsGenerationInProgress(NotificationType.Title);
-        var titleIsLocked = metadata?.IsTitleLocked == true;
+        var titleIsLocked = chat.Conversation.IsTitleLocked;
 
         var status = titleGenerationInProgress
             ? "AI title generation in progress..."
@@ -375,20 +366,14 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private void SetUserTitle(FunctionCallingChat chat, string title)
     {
-        // Initialize metadata if not present
-        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
-        
         // Store current title as old title for revert functionality
-        chat.Notifications.SetOldTitle(metadata.Title);
+        chat.Notifications.SetOldTitle(chat.Conversation.Title);
         
         // Set and lock the title
-        ConversationMetadataHelpers.SetUserTitle(metadata, title);
-        
-        // Update the chat's metadata
-        chat.Conversation.UpdateMetadata(metadata);
+        chat.Conversation.SetUserTitle(title);
         
         // Update console title immediately
-        ConsoleTitleHelper.UpdateWindowTitle(metadata);
+        ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
 
         ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.DarkGray);
         
@@ -413,14 +398,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
             
             if (!string.IsNullOrEmpty(generatedTitle))
             {
-                // Update metadata with new title (unlocked since it's AI-generated)
-                var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
-                
                 // Store current title as old title for revert functionality
-                chat.Notifications.SetOldTitle(metadata.Title);
+                chat.Notifications.SetOldTitle(chat.Conversation.Title);
                 
-                ConversationMetadataHelpers.SetGeneratedTitle(metadata, generatedTitle);
-                chat.Conversation.UpdateMetadata(metadata);
+                // Set generated title (unlocked since it's AI-generated)
+                chat.Conversation.SetGeneratedTitle(generatedTitle);
                 
                 // Save the updated conversation to auto-save file (not the input file)
                 var saveFilePath = _autoSaveOutputChatHistoryPath ?? readFilePath;
@@ -429,7 +411,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
                 ConsoleHelpers.WriteDebugLine($"Title refresh: read from {readFilePath}, saved to {saveFilePath}");
                 
                 // Update console title immediately
-                ConsoleTitleHelper.UpdateWindowTitle(metadata);
+                ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
                 
                 // Set pending notification for next assistant response
                 chat.Notifications.SetPending(NotificationType.Title, generatedTitle);

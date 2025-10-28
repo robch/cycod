@@ -106,11 +106,7 @@ public class ChatCommand : CommandWithVariables
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
         _currentChat = chat;
 
-        // Initialize metadata for new conversations
-        if (chat.Conversation.Metadata == null)
-        {
-            chat.Conversation.UpdateMetadata(ConversationMetadataHelpers.CreateDefault());
-        }
+
 
         try
         {
@@ -600,7 +596,7 @@ public class ChatCommand : CommandWithVariables
         
         // Generate title after first meaningful exchange (unless disabled by environment variable)
         var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
-        var shouldGenerate = TitleGenerationHelpers.ShouldGenerateTitle(messages, _currentChat?.Conversation.Metadata);
+        var shouldGenerate = _currentChat?.Conversation.NeedsTitleGeneration() == true;
         
         ConsoleHelpers.WriteDebugLine($"Title generation check: attempted={_titleGenerationAttempted}, shouldGenerate={shouldGenerate}, envDisabled={envDisabled}, messageCount={messages.Count}");
         
@@ -660,8 +656,8 @@ public class ChatCommand : CommandWithVariables
                 
                 // Store current title as old title for revert functionality
                 _currentChat.Notifications.SetOldTitle(_currentChat.Conversation.Metadata?.Title);
-                
-                ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Conversation.Metadata, generatedTitle);
+
+                _currentChat.Conversation.SetGeneratedTitle(generatedTitle);
                 
                 // Save again with updated title
                 ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
