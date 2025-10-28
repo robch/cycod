@@ -3,65 +3,69 @@ using System.Linq;
 
 /// <summary>
 /// Handles the /title slash command for viewing and setting conversation titles.
-/// Supports subcommands: view, set, lock, unlock, refresh
+/// Supports subcommands: view, set, lock, unlock, refresh, revert.
+/// Implements the clean ISlashCommandHandler interface.
 /// </summary>
-public class SlashTitleCommandHandler : SlashCommandBase
+public class SlashTitleCommandHandler : ISlashCommandHandler
 {
-    public override string CommandName => "title";
     private string? _inputChatHistoryPath;
     private string? _autoSaveOutputChatHistoryPath;
-    
-    public SlashTitleCommandHandler()
+
+    /// <summary>
+    /// Parses arguments from a command string.
+    /// </summary>
+    private string[] ParseArgs(string input)
     {
-        // Register subcommands (set is handled specially in TryHandle override)
-        _subcommands["view"] = HandleView;
-        _subcommands["lock"] = HandleLock;
-        _subcommands["unlock"] = HandleUnlock;
-        _subcommands["refresh"] = HandleRefresh;
-        _subcommands["revert"] = HandleRevert;
+        if (string.IsNullOrWhiteSpace(input))
+            return Array.Empty<string>();
+
+        return input.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
     }
     
     /// <summary>
-    /// Override to handle "set" subcommand with raw input validation for quotes.
+    /// Checks if this handler can process the given command.
     /// </summary>
-    public override bool TryHandle(string userPrompt, FunctionCallingChat chat, out SlashCommandResult result)
+    public bool CanHandle(string userPrompt)
     {
-        if (!userPrompt.StartsWith($"/{CommandName}"))
-        {
-            result = SlashCommandResult.PassToAssistant;
-            return false;
-        }
-        
-        var afterCommand = userPrompt.Substring($"/{CommandName}".Length).Trim();
+        return userPrompt.StartsWith("/title");
+    }
+
+    /// <summary>
+    /// Handles the title command asynchronously with support for all subcommands.
+    /// </summary>
+    public Task<SlashCommandResult> HandleAsync(string userPrompt, FunctionCallingChat chat)
+    {
+        var afterCommand = userPrompt.Substring("/title".Length).Trim();
         var args = ParseArgs(afterCommand);
         
         if (args.Length == 0)
         {
-            result = HandleDefault(chat);
-            return true;
+            return Task.FromResult(HandleDefault(chat));
         }
         
         var subcommand = args[0].ToLowerInvariant();
         
-        // Handle "set" specially with raw input validation
-        if (subcommand == "set")
+        // Handle each subcommand
+        switch (subcommand)
         {
-            var afterSet = afterCommand.Substring(3).Trim(); // Remove "set" and trim
-            result = HandleSetWithRawInput(afterSet, chat);
-            return true;
+            case "view":
+                return Task.FromResult(HandleView(args.Skip(1).ToArray(), chat));
+            case "set":
+                var afterSet = afterCommand.Substring(3).Trim(); // Remove "set" and trim
+                return Task.FromResult(HandleSetWithRawInput(afterSet, chat));
+            case "lock":
+                return Task.FromResult(HandleLock(args.Skip(1).ToArray(), chat));
+            case "unlock":
+                return Task.FromResult(HandleUnlock(args.Skip(1).ToArray(), chat));
+            case "refresh":
+                return Task.FromResult(HandleRefresh(args.Skip(1).ToArray(), chat));
+            case "revert":
+                return Task.FromResult(HandleRevert(args.Skip(1).ToArray(), chat));
+            default:
+                ConsoleHelpers.WriteLine($"Unknown subcommand '{subcommand}' for /title.\n", ConsoleColor.Yellow);
+                ShowHelp(chat.Conversation.Metadata);
+                return Task.FromResult(SlashCommandResult.Success());
         }
-        
-        // Handle other subcommands normally
-        if (_subcommands.TryGetValue(subcommand, out var handler))
-        {
-            result = handler(args.Skip(1).ToArray(), chat);
-            return true;
-        }
-        
-        // Unknown subcommand
-        ConsoleHelpers.WriteLine($"Unknown subcommand '{subcommand}' for /{CommandName}.\n", ConsoleColor.Yellow);
-        result = SlashCommandResult.Handled;
-        return true;
     }
     
     /// <summary>
@@ -124,10 +128,10 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Handles the default /title command (no subcommand) - shows title and help.
     /// </summary>
-    protected override SlashCommandResult HandleDefault(FunctionCallingChat chat)
+    private SlashCommandResult HandleDefault(FunctionCallingChat chat)
     {
         ShowTitleAndHelp(chat);
-        return SlashCommandResult.Handled;
+        return SlashCommandResult.Success();
     }
     
     /// <summary>
@@ -136,7 +140,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private SlashCommandResult HandleView(string[] args, FunctionCallingChat chat)
     {
         ShowCurrentTitle(chat);
-        return SlashCommandResult.Handled;
+        return SlashCommandResult.Success();
     }
     
     /// <summary>
@@ -156,21 +160,21 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (string.IsNullOrWhiteSpace(input))
         {
             ConsoleHelpers.WriteLine("Error: Titles must be enclosed in double quotes. Usage: /title set \"<title>\"\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Check if there's a valid conversation file to save metadata to
         if (!HasValidConversationFile())
         {
             ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Validate that input starts and ends with double quotes
         if (!input.StartsWith("\"") || !input.EndsWith("\"") || input.Length < 2)
         {
             ConsoleHelpers.WriteLine("Error: Titles must be enclosed in double quotes. Usage: /title set \"<title>\"\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Extract content between outermost quotes
@@ -180,11 +184,11 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (string.IsNullOrWhiteSpace(title))
         {
             ConsoleHelpers.WriteLine("Error: Title cannot be empty. Please provide a title.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         SetUserTitle(chat, title);
-        return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
+        return SlashCommandResult.HandledWithSave(); // 🚀 Request immediate save
     }
 
     /// <summary>
@@ -196,13 +200,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (!HasValidConversationFile())
         {
             ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         if (chat.Conversation.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already locked.\n", ConsoleColor.DarkGray);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         else
         {
@@ -212,7 +216,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
             
             ConsoleHelpers.WriteLine("Title locked from AI changes.\n", ConsoleColor.DarkGray);
-            return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
+            return SlashCommandResult.HandledWithSave(); // 🚀 Request immediate save
         }
     }
     
@@ -225,13 +229,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (!HasValidConversationFile())
         {
             ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         if (!chat.Conversation.IsTitleLocked)
         {
             ConsoleHelpers.WriteLine("Title is already unlocked.\n", ConsoleColor.DarkGray);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         else
         {
@@ -241,7 +245,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
             
             ConsoleHelpers.WriteLine("Title unlocked - AI can now regenerate the title.\n", ConsoleColor.DarkGray);
-            return SlashCommandResult.NeedsSave; // 🚀 Request immediate save
+            return SlashCommandResult.HandledWithSave(); // 🚀 Request immediate save
         }
     }
     
@@ -255,21 +259,21 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (string.IsNullOrEmpty(readFilePath))
         {
             ConsoleHelpers.WriteLine("Error: No conversation file available for title refresh.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Validate conversation has enough content
         if (!TitleGenerationHelpers.HasSufficientContentForTitleGeneration(readFilePath))
         {
             ConsoleHelpers.WriteLine("Cannot refresh title: conversation needs at least one assistant message.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Start async title generation
         ConsoleHelpers.WriteLine("Generating new title...\n", ConsoleColor.DarkGray);
         _ = Task.Run(async () => await RefreshTitleAsync(chat, readFilePath));
         
-        return SlashCommandResult.Handled; // No immediate save - async operation will handle it
+        return SlashCommandResult.Success(); // No immediate save - async operation will handle it
     }
     
     /// <summary>
@@ -281,7 +285,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (!HasValidConversationFile())
         {
             ConsoleHelpers.WriteLine("Error: No conversation file to save metadata to. Use --input-chat-history or create a conversation first.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Check if there's an old title to revert to
@@ -289,7 +293,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         if (string.IsNullOrEmpty(oldTitle))
         {
             ConsoleHelpers.WriteLine("No previous title to revert to.\n", ConsoleColor.Red);
-            return SlashCommandResult.Handled;
+            return SlashCommandResult.Success();
         }
         
         // Get current state for logging
@@ -312,7 +316,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         // Clear any pending title notifications since user just reverted the title
         chat.Notifications.ClearPendingOfType(NotificationType.Title);
         
-        return SlashCommandResult.NeedsSave; // Request immediate save
+        return SlashCommandResult.HandledWithSave(); // Request immediate save
     }
     
     /// <summary>
@@ -327,7 +331,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// <summary>
     /// Shows available title subcommands.
     /// </summary>
-    protected override void ShowHelp(ConversationMetadata? metadata)
+    private void ShowHelp(ConversationMetadata? metadata)
     {
         ConsoleHelpers.WriteLine("Available commands:", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine("  /title view         Show current title and lock status", ConsoleColor.DarkGray);

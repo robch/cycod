@@ -6,9 +6,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 /// <summary>
-/// Handles slash commands by translating them to CYCODMD commands
+/// Handles slash commands by translating them to CYCODMD commands.
+/// Implements the clean ISlashCommandHandler interface.
 /// </summary>
-public class SlashCycoDmdCommandHandler
+public class SlashCycoDmdCommandHandler : ISlashCommandHandler
 {
     public SlashCycoDmdCommandHandler(ChatCommand chatCommand)
     {
@@ -36,18 +37,16 @@ public class SlashCycoDmdCommandHandler
     }
 
     /// <summary>
-    /// Checks if the handler can process a given command
+    /// Checks if this handler can process the given command.
     /// </summary>
-    /// <param name="commandWithArgs">The user's input</param>
-    /// <returns>True if the command can be handled</returns>
-    public bool IsCommand(string commandWithArgs)
+    public bool CanHandle(string userPrompt)
     {
-        if (string.IsNullOrWhiteSpace(commandWithArgs) || !commandWithArgs.StartsWith("/"))
+        if (string.IsNullOrWhiteSpace(userPrompt) || !userPrompt.StartsWith("/"))
         {
             return false;
         }
 
-        var commandName = ExtractCommandName(commandWithArgs);
+        var commandName = ExtractCommandName(userPrompt);
         return _commandHandlers.ContainsKey(commandName);
     }
     
@@ -62,11 +61,9 @@ public class SlashCycoDmdCommandHandler
     }
 
     /// <summary>
-    /// Executes a slash command and returns the result
+    /// Handles the CycoDmd command asynchronously and adds the result to the conversation.
     /// </summary>
-    /// <param name="userPrompt">The user's input</param>
-    /// <returns>The result of executing the command</returns>
-    public async Task<string> HandleCommand(string userPrompt)
+    public async Task<SlashCommandResult> HandleAsync(string userPrompt, FunctionCallingChat chat)
     {
         var command = ExtractCommandName(userPrompt);
         var arguments = ExtractArguments(userPrompt);
@@ -76,15 +73,21 @@ public class SlashCycoDmdCommandHandler
         {
             try
             {
-                return await handler(arguments);
+                var result = await handler(arguments);
+                
+                // Add result to conversation and skip assistant response
+                chat.AddUserMessage(result);
+                return SlashCommandResult.Success();
             }
             catch (Exception ex)
             {
-                return $"Error executing slash command: {ex.Message}";
+                var errorMessage = $"Error executing slash command: {ex.Message}";
+                chat.AddUserMessage(errorMessage);
+                return SlashCommandResult.Success();
             }
         }
 
-        return $"Unknown command: {command}";
+        return SlashCommandResult.NotHandled();
     }
 
     /// <summary>

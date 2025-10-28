@@ -57,9 +57,12 @@ public class ChatCommand : CommandWithVariables
         _namedValues = new TemplateVariables(Variables);
         AddAgentsFileContentToTemplateVariables();
         
-        // Initialize slash command handlers
-        _cycoDmdCommandHandler = new SlashCycoDmdCommandHandler(this);
-        _titleCommandHandler = new SlashTitleCommandHandler();
+        // Initialize slash command router with all handlers
+        _slashCommandRouter.Register(new SlashPromptCommandHandler());
+        _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));
+        
+        var titleHandler = new SlashTitleCommandHandler();
+        _slashCommandRouter.Register(titleHandler);
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -81,7 +84,7 @@ public class ChatCommand : CommandWithVariables
         // - InputChatHistory: where to read the original conversation for title generation
         // - AutoSaveOutputChatHistory: where to save the conversation with the new title
         // Without these paths, title commands would fail because they wouldn't know where to read from / save to, 
-        _titleCommandHandler.SetFilePaths(InputChatHistory, AutoSaveOutputChatHistory);
+        titleHandler.SetFilePaths(InputChatHistory, AutoSaveOutputChatHistory);
         
         // Initialize trajectory files
         _trajectoryFile = new TrajectoryFile(OutputTrajectory);
@@ -266,18 +269,24 @@ public class ChatCommand : CommandWithVariables
     private string GroundPromptName(string promptOrName)
     {
         var check = $"/{promptOrName}";
-        var isPromptCommand = _promptCommandHandler.IsCommand(check);
-        return isPromptCommand
-            ? _promptCommandHandler.HandleCommand(check) ?? promptOrName
-            : promptOrName;
+        var isPromptCommand = _promptHelper.CanHandle(check);
+        if (isPromptCommand)
+        {
+            var result = _promptHelper.HandleAsync(check, null!).Result; // Sync call for utility method
+            return result.ResponseText ?? promptOrName;
+        }
+        return promptOrName;
     }
 
     private string GroundSlashPrompt(string promptOrSlashPromptCommand)
     {
-        var isPromptCommand = _promptCommandHandler.IsCommand(promptOrSlashPromptCommand);
-        return isPromptCommand
-            ? _promptCommandHandler.HandleCommand(promptOrSlashPromptCommand) ?? promptOrSlashPromptCommand
-            : promptOrSlashPromptCommand;
+        var isPromptCommand = _promptHelper.CanHandle(promptOrSlashPromptCommand);
+        if (isPromptCommand)
+        {
+            var result = _promptHelper.HandleAsync(promptOrSlashPromptCommand, null!).Result; // Sync call for utility method
+            return result.ResponseText ?? promptOrSlashPromptCommand;
+        }
+        return promptOrSlashPromptCommand;
     }
     
     private List<string> GroundInputInstructions()
@@ -313,22 +322,29 @@ public class ChatCommand : CommandWithVariables
         bool skipAssistant = false;
         string? giveAssistant = null;
 
-        if (_titleCommandHandler?.TryHandle(userPrompt, chat, out var titleResult) == true)
+        // Try the slash command router first - handles /title, /prompt, and /cycodmd commands
+        var slashResult = await _slashCommandRouter.HandleAsync(userPrompt, chat);
+        if (slashResult.Handled)
         {
-            skipAssistant = true;
+            skipAssistant = slashResult.SkipAssistant;
+            giveAssistant = slashResult.ResponseText;
             
             // Handle immediate save if requested
-            if (titleResult == SlashCommandResult.NeedsSave)
+            if (slashResult.NeedsSave)
             {
                 TrySaveChatHistoryToFile(AutoSaveOutputChatHistory);
                 if (OutputChatHistory != AutoSaveOutputChatHistory)
                 {
                     TrySaveChatHistoryToFile(OutputChatHistory);
                 }
-                ConsoleHelpers.WriteDebugLine("Title command triggered immediate save");
+                ConsoleHelpers.WriteDebugLine("Slash command triggered immediate save");
             }
+            
+            return (skipAssistant, giveAssistant);
         }
-        else if (userPrompt.StartsWith("/save"))
+
+        // Handle built-in commands that don't need router
+        if (userPrompt.StartsWith("/save"))
         {
             skipAssistant = HandleSaveChatHistoryCommand(chat, userPrompt.Substring("/save".Length).Trim());
         }
@@ -344,15 +360,6 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = HandleHelpCommand();
         }
-        else if (_cycoDmdCommandHandler?.IsCommand(userPrompt) == true)
-        {
-            skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
-        }
-        else if (_promptCommandHandler.IsCommand(userPrompt))
-        {
-            var handled = HandlePromptCommand(chat, userPrompt, out giveAssistant);
-            if (!handled) giveAssistant = null;
-        }
 
         return (skipAssistant, giveAssistant);
     }
@@ -362,23 +369,7 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.WriteLine($"\rUser: {userPrompt} => {replaceUserPrompt}", ConsoleColor.DarkGray, overrideQuiet: true);
     }
 
-    private bool HandlePromptCommand(FunctionCallingChat chat, string userPrompt, out string? giveAssistant)
-    {
-        giveAssistant = _promptCommandHandler.HandleCommand(userPrompt);
-        return !string.IsNullOrEmpty(giveAssistant);
-    }
 
-    private async Task<bool> HandleCycoDmdCommand(FunctionCallingChat chat, string userPrompt)
-    {
-        var userFunctionName = _cycoDmdCommandHandler?.GetCommandName(userPrompt) ?? "";
-        DisplayUserFunctionCall(userFunctionName, null);
-
-        var result = await _cycoDmdCommandHandler?.HandleCommand(userPrompt)!;
-        if (result != null) chat.AddUserMessage(result);
-
-        DisplayUserFunctionCall(userFunctionName, result ?? string.Empty);
-        return true;
-    }
 
     private bool HandleClearChatHistoryCommand(FunctionCallingChat chat)
     {
@@ -1200,9 +1191,8 @@ public class ChatCommand : CommandWithVariables
     private INamedValues? _namedValues;
     private TrajectoryFile _trajectoryFile = null!;
     private TrajectoryFile _autoSaveTrajectoryFile = null!;
-    private SlashCycoDmdCommandHandler? _cycoDmdCommandHandler;
-    private SlashPromptCommandHandler _promptCommandHandler = new();
-    private SlashTitleCommandHandler? _titleCommandHandler;
+    private SlashCommandRouter _slashCommandRouter = new();
+    private SlashPromptCommandHandler _promptHelper = new(); // For utility methods that need prompt expansion
     private FunctionCallingChat? _currentChat;
     private bool _titleGenerationAttempted = false;
 
