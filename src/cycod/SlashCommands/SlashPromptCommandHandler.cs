@@ -22,9 +22,9 @@ public class SlashPromptCommandHandler : ISlashCommandHandler
     }
     
     /// <summary>
-    /// Handles the prompt command asynchronously and returns the expanded prompt text.
+    /// Handles the prompt command synchronously and returns the expanded prompt text.
     /// </summary>
-    public Task<SlashCommandResult> HandleAsync(string userPrompt, FunctionCallingChat chat)
+    public SlashCommandResult Handle(string userPrompt, FunctionCallingChat chat)
     {
         var command = ExtractCommandName(userPrompt);
         var arguments = ExtractArguments(userPrompt);
@@ -35,10 +35,10 @@ public class SlashPromptCommandHandler : ISlashCommandHandler
 
         if (!string.IsNullOrWhiteSpace(promptText))
         {
-            return Task.FromResult(SlashCommandResult.WithResponse(promptText));
+            return SlashCommandResult.WithResponse(promptText);
         }
 
-        return Task.FromResult(SlashCommandResult.NotHandled());
+        return SlashCommandResult.NotHandled();
     }
 
     /// <summary>

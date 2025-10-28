@@ -1,8 +1,8 @@
 /// <summary>
-/// Interface for synchronous slash command handlers.
-/// Use this for commands that perform sync operations (file reading, simple logic).
+/// Interface for asynchronous slash command handlers.
+/// Use this for commands that perform async operations (network calls, process execution).
 /// </summary>
-public interface ISlashCommandHandler
+public interface IAsyncSlashCommandHandler
 {
     /// <summary>
     /// Checks if this handler can process the given command.
@@ -12,10 +12,10 @@ public interface ISlashCommandHandler
     bool CanHandle(string userPrompt);
     
     /// <summary>
-    /// Handles the command synchronously and returns the result.
+    /// Handles the command asynchronously and returns the result.
     /// </summary>
     /// <param name="userPrompt">The user's input prompt</param>
     /// <param name="chat">The current chat instance</param>
     /// <returns>The result of executing the command</returns>
-    SlashCommandResult Handle(string userPrompt, FunctionCallingChat chat);
+    Task<SlashCommandResult> HandleAsync(string userPrompt, FunctionCallingChat chat);
 }

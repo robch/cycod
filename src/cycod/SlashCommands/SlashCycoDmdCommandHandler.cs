@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 /// <summary>
 /// Handles slash commands by translating them to CYCODMD commands.
-/// Implements the clean ISlashCommandHandler interface.
+/// Implements the async interface since it executes external processes.
 /// </summary>
-public class SlashCycoDmdCommandHandler : ISlashCommandHandler
+public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
 {
     public SlashCycoDmdCommandHandler(ChatCommand chatCommand)
     {

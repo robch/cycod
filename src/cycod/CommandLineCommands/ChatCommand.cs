@@ -58,11 +58,14 @@ public class ChatCommand : CommandWithVariables
         AddAgentsFileContentToTemplateVariables();
         
         // Initialize slash command router with all handlers
-        _slashCommandRouter.Register(new SlashPromptCommandHandler());
-        _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));
+        // Sync handlers - fast operations like file reading
+        _slashCommandRouter.Register(new SlashPromptCommandHandler());        // ← Sync: prompt file reading
         
         var titleHandler = new SlashTitleCommandHandler();
-        _slashCommandRouter.Register(titleHandler);
+        _slashCommandRouter.Register(titleHandler);                           // ← Sync: title operations
+        
+        // Async handlers - operations that may take time like process execution  
+        _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));   // ← Async: external process execution
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -272,7 +275,7 @@ public class ChatCommand : CommandWithVariables
         var isPromptCommand = _promptHelper.CanHandle(check);
         if (isPromptCommand)
         {
-            var result = _promptHelper.HandleAsync(check, null!).Result; // Sync call for utility method
+            var result = _promptHelper.Handle(check, null!); // Direct sync call - no Task overhead!
             return result.ResponseText ?? promptOrName;
         }
         return promptOrName;
@@ -283,7 +286,7 @@ public class ChatCommand : CommandWithVariables
         var isPromptCommand = _promptHelper.CanHandle(promptOrSlashPromptCommand);
         if (isPromptCommand)
         {
-            var result = _promptHelper.HandleAsync(promptOrSlashPromptCommand, null!).Result; // Sync call for utility method
+            var result = _promptHelper.Handle(promptOrSlashPromptCommand, null!); // Direct sync call - no Task overhead!
             return result.ResponseText ?? promptOrSlashPromptCommand;
         }
         return promptOrSlashPromptCommand;

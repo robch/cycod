@@ -31,16 +31,16 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
     }
 
     /// <summary>
-    /// Handles the title command asynchronously with support for all subcommands.
+    /// Handles the title command synchronously with support for all subcommands.
     /// </summary>
-    public Task<SlashCommandResult> HandleAsync(string userPrompt, FunctionCallingChat chat)
+    public SlashCommandResult Handle(string userPrompt, FunctionCallingChat chat)
     {
         var afterCommand = userPrompt.Substring("/title".Length).Trim();
         var args = ParseArgs(afterCommand);
         
         if (args.Length == 0)
         {
-            return Task.FromResult(HandleDefault(chat));
+            return HandleDefault(chat);
         }
         
         var subcommand = args[0].ToLowerInvariant();
@@ -49,22 +49,22 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         switch (subcommand)
         {
             case "view":
-                return Task.FromResult(HandleView(args.Skip(1).ToArray(), chat));
+                return HandleView(args.Skip(1).ToArray(), chat);
             case "set":
                 var afterSet = afterCommand.Substring(3).Trim(); // Remove "set" and trim
-                return Task.FromResult(HandleSetWithRawInput(afterSet, chat));
+                return HandleSetWithRawInput(afterSet, chat);
             case "lock":
-                return Task.FromResult(HandleLock(args.Skip(1).ToArray(), chat));
+                return HandleLock(args.Skip(1).ToArray(), chat);
             case "unlock":
-                return Task.FromResult(HandleUnlock(args.Skip(1).ToArray(), chat));
+                return HandleUnlock(args.Skip(1).ToArray(), chat);
             case "refresh":
-                return Task.FromResult(HandleRefresh(args.Skip(1).ToArray(), chat));
+                return HandleRefresh(args.Skip(1).ToArray(), chat);
             case "revert":
-                return Task.FromResult(HandleRevert(args.Skip(1).ToArray(), chat));
+                return HandleRevert(args.Skip(1).ToArray(), chat);
             default:
                 ConsoleHelpers.WriteLine($"Unknown subcommand '{subcommand}' for /title.\n", ConsoleColor.Yellow);
                 ShowHelp(chat.Conversation.Metadata);
-                return Task.FromResult(SlashCommandResult.Success());
+                return SlashCommandResult.Success();
         }
     }
     
