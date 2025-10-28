@@ -195,7 +195,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (metadata.IsTitleLocked)
         {
@@ -205,7 +205,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         else
         {
             metadata.IsTitleLocked = true;
-            chat.UpdateMetadata(metadata);
+            chat.Conversation.UpdateMetadata(metadata);
             
             // Update console title (no change in title text, but ensure it's set)
             ConsoleTitleHelper.UpdateWindowTitle(metadata);
@@ -227,7 +227,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
             return SlashCommandResult.Handled;
         }
         
-        var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         if (!metadata.IsTitleLocked)
         {
@@ -237,7 +237,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         else
         {
             metadata.IsTitleLocked = false;
-            chat.UpdateMetadata(metadata);
+            chat.Conversation.UpdateMetadata(metadata);
             
             // Update console title (no change in title text, but ensure it's set)
             ConsoleTitleHelper.UpdateWindowTitle(metadata);
@@ -287,7 +287,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         
         // Check if there's an old title to revert to
-        var oldTitle = chat.GetOldTitle();
+        var oldTitle = chat.Notifications.GetOldTitle();
         if (string.IsNullOrEmpty(oldTitle))
         {
             ConsoleHelpers.WriteLine("No previous title to revert to.\n", ConsoleColor.Red);
@@ -295,7 +295,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         }
         
         // Get current metadata
-        var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         var currentTitle = metadata.Title;
         var currentLockStatus = metadata.IsTitleLocked;
         
@@ -304,10 +304,10 @@ public class SlashTitleCommandHandler : SlashCommandBase
         // Keep current lock status: metadata.IsTitleLocked remains unchanged
         
         // Clear the old title since it's now used
-        chat.ClearOldTitle();
+        chat.Notifications.ClearOldTitle();
         
         // Update the chat's metadata
-        chat.UpdateMetadata(metadata);
+        chat.Conversation.UpdateMetadata(metadata);
         
         // Update console title immediately
         ConsoleTitleHelper.UpdateWindowTitle(metadata);
@@ -315,7 +315,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         ConsoleHelpers.WriteLine($"Title reverted to: \"{oldTitle}\"\n", ConsoleColor.DarkGray);
         
         // Clear any pending title notifications since user just reverted the title
-        chat.ClearPendingNotificationsOfType(NotificationType.Title);
+        chat.Notifications.ClearPendingOfType(NotificationType.Title);
         
         return SlashCommandResult.NeedsSave; // Request immediate save
     }
@@ -326,7 +326,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private void ShowTitleAndHelp(FunctionCallingChat chat)
     {
         ShowCurrentTitle(chat);
-        ShowHelp(chat.Metadata);
+        ShowHelp(chat.Conversation.Metadata);
     }
     
     /// <summary>
@@ -348,12 +348,12 @@ public class SlashTitleCommandHandler : SlashCommandBase
     /// </summary>
     private void ShowCurrentTitle(FunctionCallingChat chat)
     {
-        var metadata = chat.Metadata;
+        var metadata = chat.Conversation.Metadata;
         var title = metadata?.Title ?? "[null]";
-        var oldTitle = chat.GetOldTitle() ?? "[null]";
+        var oldTitle = chat.Notifications.GetOldTitle() ?? "[null]";
         
         // Determine status with generation awareness
-        var titleGenerationInProgress = chat.IsGenerationInProgress(NotificationType.Title);
+        var titleGenerationInProgress = chat.Notifications.IsGenerationInProgress(NotificationType.Title);
         var titleIsLocked = metadata?.IsTitleLocked == true;
 
         var status = titleGenerationInProgress
@@ -367,7 +367,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         ConsoleHelpers.WriteLine();
         
         // Clear any pending title notifications since user just viewed the title
-        chat.ClearPendingNotificationsOfType(NotificationType.Title);
+        chat.Notifications.ClearPendingOfType(NotificationType.Title);
     }
     
     /// <summary>
@@ -376,16 +376,16 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private void SetUserTitle(FunctionCallingChat chat, string title)
     {
         // Initialize metadata if not present
-        var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+        var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
         
         // Store current title as old title for revert functionality
-        chat.SetOldTitle(metadata.Title);
+        chat.Notifications.SetOldTitle(metadata.Title);
         
         // Set and lock the title
         ConversationMetadataHelpers.SetUserTitle(metadata, title);
         
         // Update the chat's metadata
-        chat.UpdateMetadata(metadata);
+        chat.Conversation.UpdateMetadata(metadata);
         
         // Update console title immediately
         ConsoleTitleHelper.UpdateWindowTitle(metadata);
@@ -393,7 +393,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         ConsoleHelpers.WriteLine($"Title updated to: \"{title}\" (locked from AI changes)\n", ConsoleColor.DarkGray);
         
         // Clear any pending title notifications since user just set the title
-        chat.ClearPendingNotificationsOfType(NotificationType.Title);
+        chat.Notifications.ClearPendingOfType(NotificationType.Title);
     }
     
 
@@ -404,7 +404,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
     private async Task RefreshTitleAsync(FunctionCallingChat chat, string readFilePath)
     {
         // Mark title generation as in progress
-        chat.SetGenerationInProgress(NotificationType.Title);
+        chat.Notifications.SetGenerationInProgress(NotificationType.Title);
         
         try
         {
@@ -414,13 +414,13 @@ public class SlashTitleCommandHandler : SlashCommandBase
             if (!string.IsNullOrEmpty(generatedTitle))
             {
                 // Update metadata with new title (unlocked since it's AI-generated)
-                var metadata = chat.Metadata ?? ConversationMetadataHelpers.CreateDefault();
+                var metadata = chat.Conversation.Metadata ?? ConversationMetadataHelpers.CreateDefault();
                 
                 // Store current title as old title for revert functionality
-                chat.SetOldTitle(metadata.Title);
+                chat.Notifications.SetOldTitle(metadata.Title);
                 
                 ConversationMetadataHelpers.SetGeneratedTitle(metadata, generatedTitle);
-                chat.UpdateMetadata(metadata);
+                chat.Conversation.UpdateMetadata(metadata);
                 
                 // Save the updated conversation to auto-save file (not the input file)
                 var saveFilePath = _autoSaveOutputChatHistoryPath ?? readFilePath;
@@ -432,7 +432,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
                 ConsoleTitleHelper.UpdateWindowTitle(metadata);
                 
                 // Set pending notification for next assistant response
-                chat.SetPendingNotification(NotificationType.Title, generatedTitle);
+                chat.Notifications.SetPending(NotificationType.Title, generatedTitle);
             }
             else
             {
@@ -457,7 +457,7 @@ public class SlashTitleCommandHandler : SlashCommandBase
         finally
         {
             // Clear generation status regardless of success or failure
-            chat.ClearGenerationInProgress(NotificationType.Title);  
+            chat.Notifications.ClearGenerationInProgress(NotificationType.Title);  
         }
     }
     

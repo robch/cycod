@@ -1,197 +1,26 @@
-using System.Collections.Concurrent;
-
 using Microsoft.Extensions.AI;
-
-/// <summary>
-/// Types of notifications that can be sent to the user.
-/// </summary>
-public enum NotificationType
-{
-    Title = 0,
-    Description = 1
-}
-
-/// <summary>
-/// Represents a pending notification message for the user.
-/// </summary>
-public class NotificationMessage
-{
-    /// <summary>
-    /// The type of notification (e.g., "title", "description").
-    /// </summary>
-    public string Type { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// The content of the notification.
-    /// </summary>
-    public string Content { get; set; } = string.Empty;
-    
-    /// <summary>
-    /// When the notification was created.
-    /// </summary>
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-}
 
 public class FunctionCallingChat : IAsyncDisposable
 {
     /// <summary>
-    /// Metadata for the current conversation.
+    /// The conversation data and operations.
     /// </summary>
-    public ConversationMetadata? Metadata { get; private set; }
+    public Conversation Conversation { get; private set; }
     
     /// <summary>
-    /// Pending notifications to show before next assistant response.
+    /// The notification management system.
     /// </summary>
-    private readonly ConcurrentQueue<NotificationMessage> _pendingNotifications = new();
-    
-    /// <summary>
-    /// Tracks which types of content are currently being generated.
-    /// </summary>
-    private readonly HashSet<string> _activeGenerations = new();
-
-    /// <summary>
-    /// Stores the previous title for revert functionality.
-    /// This is memory-only and does not persist across conversation restarts.
-    /// </summary>
-    private string? _oldTitle;
-
-    /// <summary>
-    /// Updates the conversation metadata.
-    /// </summary>
-    /// <param name="metadata">New metadata to set</param>
-    public void UpdateMetadata(ConversationMetadata? metadata)
-    {
-        Metadata = metadata;
-    }
-    
-    /// <summary>
-    /// Sets a pending notification to be shown before the next assistant response.
-    /// </summary>
-    /// <param name="type">The type of notification</param>
-    /// <param name="content">The content of the notification</param>
-    public void SetPendingNotification(NotificationType type, string content)
-    {
-        _pendingNotifications.Enqueue(new NotificationMessage 
-        { 
-            Type = type.ToString().ToLowerInvariant(), 
-            Content = content 
-        });
-    }
-    
-    /// <summary>
-    /// Checks if there are any pending notifications.
-    /// </summary>
-    /// <returns>True if there are pending notifications</returns>
-    public bool HasPendingNotifications()
-    {
-        return !_pendingNotifications.IsEmpty;
-    }
-    
-    /// <summary>
-    /// Gets and clears all pending notifications.
-    /// </summary>
-    /// <returns>Collection of pending notifications</returns>
-    public IEnumerable<NotificationMessage> GetAndClearPendingNotifications()
-    {
-        var notifications = new List<NotificationMessage>();
-        while (_pendingNotifications.TryDequeue(out var notification))
-        {
-            notifications.Add(notification);
-        }
-        return notifications;
-    }
-    
-    /// <summary>
-    /// Clears pending notifications of a specific type.
-    /// </summary>
-    /// <param name="type">The type of notifications to clear</param>
-    public void ClearPendingNotificationsOfType(NotificationType type)
-    {
-        var typeString = type.ToString().ToLowerInvariant();
-        var remainingNotifications = new List<NotificationMessage>();
-        
-        while (_pendingNotifications.TryDequeue(out var notification))
-        {
-            if (notification.Type != typeString)
-            {
-                remainingNotifications.Add(notification);
-            }
-        }
-        
-        foreach (var notification in remainingNotifications)
-        {
-            _pendingNotifications.Enqueue(notification);
-        }
-    }
-    
-    /// <summary>
-    /// Marks a content type as currently being generated.
-    /// </summary>
-    /// <param name="type">The type of content being generated</param>
-    public void SetGenerationInProgress(NotificationType type)
-    {
-        lock (_activeGenerations)
-        {
-            _activeGenerations.Add(type.ToString().ToLowerInvariant());
-        }
-    }
-    
-    /// <summary>
-    /// Marks a content type as no longer being generated.
-    /// </summary>
-    /// <param name="type">The type of content that finished generating</param>
-    public void ClearGenerationInProgress(NotificationType type)
-    {
-        lock (_activeGenerations)
-        {
-            _activeGenerations.Remove(type.ToString().ToLowerInvariant());
-        }
-    }
-    
-    /// <summary>
-    /// Checks if a content type is currently being generated.
-    /// </summary>
-    /// <param name="type">The type of content to check</param>
-    /// <returns>True if the content type is currently being generated</returns>
-    public bool IsGenerationInProgress(NotificationType type)
-    {
-        lock (_activeGenerations)
-        {
-            return _activeGenerations.Contains(type.ToString().ToLowerInvariant());
-        }
-    }
-
-    /// <summary>
-    /// Gets the previous title stored for revert functionality.
-    /// </summary>
-    /// <returns>The old title, or null if none is stored</returns>
-    public string? GetOldTitle()
-    {
-        return _oldTitle;
-    }
-    
-    /// <summary>
-    /// Sets the previous title for revert functionality.
-    /// </summary>
-    /// <param name="oldTitle">The title to store as the previous title</param>
-    public void SetOldTitle(string? oldTitle)
-    {
-        _oldTitle = oldTitle;
-    }
-    
-    /// <summary>
-    /// Clears the stored previous title.
-    /// </summary>
-    public void ClearOldTitle()
-    {
-        _oldTitle = null;
-    }
+    public NotificationManager Notifications { get; private set; }
 
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
         _functionFactory = factory;
         _functionCallDetector = new FunctionCallDetector();
+
+        // Initialize composition objects
+        Conversation = new Conversation();
+        Notifications = new NotificationManager();
 
         var useMicrosoftExtensionsAIFunctionCalling = false; // Can't use this for now; (1) doesn't work with copilot w/ all models, (2) functionCallCallback not available
         _chatClient = useMicrosoftExtensionsAIFunctionCalling
@@ -201,7 +30,6 @@ public class FunctionCallingChat : IAsyncDisposable
         var tools = _functionFactory.GetAITools().ToList();
         ConsoleHelpers.WriteDebugLine($"FunctionCallingChat: Found {tools.Count} tools in FunctionFactory");
 
-        _messages = new List<ChatMessage>();
         _options = new ChatOptions()
         {
             ModelId = options?.ModelId,
@@ -217,9 +45,7 @@ public class FunctionCallingChat : IAsyncDisposable
 
     public void ClearChatHistory()
     {
-        _messages.Clear();
-        _messages.Add(new ChatMessage(ChatRole.System, _systemPrompt));
-        _messages.AddRange(_userMessageAdds);
+        Conversation.Clear(_systemPrompt, _userMessageAdds);
     }
 
     public void AddUserMessage(string userMessage, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
@@ -229,10 +55,7 @@ public class FunctionCallingChat : IAsyncDisposable
             maxPromptTokenTarget: maxPromptTokenTarget,
             maxChatTokenTarget: maxChatTokenTarget);
 
-        _messages.Add(new ChatMessage(ChatRole.User, userMessage));
-        _messages.TryTrimToTarget(
-            maxPromptTokenTarget: maxPromptTokenTarget,
-            maxChatTokenTarget: maxChatTokenTarget);
+        Conversation.AddUserMessage(userMessage, maxPromptTokenTarget, maxChatTokenTarget);
     }
     
     public void AddUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
@@ -242,38 +65,22 @@ public class FunctionCallingChat : IAsyncDisposable
             AddUserMessage(userMessage, maxPromptTokenTarget);
         }
 
-        _messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
+        Conversation.Messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
     }
 
     public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        // Load messages and metadata
-        var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
-        
-        // Store metadata, create default if missing
-        Metadata = metadata ?? ConversationMetadataHelpers.CreateDefault();
-
-        // Clear and repopulate messages
-        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
-        if (hasSystemMessage) _messages.Clear();
-
-        _messages.AddRange(messages);
-        _messages.FixDanglingToolCalls();
-        _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
+        Conversation.LoadFromFile(fileName, maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget, useOpenAIFormat);
     }
 
     public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        // Initialize metadata if not present
-        Metadata ??= ConversationMetadataHelpers.CreateDefault();
-
-        // Save with metadata
-        _messages.SaveChatHistoryToFile(fileName, Metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
+        Conversation.SaveToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        _messages.SaveTrajectoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
+        Conversation.SaveTrajectoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     public async Task<string> CompleteChatStreamingAsync(
@@ -302,14 +109,14 @@ public class FunctionCallingChat : IAsyncDisposable
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
         
-        _messages.Add(message);
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(message);
+        messageCallback?.Invoke(Conversation.Messages);
 
         var contentToReturn = string.Empty;
         while (true)
         {
             var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(_messages, _options))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options))
             {
                 _functionCallDetector.CheckForFunctionCall(update);
 
@@ -336,8 +143,8 @@ public class FunctionCallingChat : IAsyncDisposable
                 continue;
             }
 
-            _messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
-            messageCallback?.Invoke(_messages);
+            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
+            messageCallback?.Invoke(Conversation.Messages);
 
             return contentToReturn;
         }
@@ -357,8 +164,8 @@ public class FunctionCallingChat : IAsyncDisposable
             .AsAIContentList()
             .Prepend(new TextContent(responseContent))
             .ToList();
-        _messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
+        messageCallback?.Invoke(Conversation.Messages);
 
         var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
 
@@ -367,8 +174,8 @@ public class FunctionCallingChat : IAsyncDisposable
             .Cast<AIContent>()
             .ToList();
 
-        _messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
+        messageCallback?.Invoke(Conversation.Messages);
 
         var otherContentToAttach = functionCallResults
             .Where(c => c is not FunctionResultContent)
@@ -381,8 +188,8 @@ public class FunctionCallingChat : IAsyncDisposable
                 otherContentToAttach.Insert(0, new TextContent("attached content:"));
             }
 
-            _messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
-            messageCallback?.Invoke(_messages);
+            Conversation.Messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
+            messageCallback?.Invoke(Conversation.Messages);
         }
 
         return true;
@@ -497,5 +304,5 @@ public class FunctionCallingChat : IAsyncDisposable
     private readonly FunctionCallDetector _functionCallDetector;
     private readonly ChatOptions _options;
     private readonly IChatClient _chatClient;
-    private List<ChatMessage> _messages;
+
 }

@@ -107,9 +107,9 @@ public class ChatCommand : CommandWithVariables
         _currentChat = chat;
 
         // Initialize metadata for new conversations
-        if (chat.Metadata == null)
+        if (chat.Conversation.Metadata == null)
         {
-            chat.UpdateMetadata(ConversationMetadataHelpers.CreateDefault());
+            chat.Conversation.UpdateMetadata(ConversationMetadataHelpers.CreateDefault());
         }
 
         try
@@ -131,7 +131,7 @@ public class ChatCommand : CommandWithVariables
                     useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
                 
                 // Update console title with loaded conversation title
-                ConsoleTitleHelper.UpdateWindowTitle(chat.Metadata);
+                ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
             }
 
             // Check to make sure we're either in interactive mode, or have input instructions.
@@ -190,7 +190,7 @@ public class ChatCommand : CommandWithVariables
             var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
             // Check for notifications before assistant response
-            if (chat.HasPendingNotifications())
+            if (chat.Notifications.HasPending())
             {
                 ConsoleHelpers.WriteLine("", overrideQuiet: true);
                 CheckAndShowPendingNotifications(chat);
@@ -211,7 +211,7 @@ public class ChatCommand : CommandWithVariables
 
             // Check for notifications that may have been generated during the assistant's response
             ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
-            if (chat.HasPendingNotifications())
+            if (chat.Notifications.HasPending())
             {
                 CheckAndShowPendingNotifications(chat);
                 ConsoleHelpers.WriteLine("", overrideQuiet: true);
@@ -600,7 +600,7 @@ public class ChatCommand : CommandWithVariables
         
         // Generate title after first meaningful exchange (unless disabled by environment variable)
         var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
-        var shouldGenerate = TitleGenerationHelpers.ShouldGenerateTitle(messages, _currentChat?.Metadata);
+        var shouldGenerate = TitleGenerationHelpers.ShouldGenerateTitle(messages, _currentChat?.Conversation.Metadata);
         
         ConsoleHelpers.WriteDebugLine($"Title generation check: attempted={_titleGenerationAttempted}, shouldGenerate={shouldGenerate}, envDisabled={envDisabled}, messageCount={messages.Count}");
         
@@ -640,16 +640,16 @@ public class ChatCommand : CommandWithVariables
     /// </summary>
     private async Task TryGenerateAndSaveTitle(string? filePath)
     {
-        if (filePath == null || _currentChat?.Metadata == null) 
+        if (filePath == null || _currentChat?.Conversation.Metadata == null) 
         {
-            ConsoleHelpers.WriteDebugLine($"Skipping title generation: filePath={filePath}, metadata={_currentChat?.Metadata != null}");
+            ConsoleHelpers.WriteDebugLine($"Skipping title generation: filePath={filePath}, metadata={_currentChat?.Conversation.Metadata != null}");
             return;
         }
         
         ConsoleHelpers.WriteDebugLine($"Starting title generation for: {filePath}");
         
         // Mark title generation as in progress
-        _currentChat.SetGenerationInProgress(NotificationType.Title);
+        _currentChat.Notifications.SetGenerationInProgress(NotificationType.Title);
         
         try
         {
@@ -659,19 +659,19 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteDebugLine($"Generated title: '{generatedTitle}', setting to metadata");
                 
                 // Store current title as old title for revert functionality
-                _currentChat.SetOldTitle(_currentChat.Metadata?.Title);
+                _currentChat.Notifications.SetOldTitle(_currentChat.Conversation.Metadata?.Title);
                 
-                ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Metadata, generatedTitle);
+                ConversationMetadataHelpers.SetGeneratedTitle(_currentChat.Conversation.Metadata, generatedTitle);
                 
                 // Save again with updated title
                 ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
                 _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
                 
                 // Update console title with new auto-generated title
-                ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Metadata);
+                ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Conversation.Metadata);
                 
                 // Set pending notification for next assistant response
-                _currentChat.SetPendingNotification(NotificationType.Title, generatedTitle);
+                _currentChat.Notifications.SetPending(NotificationType.Title, generatedTitle);
                 
                 ConsoleHelpers.WriteDebugLine($"Successfully generated and saved title: '{generatedTitle}'");
             }
@@ -687,7 +687,7 @@ public class ChatCommand : CommandWithVariables
         finally
         {
             // Clear generation status regardless of success or failure
-            _currentChat.ClearGenerationInProgress(NotificationType.Title);
+            _currentChat.Notifications.ClearGenerationInProgress(NotificationType.Title);
         }
     }
 
@@ -698,9 +698,9 @@ public class ChatCommand : CommandWithVariables
     /// </summary>
     private void CheckAndShowPendingNotifications(FunctionCallingChat chat)
     {
-        if (chat.HasPendingNotifications())
+        if (chat.Notifications.HasPending())
         {
-            var notifications = chat.GetAndClearPendingNotifications();
+            var notifications = chat.Notifications.GetAndClearPending();
             foreach (var notification in notifications)
             {
                 var message = $"[{char.ToUpper(notification.Type[0])}{notification.Type[1..]} updated to: \"{notification.Content}\"]";
