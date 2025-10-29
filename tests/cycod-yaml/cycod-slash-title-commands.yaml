@@ -1132,5 +1132,21 @@ tests:
   - name: Clean up test file
     bash: rm -f testfiles/refresh-delay-test.jsonl
 
-
-
+- name: refresh_shows_timer_status_during_generation
+  steps:
+  - name: Create test file copy for timer test
+    bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/timer-status-test.jsonl
+  - name: Test real title generation shows timer status
+    run: cycod --chat-history testfiles/timer-status-test.jsonl --input "/title refresh" --input "/title view" --input exit --auto-save-chat-history 0 --use-test
+    expect-regex: |
+      User: /title refresh\r?\n
+      Generating new title\.\.\.\r?\n
+      \r?\n
+      User: /title view\r?\n
+      Title:\s+.*\r?\n
+      Previous:\s+.*\r?\n
+      Status:\s+(Generating\.\.\.\s+\(started\s+\d+s?\s+ago\)|unlocked|locked)\r?\n
+      \r?\n
+      User: exit\r?\n
+  - name: Clean up timer test file
+    bash: rm -f testfiles/timer-status-test.jsonl

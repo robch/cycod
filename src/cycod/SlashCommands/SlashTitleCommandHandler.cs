@@ -351,13 +351,11 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         if (string.IsNullOrEmpty(title)) title = "[null]";
         var oldTitle = chat.Notifications.GetOldTitle() ?? "[null]";
         
-        // Get rich status information from state machine
-        var generationStatus = chat.Notifications.GetGenerationStatus(NotificationType.Title);
+        // Show meaningful user status: detailed generating status or lock status (filter out transient completion states)
         var isLocked = chat.Conversation.IsTitleLocked;
-
-        var status = generationStatus != "Ready" 
-            ? generationStatus  // Show generation status (e.g., "Generating...", "Generation failed: timeout")
-            : isLocked ? "locked" : "unlocked"; // Show lock status when idle
+        var status = chat.Notifications.IsGenerationInProgress(NotificationType.Title)
+            ? chat.Notifications.GetGenerationStatus(NotificationType.Title)  // "Generating... (started 5s ago)"
+            : isLocked ? "locked" : "unlocked";
 
         ConsoleHelpers.WriteLine($"Title:     {title}", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine($"Previous:  {oldTitle}", ConsoleColor.DarkGray);
