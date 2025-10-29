@@ -351,13 +351,13 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         if (string.IsNullOrEmpty(title)) title = "[null]";
         var oldTitle = chat.Notifications.GetOldTitle() ?? "[null]";
         
-        // Determine status with generation awareness
-        var titleGenerationInProgress = chat.Notifications.IsGenerationInProgress(NotificationType.Title);
-        var titleIsLocked = chat.Conversation.IsTitleLocked;
+        // Get rich status information from state machine
+        var generationStatus = chat.Notifications.GetGenerationStatus(NotificationType.Title);
+        var isLocked = chat.Conversation.IsTitleLocked;
 
-        var status = titleGenerationInProgress
-            ? "AI title generation in progress..."
-            : titleIsLocked ? "locked" : "unlocked";
+        var status = generationStatus != "Ready" 
+            ? generationStatus  // Show generation status (e.g., "Generating...", "Generation failed: timeout")
+            : isLocked ? "locked" : "unlocked"; // Show lock status when idle
 
         ConsoleHelpers.WriteLine($"Title:     {title}", ConsoleColor.DarkGray);
         ConsoleHelpers.WriteLine($"Previous:  {oldTitle}", ConsoleColor.DarkGray);
@@ -397,7 +397,12 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
     private async Task RefreshTitleAsync(FunctionCallingChat chat, string readFilePath)
     {
         // Mark title generation as in progress
-        chat.Notifications.SetGenerationInProgress(NotificationType.Title);
+        if (!chat.Notifications.TryStartGeneration(NotificationType.Title))
+        {
+            // Race condition detected - log and return (don't show console message from background thread)
+            ConsoleHelpers.WriteDebugLine("Title generation already in progress, skipping duplicate request");
+            return;
+        }
         
         try
         {
@@ -421,33 +426,47 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
                 // Update console title immediately
                 ConsoleTitleHelper.UpdateWindowTitle(chat.Conversation.Metadata);
                 
-                // Set pending notification for next assistant response
-                chat.Notifications.SetPending(NotificationType.Title, generatedTitle);
+                // Complete generation successfully with notification
+                chat.Notifications.CompleteGeneration(NotificationType.Title, generatedTitle, NotificationFormat.Success);
             }
             else
             {
+                // Generation returned null/empty - treat as failure
+                var errorMessage = "AI could not generate a suitable title for this conversation";
+                chat.Notifications.FailGeneration(NotificationType.Title, errorMessage);
                 ConsoleHelpers.WriteLine("Failed to generate new title.\n", ConsoleColor.Red);
+                ConsoleHelpers.WriteDebugLine("Title generation returned null/empty result");
             }
         }
         catch (FileNotFoundException ex)
         {
+            var errorMessage = "Conversation file not found - cannot refresh title";
+            chat.Notifications.FailGeneration(NotificationType.Title, errorMessage);
             ConsoleHelpers.WriteDebugLine($"Conversation file not found during title refresh: {ex.Message}");
             ConsoleHelpers.WriteLine("Failed to refresh title - conversation file not found.\n", ConsoleColor.Red);
         }
         catch (UnauthorizedAccessException ex)
         {
+            var errorMessage = "Access denied - cannot refresh title";
+            chat.Notifications.FailGeneration(NotificationType.Title, errorMessage);
             ConsoleHelpers.WriteDebugLine($"Access denied during title refresh: {ex.Message}");
             ConsoleHelpers.WriteLine("Failed to refresh title - access denied.\n", ConsoleColor.Red);
         }
         catch (Exception ex)
         {
+            var errorMessage = "Title generation failed - please try again later";
+            chat.Notifications.FailGeneration(NotificationType.Title, errorMessage);
             ConsoleHelpers.WriteDebugLine($"Error during title refresh: {ex.Message}");
             ConsoleHelpers.WriteLine("Failed to refresh title due to an error.\n", ConsoleColor.Red);
         }
         finally
         {
-            // Clear generation status regardless of success or failure
-            chat.Notifications.ClearGenerationInProgress(NotificationType.Title);  
+            // Safety net: ensure state returns to idle if something unexpected happened  
+            if (chat.Notifications.IsGenerationInProgress(NotificationType.Title))
+            {
+                ConsoleHelpers.WriteDebugLine("Warning: Generation state was stuck in progress, forcing reset to idle");
+                chat.Notifications.ResetGeneration(NotificationType.Title);
+            }
         }
     }
     

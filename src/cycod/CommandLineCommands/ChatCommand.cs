@@ -643,7 +643,11 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.WriteDebugLine($"Starting title generation for: {filePath}");
         
         // Mark title generation as in progress
-        _currentChat.Notifications.SetGenerationInProgress(NotificationType.Title);
+        if (!_currentChat.Notifications.TryStartGeneration(NotificationType.Title))
+        {
+            ConsoleHelpers.WriteDebugLine("Title generation already in progress, skipping background generation");
+            return;
+        }
         
         try
         {
@@ -664,8 +668,8 @@ public class ChatCommand : CommandWithVariables
                 // Update console title with new auto-generated title
                 ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Conversation.Metadata);
                 
-                // Set pending notification for next assistant response
-                _currentChat.Notifications.SetPending(NotificationType.Title, generatedTitle);
+                // Complete generation successfully with notification
+                _currentChat.Notifications.CompleteGeneration(NotificationType.Title, generatedTitle, NotificationFormat.Success);
                 
                 ConsoleHelpers.WriteDebugLine($"Successfully generated and saved title: '{generatedTitle}'");
             }
@@ -676,13 +680,12 @@ public class ChatCommand : CommandWithVariables
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"Failed to generate title: {ex.Message}");
+            // Handle failure with user notification and debug logging
+            var userMessage = "Title generation failed - please try /title refresh to retry";
+            _currentChat.Notifications.FailGeneration(NotificationType.Title, userMessage);
+            ConsoleHelpers.WriteDebugLine($"Background title generation failed: {ex.Message}");
         }
-        finally
-        {
-            // Clear generation status regardless of success or failure
-            _currentChat.Notifications.ClearGenerationInProgress(NotificationType.Title);
-        }
+        // No finally block needed - CompleteGeneration/FailGeneration handle state cleanup internally
     }
 
 
@@ -697,7 +700,7 @@ public class ChatCommand : CommandWithVariables
             var notifications = chat.Notifications.GetAndClearPending();
             foreach (var notification in notifications)
             {
-                var message = $"[{char.ToUpper(notification.Type[0])}{notification.Type[1..]} updated to: \"{notification.Content}\"]";
+                var message = NotificationFormatter.Format(notification);
                 ConsoleHelpers.WriteLine(message, ConsoleColor.DarkGray);
             }
         }
@@ -802,7 +805,7 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.SetForegroundColor(ConsoleColor.White);
     }
 
-    private void DisplayUserFunctionCall(string userFunctionName, string? result)
+    public void DisplayUserFunctionCall(string userFunctionName, string? result)
     {
         ConsoleHelpers.Write($"\ruser-function: {userFunctionName} => ", ConsoleColor.DarkGray);
 

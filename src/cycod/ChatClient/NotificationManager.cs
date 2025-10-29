@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 
 /// <summary>
 /// Manages notifications and generation tracking for conversations.
+/// Now uses proper state machines internally for robust generation tracking.
 /// </summary>
 public class NotificationManager
 {
@@ -11,9 +12,9 @@ public class NotificationManager
     private readonly ConcurrentQueue<NotificationMessage> _pendingNotifications = new();
     
     /// <summary>
-    /// Tracks which types of content are currently being generated.
+    /// Manages generation state using proper state machines.
     /// </summary>
-    private readonly HashSet<string> _activeGenerations = new();
+    private readonly Dictionary<NotificationType, GenerationStateMachine> _generationStates = new();
 
     /// <summary>
     /// Stores the previous title for revert functionality.
@@ -26,12 +27,14 @@ public class NotificationManager
     /// </summary>
     /// <param name="type">The type of notification</param>
     /// <param name="content">The content of the notification</param>
-    public void SetPending(NotificationType type, string content)
+    /// <param name="format">How the notification should be formatted (defaults to UpdatedTo)</param>
+    public void SetPending(NotificationType type, string content, NotificationFormat format = NotificationFormat.UpdatedTo)
     {
         _pendingNotifications.Enqueue(new NotificationMessage 
         { 
             Type = type.ToString().ToLowerInvariant(), 
-            Content = content 
+            Content = content,
+            Format = format
         });
     }
     
@@ -82,40 +85,75 @@ public class NotificationManager
     }
     
     /// <summary>
-    /// Marks a content type as currently being generated.
+    /// Gets the state machine for a specific notification type, creating one if needed.
+    /// </summary>
+    private GenerationStateMachine GetStateMachine(NotificationType type)
+    {
+        if (!_generationStates.TryGetValue(type, out var stateMachine))
+        {
+            stateMachine = new GenerationStateMachine();
+            _generationStates[type] = stateMachine;
+        }
+        return stateMachine;
+    }
+
+    /// <summary>
+    /// Attempts to start generation for the specified type.
     /// </summary>
     /// <param name="type">The type of content being generated</param>
-    public void SetGenerationInProgress(NotificationType type)
+    /// <returns>True if generation was started, false if already in progress</returns>
+    public bool TryStartGeneration(NotificationType type)
     {
-        lock (_activeGenerations)
-        {
-            _activeGenerations.Add(type.ToString().ToLowerInvariant());
-        }
+        return GetStateMachine(type).TryStartGeneration();
     }
     
     /// <summary>
-    /// Marks a content type as no longer being generated.
+    /// Marks a content type as successfully generated.
     /// </summary>
     /// <param name="type">The type of content that finished generating</param>
-    public void ClearGenerationInProgress(NotificationType type)
+    /// <param name="generatedContent">The content that was generated</param>
+    /// <param name="format">How to format the success notification</param>
+    public void CompleteGeneration(NotificationType type, string generatedContent, NotificationFormat format = NotificationFormat.UpdatedTo)
     {
-        lock (_activeGenerations)
+        var stateMachine = GetStateMachine(type);
+        if (stateMachine.MarkCompleted())
         {
-            _activeGenerations.Remove(type.ToString().ToLowerInvariant());
+            SetPending(type, generatedContent, format);
+            stateMachine.Reset(); // Ready for next generation
         }
     }
     
-    /// <summary>
-    /// Checks if a content type is currently being generated.
-    /// </summary>
-    /// <param name="type">The type of content to check</param>
-    /// <returns>True if the content type is currently being generated</returns>
+    public void FailGeneration(NotificationType type, string errorMessage)
+    {
+        var stateMachine = GetStateMachine(type);
+        if (stateMachine.MarkFailed(errorMessage))
+        {
+            SetPending(type, errorMessage, NotificationFormat.Error);
+            stateMachine.Reset(); // Ready for next generation
+        }
+    }
+    
     public bool IsGenerationInProgress(NotificationType type)
     {
-        lock (_activeGenerations)
-        {
-            return _activeGenerations.Contains(type.ToString().ToLowerInvariant());
-        }
+        return GetStateMachine(type).CurrentState == GenerationState.Generating;
+    }
+    
+    /// <summary>
+    /// Gets detailed status information about generation state.
+    /// </summary>
+    /// <param name="type">The type of content to check</param>
+    /// <returns>User-friendly status description</returns>
+    public string GetGenerationStatus(NotificationType type)
+    {
+        return GetStateMachine(type).GetStatusDescription();
+    }
+    
+    /// <summary>
+    /// Resets generation state to idle (emergency cleanup only).
+    /// </summary>
+    public void ResetGeneration(NotificationType type)
+    {
+        GetStateMachine(type).Reset();
     }
 
     /// <summary>

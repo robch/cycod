@@ -71,17 +71,27 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
         // First check built-in commands
         if (_commandHandlers.TryGetValue(command, out var handler))
         {
+            // Display function start (like original master branch)
+            _chatCommand.DisplayUserFunctionCall(command, null);
+            
             try
             {
                 var result = await handler(arguments);
                 
+                // Display function result (like original master branch)  
+                _chatCommand.DisplayUserFunctionCall(command, result ?? string.Empty);
+                
                 // Add result to conversation and skip assistant response
-                chat.AddUserMessage(result);
+                chat.AddUserMessage(result ?? string.Empty);
                 return SlashCommandResult.Success();
             }
             catch (Exception ex)
             {
                 var errorMessage = $"Error executing slash command: {ex.Message}";
+                
+                // Display error result
+                _chatCommand.DisplayUserFunctionCall(command, errorMessage);
+                
                 chat.AddUserMessage(errorMessage);
                 return SlashCommandResult.Success();
             }
