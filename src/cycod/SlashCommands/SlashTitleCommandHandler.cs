@@ -353,7 +353,7 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         
         // Show meaningful user status: detailed generating status or lock status (filter out transient completion states)
         var isLocked = chat.Conversation.IsTitleLocked;
-        var status = chat.Notifications.IsGenerationInProgress(NotificationType.Title)
+        var status = chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready"
             ? chat.Notifications.GetGenerationStatus(NotificationType.Title)  // "Generating... (started 5s ago)"
             : isLocked ? "locked" : "unlocked";
 
@@ -460,7 +460,7 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         finally
         {
             // Safety net: ensure state returns to idle if something unexpected happened  
-            if (chat.Notifications.IsGenerationInProgress(NotificationType.Title))
+            if (chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready")
             {
                 ConsoleHelpers.WriteDebugLine("Warning: Generation state was stuck in progress, forcing reset to idle");
                 chat.Notifications.ResetGeneration(NotificationType.Title);

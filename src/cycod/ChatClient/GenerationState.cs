@@ -11,15 +11,5 @@ public enum GenerationState
     /// <summary>
     /// Currently generating content.
     /// </summary>
-    Generating,
-    
-    /// <summary>
-    /// Generation completed successfully - notification may be pending.
-    /// </summary>
-    CompletedWithSuccess,
-    
-    /// <summary>
-    /// Generation completed with failure - error may be pending.
-    /// </summary>
-    CompletedWithFailure
+    Generating
 }

@@ -54,40 +54,35 @@ public class GenerationStateMachine
     }
     
     /// <summary>
-    /// Marks the generation as completed successfully.
+    /// Completes the generation and returns to idle state.
     /// </summary>
-    /// <returns>True if state was updated, false if not currently generating</returns>
-    public bool MarkCompleted()
+    public void CompleteGeneration()
     {
         lock (_lock)
         {
-            if (_state != GenerationState.Generating)
+            if (_state == GenerationState.Generating)
             {
-                return false; // Invalid state transition
+                _state = GenerationState.Idle;
+                _startedAt = null;
+                _lastError = null;
             }
-            
-            _state = GenerationState.CompletedWithSuccess;
-            return true;
         }
     }
     
     /// <summary>
-    /// Marks the generation as failed with an error message.
+    /// Fails the generation with an error and returns to idle state.
     /// </summary>
     /// <param name="errorMessage">The error that caused the failure</param>
-    /// <returns>True if state was updated, false if not currently generating</returns>
-    public bool MarkFailed(string errorMessage)
+    public void FailGeneration(string errorMessage)
     {
         lock (_lock)
         {
-            if (_state != GenerationState.Generating)
+            if (_state == GenerationState.Generating)
             {
-                return false; // Invalid state transition
+                _state = GenerationState.Idle;
+                _startedAt = null;
+                _lastError = errorMessage;
             }
-            
-            _state = GenerationState.CompletedWithFailure;
-            _lastError = errorMessage;
-            return true;
         }
     }
     
@@ -115,8 +110,6 @@ public class GenerationStateMachine
             {
                 GenerationState.Idle => "Ready",
                 GenerationState.Generating => $"Generating... (started {GetElapsedTime()})",
-                GenerationState.CompletedWithSuccess => "Generation completed successfully",
-                GenerationState.CompletedWithFailure => $"Generation failed: {_lastError ?? "unknown error"}",
                 _ => "Unknown state"
             };
         }

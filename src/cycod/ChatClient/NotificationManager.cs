@@ -116,27 +116,17 @@ public class NotificationManager
     public void CompleteGeneration(NotificationType type, string generatedContent, NotificationFormat format = NotificationFormat.UpdatedTo)
     {
         var stateMachine = GetStateMachine(type);
-        if (stateMachine.MarkCompleted())
-        {
-            SetPending(type, generatedContent, format);
-            stateMachine.Reset(); // Ready for next generation
-        }
+        stateMachine.CompleteGeneration(); // Goes directly from Generating -> Idle
+        SetPending(type, generatedContent, format);
     }
     
     public void FailGeneration(NotificationType type, string errorMessage)
     {
         var stateMachine = GetStateMachine(type);
-        if (stateMachine.MarkFailed(errorMessage))
-        {
-            SetPending(type, errorMessage, NotificationFormat.Error);
-            stateMachine.Reset(); // Ready for next generation
-        }
+        stateMachine.FailGeneration(errorMessage); // Goes directly from Generating -> Idle
+        SetPending(type, errorMessage, NotificationFormat.Error);
     }
     
-    public bool IsGenerationInProgress(NotificationType type)
-    {
-        return GetStateMachine(type).CurrentState == GenerationState.Generating;
-    }
     
     /// <summary>
     /// Gets detailed status information about generation state.
@@ -151,7 +141,7 @@ public class NotificationManager
     /// <summary>
     /// Resets generation state to idle (emergency cleanup only).
     /// </summary>
-    public void ResetGeneration(NotificationType type)
+    internal void ResetGeneration(NotificationType type)
     {
         GetStateMachine(type).Reset();
     }
