@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 
 /// <summary>
 /// Manages notifications and generation tracking for conversations.
-/// Now uses proper state machines internally for robust generation tracking.
+/// Uses proper state machines internally for robust generation tracking.
 /// </summary>
 public class NotificationManager
 {
@@ -96,7 +96,7 @@ public class NotificationManager
         }
         return stateMachine;
     }
-
+    
     /// <summary>
     /// Attempts to start generation for the specified type.
     /// </summary>
@@ -115,18 +115,28 @@ public class NotificationManager
     /// <param name="format">How to format the success notification</param>
     public void CompleteGeneration(NotificationType type, string generatedContent, NotificationFormat format = NotificationFormat.UpdatedTo)
     {
+        // 1. Update generation state
         var stateMachine = GetStateMachine(type);
         stateMachine.CompleteGeneration(); // Goes directly from Generating -> Idle
+        
+        // 2. Create user notification
         SetPending(type, generatedContent, format);
     }
     
+    /// <summary>
+    /// Marks a content type as failed to generate.
+    /// </summary>
+    /// <param name="type">The type of content that failed to generate</param>
+    /// <param name="errorMessage">The error that caused the failure</param>
     public void FailGeneration(NotificationType type, string errorMessage)
     {
+        // 1. Update generation state
         var stateMachine = GetStateMachine(type);
         stateMachine.FailGeneration(errorMessage); // Goes directly from Generating -> Idle
+        
+        // 2. Create user notification
         SetPending(type, errorMessage, NotificationFormat.Error);
     }
-    
     
     /// <summary>
     /// Gets detailed status information about generation state.
@@ -145,7 +155,7 @@ public class NotificationManager
     {
         GetStateMachine(type).Reset();
     }
-
+    
     /// <summary>
     /// Gets the previous title stored for revert functionality.
     /// </summary>
