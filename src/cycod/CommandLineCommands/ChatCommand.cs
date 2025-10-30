@@ -116,8 +116,6 @@ public class ChatCommand : CommandWithVariables
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
         _currentChat = chat;
 
-
-
         try
         {
             // Add the user prompt messages to the chat.
@@ -147,7 +145,53 @@ public class ChatCommand : CommandWithVariables
                 return 1;
             }
 
-            await RunInteractiveChatLoop(chat, factory, interactive);
+            while (true)
+            {
+                DisplayUserPrompt();
+                var userPrompt = interactive
+                    ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
+                    : ReadLineOrSimulateInput(InputInstructions, "exit");
+                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+                {
+                    // Show any pending notifications before exiting
+                    // This prevents title updates from being missed by the user.
+                    CheckAndShowPendingNotifications(chat);
+                    break;
+                }
+
+                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
+                if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
+
+                var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
+                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
+
+                var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
+
+                // Check for notifications before assistant response
+                if (chat.Notifications.HasPending())
+                {
+                    ConsoleHelpers.WriteLine("", overrideQuiet: true);
+                    CheckAndShowPendingNotifications(chat);
+                }
+                DisplayAssistantLabel();
+
+                var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
+                ImagePatterns.Clear();
+
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
+                    (messages) => HandleUpdateMessages(messages),
+                    (update) => HandleStreamingChatCompletionUpdate(update),
+                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
+                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+
+                // Check for notifications that may have been generated during the assistant's response
+                ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
+                if (chat.Notifications.HasPending())
+                {
+                    CheckAndShowPendingNotifications(chat);
+                    ConsoleHelpers.WriteLine("", overrideQuiet: true);
+                }
+            }
 
             return 0;
         }
@@ -161,65 +205,6 @@ public class ChatCommand : CommandWithVariables
             {
                 await mcpFactory.DisposeAsync();
             }
-        }
-    }
-
-    /// <summary>
-    /// Runs the interactive chat loop.
-    /// </summary>
-    /// <param name="chat"></param>
-    /// <param name="factory"></param>
-    /// <param name="interactive"></param>
-    /// <returns></returns>
-    private async Task RunInteractiveChatLoop(FunctionCallingChat chat, McpFunctionFactory factory, bool interactive)
-    {
-        while (true)
-        {
-            DisplayUserPrompt();
-            var userPrompt = interactive
-                ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
-                : ReadLineOrSimulateInput(InputInstructions, "exit");
-            if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
-            {
-                // Show any pending notifications before exiting
-                // This prevents title updates from being missed by the user.
-                CheckAndShowPendingNotifications(chat);
-                break;
-            }
-
-            var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
-            if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
-
-            var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
-            if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
-
-            var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
-
-            // Check for notifications before assistant response
-            if (chat.Notifications.HasPending())
-            {
-                ConsoleHelpers.WriteLine("", overrideQuiet: true);
-                CheckAndShowPendingNotifications(chat);
-            }
-            DisplayAssistantLabel();
-
-            var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
-            ImagePatterns.Clear();
-
-            var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
-                (messages) => HandleUpdateMessages(messages),
-                (update) => HandleStreamingChatCompletionUpdate(update),
-                (name, args) => HandleFunctionCallApproval(factory, name, args!),
-                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
-
-            // Check for notifications that may have been generated during the assistant's response
-            ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
-            if (chat.Notifications.HasPending())
-            {
-                CheckAndShowPendingNotifications(chat);
-                ConsoleHelpers.WriteLine("", overrideQuiet: true);
-            }
-                
         }
     }
 
