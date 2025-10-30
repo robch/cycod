@@ -269,6 +269,13 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
             return SlashCommandResult.Success();
         }
         
+        // Check if generation is already in progress
+        if (chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready")
+        {
+            ConsoleHelpers.WriteLine("Title generation already in progress. Please wait for it to complete.\n", ConsoleColor.Yellow);
+            return SlashCommandResult.Success();
+        }
+        
         // Start async title generation
         ConsoleHelpers.WriteLine("Generating new title...\n", ConsoleColor.DarkGray);
         _ = Task.Run(async () => await RefreshTitleAsync(chat, readFilePath));

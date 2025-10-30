@@ -125,6 +125,74 @@ public static class TitleGenerationHelpers
                 return string.Empty;
             }
             
+            // Trim context if conversation is too large (more than 6 messages)
+            if (filteredMessages.Count > 6)
+            {
+                var trimmedMessages = new List<ChatMessage>();
+                var addedIndices = new HashSet<int>();
+                
+                // Find first user message
+                var firstUserMsg = filteredMessages.FirstOrDefault(m => m.Role == ChatRole.User);
+                if (firstUserMsg != null)
+                {
+                    var index = filteredMessages.IndexOf(firstUserMsg);
+                    trimmedMessages.Add(firstUserMsg);
+                    addedIndices.Add(index);
+                }
+                
+                // Find first assistant message
+                var firstAssistantMsg = filteredMessages.FirstOrDefault(m => m.Role == ChatRole.Assistant);
+                if (firstAssistantMsg != null)
+                {
+                    var index = filteredMessages.IndexOf(firstAssistantMsg);
+                    if (!addedIndices.Contains(index))
+                    {
+                        trimmedMessages.Add(firstAssistantMsg);
+                        addedIndices.Add(index);
+                    }
+                }
+                
+                // Add third-to-last message (regardless of role)
+                if (filteredMessages.Count >= 3)
+                {
+                    var thirdToLastIndex = filteredMessages.Count - 3;
+                    if (!addedIndices.Contains(thirdToLastIndex))
+                    {
+                        trimmedMessages.Add(filteredMessages[thirdToLastIndex]);
+                        addedIndices.Add(thirdToLastIndex);
+                    }
+                }
+                
+                // Add second-to-last message (regardless of role)
+                if (filteredMessages.Count >= 2)
+                {
+                    var secondToLastIndex = filteredMessages.Count - 2;
+                    if (!addedIndices.Contains(secondToLastIndex))
+                    {
+                        trimmedMessages.Add(filteredMessages[secondToLastIndex]);
+                        addedIndices.Add(secondToLastIndex);
+                    }
+                }
+                
+                // Add last message (regardless of role)
+                var lastIndex = filteredMessages.Count - 1;
+                if (!addedIndices.Contains(lastIndex))
+                {
+                    trimmedMessages.Add(filteredMessages[lastIndex]);
+                    addedIndices.Add(lastIndex);
+                }
+                
+                // Sort by original order
+                var sortedMessages = trimmedMessages
+                    .Select(msg => new { Message = msg, Index = filteredMessages.IndexOf(msg) })
+                    .OrderBy(x => x.Index)
+                    .Select(x => x.Message)
+                    .ToList();
+                
+                filteredMessages = sortedMessages;
+                ConsoleHelpers.WriteDebugLine($"Trimmed large conversation context from {messages.Count} to {filteredMessages.Count} key messages for title generation");
+            }
+            
             // Convert to simple text format for title generation
             var content = new StringBuilder();
             content.AppendLine("Conversation between User and Assistant:");
