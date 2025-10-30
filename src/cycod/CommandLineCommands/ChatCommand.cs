@@ -207,13 +207,10 @@ public class ChatCommand : CommandWithVariables
             ImagePatterns.Clear();
 
             var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
-                new ChatCompletionCallbacks
-                {
-                    MessageCallback = (messages) => HandleUpdateMessages(messages),
-                    StreamingCallback = (update) => HandleStreamingChatCompletionUpdate(update),
-                    ApproveFunctionCall = (name, args) => HandleFunctionCallApproval(factory, name, args!),
-                    FunctionCallCallback = (name, args, result) => HandleFunctionCallCompleted(name, args, result)
-                });
+                (messages) => HandleUpdateMessages(messages),
+                (update) => HandleStreamingChatCompletionUpdate(update),
+                (name, args) => HandleFunctionCallApproval(factory, name, args!),
+                (name, args, result) => HandleFunctionCallCompleted(name, args, result));
 
             // Check for notifications that may have been generated during the assistant's response
             ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
@@ -508,13 +505,11 @@ public class ChatCommand : CommandWithVariables
         FunctionCallingChat chat,
         string userPrompt,
         IEnumerable<string> imageFiles,
-        ChatCompletionCallbacks? callbacks = null)
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, object?>? functionCallCallback = null)
     {
-        var messageCallback = callbacks?.MessageCallback;
-        var streamingCallback = callbacks?.StreamingCallback;
-        var approveFunctionCall = callbacks?.ApproveFunctionCall;
-        var functionCallCallback = callbacks?.FunctionCallCallback;
-        
         messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
@@ -1156,14 +1151,6 @@ public class ChatCommand : CommandWithVariables
         {
             _deniedFunctionCallNames.Add(item);
         }
-    }
-
-    private class ChatCompletionCallbacks
-    {
-        public Action<IList<ChatMessage>>? MessageCallback { get; set; }
-        public Action<ChatResponseUpdate>? StreamingCallback { get; set; }
-        public Func<string, string?, bool>? ApproveFunctionCall { get; set; }
-        public Action<string, string, object?>? FunctionCallCallback { get; set; }
     }
 
     public string? SystemPrompt { get; set; }

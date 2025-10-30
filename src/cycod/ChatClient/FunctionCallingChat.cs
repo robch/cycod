@@ -208,10 +208,10 @@ public class FunctionCallingChat : IAsyncDisposable
                 ? CallFunction(functionCall, functionCallCallback)
                 : DontCallFunction(functionCall, functionCallCallback);
 
-            var functionResultContent = functionResult as DataContent;
-            if (functionResultContent != null)
+            var asDataContent = functionResult as DataContent;
+            if (asDataContent != null)
             {
-                functionResultContents.Add(functionResultContent);
+                functionResultContents.Add(asDataContent);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
             }
             else
@@ -276,21 +276,9 @@ public class FunctionCallingChat : IAsyncDisposable
                     var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
                     message.Contents.Add(new DataContent(imageBytes, mediaType));
                 }
-                catch (FileNotFoundException ex)
+                catch (Exception ex)
                 {
-                    ConsoleHelpers.LogException(ex, $"Image file not found: {imageFile}");
-                }
-                catch (IOException ex)
-                {
-                    ConsoleHelpers.LogException(ex, $"Failed to read image file {imageFile}");
-                }
-                catch (UnauthorizedAccessException ex)
-                {
-                    ConsoleHelpers.LogException(ex, $"Access denied reading image file {imageFile}");
-                }
-                catch (Exception ex)  // Safety net for unexpected exceptions
-                {
-                    ConsoleHelpers.LogException(ex, $"Unexpected error loading image {imageFile}");
+                    ConsoleHelpers.LogException(ex, $"Failed to load image {imageFile}");
                 }
             }
         }

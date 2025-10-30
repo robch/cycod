@@ -1,8 +1,3 @@
-//
-// Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE.md file in the project root for full license information.
-//
-
 using System.ComponentModel;
 using Microsoft.Extensions.AI;
 
@@ -47,10 +42,6 @@ public class ImageHelperFunctions
             }
 
             return $"More than one image found matching pattern: {imageFileName}";
-        }
-        catch (InvalidOperationException ex)
-        {
-            return $"Error: {ex.Message}";
         }
         catch (Exception ex)
         {
