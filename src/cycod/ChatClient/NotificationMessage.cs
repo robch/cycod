@@ -6,7 +6,7 @@ public class NotificationMessage
     /// <summary>
     /// The type of notification (e.g., "title", "description").
     /// </summary>
-    public string Type { get; set; } = string.Empty;
+    public NotificationType Type { get; set; } = NotificationType.Title;
     
     /// <summary>
     /// The content of the notification.
