@@ -12,6 +12,14 @@ public class FunctionCallingChat : IAsyncDisposable
     /// </summary>
     public NotificationManager Notifications { get; private set; }
 
+    /// <summary>
+    /// Clears the conversation history and reinitializes with the original system prompt and persistent user messages.
+    /// </summary>
+    public void ClearChatHistory()
+    {
+        Conversation.Clear(_systemPrompt);
+    }
+
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
@@ -43,45 +51,9 @@ public class FunctionCallingChat : IAsyncDisposable
         ClearChatHistory();
     }
 
-    public void ClearChatHistory()
-    {
-        Conversation.Clear(_systemPrompt, _userMessageAdds);
-    }
 
-    public void AddUserMessage(string userMessage, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
-    {
-        _userMessageAdds.Add(new ChatMessage(ChatRole.User, userMessage));
-        _userMessageAdds.TryTrimToTarget(
-            maxPromptTokenTarget: maxPromptTokenTarget,
-            maxChatTokenTarget: maxChatTokenTarget);
 
-        Conversation.AddUserMessage(userMessage, maxPromptTokenTarget, maxChatTokenTarget);
-    }
-    
-    public void AddUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
-    {
-        foreach (var userMessage in userMessages)
-        {
-            AddUserMessage(userMessage, maxPromptTokenTarget);
-        }
 
-        Conversation.Messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
-    }
-
-    public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
-    {
-        Conversation.LoadFromFile(fileName, maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget, useOpenAIFormat);
-    }
-
-    public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
-    {
-        Conversation.SaveToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
-    }
-
-    public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
-    {
-        Conversation.SaveTrajectoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
-    }
 
     public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
@@ -287,7 +259,6 @@ public class FunctionCallingChat : IAsyncDisposable
     }
 
     private readonly string _systemPrompt;
-    private readonly List<ChatMessage> _userMessageAdds = new();
 
     private readonly FunctionFactory _functionFactory;
     private readonly FunctionCallDetector _functionCallDetector;

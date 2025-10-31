@@ -17,6 +17,12 @@ public class Conversation
     public List<ChatMessage> Messages { get; private set; }
 
     /// <summary>
+    /// Persistent user messages that survive conversation clearing.
+    /// These are typically added via --add-user-prompt functionality.
+    /// </summary>
+    private readonly List<ChatMessage> _persistentUserMessages = new();
+
+    /// <summary>
     /// Initializes a new conversation with empty messages and default metadata.
     /// </summary>
     public Conversation()
@@ -91,7 +97,8 @@ public class Conversation
     }
 
     /// <summary>
-    /// Adds a user message to the conversation.
+    /// Adds a transient user message to the conversation.
+    /// Transient messages are cleared when ClearChatHistory is called.
     /// </summary>
     /// <param name="userMessage">The user message to add</param>
     /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
@@ -105,7 +112,45 @@ public class Conversation
     }
 
     /// <summary>
-    /// Adds multiple user messages to the conversation.
+    /// Adds a persistent user message to the conversation.
+    /// Persistent messages survive conversation clearing and are typically used for context like --add-user-prompt.
+    /// </summary>
+    /// <param name="userMessage">The user message to add</param>
+    /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
+    /// <param name="maxChatTokenTarget">Maximum chat tokens to keep</param>
+    public void AddPersistentUserMessage(string userMessage, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
+    {
+        var message = new ChatMessage(ChatRole.User, userMessage);
+        _persistentUserMessages.Add(message);
+        Messages.Add(message);
+        
+        // Trim both the persistent cache and the main messages
+        _persistentUserMessages.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
+        Messages.TryTrimToTarget(
+            maxPromptTokenTarget: maxPromptTokenTarget,
+            maxChatTokenTarget: maxChatTokenTarget);
+    }
+
+    /// <summary>
+    /// Adds multiple persistent user messages to the conversation.
+    /// Persistent messages survive conversation clearing and are typically used for context like --add-user-prompt.
+    /// </summary>
+    /// <param name="userMessages">The user messages to add</param>
+    /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
+    /// <param name="maxChatTokenTarget">Maximum chat tokens to keep</param>
+    public void AddPersistentUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
+    {
+        foreach (var userMessage in userMessages)
+        {
+            AddPersistentUserMessage(userMessage, maxPromptTokenTarget, maxChatTokenTarget);
+        }
+    }
+
+    /// <summary>
+    /// Adds multiple transient user messages to the conversation.
+    /// Transient messages are cleared when ClearChatHistory is called.
     /// </summary>
     /// <param name="userMessages">The user messages to add</param>
     /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
@@ -114,25 +159,22 @@ public class Conversation
     {
         foreach (var userMessage in userMessages)
         {
-            Messages.Add(new ChatMessage(ChatRole.User, userMessage));
+            AddUserMessage(userMessage, maxPromptTokenTarget, maxChatTokenTarget);
         }
-
-        Messages.TryTrimToTarget(
-            maxPromptTokenTarget: maxPromptTokenTarget,
-            maxChatTokenTarget: maxChatTokenTarget);
     }
 
     /// <summary>
-    /// Clears conversation history and reinitializes with system message and user additions.
+    /// Clears conversation history and reinitializes with system message and persistent user messages.
     /// </summary>
     /// <param name="systemPrompt">The system prompt to add</param>
-    /// <param name="userMessageAdds">Additional user messages to include</param>
-    public void Clear(string systemPrompt, List<ChatMessage> userMessageAdds)
+    public void Clear(string systemPrompt)
     {
         Messages.Clear();
         Messages.Add(new ChatMessage(ChatRole.System, systemPrompt));
-        Messages.AddRange(userMessageAdds);
+        Messages.AddRange(_persistentUserMessages);
     }
+
+
 
     #region Title Management
 

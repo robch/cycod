@@ -119,7 +119,7 @@ public class ChatCommand : CommandWithVariables
         try
         {
             // Add the user prompt messages to the chat.
-            chat.AddUserMessages(
+            chat.Conversation.AddPersistentUserMessages(
                 UserPromptAdds,
                 maxPromptTokenTarget: MaxPromptTokenTarget,
                 maxChatTokenTarget: MaxChatTokenTarget);
@@ -128,7 +128,7 @@ public class ChatCommand : CommandWithVariables
             var loadChatHistory = !string.IsNullOrEmpty(InputChatHistory);
             if (loadChatHistory)
             {
-                chat.LoadChatHistory(InputChatHistory!,
+                chat.Conversation.LoadFromFile(InputChatHistory!,
                     maxPromptTokenTarget: MaxPromptTokenTarget,
                     maxToolTokenTarget: MaxToolTokenTarget,
                     maxChatTokenTarget: MaxChatTokenTarget,
@@ -371,7 +371,7 @@ public class ChatCommand : CommandWithVariables
         if (useDefaultFileName) fileName = "chat-history.jsonl";
 
         ConsoleHelpers.Write($"Saving {fileName} ...", ConsoleColor.Yellow, overrideQuiet: true);
-        chat.SaveChatHistoryToFile(fileName!, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+        chat.Conversation.SaveToFile(fileName!, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         ConsoleHelpers.WriteLine("Saved!\n", ConsoleColor.Yellow, overrideQuiet: true);
 
         return true;
@@ -599,7 +599,7 @@ public class ChatCommand : CommandWithVariables
         
         try
         {
-            _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            _currentChat.Conversation.SaveToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
         }
         catch (Exception ex)
         {
@@ -643,7 +643,7 @@ public class ChatCommand : CommandWithVariables
                 
                 // Save again with updated title
                 ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
-                _currentChat.SaveChatHistoryToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                _currentChat.Conversation.SaveToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
                 
                 // Update console title with new auto-generated title
                 ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Conversation.Metadata);
@@ -894,7 +894,7 @@ public class ChatCommand : CommandWithVariables
         {
             var fileName = FileHelpers.GetFileNameFromTemplate("exception-chat-history.jsonl", "{filebase}-{time}.{fileext}")!;
             var saveToFolderOnAccessDenied = ScopeFileHelpers.EnsureDirectoryInScope("exceptions", ConfigFileScope.User);
-            chat.SaveChatHistoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
+            chat.Conversation.SaveToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
         catch (Exception ex)
@@ -910,7 +910,7 @@ public class ChatCommand : CommandWithVariables
         {
             var fileName = FileHelpers.GetFileNameFromTemplate("exception-trajectory.md", "{filebase}-{time}.{fileext}")!;
             var saveToFolderOnAccessDenied = ScopeFileHelpers.EnsureDirectoryInScope("exceptions", ConfigFileScope.User);
-            chat.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
+            chat.Conversation.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
         catch (Exception ex)

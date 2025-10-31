@@ -32,7 +32,7 @@ public class NotificationManager
     {
         _pendingNotifications.Enqueue(new NotificationMessage 
         { 
-            Type = type.ToString().ToLowerInvariant(), 
+            Type = type, 
             Content = content,
             Format = format
         });
@@ -67,12 +67,11 @@ public class NotificationManager
     /// <param name="type">The type of notifications to clear</param>
     public void ClearPendingOfType(NotificationType type)
     {
-        var typeString = type.ToString().ToLowerInvariant();
         var remainingNotifications = new List<NotificationMessage>();
         
         while (_pendingNotifications.TryDequeue(out var notification))
         {
-            if (notification.Type != typeString)
+            if (notification.Type != type)
             {
                 remainingNotifications.Add(notification);
             }

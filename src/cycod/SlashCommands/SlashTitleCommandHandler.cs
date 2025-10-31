@@ -424,7 +424,7 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
                 
                 // Save the updated conversation to auto-save file (not the input file)
                 var saveFilePath = _autoSaveOutputChatHistoryPath ?? readFilePath;
-                chat.SaveChatHistoryToFile(saveFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                chat.Conversation.SaveToFile(saveFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
                 
                 ConsoleHelpers.WriteDebugLine($"Title refresh: read from {readFilePath}, saved to {saveFilePath}");
                 

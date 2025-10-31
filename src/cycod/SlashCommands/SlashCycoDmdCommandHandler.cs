@@ -82,7 +82,7 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
                 _chatCommand.DisplayUserFunctionCall(command, result ?? string.Empty);
                 
                 // Add result to conversation and skip assistant response
-                chat.AddUserMessage(result ?? string.Empty);
+                chat.Conversation.AddUserMessage(result ?? string.Empty);
                 return SlashCommandResult.Success();
             }
             catch (Exception ex)
@@ -92,7 +92,7 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
                 // Display error result
                 _chatCommand.DisplayUserFunctionCall(command, errorMessage);
                 
-                chat.AddUserMessage(errorMessage);
+                chat.Conversation.AddUserMessage(errorMessage);
                 return SlashCommandResult.Success();
             }
         }

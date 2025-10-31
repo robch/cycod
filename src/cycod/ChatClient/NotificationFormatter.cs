@@ -23,13 +23,15 @@ public static class NotificationFormatter
     
     private static string FormatUpdatedTo(NotificationMessage notification)
     {
-        var typeCapitalized = char.ToUpper(notification.Type[0]) + notification.Type[1..];
+        var typeString = notification.Type.ToString().ToLowerInvariant();
+        var typeCapitalized = char.ToUpper(typeString[0]) + typeString[1..];
         return $"[{typeCapitalized} updated to: \"{notification.Content}\"]";
     }
     
     private static string FormatStatus(NotificationMessage notification)
     {
-        var typeCapitalized = char.ToUpper(notification.Type[0]) + notification.Type[1..];
+        var typeString = notification.Type.ToString().ToLowerInvariant();
+        var typeCapitalized = char.ToUpper(typeString[0]) + typeString[1..];
         return $"[{typeCapitalized}: {notification.Content}]";
     }
     
@@ -40,13 +42,15 @@ public static class NotificationFormatter
     
     private static string FormatSuccess(NotificationMessage notification)
     {
-        var typeCapitalized = char.ToUpper(notification.Type[0]) + notification.Type[1..];
+        var typeString = notification.Type.ToString().ToLowerInvariant();
+        var typeCapitalized = char.ToUpper(typeString[0]) + typeString[1..];
         return $"[✓ {typeCapitalized}: {notification.Content}]";
     }
     
     private static string FormatError(NotificationMessage notification)
     {
-        var typeCapitalized = char.ToUpper(notification.Type[0]) + notification.Type[1..];
+        var typeString = notification.Type.ToString().ToLowerInvariant();
+        var typeCapitalized = char.ToUpper(typeString[0]) + typeString[1..];
         return $"[✗ {typeCapitalized} failed: {notification.Content}]";
     }
 }
