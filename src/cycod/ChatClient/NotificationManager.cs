@@ -136,15 +136,21 @@ public class NotificationManager
         // 2. Create user notification
         SetPending(type, errorMessage, NotificationFormat.Error);
     }
-    
+
     /// <summary>
     /// Gets detailed status information about generation state.
     /// </summary>
     /// <param name="type">The type of content to check</param>
     /// <returns>User-friendly status description</returns>
-    public string GetGenerationStatus(NotificationType type)
+    public GenerationState GetGenerationState(NotificationType type)
     {
-        return GetStateMachine(type).GetStatusDescription();
+        return GetStateMachine(type).CurrentState;
+    }
+
+    public string GetGenerationDescription(NotificationType type)
+    {
+        var stateMachine = GetStateMachine(type);
+        return stateMachine.GetStatusDescription();
     }
     
     /// <summary>

@@ -269,9 +269,10 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
             return SlashCommandResult.Success();
         }
         
-        // Check if generation is already in progress
-        if (chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready")
+        // Check if generation is idle, and if so, mark title generation as in progress
+        if (!chat.Notifications.TryStartGeneration(NotificationType.Title))
         {
+            // Race condition detected - log and return (don't show console message from background thread)
             ConsoleHelpers.WriteLine("Title generation already in progress. Please wait for it to complete.\n", ConsoleColor.Yellow);
             return SlashCommandResult.Success();
         }
@@ -360,8 +361,8 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         
         // Show meaningful user status: detailed generating status or lock status (filter out transient completion states)
         var isLocked = chat.Conversation.IsTitleLocked;
-        var status = chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready"
-            ? chat.Notifications.GetGenerationStatus(NotificationType.Title)  // "Generating... (started 5s ago)"
+        var status = chat.Notifications.GetGenerationState(NotificationType.Title) != GenerationState.Idle
+            ? chat.Notifications.GetGenerationDescription(NotificationType.Title)  // "Generating... (started 5s ago)"
             : isLocked ? "locked" : "unlocked";
 
         ConsoleHelpers.WriteLine($"Title:     {title}", ConsoleColor.DarkGray);
@@ -401,14 +402,6 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
     /// </summary>
     private async Task RefreshTitleAsync(FunctionCallingChat chat, string readFilePath)
     {
-        // Mark title generation as in progress
-        if (!chat.Notifications.TryStartGeneration(NotificationType.Title))
-        {
-            // Race condition detected - log and return (don't show console message from background thread)
-            ConsoleHelpers.WriteDebugLine("Title generation already in progress, skipping duplicate request");
-            return;
-        }
-        
         try
         {
             // Use shared title generation logic
@@ -467,7 +460,7 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         finally
         {
             // Safety net: ensure state returns to idle if something unexpected happened  
-            if (chat.Notifications.GetGenerationStatus(NotificationType.Title) != "Ready")
+            if (chat.Notifications.GetGenerationState(NotificationType.Title) != GenerationState.Idle)
             {
                 ConsoleHelpers.WriteDebugLine("Warning: Generation state was stuck in progress, forcing reset to idle");
                 chat.Notifications.ResetGeneration(NotificationType.Title);

@@ -1002,16 +1002,13 @@ tests:
       User: exit\r?\n
 
 - name: refresh_multiple_times_idempotent
-  run: cycod --input-chat-history testfiles/unlocked-title-full-conversation.jsonl --input "/title refresh" --input "/title refresh" --input "/title refresh" --input exit --auto-save-chat-history 0 --use-test
+  run: cycod --input-chat-history testfiles/unlocked-title-full-conversation.jsonl --input "/title refresh" --input "/title refresh" --input exit --auto-save-chat-history 0 --use-test
   expect-regex: |
     User: /title refresh\r?\n
     Generating new title\.\.\.\r?\n
     \r?\n
     User: /title refresh\r?\n
-    Generating new title\.\.\.\r?\n
-    \r?\n
-    User: /title refresh\r?\n
-    Generating new title\.\.\.\r?\n
+    Title generation already in progress\. Please wait for it to complete\.\r?\n
     \r?\n
     User: exit\r?\n
 
