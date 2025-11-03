@@ -9,9 +9,9 @@
  - NotificationFormat.cs - Is this file really necessary? What purpose does it serve?
  - AIInstructionProcessor.cs - New logic to pass on the provider to cycodmd should exist in a function, not in `ApplyInstructions`
 
-
 # Test Bot
  - This isn't extensible. Ideally this could be used for other tests as well.
+ - Just generally make sure that this is implemented well, as it will be necessary for future tests that involve waiting inside the cycod interaction.
 
 # AiInstructionprocessor.cs - 
  - Is a separate environment variable is really the best way to track the Ai-provider?
