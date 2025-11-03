@@ -1,5 +1,6 @@
 # File Changes
- - ChatCommand.cs - DisplayUserFunctionCall was made public. Is this necessary? Is there another way to achieve the same functionality through a private function call?
+ - ✅COMPLETED✅ - ChatCommand.cs - DisplayUserFunctionCall was made public. Is this necessary? Is there another way to achieve the same functionality through a private function call?
+    - FIX: DisplayUserFunctionCall and DisplayGenericAssistantFunctionCall were both moved to ConsoleHelpers from ChatCommand.cs.
  - ✅COMPLETED✅ - ImageHelperFunctions.cs - Re-add its "catch invalid operation exception". This logic was removed unintentionally.
  - ChatMessageHelpers.cs - is an absolute git diff nightmare. Generally go through the entire file and make sure it makes sense.
  - SlashCycoDmdCommandHandler.cs - is an absolute git diff nightmare. Generally go through the entire file and make sure it makes sense.

@@ -72,14 +72,14 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
         if (_commandHandlers.TryGetValue(command, out var handler))
         {
             // Display function start (like original master branch)
-            _chatCommand.DisplayUserFunctionCall(command, null);
+            ConsoleHelpers.DisplayUserFunctionCall(command, null);
             
             try
             {
                 var result = await handler(arguments);
                 
                 // Display function result (like original master branch)  
-                _chatCommand.DisplayUserFunctionCall(command, result ?? string.Empty);
+                ConsoleHelpers.DisplayUserFunctionCall(command, result ?? string.Empty);
                 
                 // Add result to conversation and skip assistant response
                 chat.Conversation.AddUserMessage(result ?? string.Empty);
@@ -90,7 +90,7 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
                 var errorMessage = $"Error executing slash command: {ex.Message}";
                 
                 // Display error result
-                _chatCommand.DisplayUserFunctionCall(command, errorMessage);
+                ConsoleHelpers.DisplayUserFunctionCall(command, errorMessage);
                 
                 chat.Conversation.AddUserMessage(errorMessage);
                 return SlashCommandResult.Success();

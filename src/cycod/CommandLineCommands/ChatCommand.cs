@@ -724,13 +724,13 @@ public class ChatCommand : CommandWithVariables
             var approvePrompt = " Approve? (Y/n or ?) ";
             var erasePrompt = new string(' ', approvePrompt.Length);
             EnsureLineFeeds();
-            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
 
             ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : ConsoleHelpers.ReadKey(true);
-            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
-            DisplayGenericAssistantFunctionCall(name, args, null);
+            ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
 
             if (key?.KeyChar == 'Y' || key?.Key == ConsoleKey.Enter)
             {
@@ -785,17 +785,7 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.SetForegroundColor(ConsoleColor.White);
     }
 
-    public void DisplayUserFunctionCall(string userFunctionName, string? result)
-    {
-        ConsoleHelpers.Write($"\ruser-function: {userFunctionName} => ", ConsoleColor.DarkGray);
 
-        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
-        if (result != null)
-        {
-            ConsoleHelpers.WriteLine(result, ConsoleColor.DarkGray);
-            DisplayUserPrompt();
-        }
-    }
 
     private void DisplayAssistantLabel()
     {
@@ -836,7 +826,8 @@ public class ChatCommand : CommandWithVariables
                 break;
 
             default:
-                DisplayGenericAssistantFunctionCall(name, args, result);
+                ConsoleHelpers.DisplayAssistantFunctionCall(name, args, result);
+                DisplayAssistantLabel();
                 break;
         }
     }
@@ -856,18 +847,7 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private void DisplayGenericAssistantFunctionCall(string name, string args, object? result)
-    {
-        ConsoleHelpers.Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
-        
-        if (result == null) ConsoleHelpers.Write("...", ConsoleColor.DarkGray);
-        if (result != null)
-        {
-            var text = result as String ?? "non-string result";
-            ConsoleHelpers.WriteLine(text, ConsoleColor.DarkGray);
-            DisplayAssistantLabel();
-        }
-    }
+
 
     private string ProcessTemplate(string template)
     {
