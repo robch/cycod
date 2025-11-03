@@ -18,7 +18,8 @@ public class SlashPromptCommandHandler : ISlashCommandHandler
         var promptName = commandName.TrimStart('/');
         var promptFile = PromptFileHelpers.FindPromptFile(promptName);
 
-        return promptFile != null;
+        var found = promptFile != null;
+        return found;
     }
     
     /// <summary>
