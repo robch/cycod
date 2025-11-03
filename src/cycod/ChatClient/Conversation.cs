@@ -32,6 +32,21 @@ public class Conversation
     }
 
     /// <summary>
+    /// Initializes a new conversation by loading from a file.
+    /// </summary>
+    /// <param name="fileName">The file to load from</param>
+    /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
+    /// <param name="maxToolTokenTarget">Maximum tool tokens to keep</param>
+    /// <param name="maxChatTokenTarget">Maximum chat tokens to keep</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    public Conversation(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
+    {
+        Messages = new List<ChatMessage>();
+        Metadata = ConversationMetadataHelpers.CreateDefault();
+        LoadFromFile(fileName, maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget, useOpenAIFormat);
+    }
+
+    /// <summary>
     /// Updates the conversation metadata.
     /// </summary>
     /// <param name="metadata">New metadata to set</param>
@@ -50,23 +65,23 @@ public class Conversation
     /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
     public void LoadFromFile(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        // Helper does pure I/O - load and return data
-        var (metadata, newMessages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        // Load conversation from file
+        var loadedConversation = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
         
         // If loaded messages have system message, do complete replacement
-        var hasSystemMessage = newMessages.Any(x => x.Role == ChatRole.System);
+        var hasSystemMessage = loadedConversation.Messages.Any(x => x.Role == ChatRole.System);
         if (hasSystemMessage)
         {
             Messages.Clear(); // Complete replacement - file contains full conversation
         }
-        Messages.AddRange(newMessages);
+        Messages.AddRange(loadedConversation.Messages);
         Messages.FixDanglingToolCalls();
         Messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
         
-        // Update metadata (use loaded metadata if present, otherwise keep default)
-        if (metadata != null)
+        // Update metadata from loaded conversation
+        if (loadedConversation.Metadata != null)
         {
-            Metadata = metadata;
+            Metadata = loadedConversation.Metadata;
         }
     }
 

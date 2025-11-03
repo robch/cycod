@@ -71,14 +71,14 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
         // First check built-in commands
         if (_commandHandlers.TryGetValue(command, out var handler))
         {
-            // Display function start (like original master branch)
+            // Display function call to user
             ConsoleHelpers.DisplayUserFunctionCall(command, null);
             
             try
             {
                 var result = await handler(arguments);
                 
-                // Display function result (like original master branch)  
+                // Display function result to user
                 ConsoleHelpers.DisplayUserFunctionCall(command, result ?? string.Empty);
                 
                 // Add result to conversation and skip assistant response

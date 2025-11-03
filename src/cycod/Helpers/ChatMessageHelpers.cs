@@ -30,26 +30,45 @@ public static class AIExtensionsChatHelpers
     }
 
     /// <summary>
-    /// Reads chat history from file with metadata support.
-    /// Pure I/O operation - loads and returns data without any business logic.
+    /// Reads chat history from file and returns a complete Conversation object.
+    /// Loads both metadata and messages into a properly constructed conversation.
     /// </summary>
-    public static (ConversationMetadata? metadata, List<ChatMessage> messages) ReadChatHistoryFromFile(
+    /// <param name="fileName">The file to load from</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    /// <returns>A complete Conversation object with metadata and messages</returns>
+    public static Conversation ReadChatHistoryFromFile(
         string fileName, 
         bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
         var jsonl = FileHelpers.ReadAllText(fileName);
         
+        ConversationMetadata? metadata;
+        List<ChatMessage> messages;
+        
         if (useOpenAIFormat)
         {
-            var (metadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
-            var extensionMessages = openAIMessages.ToExtensionsAIChatMessages().ToList();
-            return (metadata, extensionMessages);
+            var (openAIMetadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
+            metadata = openAIMetadata;
+            messages = openAIMessages.ToExtensionsAIChatMessages().ToList();
         }
         else
         {
-            var (metadata, messages) = ChatMessagesFromJsonl(jsonl);
-            return (metadata, (List<ChatMessage>)messages);
+            var (extensionsMetadata, extensionsMessages) = ChatMessagesFromJsonl(jsonl);
+            metadata = extensionsMetadata;
+            messages = (List<ChatMessage>)extensionsMessages;
         }
+        
+        // Create conversation and populate it
+        var conversation = new Conversation();
+        conversation.Messages.AddRange(messages);
+        
+        // Update metadata (use loaded metadata if present, otherwise keep default)
+        if (metadata != null)
+        {
+            conversation.UpdateMetadata(metadata);
+        }
+        
+        return conversation;
     }
 
     /// <summary>

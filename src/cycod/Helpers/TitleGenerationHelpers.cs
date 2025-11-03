@@ -111,14 +111,14 @@ public static class TitleGenerationHelpers
         try
         {
             // Load and parse the conversation with format auto-detection
-            var (metadata, messages) = TryReadChatHistoryWithFormatDetection(conversationFilePath);
+            var conversation = TryReadChatHistoryWithFormatDetection(conversationFilePath);
             
             // Filter to only user and assistant messages
-            var filteredMessages = messages
+            var filteredMessages = conversation.Messages
                 .Where(m => m.Role == ChatRole.User || m.Role == ChatRole.Assistant)
                 .ToList();
             
-            ConsoleHelpers.WriteDebugLine($"Filtered {messages.Count} total messages down to {filteredMessages.Count} user/assistant messages");
+            ConsoleHelpers.WriteDebugLine($"Filtered {conversation.Messages.Count} total messages down to {filteredMessages.Count} user/assistant messages");
             
             if (filteredMessages.Count == 0)
             {
@@ -190,7 +190,7 @@ public static class TitleGenerationHelpers
                     .ToList();
                 
                 filteredMessages = sortedMessages;
-                ConsoleHelpers.WriteDebugLine($"Trimmed large conversation context from {messages.Count} to {filteredMessages.Count} key messages for title generation");
+                ConsoleHelpers.WriteDebugLine($"Trimmed large conversation context from {conversation.Messages.Count} to {filteredMessages.Count} key messages for title generation");
             }
             
             // Convert to simple text format for title generation
@@ -229,29 +229,29 @@ public static class TitleGenerationHelpers
     /// Tries the default format first, then falls back to the alternate format if no messages are found.
     /// </summary>
     /// <param name="filePath">Path to the conversation file</param>
-    /// <returns>Tuple of (metadata, messages) from whichever format successfully parsed content</returns>
-    private static (ConversationMetadata?, List<ChatMessage>) TryReadChatHistoryWithFormatDetection(string filePath)
+    /// <returns>A conversation object from whichever format successfully parsed content</returns>
+    private static Conversation TryReadChatHistoryWithFormatDetection(string filePath)
     {
         // Try default format first
-        var (metadata1, messages1) = TryReadWithFormat(filePath, ChatHistoryDefaults.UseOpenAIFormat);
-        if (messages1.Count > 0)
+        var conversation1 = TryReadWithFormat(filePath, ChatHistoryDefaults.UseOpenAIFormat);
+        if (conversation1.Messages.Count > 0)
         {
-            ConsoleHelpers.WriteDebugLine($"Successfully parsed {messages1.Count} messages using default format (OpenAI: {ChatHistoryDefaults.UseOpenAIFormat})");
-            return (metadata1, messages1);
+            ConsoleHelpers.WriteDebugLine($"Successfully parsed {conversation1.Messages.Count} messages using default format (OpenAI: {ChatHistoryDefaults.UseOpenAIFormat})");
+            return conversation1;
         }
         
         // Try opposite format
         var alternateFormat = !ChatHistoryDefaults.UseOpenAIFormat;
-        var (metadata2, messages2) = TryReadWithFormat(filePath, alternateFormat);
-        if (messages2.Count > 0)
+        var conversation2 = TryReadWithFormat(filePath, alternateFormat);
+        if (conversation2.Messages.Count > 0)
         {
-            ConsoleHelpers.WriteDebugLine($"Successfully parsed {messages2.Count} messages using alternate format (OpenAI: {alternateFormat})");
-            return (metadata2, messages2);
+            ConsoleHelpers.WriteDebugLine($"Successfully parsed {conversation2.Messages.Count} messages using alternate format (OpenAI: {alternateFormat})");
+            return conversation2;
         }
         
         // No messages found in either format
         ConsoleHelpers.WriteDebugLine("No messages found in either format - file may be empty or corrupted");
-        return (metadata1, new List<ChatMessage>());
+        return conversation1; // Return empty conversation
     }
     
     /// <summary>
@@ -259,8 +259,8 @@ public static class TitleGenerationHelpers
     /// </summary>
     /// <param name="filePath">Path to the conversation file</param>
     /// <param name="useOpenAIFormat">Whether to use OpenAI format (true) or Extensions.AI format (false)</param>
-    /// <returns>Tuple of (metadata, messages) - returns empty list on failure</returns>
-    private static (ConversationMetadata?, List<ChatMessage>) TryReadWithFormat(string filePath, bool useOpenAIFormat)
+    /// <returns>A conversation object, or an empty conversation on failure</returns>
+    private static Conversation TryReadWithFormat(string filePath, bool useOpenAIFormat)
     {
         try
         {
@@ -269,7 +269,7 @@ public static class TitleGenerationHelpers
         catch (Exception ex)
         {
             ConsoleHelpers.WriteDebugLine($"Failed to read chat history with OpenAI format = {useOpenAIFormat}: {ex.Message}");
-            return (null, new List<ChatMessage>());
+            return new Conversation(); // Return empty conversation on failure
         }
     }
 
@@ -345,10 +345,10 @@ public static class TitleGenerationHelpers
             }
             
             // Load and parse the conversation
-            var (metadata, messages) = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            var conversation = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
             
             // Need at least one assistant message for meaningful conversation
-            return messages.Any(m => m.Role == ChatRole.Assistant);
+            return conversation.Messages.Any(m => m.Role == ChatRole.Assistant);
         }
         catch (FileNotFoundException ex)
         {
