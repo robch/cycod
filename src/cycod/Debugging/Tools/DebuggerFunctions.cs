@@ -22,7 +22,16 @@ public class DebuggerFunctions
         var session = new DebugSession { TargetProgram = fullPath };
         client.EventReceived += (_, evt) =>
         {
-            if (evt.EventType == DapProtocol.StoppedEvent) session.IsRunning = false;
+            if (evt.EventType == DapProtocol.ThreadEvent)
+            {
+                try
+                {
+                    var body = JsonSerializer.Deserialize<ThreadEventBody>(evt.Body?.ToString() ?? "");
+                    if (body?.Reason == "started") session.CurrentThreadId = body.ThreadId;
+                }
+                catch { }
+            }
+            else if (evt.EventType == DapProtocol.StoppedEvent) session.IsRunning = false;
             else if (evt.EventType == DapProtocol.ContinuedEvent) session.IsRunning = true;
             else if (evt.EventType == DapProtocol.ExitedEvent) session.IsTerminated = true;
         };
@@ -188,7 +197,20 @@ public class DebuggerFunctions
     string StepOrContinue(string sessionId, string command, string errorCode)
     {
         var managed = GetManaged(sessionId); if (managed == null) return managedError;
-        var threadId = DetectThread(managed); if (threadId == null) return Err("THREAD_NOT_FOUND", "No thread");
+        var threadId = DetectThread(managed);
+        // First continue without thread: send configurationDone then detect thread
+        if (threadId == null && command == DapProtocol.ContinueCommand && !managed.Session.IsConfigured)
+        {
+            try
+            {
+                managed.Client.SendRequestAsync(DapProtocol.ConfigurationDoneCommand).Wait();
+                managed.Session.IsConfigured = true;
+                Thread.Sleep(300);
+                threadId = DetectThread(managed);
+            }
+            catch (Exception ex) { return Err("CONFIGURATION_FAILED", ex.Message); }
+        }
+        if (threadId == null) return Err("THREAD_NOT_FOUND", "No thread");
         try
         {
             managed.Client.SendRequestAsync(command, new ContinueArguments { ThreadId = threadId.Value }).Wait();
