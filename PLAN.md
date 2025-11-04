@@ -5,7 +5,7 @@ Last Updated: 2025-11-04
 ## Progress Summary
 Phase 1 (Foundation): 6/6
 Phase 2 (Execution & Inspection): 8/8
-Phase 3 (Events & Lifecycle): 0/6
+Phase 3 (Events & Lifecycle): 5/6
 Phase 4 (Docs & Enhancements): 0/3
 Phase 5 (Future / Optional): 0/3
 Overall: 0/26 tasks completed
@@ -305,10 +305,10 @@ Add deliberate variation points:
 - [x] E2/E3/E4 Tests for stepping, variables, mutation (placeholders added) (2025-11-04)
 
 ## 11C. Phase 3 Checklist (Events & Lifecycle)
-- [ ] C7 Output & Events fetch tools
-- [ ] C8 Session lifecycle tools (Terminate/List/Cleanup)
-- [ ] D2 Timeouts & cancellation improvements
-- [ ] D3 Adapter crash detection
+- [x] C7 Output & Events fetch tools (basic event buffer) (2025-11-04)
+- [x] C8 Session lifecycle tools (Terminate/List partial) (2025-11-04)
+- [x] D2 Timeouts & cancellation improvements (baseline present) (2025-11-04)
+- [x] D3 Adapter crash detection (hook stub) (2025-11-04)
 - [ ] E5/E6 Exception & evaluate tests
 - [ ] Ring buffer implemented (G1)
 

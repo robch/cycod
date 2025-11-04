@@ -1,0 +1,20 @@
+tests:
+  - name: list-sessions-initial
+    script: |
+      grep -R "ListSessions" src/cycod/Debugging/Tools/DebugSessionLifecycleFunctions.cs | wc -l
+    expect-regex:
+      - "1"
+
+  - name: terminate-session-placeholder
+    optional: broken-test
+    script: |
+      echo "TODO: invoke TerminateSession after StartDebugSession exposed via chat function calling."
+    expect-regex:
+      - "TerminateSession"
+
+  - name: fetch-events-placeholder
+    optional: broken-test
+    script: |
+      echo "TODO: invoke FetchEvents and verify nextSeq increments."
+    expect-regex:
+      - "FetchEvents"

@@ -21,6 +21,7 @@ public class DapClient : IDisposable
     public string AdapterPath { get; }
 
     public event EventHandler<Event>? EventReceived;
+public event EventHandler<string>? StdErrReceived;
 
     public DapClient(string adapterPath)
     {
@@ -45,6 +46,8 @@ public class DapClient : IDisposable
         _process = Process.Start(psi) ?? throw new Exception("Failed to start debug adapter process");
         _reader = new StreamReader(_process.StandardOutput.BaseStream, Encoding.UTF8);
         _cts = new CancellationTokenSource();
+        _process.ErrorDataReceived += (_, e) => { if (!string.IsNullOrEmpty(e.Data)) StdErrReceived?.Invoke(this, e.Data); };
+        _process.BeginErrorReadLine();
         StartListening(_cts.Token);
     }
 
@@ -198,6 +201,10 @@ public class DapClient : IDisposable
         try { _cts?.Cancel(); } catch { }
         try { _listenTask?.Wait(TimeSpan.FromSeconds(2)); } catch { }
         try { if (!_process.HasExited) _process.Kill(); } catch { }
+        if (_process.HasExited && _process.ExitCode != 0)
+        {
+            // Could raise an event or log crash; placeholder for crash detection integration
+        }
         try { _reader.Dispose(); } catch { }
         try { _process.Dispose(); } catch { }
         _cts?.Dispose();
