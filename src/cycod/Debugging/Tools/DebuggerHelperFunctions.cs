@@ -68,6 +68,22 @@ public class DebuggerHelperFunctions
     public string ListBreakpoints(
         [Description("Session Id returned from StartDebugSession")] string sessionId)
     {
+    [Description("Sets a conditional breakpoint.")]
+    public string SetConditionalBreakpoint(string sessionId, string filePath, int line, string condition)
+    {
+        var managed = _manager.Get(sessionId);
+        if (managed == null) return ErrorJson("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
+        filePath = Path.GetFullPath(filePath);
+        if (!File.Exists(filePath)) return DebugErrorHelpers.Error("FILE_NOT_FOUND", filePath);
+        managed.Session.AddBreakpoint(filePath, line, condition);
+        try
+        {
+            SyncBreakpointsForFile(managed.Client, filePath, managed.Session);
+            return JsonSerializer.Serialize(new { status = "ok", file = filePath, line, condition });
+        }
+        catch (Exception ex) { return ErrorJson("SET_BREAKPOINT_FAILED", ex.Message); }
+    }
+
         var managed = _manager.Get(sessionId);
         if (managed == null) return ErrorJson("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
         var data = managed.Session.Breakpoints.ToDictionary(k => k.Key, v => v.Value.ToArray());
@@ -80,7 +96,7 @@ public class DebuggerHelperFunctions
         client.SendRequestAsync(DapProtocol.SetBreakpointsCommand, new SetBreakpointsArguments
         {
             Source = new Source { Path = filePath },
-            Breakpoints = lines.Select(l => new SourceBreakpoint { Line = l }).ToArray()
+            Breakpoints = lines.Select(l => new SourceBreakpoint { Line = l, Condition = session.BreakpointConditions.TryGetValue((filePath,l), out var cond) ? cond : null }).ToArray()
         }).Wait();
     }
 

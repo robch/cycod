@@ -10,13 +10,15 @@ public class DebugSession
     public int? CurrentThreadId { get; set; }
     public string? TargetProgram { get; set; }
     public Dictionary<string, List<int>> Breakpoints { get; } = new();
+    public Dictionary<(string file,int line), string> BreakpointConditions { get; } = new();
     public Capabilities? Capabilities { get; set; }
 
-    public void AddBreakpoint(string filePath, int line)
+    public void AddBreakpoint(string filePath, int line, string? condition = null)
     {
         var normalized = Path.GetFullPath(filePath);
         if (!Breakpoints.ContainsKey(normalized)) Breakpoints[normalized] = new List<int>();
         if (!Breakpoints[normalized].Contains(line)) Breakpoints[normalized].Add(line);
+        if (!string.IsNullOrWhiteSpace(condition)) BreakpointConditions[(normalized,line)] = condition;
     }
 
     public bool RemoveBreakpoint(string filePath, int line)

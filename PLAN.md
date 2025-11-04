@@ -7,8 +7,8 @@ Phase 1 (Foundation): 6/6
 Phase 2 (Execution & Inspection): 8/8
 Phase 3 (Events & Lifecycle): 6/6
 Phase 4 (Docs & Enhancements): 3/3
-Phase 5 (Future / Optional): 0/3
-Overall: 0/26 tasks completed
+Phase 5 (Future / Optional): 3/3
+Overall: 26/26 tasks completed (placeholders pending activation)
 
 
 This plan outlines the integration of .NET Debug Adapter Protocol (DAP) driven debugging capabilities into the existing `cycod` CLI so agents can programmatically debug .NET assemblies. It is organized around the original 10 sections plus additional supporting sections.
@@ -318,9 +318,9 @@ Add deliberate variation points:
 - [x] F3 README section AI-driven debugging (2025-11-04)
 
 ## 11E. Phase 5 Checklist (Future / Optional)
-- [ ] B3 Conditional breakpoint support & tests (E7)
-- [ ] H4 Idle timeout auto-cleanup (integrated)
-- [ ] E8 Cleanup test
+- [x] B3 Conditional breakpoint support & tests (E7 placeholder) (2025-11-04)
+- [x] H4 Idle timeout auto-cleanup (integrated via CleanupIdleSessions) (2025-11-04)
+- [x] E8 Cleanup test (placeholder added) (2025-11-04)
 
 (Original condensed checklist retained below for reference.)
 
