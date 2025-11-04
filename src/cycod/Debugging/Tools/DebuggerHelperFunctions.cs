@@ -1,3 +1,5 @@
+#if false // Disabled legacy broken implementation; replaced by DebuggerFunctions
+
 using System.ComponentModel;
 using System.Text.Json;
 using Cycod.Debugging.Dap;
@@ -101,7 +103,6 @@ public class DebuggerHelperFunctions
     }
 
     static string ErrorJson(string code, string message) => JsonSerializer.Serialize(new ErrorResponse { Error = new ErrorBody { Code = code, Message = message } });
-}
 
     [Description("Continues execution of the debuggee.")]
     public string Continue(string sessionId)
@@ -267,3 +268,6 @@ public class DebuggerHelperFunctions
         }
         catch (Exception ex) { return ErrorJson("SET_VARIABLE_FAILED", ex.Message); }
     }
+
+
+#endif

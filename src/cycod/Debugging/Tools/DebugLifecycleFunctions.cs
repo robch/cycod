@@ -1,57 +1,50 @@
-#if false // Disabled legacy broken implementation; replaced by DebugLifecycleFunctions
-
 using System.ComponentModel;
 using System.Text.Json;
-using Cycod.Debugging.Session;
 using Cycod.Debugging.Dap;
+using Cycod.Debugging.Session;
 
 namespace Cycod.Debugging.Tools;
 
-public class DebugSessionLifecycleFunctions
+public class DebugLifecycleFunctions
 {
     static readonly DebugSessionManager _manager = new();
     static readonly Dictionary<string, DebugEventBuffer> _buffers = new();
     static readonly object _lock = new();
 
-    [Description("Lists active debug sessions.")]
+    [Description("List active debug sessions.")]
     public string ListSessions()
     {
         var list = _manager.List().Select(s => new
         {
             s.sessionId,
             program = s.managed.Session.TargetProgram,
-            createdAt = s.managed.CreatedAt,
             isRunning = s.managed.Session.IsRunning,
-            isTerminated = s.managed.Session.IsTerminated
+            isTerminated = s.managed.Session.IsTerminated,
+            createdAt = s.managed.CreatedAt
         }).ToArray();
         return JsonSerializer.Serialize(new { status = "ok", sessions = list });
     }
 
-    [Description("Terminates a debug session and disposes resources.")]
+    [Description("Terminate a debug session.")]
     public string TerminateSession(string sessionId)
     {
         var managed = _manager.Get(sessionId);
-        if (managed == null) return DebugErrorHelpers.Error("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
-        try
-        {
-            // Attempt graceful terminate
-            try { managed.Client.SendRequestAsync(DapProtocol.TerminateCommand).Wait(2000); } catch { }
-            try { managed.Client.SendRequestAsync(DapProtocol.DisconnectCommand).Wait(2000); } catch { }
-        }
-        catch { }
-        var removed = _manager.Remove(sessionId);
+        if (managed == null) return Err("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
+        try { managed.Client.SendRequestAsync(DapProtocol.TerminateCommand).Wait(1000); } catch { }
+        try { managed.Client.SendRequestAsync(DapProtocol.DisconnectCommand).Wait(1000); } catch { }
+        _manager.Remove(sessionId);
         lock (_lock) { _buffers.Remove(sessionId); }
-        return JsonSerializer.Serialize(new { status = removed ? "ok" : "not_found", sessionId });
+        return JsonSerializer.Serialize(new { status = "ok", sessionId });
     }
 
-    [Description("Cleans up idle sessions older than the specified minutes.")]
+    [Description("Cleanup idle or terminated sessions older than minutes.")]
     public string CleanupIdleSessions(int olderThanMinutes = 30)
     {
         var cutoff = DateTime.UtcNow - TimeSpan.FromMinutes(olderThanMinutes);
         var removed = new List<string>();
         foreach (var entry in _manager.List())
         {
-            if (entry.managed.LastActivity < cutoff || entry.managed.Session.IsTerminated)
+            if (entry.managed.Session.IsTerminated || entry.managed.LastActivity < cutoff)
             {
                 if (_manager.Remove(entry.sessionId))
                 {
@@ -63,17 +56,11 @@ public class DebugSessionLifecycleFunctions
         return JsonSerializer.Serialize(new { status = "ok", removed });
     }
 
-        catch { }
-        var removed = _manager.Remove(sessionId);
-        lock (_lock) { _buffers.Remove(sessionId); }
-        return JsonSerializer.Serialize(new { status = removed ? "ok" : "not_found", sessionId });
-    }
-
-    [Description("Fetches buffered debug events (adapter output etc.) since a sequence number.")]
+    [Description("Fetch buffered events since sequence.")]
     public string FetchEvents(string sessionId, int sinceSeq = 0)
     {
         var managed = _manager.Get(sessionId);
-        if (managed == null) return DebugErrorHelpers.Error("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
+        if (managed == null) return Err("SESSION_NOT_FOUND", $"Session '{sessionId}' not found");
         DebugEventBuffer buffer;
         lock (_lock)
         {
@@ -84,8 +71,9 @@ public class DebugSessionLifecycleFunctions
             }
         }
         var events = buffer.GetSince(sinceSeq).Select(e => new { e.Seq, e.TimeUtc, e.Category, e.Text }).ToArray();
-        return JsonSerializer.Serialize(new { status = "ok", events, nextSeq = events.Length > 0 ? events.Max(e => e.Seq) + 1 : sinceSeq });
+        var nextSeq = events.Length > 0 ? events.Max(e => e.Seq) + 1 : sinceSeq;
+        return JsonSerializer.Serialize(new { status = "ok", events, nextSeq });
     }
-}
 
-#endif
+    static string Err(string code, string message) => JsonSerializer.Serialize(new { error = new { code, message } });
+}
