@@ -31,40 +31,7 @@ public static class AIExtensionsChatHelpers
 
 
 
-    /// <summary>
-    /// Parses JSONL content with optional metadata support.
-    /// </summary>
-    /// <param name="jsonl">JSONL content to parse</param>
-    /// <returns>Tuple of (metadata, messages). Metadata is null if not present.</returns>
-    public static (ConversationMetadata? metadata, IList<ChatMessage> messages) ChatMessagesFromJsonl(string jsonl)
-    {
-        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        
-        if (lines.Length == 0)
-        {
-            return (null, new List<ChatMessage>());
-        }
 
-        // Try to parse metadata from first line
-        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
-
-        // Parse remaining lines as messages
-        var messageLines = lines.Skip(messageStartIndex);
-        var messages = new List<ChatMessage>();
-
-        foreach (var line in messageLines)
-        {
-            if (string.IsNullOrEmpty(line)) continue;
-
-            var message = ChatMessageFromJson(line);
-            if (message != null)
-            {
-                messages.Add(message);
-            }
-        }
-
-        return (metadata, messages);
-    }
 
     /// <summary>
     /// Converts messages and metadata to JSONL format with metadata as first line.
@@ -397,38 +364,7 @@ public static class OpenAIChatHelpers
         }
     }
 
-    /// <summary>
-    /// Parses JSONL content with optional metadata support (OpenAI format).
-    /// </summary>
-    public static (ConversationMetadata? metadata, IList<OpenAI.Chat.ChatMessage> messages) ChatMessagesFromJsonl(string jsonl)
-    {
-        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
-        
-        if (lines.Length == 0)
-        {
-            return (null, new List<OpenAI.Chat.ChatMessage>());
-        }
 
-        // Try to parse metadata from first line
-        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
-
-        // Parse remaining lines as messages
-        var messageLines = lines.Skip(messageStartIndex);
-        var messages = new List<OpenAI.Chat.ChatMessage>();
-
-        foreach (var line in messageLines)
-        {
-            if (string.IsNullOrEmpty(line)) continue;
-
-            var message = ChatMessageFromJson(line);
-            if (message != null)
-            {
-                messages.Add(message);
-            }
-        }
-
-        return (metadata, messages);
-    }
 
     public static string? AsJson(this OpenAI.Chat.ChatMessage message)
     {

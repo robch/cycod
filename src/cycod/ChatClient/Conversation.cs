@@ -67,21 +67,42 @@ public class Conversation
     {
         // Read and parse file content directly
         var jsonl = FileHelpers.ReadAllText(fileName);
+        var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         
-        ConversationMetadata? metadata;
-        List<ChatMessage> messages;
-        
-        if (useOpenAIFormat)
+        if (lines.Length == 0)
         {
-            var (openAIMetadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
-            metadata = openAIMetadata;
-            messages = openAIMessages.Select(m => m.ToExtensionsAIChatMessage()).ToList();
+            return; // Empty file, nothing to load
         }
-        else
+
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+
+        // Parse remaining lines as messages
+        var messageLines = lines.Skip(messageStartIndex);
+        var messages = new List<ChatMessage>();
+
+        foreach (var line in messageLines)
         {
-            var (extensionsMetadata, extensionsMessages) = AIExtensionsChatHelpers.ChatMessagesFromJsonl(jsonl);
-            metadata = extensionsMetadata;
-            messages = (List<ChatMessage>)extensionsMessages;
+            if (string.IsNullOrEmpty(line)) continue;
+
+            ChatMessage? message = null;
+            if (useOpenAIFormat)
+            {
+                var openAIMessage = OpenAIChatHelpers.ChatMessageFromJson(line);
+                if (openAIMessage != null)
+                {
+                    message = openAIMessage.ToExtensionsAIChatMessage();
+                }
+            }
+            else
+            {
+                message = AIExtensionsChatHelpers.ChatMessageFromJson(line);
+            }
+
+            if (message != null)
+            {
+                messages.Add(message);
+            }
         }
         
         // If loaded messages have system message, do complete replacement
