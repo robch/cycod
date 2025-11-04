@@ -26,6 +26,7 @@ public class DebugStartTool
 
         var client = new DapClient(adapterPath);
         var session = new DebugSession { TargetProgram = fullPath };
+        // Buffer events for lifecycle fetch later (stdout, stopped, etc.)
         client.EventReceived += (_, evt) =>
         {
             if (evt.EventType == DapProtocol.StoppedEvent)
