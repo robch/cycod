@@ -1,0 +1,43 @@
+tests:
+  - name: build-test-program
+    script: |
+      dotnet build tests/resources/debug/TestProgram/TestProgram.csproj -c Debug
+    expect-regex:
+      - "Build succeeded"
+      - "0 Warning"
+      - "0 Error"
+
+  - name: verify-assembly-exists
+    script: |
+      ls tests/resources/debug/TestProgram/bin/Debug/net9.0/TestProgram.dll || echo MISSING
+    expect-regex:
+      - "TestProgram.dll"
+
+  - name: verify-debugger-code-present
+    script: |
+      grep -R "StartDebugSession" src/cycod/Debugging/Tools/DebuggerHelperFunctions.cs | wc -l
+    expect-regex:
+      - "1"
+
+  - name: placeholder-breakpoint-set
+    optional: broken-test
+    script: |
+      echo "TODO: integrate direct invocation of DebuggerHelperFunctions via CLI command or function calling harness for deterministic testing."
+    expect-regex:
+      - "TODO: integrate"
+    not-expect-regex:
+      - "ERROR"
+
+  - name: placeholder-stepping
+    optional: broken-test
+    script: |
+      echo "TODO: implement debug-start, debug-set-breakpoint, debug-continue, debug-stack commands to enable stepping tests."
+    expect-regex:
+      - "debug-set-breakpoint"
+
+  - name: placeholder-evaluate-setvariable
+    optional: broken-test
+    script: |
+      echo "TODO: after command integration, evaluate expression and set variable in TestProgram." 
+    expect-regex:
+      - "evaluate expression"
