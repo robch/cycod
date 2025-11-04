@@ -226,52 +226,40 @@ public static class TitleGenerationHelpers
 
     /// <summary>
     /// Attempts to read chat history with automatic format detection.
-    /// Tries the default format first, then falls back to the alternate format if no messages are found.
+    /// Reads the file once and tries both formats on the same content.
     /// </summary>
     /// <param name="filePath">Path to the conversation file</param>
     /// <returns>A conversation object from whichever format successfully parsed content</returns>
     private static Conversation TryReadChatHistoryWithFormatDetection(string filePath)
     {
-        // Try default format first
-        var conversation1 = TryReadWithFormat(filePath, ChatHistoryDefaults.UseOpenAIFormat);
-        if (conversation1.Messages.Count > 0)
-        {
-            ConsoleHelpers.WriteDebugLine($"Successfully parsed {conversation1.Messages.Count} messages using default format (OpenAI: {ChatHistoryDefaults.UseOpenAIFormat})");
-            return conversation1;
-        }
-        
-        // Try opposite format
-        var alternateFormat = !ChatHistoryDefaults.UseOpenAIFormat;
-        var conversation2 = TryReadWithFormat(filePath, alternateFormat);
-        if (conversation2.Messages.Count > 0)
-        {
-            ConsoleHelpers.WriteDebugLine($"Successfully parsed {conversation2.Messages.Count} messages using alternate format (OpenAI: {alternateFormat})");
-            return conversation2;
-        }
-        
-        // No messages found in either format
-        ConsoleHelpers.WriteDebugLine("No messages found in either format - file may be empty or corrupted");
-        return conversation1; // Return empty conversation
-    }
-    
-    /// <summary>
-    /// Safely attempts to read chat history with a specific format, catching and logging any exceptions.
-    /// </summary>
-    /// <param name="filePath">Path to the conversation file</param>
-    /// <param name="useOpenAIFormat">Whether to use OpenAI format (true) or Extensions.AI format (false)</param>
-    /// <returns>A conversation object, or an empty conversation on failure</returns>
-    private static Conversation TryReadWithFormat(string filePath, bool useOpenAIFormat)
-    {
         try
         {
-            return new Conversation(filePath, useOpenAIFormat: useOpenAIFormat);
+            // Read file once and split into lines
+            var jsonl = FileHelpers.ReadAllText(filePath);
+            var lines = jsonl.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
+            
+            // Create conversation and try to load from lines with format detection
+            var conversation = new Conversation();
+            var success = conversation.LoadFromLines(lines);
+            
+            if (success)
+            {
+                return conversation;
+            }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine("No messages found in either format - file may be empty or corrupted");
+                return conversation; // Return empty conversation
+            }
         }
         catch (Exception ex)
         {
-            ConsoleHelpers.WriteDebugLine($"Failed to read chat history with OpenAI format = {useOpenAIFormat}: {ex.Message}");
+            ConsoleHelpers.WriteDebugLine($"Failed to read chat history with format detection: {ex.Message}");
             return new Conversation(); // Return empty conversation on failure
         }
     }
+    
+
 
     /// <summary>
     /// Cleans and formats a generated title.

@@ -79,8 +79,35 @@ public class Conversation
 
         // Parse remaining lines as messages
         var messageLines = lines.Skip(messageStartIndex);
+        var messages = ParseLinesAsMessages(messageLines, useOpenAIFormat);
+        
+        // If loaded messages have system message, do complete replacement
+        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
+        if (hasSystemMessage)
+        {
+            Messages.Clear(); // Complete replacement - file contains full conversation
+        }
+        Messages.AddRange(messages);
+        Messages.FixDanglingToolCalls();
+        Messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
+        
+        // Update metadata (use loaded metadata if present, otherwise keep current)
+        if (metadata != null)
+        {
+            Metadata = metadata;
+        }
+    }
+    
+    /// <summary>
+    /// Parses lines as chat messages using the specified format.
+    /// </summary>
+    /// <param name="messageLines">Lines to parse (excluding metadata line)</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
+    /// <returns>List of successfully parsed messages</returns>
+    private static List<ChatMessage> ParseLinesAsMessages(IEnumerable<string> messageLines, bool useOpenAIFormat)
+    {
         var messages = new List<ChatMessage>();
-
+        
         foreach (var line in messageLines)
         {
             if (string.IsNullOrEmpty(line)) continue;
@@ -105,7 +132,49 @@ public class Conversation
             }
         }
         
-        // If loaded messages have system message, do complete replacement
+        return messages;
+    }
+    
+    /// <summary>
+    /// Loads messages from already-split file lines with format detection.
+    /// </summary>
+    /// <param name="lines">File content split into lines</param>
+    /// <param name="maxPromptTokenTarget">Maximum prompt tokens to keep</param>
+    /// <param name="maxToolTokenTarget">Maximum tool tokens to keep</param>
+    /// <param name="maxChatTokenTarget">Maximum chat tokens to keep</param>
+    /// <returns>True if messages were successfully loaded</returns>
+    public bool LoadFromLines(string[] lines, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0)
+    {
+        if (lines.Length == 0)
+        {
+            return false; // Empty content, nothing to load
+        }
+
+        // Try to parse metadata from first line
+        var (metadata, messageStartIndex) = ConversationMetadataHelpers.TryParseMetadata(lines[0]);
+        var messageLines = lines.Skip(messageStartIndex);
+
+        // Try default format first
+        var messages = ParseLinesAsMessages(messageLines, ChatHistoryDefaults.UseOpenAIFormat);
+        var useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat;
+        
+        // If no messages found, try alternate format
+        if (messages.Count == 0)
+        {
+            var alternateFormat = !ChatHistoryDefaults.UseOpenAIFormat;
+            messages = ParseLinesAsMessages(messageLines, alternateFormat);
+            useOpenAIFormat = alternateFormat;
+        }
+        
+        // If still no messages, return false
+        if (messages.Count == 0)
+        {
+            return false;
+        }
+        
+        ConsoleHelpers.WriteDebugLine($"Successfully parsed {messages.Count} messages using format (OpenAI: {useOpenAIFormat})");
+        
+        // Apply the loaded messages to this conversation
         var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
         if (hasSystemMessage)
         {
@@ -120,6 +189,8 @@ public class Conversation
         {
             Metadata = metadata;
         }
+        
+        return true;
     }
 
     /// <summary>
