@@ -61,7 +61,7 @@ Downloads: https://github.com/Samsung/netcoredbg/releases
                 Path.Combine(pf, "netcoredbg", exeName),
                 Path.Combine(pfx86, "netcoredbg", exeName),
 
-                choc != null ? Path.Combine(choc, "bin", exeName) : null,
+                choc != null ? Path.Combine(choc, "bin", exeName) : string.Empty,
                 Path.Combine(user, "scoop", "apps", "netcoredbg", "current", exeName),
                 Path.Combine(pf, "dotnet", "tools", exeName)
             }.Where(p => !string.IsNullOrEmpty(p));
