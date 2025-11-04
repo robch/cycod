@@ -65,23 +65,39 @@ public class Conversation
     /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
     public void LoadFromFile(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
     {
-        // Load conversation from file
-        var loadedConversation = AIExtensionsChatHelpers.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
+        // Read and parse file content directly
+        var jsonl = FileHelpers.ReadAllText(fileName);
+        
+        ConversationMetadata? metadata;
+        List<ChatMessage> messages;
+        
+        if (useOpenAIFormat)
+        {
+            var (openAIMetadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
+            metadata = openAIMetadata;
+            messages = openAIMessages.Select(m => m.ToExtensionsAIChatMessage()).ToList();
+        }
+        else
+        {
+            var (extensionsMetadata, extensionsMessages) = AIExtensionsChatHelpers.ChatMessagesFromJsonl(jsonl);
+            metadata = extensionsMetadata;
+            messages = (List<ChatMessage>)extensionsMessages;
+        }
         
         // If loaded messages have system message, do complete replacement
-        var hasSystemMessage = loadedConversation.Messages.Any(x => x.Role == ChatRole.System);
+        var hasSystemMessage = messages.Any(x => x.Role == ChatRole.System);
         if (hasSystemMessage)
         {
             Messages.Clear(); // Complete replacement - file contains full conversation
         }
-        Messages.AddRange(loadedConversation.Messages);
+        Messages.AddRange(messages);
         Messages.FixDanglingToolCalls();
         Messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
         
-        // Update metadata from loaded conversation
-        if (loadedConversation.Metadata != null)
+        // Update metadata (use loaded metadata if present, otherwise keep current)
+        if (metadata != null)
         {
-            Metadata = loadedConversation.Metadata;
+            Metadata = metadata;
         }
     }
 

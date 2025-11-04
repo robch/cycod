@@ -57,9 +57,9 @@ class AiInstructionProcessor
             File.WriteAllText(instructionsFileName, instructions);
             File.WriteAllText(contentFileName, content);
 
-            ConsoleHelpers.WriteDebugLine($"user:\n{File.ReadAllText(userPromptFileName)}\n\n");
-            ConsoleHelpers.WriteDebugLine($"system:\n{File.ReadAllText(systemPromptFileName)}\n\n");
-            ConsoleHelpers.WriteDebugLine($"instructions:\n{File.ReadAllText(instructionsFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"user:\n{FileHelpers.ReadAllText(userPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"system:\n{FileHelpers.ReadAllText(systemPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"instructions:\n{FileHelpers.ReadAllText(instructionsFileName)}\n\n");
 
             var useCycoD = UseCycoD();
             var arguments = useCycoD
@@ -197,7 +197,7 @@ class AiInstructionProcessor
 
     private static void RewriteExpandedFile(string userPromptFileName)
     {
-        var content = File.ReadAllText(userPromptFileName);
+        var content = FileHelpers.ReadAllText(userPromptFileName);
         
         // Find patterns that look like this {@FILENAME}, and replace them with the content of the file
         // For example, {@FILENAME} will be replaced with the content of the file FILENAME
@@ -210,7 +210,7 @@ class AiInstructionProcessor
             var filePath = Path.Combine(directoryName, fileName);
             if (File.Exists(filePath))
             {
-                var fileContent = File.ReadAllText(filePath);
+                var fileContent = FileHelpers.ReadAllText(filePath);
                 content = content.Replace(match.Value, fileContent);
             }
         }

@@ -29,47 +29,7 @@ public static class AIExtensionsChatHelpers
         return JsonSerializer.Serialize(message, _jsonlOptions);
     }
 
-    /// <summary>
-    /// Reads chat history from file and returns a complete Conversation object.
-    /// Loads both metadata and messages into a properly constructed conversation.
-    /// </summary>
-    /// <param name="fileName">The file to load from</param>
-    /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
-    /// <returns>A complete Conversation object with metadata and messages</returns>
-    public static Conversation ReadChatHistoryFromFile(
-        string fileName, 
-        bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
-    {
-        var jsonl = FileHelpers.ReadAllText(fileName);
-        
-        ConversationMetadata? metadata;
-        List<ChatMessage> messages;
-        
-        if (useOpenAIFormat)
-        {
-            var (openAIMetadata, openAIMessages) = OpenAIChatHelpers.ChatMessagesFromJsonl(jsonl);
-            metadata = openAIMetadata;
-            messages = openAIMessages.ToExtensionsAIChatMessages().ToList();
-        }
-        else
-        {
-            var (extensionsMetadata, extensionsMessages) = ChatMessagesFromJsonl(jsonl);
-            metadata = extensionsMetadata;
-            messages = (List<ChatMessage>)extensionsMessages;
-        }
-        
-        // Create conversation and populate it
-        var conversation = new Conversation();
-        conversation.Messages.AddRange(messages);
-        
-        // Update metadata (use loaded metadata if present, otherwise keep default)
-        if (metadata != null)
-        {
-            conversation.UpdateMetadata(metadata);
-        }
-        
-        return conversation;
-    }
+
 
     /// <summary>
     /// Parses JSONL content with optional metadata support.
@@ -504,11 +464,6 @@ public static class OpenAIChatHelpers
         lines.AddRange(messageJsons);
 
         return string.Join('\n', lines);
-    }
-
-    public static IEnumerable<ChatMessage> ToExtensionsAIChatMessages(this IEnumerable<OpenAI.Chat.ChatMessage> messages)
-    {
-        return messages.Select(x => x.ToExtensionsAIChatMessage());
     }
 
     public static ChatMessage ToExtensionsAIChatMessage(this OpenAI.Chat.ChatMessage message)

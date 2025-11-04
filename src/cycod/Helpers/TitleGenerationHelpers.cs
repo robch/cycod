@@ -264,7 +264,7 @@ public static class TitleGenerationHelpers
     {
         try
         {
-            return AIExtensionsChatHelpers.ReadChatHistoryFromFile(filePath, useOpenAIFormat);
+            return new Conversation(filePath, useOpenAIFormat: useOpenAIFormat);
         }
         catch (Exception ex)
         {
@@ -345,7 +345,7 @@ public static class TitleGenerationHelpers
             }
             
             // Load and parse the conversation
-            var conversation = AIExtensionsChatHelpers.ReadChatHistoryFromFile(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+            var conversation = new Conversation(conversationFilePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
             
             // Need at least one assistant message for meaningful conversation
             return conversation.Messages.Any(m => m.Role == ChatRole.Assistant);
