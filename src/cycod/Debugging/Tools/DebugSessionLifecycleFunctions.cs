@@ -36,6 +36,25 @@ public class DebugSessionLifecycleFunctions
             try { managed.Client.SendRequestAsync(DapProtocol.TerminateCommand).Wait(2000); } catch { }
             try { managed.Client.SendRequestAsync(DapProtocol.DisconnectCommand).Wait(2000); } catch { }
         }
+    [Description("Cleans up idle sessions older than the specified minutes.")]
+    public string CleanupIdleSessions(int olderThanMinutes = 30)
+    {
+        var cutoff = DateTime.UtcNow - TimeSpan.FromMinutes(olderThanMinutes);
+        var removed = new List<string>();
+        foreach (var entry in _manager.List())
+        {
+            if (entry.managed.LastActivity < cutoff || entry.managed.Session.IsTerminated)
+            {
+                if (_manager.Remove(entry.sessionId))
+                {
+                    lock (_lock) { _buffers.Remove(entry.sessionId); }
+                    removed.Add(entry.sessionId);
+                }
+            }
+        }
+        return JsonSerializer.Serialize(new { status = "ok", removed });
+    }
+
         catch { }
         var removed = _manager.Remove(sessionId);
         lock (_lock) { _buffers.Remove(sessionId); }

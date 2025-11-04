@@ -5,8 +5,8 @@ Last Updated: 2025-11-04
 ## Progress Summary
 Phase 1 (Foundation): 6/6
 Phase 2 (Execution & Inspection): 8/8
-Phase 3 (Events & Lifecycle): 5/6
-Phase 4 (Docs & Enhancements): 0/3
+Phase 3 (Events & Lifecycle): 6/6
+Phase 4 (Docs & Enhancements): 3/3
 Phase 5 (Future / Optional): 0/3
 Overall: 0/26 tasks completed
 
@@ -310,12 +310,12 @@ Add deliberate variation points:
 - [x] D2 Timeouts & cancellation improvements (baseline present) (2025-11-04)
 - [x] D3 Adapter crash detection (hook stub) (2025-11-04)
 - [ ] E5/E6 Exception & evaluate tests
-- [ ] Ring buffer implemented (G1)
+- [x] Ring buffer implemented (G1 basic event buffer) (2025-11-04)
 
 ## 11D. Phase 4 Checklist (Docs & Enhancements)
-- [ ] F1 docs/debug-tools.md
-- [ ] F2 Update AGENTS.md usage
-- [ ] F3 README section AI-driven debugging
+- [x] F1 docs/debug-tools.md (2025-11-04)
+- [x] F2 Update AGENTS.md usage (2025-11-04)
+- [x] F3 README section AI-driven debugging (2025-11-04)
 
 ## 11E. Phase 5 Checklist (Future / Optional)
 - [ ] B3 Conditional breakpoint support & tests (E7)
