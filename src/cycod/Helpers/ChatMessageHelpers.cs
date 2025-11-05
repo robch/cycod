@@ -73,7 +73,15 @@ public static class AIExtensionsChatHelpers
         FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
-    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, ConversationMetadata? metadata = null, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    /// <summary>
+    /// Saves chat messages to a trajectory file (human-readable markdown format) with metadata.
+    /// </summary>
+    /// <param name="messages">The chat messages to save</param>
+    /// <param name="fileName">The trajectory file path to save to</param>
+    /// <param name="metadata">Conversation metadata to include as header in the trajectory file</param>
+    /// <param name="useOpenAIFormat">Whether to use OpenAI format for message conversion</param>
+    /// <param name="saveToFolderOnAccessDenied">Fallback folder if access denied to primary location</param>
+    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, ConversationMetadata? metadata, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
         try
         {
