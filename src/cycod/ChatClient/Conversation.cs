@@ -7,6 +7,11 @@ using Microsoft.Extensions.AI;
 public class Conversation
 {
     /// <summary>
+    /// Event fired when conversation metadata changes (title, lock status, etc.).
+    /// </summary>
+    public event Action<ConversationMetadata?>? MetadataChanged;
+
+    /// <summary>
     /// Metadata for the current conversation.
     /// </summary>
     public ConversationMetadata? Metadata { get; private set; }
@@ -209,14 +214,15 @@ public class Conversation
     }
 
     /// <summary>
-    /// Saves trajectory to file (messages only, no metadata).
+    /// Saves trajectory to file with optional metadata.
     /// </summary>
     /// <param name="fileName">The file to save to</param>
+    /// <param name="metadata">Optional conversation metadata to include</param>
     /// <param name="useOpenAIFormat">Whether to use OpenAI format</param>
     /// <param name="saveToFolderOnAccessDenied">Fallback folder if access denied</param>
-    public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    public void SaveTrajectoryToFile(string fileName, ConversationMetadata? metadata = null, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
-        Messages.SaveTrajectoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
+        Messages.SaveTrajectoryToFile(fileName, metadata, useOpenAIFormat, saveToFolderOnAccessDenied);
     }
 
     /// <summary>
@@ -310,6 +316,7 @@ public class Conversation
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.Title = title;
         Metadata.IsTitleLocked = true;
+        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>
@@ -323,6 +330,7 @@ public class Conversation
         {
             Metadata.Title = title?.Trim();
             // IsTitleLocked remains false
+            MetadataChanged?.Invoke(Metadata);
         }
     }
 
@@ -373,6 +381,7 @@ public class Conversation
     {
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.IsTitleLocked = true;
+        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>
@@ -382,6 +391,7 @@ public class Conversation
     {
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.IsTitleLocked = false;
+        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>

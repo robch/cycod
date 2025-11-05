@@ -116,6 +116,12 @@ public class ChatCommand : CommandWithVariables
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
         _currentChat = chat;
 
+        // Subscribe to metadata changes to update trajectory files
+        _currentChat.Conversation.MetadataChanged += OnMetadataChanged;
+
+        // Set initial metadata for trajectory files
+        SetTrajectoryMetadata(_currentChat.Conversation.Metadata);
+
         try
         {
             // Add the user prompt messages to the chat.
@@ -561,6 +567,29 @@ public class ChatCommand : CommandWithVariables
         return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
+
+
+    /// <summary>
+    /// Event handler for when conversation metadata changes.
+    /// Updates trajectory files with the new metadata.
+    /// </summary>
+    /// <param name="metadata">The updated metadata</param>
+    private void OnMetadataChanged(ConversationMetadata? metadata)
+    {
+        ConsoleHelpers.WriteDebugLine("Trajectory metadata changed, updating trajectory files");
+        SetTrajectoryMetadata(metadata);
+    }
+
+    /// <summary>
+    /// Sets metadata for both trajectory files.
+    /// </summary>
+    /// <param name="metadata">The conversation metadata to set</param>
+    private void SetTrajectoryMetadata(ConversationMetadata? metadata)
+    {
+        _trajectoryFile.Metadata = metadata;
+        _autoSaveTrajectoryFile.Metadata = metadata;
+    }
+
     private void HandleUpdateMessages(IList<ChatMessage> messages)
     {
         messages.TryTrimToTarget(MaxPromptTokenTarget, MaxToolTokenTarget, MaxChatTokenTarget);
@@ -890,7 +919,7 @@ public class ChatCommand : CommandWithVariables
         {
             var fileName = FileHelpers.GetFileNameFromTemplate("exception-trajectory.md", "{filebase}-{time}.{fileext}")!;
             var saveToFolderOnAccessDenied = ScopeFileHelpers.EnsureDirectoryInScope("exceptions", ConfigFileScope.User);
-            chat.Conversation.SaveTrajectoryToFile(fileName, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
+            chat.Conversation.SaveTrajectoryToFile(fileName, metadata: null, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat, saveToFolderOnAccessDenied);
             ConsoleHelpers.WriteWarning($"SAVED: {fileName}");
         }
         catch (Exception ex)

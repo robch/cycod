@@ -29,10 +29,6 @@ public static class AIExtensionsChatHelpers
         return JsonSerializer.Serialize(message, _jsonlOptions);
     }
 
-
-
-
-
     /// <summary>
     /// Converts messages and metadata to JSONL format with metadata as first line.
     /// </summary>
@@ -77,11 +73,14 @@ public static class AIExtensionsChatHelpers
         FileHelpers.WriteAllText(fileName, jsonl, saveToFolderOnAccessDenied);
     }
 
-    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
+    public static void SaveTrajectoryToFile(this IList<ChatMessage> messages, string fileName, ConversationMetadata? metadata = null, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
     {
         try
         {
+            // Create trajectory file with metadata support
             var trajectoryFile = new TrajectoryFile(fileName);
+            trajectoryFile.Metadata = metadata;
+            
             foreach (var message in messages)
             {
                 trajectoryFile.AppendMessage(message);
@@ -98,7 +97,7 @@ public static class AIExtensionsChatHelpers
                 var fileNameWithoutFolder = Path.GetFileName(fileName);
                 fileName = Path.Combine(trySavingToFolder, fileNameWithoutFolder);
 
-                SaveTrajectoryToFile(messages, fileName, useOpenAIFormat, null);
+                SaveTrajectoryToFile(messages, fileName, metadata, useOpenAIFormat, null);
             }
         }
     }
@@ -329,6 +328,8 @@ public static class AIExtensionsChatHelpers
     };
 
     private const int ESTIMATED_BYTES_PER_TOKEN = 4; // This is an estimate, actual bytes per token may vary
+
+
 }
 
 public static class OpenAIChatHelpers
@@ -363,8 +364,6 @@ public static class OpenAIChatHelpers
             return null;
         }
     }
-
-
 
     public static string? AsJson(this OpenAI.Chat.ChatMessage message)
     {
