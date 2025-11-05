@@ -7,11 +7,6 @@ using Microsoft.Extensions.AI;
 public class Conversation
 {
     /// <summary>
-    /// Event fired when conversation metadata changes (title, lock status, etc.).
-    /// </summary>
-    public event Action<ConversationMetadata?>? MetadataChanged;
-
-    /// <summary>
     /// Metadata for the current conversation.
     /// </summary>
     public ConversationMetadata? Metadata { get; private set; }
@@ -316,7 +311,6 @@ public class Conversation
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.Title = title;
         Metadata.IsTitleLocked = true;
-        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>
@@ -330,7 +324,6 @@ public class Conversation
         {
             Metadata.Title = title?.Trim();
             // IsTitleLocked remains false
-            MetadataChanged?.Invoke(Metadata);
         }
     }
 
@@ -381,7 +374,6 @@ public class Conversation
     {
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.IsTitleLocked = true;
-        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>
@@ -391,7 +383,6 @@ public class Conversation
     {
         if (Metadata == null) throw new InvalidOperationException("Metadata should never be null after constructor");
         Metadata.IsTitleLocked = false;
-        MetadataChanged?.Invoke(Metadata);
     }
 
     /// <summary>

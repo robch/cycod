@@ -116,9 +116,6 @@ public class ChatCommand : CommandWithVariables
         var chat = new FunctionCallingChat(chatClient, SystemPrompt, factory, options, MaxOutputTokens);
         _currentChat = chat;
 
-        // Subscribe to metadata changes to update trajectory files
-        _currentChat.Conversation.MetadataChanged += OnMetadataChanged;
-
         // Set initial metadata for trajectory files
         SetTrajectoryMetadata(_currentChat.Conversation.Metadata);
 
@@ -328,6 +325,10 @@ public class ChatCommand : CommandWithVariables
                 {
                     TrySaveChatHistoryToFile(OutputChatHistory);
                 }
+                
+                // Update trajectory metadata to match conversation state after title changes
+                SetTrajectoryMetadata(_currentChat?.Conversation.Metadata);
+                
                 ConsoleHelpers.WriteDebugLine("Slash command triggered immediate save");
             }
             
@@ -570,17 +571,6 @@ public class ChatCommand : CommandWithVariables
 
 
     /// <summary>
-    /// Event handler for when conversation metadata changes.
-    /// Updates trajectory files with the new metadata.
-    /// </summary>
-    /// <param name="metadata">The updated metadata</param>
-    private void OnMetadataChanged(ConversationMetadata? metadata)
-    {
-        ConsoleHelpers.WriteDebugLine("Trajectory metadata changed, updating trajectory files");
-        SetTrajectoryMetadata(metadata);
-    }
-
-    /// <summary>
     /// Sets metadata for both trajectory files.
     /// </summary>
     /// <param name="metadata">The conversation metadata to set</param>
@@ -600,6 +590,9 @@ public class ChatCommand : CommandWithVariables
         {
             TrySaveChatHistoryToFile(OutputChatHistory);
         }
+        
+        // Update trajectory metadata to match conversation state
+        SetTrajectoryMetadata(_currentChat?.Conversation.Metadata);
         
         // Generate title after first meaningful exchange (unless disabled by environment variable)
         var envDisabled = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION") == "true";
@@ -673,6 +666,9 @@ public class ChatCommand : CommandWithVariables
                 // Save again with updated title
                 ConsoleHelpers.WriteDebugLine($"Saving conversation with updated title to: {filePath}");
                 _currentChat.Conversation.SaveToFile(filePath, useOpenAIFormat: ChatHistoryDefaults.UseOpenAIFormat);
+                
+                // Update trajectory metadata with new title
+                SetTrajectoryMetadata(_currentChat.Conversation.Metadata);
                 
                 // Update console title with new auto-generated title
                 ConsoleTitleHelper.UpdateWindowTitle(_currentChat.Conversation.Metadata);
