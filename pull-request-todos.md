@@ -9,7 +9,9 @@
     - RESOLUTION: Lines 21-22 now properly return the found variable.
  - ✅ COMPLETED ✅ - **GenerationResult.cs** - "Success" method might not be the best name. Maybe "resolve"?
     - RESOLUTION: GenerationResult<T> was dead code that was never used anywhere in the codebase. Created in commit 0ee0995d ("Shoddy State Machine Implementation") as experimental code but immediately superseded by the superior GenerationStateMachine + NotificationManager architecture. File removed as cleanup.
- - 🟨 - **FunctionCallingChat.cs** - Ensure that _messages is no longer tracked in any way. All messages logic should be in Conversation.cs
+ - ✅ COMPLETED ✅ - **FunctionCallingChat.cs** - Ensure that _messages is no longer tracked in any way. All messages logic should be in Conversation.cs
+    - RESOLUTION: Verified complete migration to Conversation.cs. No private message fields exist, all message operations use Conversation.Messages, and AI calls properly use Conversation.Messages. Clean composition pattern implemented.
+    - IMPROVEMENT: Moved `CreateUserMessageWithImages` method from FunctionCallingChat to Conversation.cs for better encapsulation and reusability. Also added `AddUserMessageWithImages` convenience method.
  - ✅ COMPLETED ✅ - **AIInstructionProcessor.cs** - New logic to pass on the provider to cycodmd should exist in a function, not in `ApplyInstructions`
     - RESOLUTION: Provider logic extracted to GetConfiguredAIProviders() method. (Commit: 4f376a58 "Refactor Persistent AI Provider Logic")
 

@@ -66,6 +66,10 @@ public class GenerationStateMachine
                 _startedAt = null;
                 _lastError = null;
             }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine($"CompleteGeneration called from invalid state: {_state}");
+            }
         }
     }
     
@@ -82,6 +86,10 @@ public class GenerationStateMachine
                 _state = GenerationState.Idle;
                 _startedAt = null;
                 _lastError = errorMessage;
+            }
+            else
+            {
+                ConsoleHelpers.WriteDebugLine($"FailGeneration called from invalid state: {_state}");
             }
         }
     }
