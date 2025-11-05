@@ -125,12 +125,15 @@ public class GenerationStateMachine
     
     private string GetElapsedTime()
     {
-        if (_startedAt == null) return "unknown time";
-        
-        var elapsed = DateTime.UtcNow - _startedAt.Value;
-        if (elapsed.TotalSeconds < 60)
-            return $"{elapsed.TotalSeconds:F0}s ago";
-        else
-            return $"{elapsed.TotalMinutes:F0}m ago";
+        lock (_lock)
+        {
+            if (_startedAt == null) return "unknown time";
+            
+            var elapsed = DateTime.UtcNow - _startedAt.Value;
+            if (elapsed.TotalSeconds < 60)
+                return $"{elapsed.TotalSeconds:F0}s ago";
+            else
+                return $"{elapsed.TotalMinutes:F0}m ago";
+        }
     }
 }

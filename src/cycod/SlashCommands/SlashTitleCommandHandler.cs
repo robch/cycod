@@ -362,7 +362,7 @@ public class SlashTitleCommandHandler : ISlashCommandHandler
         // Show meaningful user status: detailed generating status or lock status (filter out transient completion states)
         var isLocked = chat.Conversation.IsTitleLocked;
         var status = chat.Notifications.GetGenerationState(NotificationType.Title) != GenerationState.Idle
-            ? chat.Notifications.GetGenerationDescription(NotificationType.Title)  // "Generating... (started 5s ago)"
+            ? chat.Notifications.GetStatusDescription(NotificationType.Title)  // "Generating... (started 5s ago)"
             : isLocked ? "locked" : "unlocked";
 
         ConsoleHelpers.WriteLine($"Title:     {title}", ConsoleColor.DarkGray);

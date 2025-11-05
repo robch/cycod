@@ -147,7 +147,7 @@ public class NotificationManager
         return GetStateMachine(type).CurrentState;
     }
 
-    public string GetGenerationDescription(NotificationType type)
+    public string GetStatusDescription(NotificationType type)
     {
         var stateMachine = GetStateMachine(type);
         return stateMachine.GetStatusDescription();
