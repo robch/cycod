@@ -333,7 +333,6 @@ public static class ChatClientFactory
                     - OPENAI_CHAT_MODEL_NAME (optional)
 
                     To use Test provider for development/testing, please set:
-                    - TEST_PROVIDER=true (or use --use-test flag)
                     - TEST_DEFAULT_RESPONSE (optional)
                     - TEST_TITLE_RESPONSE (optional)"
                 .Split(new[] { '\n' })
