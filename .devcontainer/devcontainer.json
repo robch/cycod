@@ -23,7 +23,7 @@
       ]
     }
   },
-  "postCreateCommand": "dotnet restore",
+  "postCreateCommand": "dotnet restore && ./scripts/setup-debug-path.sh",
   "remoteUser": "vscode",
   "updateContentCommand": "dotnet build",
   "mounts": [
