@@ -152,7 +152,7 @@ public static class ChatClientFactory
         return chatClient.AsIChatClient();
     }
 
-    public static IChatClient CreateTestChatClient(out ChatOptions? options)
+    public static IChatClient CreateTestChatClient()
     {
         // You can customize responses via environment variables or config if desired
         var responses = new Dictionary<string, string>();
@@ -170,13 +170,6 @@ public static class ChatClientFactory
         var modelId = EnvironmentHelpers.FindEnvVar("TEST_MODEL_ID") ?? "test-model";
         
         var chatClient = new TestChatClient(responses, defaultResponse, modelId);
-        
-        options = new ChatOptions
-        {
-            ModelId = modelId,
-            ToolMode = ChatToolMode.Auto,
-            MaxOutputTokens = 1000
-        };
 
         ConsoleHelpers.WriteDebugLine("Using test chat client for predictable responses");
         return chatClient;
@@ -194,7 +187,8 @@ public static class ChatClientFactory
             // Try to create client based on preference
             if (preferredProvider == "test")
             {
-                return CreateTestChatClient(out options);
+                options = null;  // Test client doesn't need options
+                return CreateTestChatClient();
             }
             else if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
             {
@@ -245,7 +239,7 @@ public static class ChatClientFactory
         // Check for test provider first (useful when TEST_PROVIDER env var is set)
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("TEST_PROVIDER")))
         {
-            return CreateTestChatClient(out options);
+            return CreateTestChatClient();
         }
 
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
