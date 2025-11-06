@@ -236,12 +236,6 @@ public static class ChatClientFactory
         ConsoleHelpers.WriteDebugLine("Creating chat client from environment variables...");
         options = null;
 
-        // Check for test provider first (useful when TEST_PROVIDER env var is set)
-        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("TEST_PROVIDER")))
-        {
-            return CreateTestChatClient();
-        }
-
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
         {
             return CreateCopilotChatClientWithGitHubToken();

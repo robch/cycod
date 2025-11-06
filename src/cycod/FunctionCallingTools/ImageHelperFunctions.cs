@@ -34,10 +34,6 @@ public class ImageHelperFunctions
                         var mediaType = ImageResolver.GetMediaTypeFromFileExtension(imageFile);
                         return new DataContent(imageBytes, mediaType);
                     }
-                    catch (InvalidOperationException ex)
-                    {
-                        return $"Error: {ex.Message}";
-                    }
                     catch (Exception ex)
                     {
                         return $"Error loading image {imageFile}: {ex.Message}";
@@ -46,6 +42,10 @@ public class ImageHelperFunctions
             }
 
             return $"More than one image found matching pattern: {imageFileName}";
+        }
+        catch (InvalidOperationException ex)
+        {
+            return $"Error: {ex.Message}";
         }
         catch (Exception ex)
         {
