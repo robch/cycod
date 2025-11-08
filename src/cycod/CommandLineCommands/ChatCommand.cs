@@ -281,6 +281,10 @@ public class ChatCommand : CommandWithVariables
         {
             skipAssistant = HandleHelpCommand();
         }
+        else if (userPrompt == "/info")
+        {
+            skipAssistant = HandleInfoCommand();
+        }
         else if (_cycoDmdCommandHandler?.IsCommand(userPrompt) == true)
         {
             skipAssistant = await HandleCycoDmdCommand(chat, userPrompt);
@@ -354,6 +358,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /save     Save chat history to file");
         helpBuilder.AppendLine("  /clear    Clear chat history");
         helpBuilder.AppendLine("  /cost     Show token usage statistics");
+        helpBuilder.AppendLine("  /info     Display program information");
         helpBuilder.AppendLine("  /help     Show this help message");
         helpBuilder.AppendLine();
         
@@ -427,6 +432,207 @@ public class ChatCommand : CommandWithVariables
         var indented = "\n  " + helpBuilder.ToString().Replace("\n", "\n  ").TrimEnd() + "\n";
         ConsoleHelpers.WriteLine(indented, overrideQuiet: true);
         return true;
+    }
+
+    private bool HandleInfoCommand()
+    {
+        var programNameUppercase = ProgramInfo.Name.ToUpper();
+        var programDescription = ProgramInfo.Description;
+        var version = VersionInfo.GetVersion();
+
+        var bannerText = $"{programNameUppercase} - {programDescription}\n" +
+                         "Copyright (c) 2025, Rob Chambers. All rights reserved.\n\n";
+        ConsoleHelpers.WriteLine(bannerText, overrideQuiet: true);
+
+        // Parse and display version components
+        var versionInfo = ParseVersionString(version);
+        ConsoleHelpers.WriteLine($"Version:   {versionInfo.BaseVersion}", overrideQuiet: true);
+        if (versionInfo.IsDevBuild && !string.IsNullOrEmpty(versionInfo.Developer))
+        {
+            ConsoleHelpers.WriteLine($"Developer: {versionInfo.Developer}", overrideQuiet: true);
+        }
+        if (!string.IsNullOrEmpty(versionInfo.BuildDate))
+        {
+            ConsoleHelpers.WriteLine($"Built:     {versionInfo.BuildDate}", overrideQuiet: true);
+        }
+        if (!string.IsNullOrEmpty(versionInfo.CommitHash))
+        {
+            ConsoleHelpers.WriteLine($"Commit:    {versionInfo.CommitHash}", overrideQuiet: true);
+        }
+        ConsoleHelpers.WriteLine("", overrideQuiet: true);
+
+        // Display AGENTS.md file location if present
+        var agentsFile = AgentsFileHelpers.FindAgentsFile();
+        if (agentsFile != null)
+        {
+            ConsoleHelpers.WriteLine($"AGENTS.md: {agentsFile}\n", overrideQuiet: true);
+        }
+        else
+        {
+            ConsoleHelpers.WriteLine("AGENTS.md: No AGENTS.md file found\n", overrideQuiet: true);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Parses a version string into its components.
+    /// 
+    /// <para>
+    /// <b>Expected version string format:</b>
+    /// <code>
+    /// {baseVersion}[-DEV-{developer}-{buildDate}][+{commitHash}]
+    /// </code>
+    /// </para>
+    /// <para>
+    /// <b>Components:</b>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description>
+    ///       <c>baseVersion</c>: The main version number (e.g., "1.0.0").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>-DEV</c>: Optional marker indicating a development build.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>{developer}</c>: Optional developer identifier (e.g., "phs").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>{buildDate}</c>: Optional build date and time in the format "yyyyMMdd.HHmm" (e.g., "20251023.1319").
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <c>+{commitHash}</c>: Optional commit hash (e.g., "4d348df87afc2a42e460aaa3d4056acee19894c4").
+    ///     </description>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Parsing logic:</b>
+    /// <list type="number">
+    ///   <item>
+    ///     <description>
+    ///       If the version string contains a '+', the substring after '+' is treated as the commit hash.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       The main part before '+' is split by '-', and if it contains "DEV", it is considered a development build.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       If present, the developer and build date are extracted from the segments following "DEV".
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       The base version is always the first segment.
+    ///     </description>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// <b>Example:</b>
+    /// <code>
+    /// 1.0.0-DEV-phs-20251023.1319+4d348df87afc2a42e460aaa3d4056acee19894c4
+    /// </code>
+    /// </para>
+    /// </summary>
+    /// <param name="version">The version string to parse.</param>
+    /// <returns>
+    /// A tuple containing:
+    ///   - BaseVersion: The main version number.
+    ///   - IsDevBuild: True if this is a development build.
+    ///   - Developer: The developer identifier, if present.
+    ///   - BuildDate: The build date, if present.
+    ///   - CommitHash: The commit hash, if present.
+    /// </returns>
+    private (string BaseVersion, bool IsDevBuild, string Developer, string BuildDate, string CommitHash) ParseVersionString(string version)
+    {
+        // Example: 1.0.0-DEV-phs-20251023.1319+4d348df87afc2a42e460aaa3d4056acee19894c4
+        var baseVersion = version;
+        var isDevBuild = false;
+        var developer = string.Empty;
+        var buildDate = string.Empty;
+        var commitHash = string.Empty;
+
+        try
+        {
+            // Extract commit hash (after +)
+            var plusIndex = version.IndexOf('+');
+            if (plusIndex >= 0)
+            {
+                commitHash = version.Substring(plusIndex + 1);
+                if (commitHash.Length > 8) commitHash = commitHash.Substring(0, 8); // Short hash
+                version = version.Substring(0, plusIndex);
+            }
+
+            // Split by dash to get parts
+            var parts = version.Split('-');
+            if (parts.Length > 0)
+            {
+                baseVersion = parts[0]; // 1.0.0
+            }
+
+            // Check if this is a DEV build (typically 2nd part)
+            if (parts.Length >= 2)
+            {
+                isDevBuild = parts[1].Equals("DEV", StringComparison.OrdinalIgnoreCase);
+            }
+
+            // Look for developer name (typically 3rd part, after version and DEV/config)
+            if (parts.Length >= 3)
+            {
+                developer = parts[2]; // phs
+            }
+
+            // Look for date/time (typically 4th part)
+            if (parts.Length >= 4)
+            {
+                var dateTimePart = parts[3]; // 20251023.1319
+                var dotIndex = dateTimePart.IndexOf('.');
+
+                if (dotIndex >= 0)
+                {
+                    var datePart = dateTimePart.Substring(0, dotIndex); // 20251023
+                    var timePart = dateTimePart.Substring(dotIndex + 1); // 1319
+
+                    // Parse date: YYYYMMDD
+                    if (datePart.Length == 8)
+                    {
+                        var year = datePart.Substring(0, 4);
+                        var month = datePart.Substring(4, 2);
+                        var day = datePart.Substring(6, 2);
+
+                        // Parse time: HHMM
+                        var time = string.Empty;
+                        if (timePart.Length == 4)
+                        {
+                            var hour = timePart.Substring(0, 2);
+                            var minute = timePart.Substring(2, 2);
+                            time = $" {hour}:{minute}";
+                        }
+
+                        buildDate = $"{year}-{month}-{day}{time}";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // If parsing fails, just return what we have
+            ConsoleHelpers.LogException(ex, "Failed to parse version string", showToUser: false);
+        }
+
+        return (baseVersion, isDevBuild, developer, buildDate, commitHash);
     }
 
     private async Task<string> CompleteChatStreamingAsync(
