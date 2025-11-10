@@ -202,7 +202,7 @@ public class ChatCommand : CommandWithVariables
                 var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
                 ImagePatterns.Clear();
 
-                var response = await CompleteChatStreamingAsyncWithInterruptPolling(chat, giveAssistant, imageFiles,
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => ConvertFunctionCallDecision(HandleFunctionCallApproval(factory, name, args!)),
@@ -536,15 +536,42 @@ public class ChatCommand : CommandWithVariables
 
         try
         {
-            var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
+            // Start the AI streaming task
+            var streamingTask = chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
                 (name, args, result) => functionCallCallback?.Invoke(name, args, result),
                 _interruptTokenSource.Token,
                 () => _displayBuffer);
-
-            return response;
+            
+            // Poll for interrupts throughout the entire streaming at AI token frequency
+            const int pollIntervalMs = 50; // Same frequency as typical AI token arrival
+            
+            while (!streamingTask.IsCompleted)
+            {
+                CheckForDoubleEscapeInterrupt();
+                if (_interruptTokenSource?.Token.IsCancellationRequested == true)
+                {
+                    // Interrupt detected during polling - handle immediately
+                    ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
+                    
+                    // Properly cancel and await the streaming task to prevent duplicate messages
+                    try 
+                    {
+                        await streamingTask;
+                    }
+                    catch (OperationCanceledException) 
+                    {
+                    }
+                    return "";
+                }
+                
+                await Task.Delay(pollIntervalMs);
+            }
+            
+            // Return the completed streaming result
+            return await streamingTask;
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
         {
@@ -565,47 +592,6 @@ public class ChatCommand : CommandWithVariables
             _suppressAssistantDisplay = false;
             _displayBuffer = "";
         }
-    }
-
-    private async Task<string> CompleteChatStreamingAsyncWithInterruptPolling(
-        FunctionCallingChat chat,
-        string userPrompt,
-        IEnumerable<string> imageFiles,
-        Action<IList<ChatMessage>>? messageCallback = null,
-        Action<ChatResponseUpdate>? streamingCallback = null,
-        Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
-    {
-        // Start the AI streaming task
-        var streamingTask = CompleteChatStreamingAsync(chat, userPrompt, imageFiles, messageCallback, streamingCallback, approveFunctionCall, functionCallCallback);
-        
-        // Poll for interrupts throughout the entire streaming at AI token frequency
-        const int pollIntervalMs = 50; // Same frequency as typical AI token arrival
-        
-        while (!streamingTask.IsCompleted)
-        {
-            CheckForDoubleEscapeInterrupt();
-            if (_interruptTokenSource?.Token.IsCancellationRequested == true)
-            {
-                // Interrupt detected during polling - handle immediately
-                ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
-                
-                // Properly cancel and await the streaming task to prevent duplicate messages
-                try 
-                {
-                    await streamingTask; // This will hit the catch block but won't display message again
-                }
-                catch (OperationCanceledException) 
-                {
-                }
-                return "";
-            }
-            
-            await Task.Delay(pollIntervalMs);
-        }
-        
-        // Either streaming started or polling timed out - return the streaming result
-        return await streamingTask;
     }
 
     private string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
