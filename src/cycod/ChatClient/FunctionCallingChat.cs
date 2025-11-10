@@ -126,14 +126,11 @@ public class FunctionCallingChat : IAsyncDisposable
             {
                 // User interrupted - trim content to match what was actually displayed
                 var displayBuffer = getDisplayBuffer?.Invoke() ?? "";
-                
-                if (string.IsNullOrEmpty(displayBuffer))
+
+                // If we have both the display buffer and the content to return, trim the content to match what was displayed
+                // This avoids showing content that was generated but not actually seen by the user due to the slight delay in cancellation
+                if (!string.IsNullOrEmpty(displayBuffer) && !string.IsNullOrEmpty(contentToReturn))
                 {
-                    // No content was displayed, don't add any message
-                }
-                else if (!string.IsNullOrEmpty(contentToReturn))
-                {
-                    // Trim saved content to match what user actually saw
                     var trimmedContent = TrimContentToDisplayBuffer(contentToReturn, displayBuffer);
                     if (!string.IsNullOrEmpty(trimmedContent))
                     {
