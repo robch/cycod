@@ -161,7 +161,7 @@ public class FunctionCallingChat : IAsyncDisposable
             {
                 // User cancelled function call - exit streaming entirely and return control to user
                 _functionCallDetector.Clear();
-                return contentToReturn; // Exit the streaming loop, return to ChatCommand for user prompt
+                return ""; // Empty response - will show blank Assistant line
             }
 
             return contentToReturn;
@@ -210,13 +210,28 @@ public class FunctionCallingChat : IAsyncDisposable
         }
         catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
         {
-            // User wants to regain control - add cancellation message
-            // Don't add the original assistant message again - it was already added in TryCallFunctions
-            var cancelMessage = "Function call cancelled by user - returning to conversation.";
-            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, cancelMessage));
+            // User wants to regain control - simulate the same callback pattern as approve/deny
+            var functionResultContents = new List<AIContent>();
+            
+            // For each cancelled function call, replicate the exact approve/deny callback pattern
+            foreach (var functionCall in readyToCallFunctionCalls)
+            {
+                // First callback: null result (shows "...")
+                functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
+                
+                // Second callback: actual result (shows cancellation message)  
+                var cancelResult = ChatCommand.CallDeniedMessage;
+                functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, cancelResult);
+                
+                // Create the FunctionResultContent for the Tool message
+                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, cancelResult));
+            }
+            
+            // Add Tool message (same pattern as normal flow)
+            Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, functionResultContents));
             messageCallback?.Invoke(Conversation.Messages);
             
-            // Re-throw so the main loop knows to skip adding the assistant message
+            // Re-throw so the main loop knows to exit
             throw;
         }
 
@@ -303,7 +318,7 @@ public class FunctionCallingChat : IAsyncDisposable
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
 
         ConsoleHelpers.WriteDebugLine($"Function call not approved: {functionCall.Name} with arguments: {functionCall.Arguments}");
-        var functionResult = "User did not approve function call";
+        var functionResult = ChatCommand.CallDeniedMessage;
 
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
 

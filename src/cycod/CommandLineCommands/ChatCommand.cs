@@ -22,6 +22,9 @@ public class UserWantsControlException : Exception
 
 public class ChatCommand : CommandWithVariables
 {
+    // Public constant for function call cancellation message
+    public const string CallDeniedMessage = "User did not approve function call";
+    
     public ChatCommand()
     {
     }
@@ -938,7 +941,7 @@ public class ChatCommand : CommandWithVariables
             }
             else if (key?.Key == ConsoleKey.Escape)
             {
-                ConsoleHelpers.WriteLine($"\b\b\b\b Cancelled - returning control to user", ConsoleColor.Yellow);
+                ConsoleHelpers.WriteLine($"\b\b\b\b Cancelled", ConsoleColor.Yellow);
                 return FunctionCallDecision.UserWantsControl;
             }
             else if (key?.KeyChar == '?')
@@ -964,6 +967,11 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleFunctionCallCompleted(string name, string args, object? result)
     {
+        // Track if this is a cancellation for other logic
+        var isCancellation = result?.ToString() == CallDeniedMessage;
+        _lastFunctionCallWasCancelled = isCancellation;
+        
+        // Always use normal flow - let DisplayAssistantLabel() be called even for cancellation
         DisplayAssistantFunctionCall(name, args, result);
     }
 
@@ -1394,6 +1402,9 @@ public class ChatCommand : CommandWithVariables
     private string _displayBuffer = ""; // Track last displayed content for accurate saving
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
     private const int DisplayBufferSize = 50; // Track last 50 characters displayed
+    
+    // Function call cancellation tracking
+    private bool _lastFunctionCallWasCancelled = false;
 
 
 }
