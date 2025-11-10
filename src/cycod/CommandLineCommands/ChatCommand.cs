@@ -3,6 +3,23 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 
+public enum FunctionCallDecision 
+{ 
+    Approved, 
+    Denied, 
+    UserWantsControl 
+}
+
+public class UserWantsControlException : Exception
+{
+    public bool AssistantMessageAlreadyAdded { get; }
+    
+    public UserWantsControlException(bool assistantMessageAlreadyAdded = false) : base("User requested control") 
+    { 
+        AssistantMessageAlreadyAdded = assistantMessageAlreadyAdded;
+    }
+}
+
 public class ChatCommand : CommandWithVariables
 {
     public ChatCommand()
@@ -185,7 +202,7 @@ public class ChatCommand : CommandWithVariables
                 var response = await CompleteChatStreamingAsyncWithInterruptPolling(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
-                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
+                    (name, args) => ConvertFunctionCallDecision(HandleFunctionCallApproval(factory, name, args!)),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
 
 
@@ -861,14 +878,25 @@ public class ChatCommand : CommandWithVariables
         }
     }
 
-    private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
+    private bool ConvertFunctionCallDecision(FunctionCallDecision decision)
+    {
+        return decision switch
+        {
+            FunctionCallDecision.Approved => true,
+            FunctionCallDecision.Denied => false,
+            FunctionCallDecision.UserWantsControl => throw new UserWantsControlException(),
+            _ => false
+        };
+    }
+
+    private FunctionCallDecision HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
     {
         Logger.Info($"HandleFunctionCallApproval: Function '{name}' called with args: {args}");
         
         var autoApprove = ShouldAutoApprove(factory, name);
         Logger.Info($"HandleFunctionCallApproval: Auto-approve result for '{name}': {autoApprove}");
         
-        if (autoApprove) return true;
+        if (autoApprove) return FunctionCallDecision.Approved;
 
         while (true)
         {
@@ -890,23 +918,28 @@ public class ChatCommand : CommandWithVariables
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Approved (session)", ConsoleColor.Yellow);
                 _approvedFunctionCallNames.Add(name);
-                return true;
+                return FunctionCallDecision.Approved;
             }
             else if (key == null || key?.KeyChar == 'N')
             {
                 _deniedFunctionCallNames.Add(name);
                 ConsoleHelpers.WriteLine($"\b\b\b\b Declined (session)", ConsoleColor.Red);
-                return false;
+                return FunctionCallDecision.Denied;
             }
             else if (key?.KeyChar == 'y')
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Approved (once)", ConsoleColor.Yellow);
-                return true;
+                return FunctionCallDecision.Approved;
             }
             else if (key?.KeyChar == 'n')
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Declined (once)", ConsoleColor.Red);
-                return false;
+                return FunctionCallDecision.Denied;
+            }
+            else if (key?.Key == ConsoleKey.Escape)
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Cancelled - returning control to user", ConsoleColor.Yellow);
+                return FunctionCallDecision.UserWantsControl;
             }
             else if (key?.KeyChar == '?')
             {
@@ -916,6 +949,7 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteLine("  y: Approve this function call for this one time");
                 ConsoleHelpers.WriteLine("  N: Decline this function call for this session");
                 ConsoleHelpers.WriteLine("  n: Decline this function call for this one time");
+                ConsoleHelpers.WriteLine("  ESC: Cancel function call and return to conversation");
                 ConsoleHelpers.WriteLine("  ?: Show this help message\n");
                 ConsoleHelpers.Write("  See ");
                 ConsoleHelpers.Write("cycod help function calls", ConsoleColor.Yellow);

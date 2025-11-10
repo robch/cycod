@@ -146,14 +146,23 @@ public class FunctionCallingChat : IAsyncDisposable
                 throw;
             }
 
-            if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
+            try
             {
-                _functionCallDetector.Clear();
-                continue;
-            }
+                if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
+                {
+                    _functionCallDetector.Clear();
+                    continue;
+                }
 
-            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
-            messageCallback?.Invoke(Conversation.Messages);
+                Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
+                messageCallback?.Invoke(Conversation.Messages);
+            }
+            catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+            {
+                // User cancelled function call - exit streaming entirely and return control to user
+                _functionCallDetector.Clear();
+                return contentToReturn; // Exit the streaming loop, return to ChatCommand for user prompt
+            }
 
             return contentToReturn;
         }
@@ -194,7 +203,22 @@ public class FunctionCallingChat : IAsyncDisposable
         Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
         messageCallback?.Invoke(Conversation.Messages);
 
-        var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
+        List<AIContent> functionCallResults;
+        try
+        {
+            functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
+        }
+        catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+        {
+            // User wants to regain control - add cancellation message
+            // Don't add the original assistant message again - it was already added in TryCallFunctions
+            var cancelMessage = "Function call cancelled by user - returning to conversation.";
+            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, cancelMessage));
+            messageCallback?.Invoke(Conversation.Messages);
+            
+            // Re-throw so the main loop knows to skip adding the assistant message
+            throw;
+        }
 
         var attachToToolMessage = functionCallResults
             .Where(c => c is FunctionResultContent)
@@ -229,7 +253,16 @@ public class FunctionCallingChat : IAsyncDisposable
         var functionResultContents = new List<AIContent>();
         foreach (var functionCall in readyToCallFunctionCalls)
         {
-            var approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
+            bool approved;
+            try
+            {
+                approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
+            }
+            catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+            {
+                // Re-throw so TryCallFunctions can handle it
+                throw;
+            }
 
             var functionResult = approved
                 ? CallFunction(functionCall, functionCallCallback)
