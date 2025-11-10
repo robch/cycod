@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using System.Threading;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -60,7 +61,8 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null,
+        CancellationToken cancellationToken = default)
     {
         return await CompleteChatStreamingAsync(
             userPrompt, 
@@ -68,7 +70,8 @@ public class FunctionCallingChat : IAsyncDisposable
             messageCallback, 
             streamingCallback, 
             approveFunctionCall, 
-            functionCallCallback);
+            functionCallCallback,
+            cancellationToken);
     }
 
     public async Task<string> CompleteChatStreamingAsync(
@@ -77,7 +80,8 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null,
+        CancellationToken cancellationToken = default)
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
         
@@ -88,8 +92,11 @@ public class FunctionCallingChat : IAsyncDisposable
         while (true)
         {
             var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options, cancellationToken))
             {
+                // Check for cancellation before processing each update
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 _functionCallDetector.CheckForFunctionCall(update);
 
                 var content = string.Join("", update.Contents

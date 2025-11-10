@@ -188,6 +188,7 @@ public class ChatCommand : CommandWithVariables
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
                     (name, args, result) => HandleFunctionCallCompleted(name, args, result));
 
+
                 // Check for notifications that may have been generated during the assistant's response
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
                 if (chat.Notifications.HasPending())
@@ -507,21 +508,40 @@ public class ChatCommand : CommandWithVariables
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
 
+        // Create a new cancellation token source for this streaming session
+        _interruptTokenSource = new CancellationTokenSource();
+        _lastEscKeyTime = null; // Reset ESC tracking
+        _suppressAssistantDisplay = false; // Reset display suppression
+
         try
         {
             var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
-                (name, args, result) => functionCallCallback?.Invoke(name, args, result));
+                (name, args, result) => functionCallCallback?.Invoke(name, args, result),
+                _interruptTokenSource.Token);
 
             return response;
+        }
+        catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
+        {
+            // Handle graceful interruption - show em dash to indicate user interruption
+            ConsoleHelpers.Write("—", ConsoleColor.Yellow);
+            return "";
         }
         catch (Exception ex)
         {
             ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
             SaveExceptionHistory(chat);
             throw;
+        }
+        finally
+        {
+            // Clean up the cancellation token source and reset state
+            _interruptTokenSource?.Dispose();
+            _interruptTokenSource = null;
+            _suppressAssistantDisplay = false;
         }
     }
 
@@ -716,6 +736,15 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
+        // Check for ESC key presses before processing any content
+        CheckForDoubleEscapeInterrupt();
+        
+        // If display is suppressed due to cancellation, don't display anything
+        if (_suppressAssistantDisplay)
+        {
+            return;
+        }
+        
         var usageUpdate = update.Contents
             .Where(x => x is UsageContent)
             .Cast<UsageContent>()
@@ -738,6 +767,40 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
+    }
+
+    private void CheckForDoubleEscapeInterrupt()
+    {
+        // Only check for ESC if console input is not redirected and we're in an interactive session
+        if (Console.IsInputRedirected || !Console.KeyAvailable)
+            return;
+
+        // Check if there are any keys available
+        while (Console.KeyAvailable)
+        {
+            var keyInfo = Console.ReadKey(true); // Read key without displaying it
+            
+            if (keyInfo.Key == ConsoleKey.Escape)
+            {
+                var currentTime = DateTime.UtcNow;
+                
+                if (_lastEscKeyTime.HasValue && 
+                    (currentTime - _lastEscKeyTime.Value).TotalMilliseconds <= DoubleEscTimeoutMs)
+                {
+                    // Double ESC detected - suppress further display and show interruption indicator
+                    _suppressAssistantDisplay = true;
+                    _interruptTokenSource?.Cancel();
+                    return;
+                }
+                
+                _lastEscKeyTime = currentTime;
+            }
+            else
+            {
+                // Reset ESC tracking if any other key is pressed
+                _lastEscKeyTime = null;
+            }
+        }
     }
 
     private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
@@ -1231,6 +1294,12 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+    
+    // Double-ESC interrupt tracking
+    private DateTime? _lastEscKeyTime = null;
+    private CancellationTokenSource? _interruptTokenSource = null;
+    private bool _suppressAssistantDisplay = false;
+    private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
 
 
 }
