@@ -92,28 +92,43 @@ public class FunctionCallingChat : IAsyncDisposable
         while (true)
         {
             var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options, cancellationToken))
+            
+            try
             {
-                // Check for cancellation before processing each update
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                _functionCallDetector.CheckForFunctionCall(update);
-
-                var content = string.Join("", update.Contents
-                    .Where(c => c is TextContent)
-                    .Cast<TextContent>()
-                    .Select(c => c.Text)
-                    .ToList());
-
-                if (update.FinishReason == ChatFinishReason.ContentFilter)
+                await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options, cancellationToken))
                 {
-                    content = $"{content}\nWARNING: Content filtered!";
+                    // Check for cancellation before processing each update
+                    cancellationToken.ThrowIfCancellationRequested();
+                    
+                    _functionCallDetector.CheckForFunctionCall(update);
+
+                    var content = string.Join("", update.Contents
+                        .Where(c => c is TextContent)
+                        .Cast<TextContent>()
+                        .Select(c => c.Text)
+                        .ToList());
+
+                    if (update.FinishReason == ChatFinishReason.ContentFilter)
+                    {
+                        content = $"{content}\nWARNING: Content filtered!";
+                    }
+
+                    responseContent += content;
+                    contentToReturn += content;
+
+                    streamingCallback?.Invoke(update);
                 }
-
-                responseContent += content;
-                contentToReturn += content;
-
-                streamingCallback?.Invoke(update);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // User interrupted - save the partial response (without em dash for now)
+                if (!string.IsNullOrEmpty(contentToReturn))
+                {
+                    Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, contentToReturn));
+                    messageCallback?.Invoke(Conversation.Messages);
+                }
+                // Re-throw so ChatCommand can handle the display
+                throw;
             }
 
             if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))

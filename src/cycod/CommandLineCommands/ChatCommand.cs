@@ -526,8 +526,8 @@ public class ChatCommand : CommandWithVariables
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
         {
-            // Handle graceful interruption - show em dash to indicate user interruption
-            ConsoleHelpers.Write("—", ConsoleColor.Yellow);
+            // Handle graceful interruption - show yellow em dash and save partial content
+            ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
             return "";
         }
         catch (Exception ex)
