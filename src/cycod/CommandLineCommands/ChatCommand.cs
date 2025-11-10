@@ -3,27 +3,27 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 
-public enum FunctionCallDecision 
-{ 
-    Approved, 
-    Denied, 
-    UserWantsControl 
-}
-
-public class UserWantsControlException : Exception
-{
-    public bool AssistantMessageAlreadyAdded { get; }
-    
-    public UserWantsControlException(bool assistantMessageAlreadyAdded = false) : base("User requested control") 
-    { 
-        AssistantMessageAlreadyAdded = assistantMessageAlreadyAdded;
-    }
-}
-
 public class ChatCommand : CommandWithVariables
 {
-    // Public constant for function call cancellation message
+    // Public constants for function call results
     public const string CallDeniedMessage = "User did not approve function call";
+    public const string CancelledFunctionResultMessage = "User did not approve function call";
+    
+    // Function call decision enum
+    public enum FunctionCallDecision 
+    { 
+        Approved, 
+        Denied, 
+        UserWantsControl 
+    }
+    
+    // Inner exception class for user control requests
+    public class UserWantsControlException : Exception
+    {
+        public UserWantsControlException() : base("User requested control") 
+        { 
+        }
+    }
     
     public ChatCommand()
     {
@@ -206,7 +206,7 @@ public class ChatCommand : CommandWithVariables
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => ConvertFunctionCallDecision(HandleFunctionCallApproval(factory, name, args!)),
-                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                    (name, args, result) => DisplayAssistantFunctionCall(name, args, result));
 
 
                 // Check for notifications that may have been generated during the assistant's response
@@ -597,7 +597,6 @@ public class ChatCommand : CommandWithVariables
                 }
                 catch (OperationCanceledException) 
                 {
-                    // Expected - streaming was cancelled, ignore
                 }
                 return "";
             }
@@ -842,7 +841,7 @@ public class ChatCommand : CommandWithVariables
         // Check if there are any keys available
         while (Console.KeyAvailable)
         {
-            var keyInfo = Console.ReadKey(true); // Read key without displaying it
+            var keyInfo = Console.ReadKey(true);
             
             if (keyInfo.Key == ConsoleKey.Escape)
             {
@@ -963,16 +962,6 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteLine($"\b\b\b\b Invalid input", ConsoleColor.Red);
             }
         }
-    }
-
-    private void HandleFunctionCallCompleted(string name, string args, object? result)
-    {
-        // Track if this is a cancellation for other logic
-        var isCancellation = result?.ToString() == CallDeniedMessage;
-        _lastFunctionCallWasCancelled = isCancellation;
-        
-        // Always use normal flow - let DisplayAssistantLabel() be called even for cancellation
-        DisplayAssistantFunctionCall(name, args, result);
     }
 
     private void DisplayUserPrompt()
@@ -1403,8 +1392,7 @@ public class ChatCommand : CommandWithVariables
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
     private const int DisplayBufferSize = 50; // Track last 50 characters displayed
     
-    // Function call cancellation tracking
-    private bool _lastFunctionCallWasCancelled = false;
+
 
 
 }

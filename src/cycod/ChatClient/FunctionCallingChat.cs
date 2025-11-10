@@ -130,11 +130,10 @@ public class FunctionCallingChat : IAsyncDisposable
                 if (string.IsNullOrEmpty(displayBuffer))
                 {
                     // No content was displayed, don't add any message
-                    // (This handles issue #1 - early interrupt before any text shown)
                 }
                 else if (!string.IsNullOrEmpty(contentToReturn))
                 {
-                    // Trim contentToReturn to match displayBuffer (handles issue #2)
+                    // Trim saved content to match what user actually saw
                     var trimmedContent = TrimContentToDisplayBuffer(contentToReturn, displayBuffer);
                     if (!string.IsNullOrEmpty(trimmedContent))
                     {
@@ -142,7 +141,6 @@ public class FunctionCallingChat : IAsyncDisposable
                         messageCallback?.Invoke(Conversation.Messages);
                     }
                 }
-                // Re-throw so ChatCommand can handle the display
                 throw;
             }
 
@@ -157,7 +155,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
                 messageCallback?.Invoke(Conversation.Messages);
             }
-            catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+            catch (ChatCommand.UserWantsControlException)
             {
                 // User cancelled function call - exit streaming entirely and return control to user
                 _functionCallDetector.Clear();
@@ -208,7 +206,7 @@ public class FunctionCallingChat : IAsyncDisposable
         {
             functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
         }
-        catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+        catch (ChatCommand.UserWantsControlException)
         {
             // User wants to regain control - simulate the same callback pattern as approve/deny
             var functionResultContents = new List<AIContent>();
@@ -220,7 +218,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
                 
                 // Second callback: actual result (shows cancellation message)  
-                var cancelResult = ChatCommand.CallDeniedMessage;
+                var cancelResult = ChatCommand.CancelledFunctionResultMessage;
                 functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, cancelResult);
                 
                 // Create the FunctionResultContent for the Tool message
@@ -273,7 +271,7 @@ public class FunctionCallingChat : IAsyncDisposable
             {
                 approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
             }
-            catch (Exception ex) when (ex.GetType().Name == "UserWantsControlException")
+            catch (ChatCommand.UserWantsControlException)
             {
                 // Re-throw so TryCallFunctions can handle it
                 throw;
