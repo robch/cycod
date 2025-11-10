@@ -182,7 +182,7 @@ public class ChatCommand : CommandWithVariables
                 var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
                 ImagePatterns.Clear();
 
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
+                var response = await CompleteChatStreamingAsyncWithInterruptPolling(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
@@ -528,9 +528,7 @@ public class ChatCommand : CommandWithVariables
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
         {
-            // Handle graceful interruption - show yellow em dash (trimming now handled in FunctionCallingChat)
-            ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
-            _isDisplayingAssistantResponse = false;
+            // Interruption handled by polling - just return empty (no message display needed)
             return "";
         }
         catch (Exception ex)
@@ -545,9 +543,50 @@ public class ChatCommand : CommandWithVariables
             _interruptTokenSource?.Dispose();
             _interruptTokenSource = null;
             _suppressAssistantDisplay = false;
-            _isDisplayingAssistantResponse = false;
             _displayBuffer = "";
         }
+    }
+
+    private async Task<string> CompleteChatStreamingAsyncWithInterruptPolling(
+        FunctionCallingChat chat,
+        string userPrompt,
+        IEnumerable<string> imageFiles,
+        Action<IList<ChatMessage>>? messageCallback = null,
+        Action<ChatResponseUpdate>? streamingCallback = null,
+        Func<string, string?, bool>? approveFunctionCall = null,
+        Action<string, string, object?>? functionCallCallback = null)
+    {
+        // Start the AI streaming task
+        var streamingTask = CompleteChatStreamingAsync(chat, userPrompt, imageFiles, messageCallback, streamingCallback, approveFunctionCall, functionCallCallback);
+        
+        // Poll for interrupts throughout the entire streaming at AI token frequency
+        const int pollIntervalMs = 50; // Same frequency as typical AI token arrival
+        
+        while (!streamingTask.IsCompleted)
+        {
+            CheckForDoubleEscapeInterrupt();
+            if (_interruptTokenSource?.Token.IsCancellationRequested == true)
+            {
+                // Interrupt detected during polling - handle immediately
+                ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
+                
+                // Properly cancel and await the streaming task to prevent duplicate messages
+                try 
+                {
+                    await streamingTask; // This will hit the catch block but won't display message again
+                }
+                catch (OperationCanceledException) 
+                {
+                    // Expected - streaming was cancelled, ignore
+                }
+                return "";
+            }
+            
+            await Task.Delay(pollIntervalMs);
+        }
+        
+        // Either streaming started or polling timed out - return the streaming result
+        return await streamingTask;
     }
 
     private string? ReadLineOrSimulateInput(List<string> inputInstructions, string? defaultOnEndOfInput = null)
@@ -741,9 +780,6 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
-        // Check for ESC key presses before processing any content
-        CheckForDoubleEscapeInterrupt();
-        
         // If display is suppressed due to cancellation, don't display anything
         if (_suppressAssistantDisplay)
         {
@@ -1320,7 +1356,6 @@ public class ChatCommand : CommandWithVariables
     // Double-ESC interrupt tracking
     private DateTime? _lastEscKeyTime = null;
     private CancellationTokenSource? _interruptTokenSource = null;
-    private bool _isDisplayingAssistantResponse = false;
     private bool _suppressAssistantDisplay = false;
     private string _displayBuffer = ""; // Track last displayed content for accurate saving
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
