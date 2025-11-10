@@ -62,7 +62,8 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
         Action<string, string, object?>? functionCallCallback = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Func<string>? getDisplayBuffer = null)
     {
         return await CompleteChatStreamingAsync(
             userPrompt, 
@@ -71,7 +72,8 @@ public class FunctionCallingChat : IAsyncDisposable
             streamingCallback, 
             approveFunctionCall, 
             functionCallCallback,
-            cancellationToken);
+            cancellationToken,
+            getDisplayBuffer);
     }
 
     public async Task<string> CompleteChatStreamingAsync(
@@ -81,7 +83,8 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
         Action<string, string, object?>? functionCallCallback = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Func<string>? getDisplayBuffer = null)
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
         
@@ -121,11 +124,23 @@ public class FunctionCallingChat : IAsyncDisposable
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                // User interrupted - save the partial response (without em dash for now)
-                if (!string.IsNullOrEmpty(contentToReturn))
+                // User interrupted - trim content to match what was actually displayed
+                var displayBuffer = getDisplayBuffer?.Invoke() ?? "";
+                
+                if (string.IsNullOrEmpty(displayBuffer))
                 {
-                    Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, contentToReturn));
-                    messageCallback?.Invoke(Conversation.Messages);
+                    // No content was displayed, don't add any message
+                    // (This handles issue #1 - early interrupt before any text shown)
+                }
+                else if (!string.IsNullOrEmpty(contentToReturn))
+                {
+                    // Trim contentToReturn to match displayBuffer (handles issue #2)
+                    var trimmedContent = TrimContentToDisplayBuffer(contentToReturn, displayBuffer);
+                    if (!string.IsNullOrEmpty(trimmedContent))
+                    {
+                        Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, trimmedContent));
+                        messageCallback?.Invoke(Conversation.Messages);
+                    }
                 }
                 // Re-throw so ChatCommand can handle the display
                 throw;
@@ -142,6 +157,24 @@ public class FunctionCallingChat : IAsyncDisposable
 
             return contentToReturn;
         }
+    }
+
+    private string TrimContentToDisplayBuffer(string fullContent, string displayBuffer)
+    {
+        if (string.IsNullOrEmpty(displayBuffer) || string.IsNullOrEmpty(fullContent))
+            return "";
+
+        // Find where the display buffer content appears in the full content
+        var displayBufferIndex = fullContent.LastIndexOf(displayBuffer);
+        if (displayBufferIndex >= 0)
+        {
+            // Trim to end where display buffer ends
+            return fullContent.Substring(0, displayBufferIndex + displayBuffer.Length);
+        }
+
+        // If we can't find the display buffer in the content, return the display buffer
+        // This handles edge cases where the content might have been modified
+        return displayBuffer;
     }
 
     private bool TryCallFunctions(string responseContent, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)

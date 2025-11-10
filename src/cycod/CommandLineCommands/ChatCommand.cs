@@ -512,6 +512,7 @@ public class ChatCommand : CommandWithVariables
         _interruptTokenSource = new CancellationTokenSource();
         _lastEscKeyTime = null; // Reset ESC tracking
         _suppressAssistantDisplay = false; // Reset display suppression
+        _displayBuffer = ""; // Reset display buffer for new response
 
         try
         {
@@ -520,14 +521,16 @@ public class ChatCommand : CommandWithVariables
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
                 (name, args, result) => functionCallCallback?.Invoke(name, args, result),
-                _interruptTokenSource.Token);
+                _interruptTokenSource.Token,
+                () => _displayBuffer);
 
             return response;
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
         {
-            // Handle graceful interruption - show yellow em dash and save partial content
+            // Handle graceful interruption - show yellow em dash (trimming now handled in FunctionCallingChat)
             ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
+            _isDisplayingAssistantResponse = false;
             return "";
         }
         catch (Exception ex)
@@ -542,6 +545,8 @@ public class ChatCommand : CommandWithVariables
             _interruptTokenSource?.Dispose();
             _interruptTokenSource = null;
             _suppressAssistantDisplay = false;
+            _isDisplayingAssistantResponse = false;
+            _displayBuffer = "";
         }
     }
 
@@ -767,6 +772,9 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
+        
+        // Track displayed content for accurate interrupt saving
+        UpdateDisplayBuffer(text);
     }
 
     private void CheckForDoubleEscapeInterrupt()
@@ -800,6 +808,20 @@ public class ChatCommand : CommandWithVariables
                 // Reset ESC tracking if any other key is pressed
                 _lastEscKeyTime = null;
             }
+        }
+    }
+
+    private void UpdateDisplayBuffer(string displayedText)
+    {
+        if (string.IsNullOrEmpty(displayedText))
+            return;
+            
+        _displayBuffer += displayedText;
+        
+        // Keep only the last DisplayBufferSize characters
+        if (_displayBuffer.Length > DisplayBufferSize)
+        {
+            _displayBuffer = _displayBuffer.Substring(_displayBuffer.Length - DisplayBufferSize);
         }
     }
 
@@ -1298,8 +1320,11 @@ public class ChatCommand : CommandWithVariables
     // Double-ESC interrupt tracking
     private DateTime? _lastEscKeyTime = null;
     private CancellationTokenSource? _interruptTokenSource = null;
+    private bool _isDisplayingAssistantResponse = false;
     private bool _suppressAssistantDisplay = false;
+    private string _displayBuffer = ""; // Track last displayed content for accurate saving
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
+    private const int DisplayBufferSize = 50; // Track last 50 characters displayed
 
 
 }
