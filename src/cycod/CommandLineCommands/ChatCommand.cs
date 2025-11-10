@@ -1377,9 +1377,5 @@ public class ChatCommand : CommandWithVariables
     private string _displayBuffer = ""; // Track last displayed content for accurate saving
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
     private const int DisplayBufferSize = 50; // Track last 50 characters displayed
-    
-
-
-
 }
 
