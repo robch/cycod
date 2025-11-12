@@ -272,11 +272,14 @@ public class ConsoleHelpers
     public static void DisplayAssistantFunctionCall(string name, string args, object? result)
     {
         Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
-        
-        if (result == null) Write("...", ConsoleColor.DarkGray);
-        if (result != null)
+
+        if (result == null)
         {
-            var text = result as String ?? "non-string result";
+            Write("...", ConsoleColor.DarkGray);
+        }
+        else
+        {
+            var text = result as string ?? "non-string result";
             WriteLine(text, ConsoleColor.DarkGray);
         }
     }

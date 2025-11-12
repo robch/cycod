@@ -8,6 +8,10 @@ using System.Text;
 public static class TitleGenerationHelpers
 {
     /// <summary>
+    /// CycodMD CLI wrapper instance for executing title generation commands.
+    /// </summary>
+    private static readonly CycoDmdCliWrapper _cycoDmdWrapper = new CycoDmdCliWrapper();
+    /// <summary>
     /// Default system prompt for title generation.
     /// </summary>
     private const string DefaultSystemPrompt = "Generate a concise title for this conversation (3-5 words). No markdown formatting allowed. Only return the title text. Do not explain your thought process in any way. Simply return the title.";
@@ -42,7 +46,6 @@ public static class TitleGenerationHelpers
         }
 
         var environmentBackup = SetupEnvironmentForTitleGeneration();
-        string? tempFilePath = null;
 
         try
         {
@@ -61,34 +64,17 @@ public static class TitleGenerationHelpers
                 return null;
             }
             
-            // Create temp file with filtered content
-            tempFilePath = Path.GetTempFileName();
-            await File.WriteAllTextAsync(tempFilePath, filteredContent);
-            
-            ConsoleHelpers.WriteDebugLine($"Created temp file for title generation: {tempFilePath}");
+            ConsoleHelpers.WriteDebugLine($"Generated filtered content for title generation ({filteredContent.Length} characters)");
             
             // Use provided prompt or default
             var prompt = systemPrompt ?? DefaultSystemPrompt;
             
-            // Convert to bash-compatible path
-            var bashPath = tempFilePath.Replace("\\", "/");
+            ConsoleHelpers.WriteDebugLine($"Executing title generation using CycoDmdCliWrapper");
+            var generatedTitle = await _cycoDmdWrapper.ExecuteGenerateTitleCommand(filteredContent, prompt, TitleGenerationTimeoutMs);
             
-            // Since we're using BashShellSession, always use bash commands
-            var command = $"cat \"{bashPath}\" | cycodmd - --instructions \"{prompt}\"";
-
-            ConsoleHelpers.WriteDebugLine($"Executing title generation command: {command}");
-            var result = await BashShellSession.Instance.ExecuteCommandAsync(command, timeoutMs: TitleGenerationTimeoutMs);
+            ConsoleHelpers.WriteDebugLine($"Raw title result: '{generatedTitle}'");
             
-            if (result.ExitCode != 0)
-            {
-                ConsoleHelpers.WriteDebugLine($"Title generation command failed with exit code {result.ExitCode}: {result.StandardError}");
-                return null;
-            }
-
-            var title = result.MergedOutput?.Trim();
-            ConsoleHelpers.WriteDebugLine($"Raw title result: '{title}'");
-            
-            return string.IsNullOrEmpty(title) ? null : SanitizeTitle(title);
+            return string.IsNullOrEmpty(generatedTitle) ? null : SanitizeTitle(generatedTitle);
         }
         catch (Exception ex)
         {
@@ -97,7 +83,7 @@ public static class TitleGenerationHelpers
         }
         finally
         {
-            CleanupTitleGeneration(tempFilePath, environmentBackup);
+            RestoreEnvironmentForTitleGeneration(environmentBackup);
         }
     }
 
@@ -395,26 +381,11 @@ public static class TitleGenerationHelpers
     }
 
     /// <summary>
-    /// Cleans up temp files and restores original environment variables.
+    /// Restores original environment variables after title generation.
     /// </summary>
-    /// <param name="tempFilePath">Temp file to delete, if any</param>
     /// <param name="environmentBackup">Environment variables to restore</param>
-    private static void CleanupTitleGeneration(string? tempFilePath, EnvironmentBackup environmentBackup)
+    private static void RestoreEnvironmentForTitleGeneration(EnvironmentBackup environmentBackup)
     {
-        // Clean up temp file
-        if (tempFilePath != null && File.Exists(tempFilePath))
-        {
-            try
-            {
-                File.Delete(tempFilePath);
-                ConsoleHelpers.WriteDebugLine($"Cleaned up temp file: {tempFilePath}");
-            }
-            catch (Exception ex)
-            {
-                ConsoleHelpers.WriteDebugLine($"Warning: Failed to delete temp file {tempFilePath}: {ex.Message}");
-            }
-        }
-        
         // Restore original environment variables
         foreach (var kvp in environmentBackup.OriginalValues)
         {
