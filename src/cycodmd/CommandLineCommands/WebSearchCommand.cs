@@ -32,6 +32,12 @@ class WebSearchCommand : WebCommand
             StripHtml = true;
         }
 
+        // If readability is enabled, automatically enable content getting
+        if (UseReadability && !GetContent)
+        {
+            GetContent = true;
+        }
+
         return this;
     }
 }

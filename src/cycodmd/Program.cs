@@ -235,6 +235,7 @@ class Program
         var excludeURLContainsPatternList = command.ExcludeURLContainsPatternList;
         var getContent = command.GetContent;
         var stripHtml = command.StripHtml;
+        var useReadability = command.UseReadability;
         var saveToFolder = command.SaveFolder;
         var browserType = command.Browser;
         var interactive = command.Interactive;
@@ -271,7 +272,7 @@ class Program
 
         foreach (var url in urls)
         {
-            var getCheckSaveTask = GetCheckSaveWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory, savePageOutput);
+            var getCheckSaveTask = GetCheckSaveWebPageContentAsync(url, stripHtml, useReadability, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory, savePageOutput);
             var taskToAdd = delayOutputToApplyInstructions
                 ? getCheckSaveTask
                 : getCheckSaveTask.ContinueWith(t =>
@@ -290,6 +291,7 @@ class Program
     {
         var urls = command.Urls;
         var stripHtml = command.StripHtml;
+        var useReadability = command.UseReadability;
         var saveToFolder = command.SaveFolder;
         var browserType = command.Browser;
         var interactive = command.Interactive;
@@ -310,7 +312,7 @@ class Program
         var tasks = new List<Task<string>>();
         foreach (var url in urls)
         {
-            var getCheckSaveTask = GetCheckSaveWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory, savePageOutput);
+            var getCheckSaveTask = GetCheckSaveWebPageContentAsync(url, stripHtml, useReadability, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory, savePageOutput);
             var taskToAdd = delayOutputToApplyInstructions
                 ? getCheckSaveTask
                 : getCheckSaveTask.ContinueWith(t =>
@@ -702,12 +704,12 @@ class Program
         return string.Join("\n", output);
     }
 
-    private static async Task<string> GetCheckSaveWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? savePageOutput)
+    private static async Task<string> GetCheckSaveWebPageContentAsync(string url, bool stripHtml, bool useReadability, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? savePageOutput)
     {
         try
         {
             ConsoleHelpers.DisplayStatus($"Processing: {url} ...");
-            var finalContent = await GetFinalWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory);
+            var finalContent = await GetFinalWebPageContentAsync(url, stripHtml, useReadability, saveToFolder, browserType, interactive, pageInstructionsList, useBuiltInFunctions, saveChatHistory);
 
             if (!string.IsNullOrEmpty(savePageOutput))
             {
@@ -725,9 +727,9 @@ class Program
         }
     }
 
-    private static async Task<string> GetFinalWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
+    private static async Task<string> GetFinalWebPageContentAsync(string url, bool stripHtml, bool useReadability, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory)
     {
-        var formatted = await GetFormattedWebPageContentAsync(url, stripHtml, saveToFolder, browserType, interactive);
+        var formatted = await GetFormattedWebPageContentAsync(url, stripHtml, useReadability, saveToFolder, browserType, interactive);
 
         var instructionsForThisPage = pageInstructionsList
             .Where(x => WebPageMatchesInstructionsCriteria(url, x.Item2))
@@ -748,11 +750,11 @@ class Program
             url == webPageCriteria;
     }
 
-    private static async Task<string> GetFormattedWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive)
+    private static async Task<string> GetFormattedWebPageContentAsync(string url, bool stripHtml, bool useReadability, string? saveToFolder, BrowserType browserType, bool interactive)
     {
         try
         {
-            var (content, title) = await PlaywrightHelpers.GetPageAndTitle(url, stripHtml, saveToFolder, browserType, interactive);
+            var (content, title) = await PlaywrightHelpers.GetPageAndTitle(url, stripHtml, useReadability, saveToFolder, browserType, interactive);
 
             var sb = new StringBuilder();
             sb.AppendLine($"## {title}\n");

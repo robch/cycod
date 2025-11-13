@@ -312,6 +312,10 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         {
             command.StripHtml = true;
         }
+        else if (arg == "--readability")
+        {
+            command.UseReadability = true;
+        }
         else if (arg == "--save-page-folder")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, 1);

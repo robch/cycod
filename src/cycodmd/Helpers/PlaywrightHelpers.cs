@@ -48,7 +48,7 @@ class PlaywrightHelpers
         return urls;
     }
 
-    public static async Task<(string, string)> GetPageAndTitle(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive)
+    public static async Task<(string, string)> GetPageAndTitle(string url, bool stripHtml, bool useReadability, string? saveToFolder, BrowserType browserType, bool interactive)
     {
         // Initialize Playwright
         using var playwright = await Playwright.CreateAsync();
@@ -60,7 +60,7 @@ class PlaywrightHelpers
         await page.GotoAsync(url);
 
         // Fetch the page content and title
-        var content = await FetchPageContent(page, url, stripHtml, saveToFolder);
+        var content = await FetchPageContent(page, url, stripHtml, useReadability, saveToFolder);
         var title = await page.TitleAsync();
 
         // Return the content and title
@@ -242,7 +242,7 @@ class PlaywrightHelpers
         }
     }
 
-    private static async Task<string> FetchPageContent(IPage page, string url, bool stripHtml, string? saveToFolder)
+    private static async Task<string> FetchPageContent(IPage page, string url, bool stripHtml, bool useReadability, string? saveToFolder)
     {
         try
         {
@@ -250,14 +250,22 @@ class PlaywrightHelpers
             await page.GotoAsync(url);
 
             // Get the main content text
-            var content = await FetchPageContentWithRetries(page);
+            string content;
+            if (useReadability)
+            {
+                content = await FetchPageContentWithReadability(page);
+            }
+            else
+            {
+                content = await FetchPageContentWithRetries(page);
+            }
 
             if (content.Contains("Rate limit is exceeded. Try again in"))
             {
                 // Rate limit exceeded, wait and try again
                 var seconds = int.Parse(content.Split("Try again in ")[1].Split(" seconds.")[0]);
                 await Task.Delay(seconds * 1000);
-                return await FetchPageContent(page, url, stripHtml, saveToFolder);
+                return await FetchPageContent(page, url, stripHtml, useReadability, saveToFolder);
             }
 
             if (stripHtml)
@@ -293,6 +301,53 @@ class PlaywrightHelpers
                 await Task.WhenAny(waitForLoadTask, delayTask);
 
                 var content = await page.ContentAsync();
+                return content;
+            }
+            catch (Exception ex)
+            {
+                var rethrow = --tryCount == 0 || !ex.Message.Contains("navigating");
+                if (rethrow) throw;
+
+                await Task.Delay(1000);
+            }
+        }
+    }
+
+    private static async Task<string> FetchPageContentWithReadability(IPage page, int timeoutInMs = 10000, int retries = 3)
+    {
+        var timeoutTime = DateTime.Now.AddMilliseconds(timeoutInMs);
+
+        var tryCount = retries + 1;
+        while (true)
+        {
+            try
+            {
+                var waitForLoadTask = page.WaitForLoadStateAsync(LoadState.NetworkIdle);
+                var delayTask = Task.Delay((int)timeoutTime.Subtract(DateTime.Now).TotalMilliseconds);
+                await Task.WhenAny(waitForLoadTask, delayTask);
+
+                // Inject Readability.js from CDN
+                await page.AddScriptTagAsync(new() { Url = "https://cdnjs.cloudflare.com/ajax/libs/readability/0.5.0/Readability.js" });
+
+                // Use Readability.js to extract main content
+                var content = await page.EvaluateAsync<string>(@"() => {
+                    try {
+                        const documentClone = document.cloneNode(true);
+                        const reader = new Readability(documentClone);
+                        const article = reader.parse();
+                        
+                        if (article && article.content) {
+                            return article.content;
+                        } else {
+                            // Fallback to document body if Readability fails
+                            return document.body.innerHTML || document.documentElement.innerHTML;
+                        }
+                    } catch (error) {
+                        // Fallback to document body if there's an error
+                        return document.body.innerHTML || document.documentElement.innerHTML;
+                    }
+                }");
+
                 return content;
             }
             catch (Exception ex)

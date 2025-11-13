@@ -16,6 +16,7 @@ abstract class WebCommand : CycoDmdCommand
         Browser = BrowserType.Chromium;
         GetContent = false;
         StripHtml = false;
+        UseReadability = false;
 
         PageInstructionsList = new();
     }
@@ -29,6 +30,7 @@ abstract class WebCommand : CycoDmdCommand
     public BrowserType Browser { get; set; }
     public bool GetContent { get; set; }
     public bool StripHtml { get; set; }
+    public bool UseReadability { get; set; }
 
     public string? SaveFolder { get; set; }
 
