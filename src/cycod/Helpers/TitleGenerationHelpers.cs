@@ -45,8 +45,6 @@ public static class TitleGenerationHelpers
             return null;
         }
 
-        var environmentBackup = SetupEnvironmentForTitleGeneration();
-
         try
         {
             // Check if file exists
@@ -80,10 +78,6 @@ public static class TitleGenerationHelpers
         {
             ConsoleHelpers.WriteDebugLine($"Title generation failed: {ex.Message}");
             return null;
-        }
-        finally
-        {
-            RestoreEnvironmentForTitleGeneration(environmentBackup);
         }
     }
 
@@ -355,54 +349,4 @@ public static class TitleGenerationHelpers
 
         return hasUserAssistantExchange && shouldGenerate;
     }
-
-    /// <summary>
-    /// Sets up environment variables for title generation to prevent infinite loops and auto-saving.
-    /// </summary>
-    /// <returns>Environment backup for restoration</returns>
-    private static EnvironmentBackup SetupEnvironmentForTitleGeneration()
-    {
-        // Save original environment variable values
-        var originalEnvVars = new Dictionary<string, string?>
-        {
-            ["CYCOD_DISABLE_TITLE_GENERATION"] = Environment.GetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION"),
-            ["CYCOD_AUTO_SAVE_CHAT_HISTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY"),
-            ["CYCOD_AUTO_SAVE_TRAJECTORY"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY"),
-            ["CYCOD_AUTO_SAVE_LOG"] = Environment.GetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG")
-        };
-        
-        // Set environment variables for child process
-        Environment.SetEnvironmentVariable("CYCOD_DISABLE_TITLE_GENERATION", "true");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_CHAT_HISTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_TRAJECTORY", "false");
-        Environment.SetEnvironmentVariable("CYCOD_AUTO_SAVE_LOG", "false");
-        
-        return new EnvironmentBackup { OriginalValues = originalEnvVars };
-    }
-
-    /// <summary>
-    /// Restores original environment variables after title generation.
-    /// </summary>
-    /// <param name="environmentBackup">Environment variables to restore</param>
-    private static void RestoreEnvironmentForTitleGeneration(EnvironmentBackup environmentBackup)
-    {
-        // Restore original environment variables
-        foreach (var kvp in environmentBackup.OriginalValues)
-        {
-            Environment.SetEnvironmentVariable(kvp.Key, kvp.Value);
-        }
-        
-        ConsoleHelpers.WriteDebugLine("Restored original environment variables");
-    }
-}
-
-/// <summary>
-/// Helper class to store original environment variable values for restoration.
-/// </summary>
-internal class EnvironmentBackup
-{
-    /// <summary>
-    /// Original environment variable values to restore.
-    /// </summary>
-    public Dictionary<string, string?> OriginalValues { get; set; } = new();
 }

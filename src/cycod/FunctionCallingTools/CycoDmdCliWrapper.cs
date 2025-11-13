@@ -613,11 +613,14 @@ public class CycoDmdCliWrapper
     private string BuildGenerateTitleArguments(string? systemPrompt)
     {
         var sb = new StringBuilder();
-        
+
         if (!string.IsNullOrEmpty(systemPrompt))
         {
             sb.Append($"--instructions {EscapeArgument(systemPrompt)} ");
         }
+
+        sb.Append("--auto-save-chat-history false ");
+        sb.Append("--auto-generate-title false ");
         
         return sb.ToString().Trim();
     }
