@@ -752,7 +752,10 @@ public class ChatCommand : CommandWithVariables
             ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(approvePrompt, ConsoleColor.Yellow);
 
-            ConsoleKeyInfo? key = ShouldDenyFunctionCall(factory, name) ? null : ConsoleHelpers.ReadKey(true);
+            var shouldDeny = ShouldDenyFunctionCall(factory, name);
+            Logger.Info($"HandleFunctionCallApproval: Should deny '{name}': {shouldDeny}");
+            
+            ConsoleKeyInfo? key = shouldDeny ? null : ConsoleHelpers.ReadKey(true);
             ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
             ConsoleHelpers.Write(erasePrompt, ColorHelpers.MapColor(ConsoleColor.DarkBlue));
             ConsoleHelpers.DisplayAssistantFunctionCall(name, args, null);
