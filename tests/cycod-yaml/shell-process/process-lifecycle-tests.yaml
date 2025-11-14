@@ -1,0 +1,35 @@
+class: process-lifecycle-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 100.PS.PRC.NORM-003 - Process completes normally within expected duration
+  run: cycod --input "Use StartNamedProcess to start a process named 'test-process' that runs 'sleep 2'. Then use WaitForShellOrProcessExit to wait for completion." --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: test-process.*
+    .*WaitForShellOrProcessExit.*
+    (.*exited.*code.*0.*|.*already exited.*)
+  not-expect-regex: |
+    Error: Executable path cannot be empty
+    Error: No shell or process found with name
+    Error: Failed to start process
+    Process.*not.*found
+    "exitCode": -1
+
+- name: Test case 210.PS.PRC.EXIT-018 - Process exits with expected status code
+  run: cycod --input "Use StartNamedProcess to start a process that runs 'bash -c \"exit 42\"' with processName='exit-test'. Then use WaitForShellOrProcessExit to wait for it and check the exit code." --auto-approve all
+  timeout: 30000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: exit-test.*
+    .*WaitForShellOrProcessExit.*
+
+- name: Test case 210.PX.PRC.SIGN-020 - Long-running process responds to termination signal
+  run: cycod --input "Use StartNamedProcess to start a long-running process 'sleep 30' with processName='long-test'. Then use TerminateShellOrProcess to terminate it gracefully." --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*StartNamedProcess.*
+    .*Process created with name: long-test.*
+    .*TerminateShellOrProcess.*
+    .*terminated.*
