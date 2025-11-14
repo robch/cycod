@@ -2,11 +2,33 @@ using Microsoft.Extensions.AI;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
+    /// <summary>
+    /// The conversation data and operations.
+    /// </summary>
+    public Conversation Conversation { get; private set; }
+    
+    /// <summary>
+    /// The notification management system.
+    /// </summary>
+    public NotificationManager Notifications { get; private set; }
+
+    /// <summary>
+    /// Clears the conversation history and reinitializes with the original system prompt and persistent user messages.
+    /// </summary>
+    public void ClearChatHistory()
+    {
+        Conversation.Clear(_systemPrompt);
+    }
+
     public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
     {
         _systemPrompt = systemPrompt;
         _functionFactory = factory;
         _functionCallDetector = new FunctionCallDetector();
+
+        // Initialize composition objects
+        Conversation = new Conversation();
+        Notifications = new NotificationManager();
 
         var useMicrosoftExtensionsAIFunctionCalling = false; // Can't use this for now; (1) doesn't work with copilot w/ all models, (2) functionCallCallback not available
         _chatClient = useMicrosoftExtensionsAIFunctionCalling
@@ -16,7 +38,6 @@ public class FunctionCallingChat : IAsyncDisposable
         var tools = _functionFactory.GetAITools().ToList();
         ConsoleHelpers.WriteDebugLine($"FunctionCallingChat: Found {tools.Count} tools in FunctionFactory");
 
-        _messages = new List<ChatMessage>();
         _options = new ChatOptions()
         {
             ModelId = options?.ModelId,
@@ -27,57 +48,12 @@ public class FunctionCallingChat : IAsyncDisposable
                 : options?.MaxOutputTokens,
         };
 
-        if (maxOutputTokens.HasValue) _options.MaxOutputTokens = maxOutputTokens.Value;
-
         ClearChatHistory();
     }
 
-    public void ClearChatHistory()
-    {
-        _messages.Clear();
-        _messages.Add(new ChatMessage(ChatRole.System, _systemPrompt));
-        _messages.AddRange(_userMessageAdds);
-    }
 
-    public void AddUserMessage(string userMessage, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
-    {
-        _userMessageAdds.Add(new ChatMessage(ChatRole.User, userMessage));
-        _userMessageAdds.TryTrimToTarget(
-            maxPromptTokenTarget: maxPromptTokenTarget,
-            maxChatTokenTarget: maxChatTokenTarget);
 
-        _messages.Add(new ChatMessage(ChatRole.User, userMessage));
-        _messages.TryTrimToTarget(
-            maxPromptTokenTarget: maxPromptTokenTarget,
-            maxChatTokenTarget: maxChatTokenTarget);
-    }
-    
-    public void AddUserMessages(IEnumerable<string> userMessages, int maxPromptTokenTarget = 0, int maxChatTokenTarget = 0)
-    {
-        foreach (var userMessage in userMessages)
-        {
-            AddUserMessage(userMessage, maxPromptTokenTarget);
-        }
 
-        _messages.TryTrimToTarget(maxChatTokenTarget: maxChatTokenTarget);
-    }
-
-    public void LoadChatHistory(string fileName, int maxPromptTokenTarget = 0, int maxToolTokenTarget = 0, int maxChatTokenTarget = 0, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat)
-    {
-        _messages.ReadChatHistoryFromFile(fileName, useOpenAIFormat);
-        _messages.FixDanglingToolCalls();
-        _messages.TryTrimToTarget(maxPromptTokenTarget, maxToolTokenTarget, maxChatTokenTarget);
-    }
-
-    public void SaveChatHistoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
-    {
-        _messages.SaveChatHistoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
-    }
-
-    public void SaveTrajectoryToFile(string fileName, bool useOpenAIFormat = ChatHistoryDefaults.UseOpenAIFormat, string? saveToFolderOnAccessDenied = null)
-    {
-        _messages.SaveTrajectoryToFile(fileName, useOpenAIFormat, saveToFolderOnAccessDenied);
-    }
 
     public async Task<string> CompleteChatStreamingAsync(
         string userPrompt,
@@ -105,14 +81,14 @@ public class FunctionCallingChat : IAsyncDisposable
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
         
-        _messages.Add(message);
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(message);
+        messageCallback?.Invoke(Conversation.Messages);
 
         var contentToReturn = string.Empty;
         while (true)
         {
             var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(_messages, _options))
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options))
             {
                 _functionCallDetector.CheckForFunctionCall(update);
 
@@ -139,8 +115,8 @@ public class FunctionCallingChat : IAsyncDisposable
                 continue;
             }
 
-            _messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
-            messageCallback?.Invoke(_messages);
+            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
+            messageCallback?.Invoke(Conversation.Messages);
 
             return contentToReturn;
         }
@@ -160,8 +136,8 @@ public class FunctionCallingChat : IAsyncDisposable
             .AsAIContentList()
             .Prepend(new TextContent(responseContent))
             .ToList();
-        _messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
+        messageCallback?.Invoke(Conversation.Messages);
 
         var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
 
@@ -170,8 +146,8 @@ public class FunctionCallingChat : IAsyncDisposable
             .Cast<AIContent>()
             .ToList();
 
-        _messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
-        messageCallback?.Invoke(_messages);
+        Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
+        messageCallback?.Invoke(Conversation.Messages);
 
         var otherContentToAttach = functionCallResults
             .Where(c => c is not FunctionResultContent)
@@ -184,8 +160,8 @@ public class FunctionCallingChat : IAsyncDisposable
                 otherContentToAttach.Insert(0, new TextContent("attached content:"));
             }
 
-            _messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
-            messageCallback?.Invoke(_messages);
+            Conversation.Messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
+            messageCallback?.Invoke(Conversation.Messages);
         }
 
         return true;
@@ -283,11 +259,10 @@ public class FunctionCallingChat : IAsyncDisposable
     }
 
     private readonly string _systemPrompt;
-    private readonly List<ChatMessage> _userMessageAdds = new();
 
     private readonly FunctionFactory _functionFactory;
     private readonly FunctionCallDetector _functionCallDetector;
     private readonly ChatOptions _options;
     private readonly IChatClient _chatClient;
-    private List<ChatMessage> _messages;
+
 }

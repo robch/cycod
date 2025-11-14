@@ -68,7 +68,7 @@ public static class PromptFileHelpers
             return null;
         }
 
-        var content = File.ReadAllText(promptFilePath).Trim();
+        var content = FileHelpers.ReadAllText(promptFilePath).Trim();
         
         // If content starts with @ symbol, it's a reference to another file
         if (content.StartsWith('@'))
@@ -76,7 +76,7 @@ public static class PromptFileHelpers
             var referencedFilePath = content.Substring(1);
             if (File.Exists(referencedFilePath))
             {
-                return File.ReadAllText(referencedFilePath);
+                return FileHelpers.ReadAllText(referencedFilePath);
             }
         }
         

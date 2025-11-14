@@ -48,6 +48,11 @@ public static class KnownSettings
     public const string CopilotIntegrationId = "Copilot.IntegrationId";
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
 
+    // Test provider settings
+    public const string TestDefaultResponse = "Test.DefaultResponse";
+    public const string TestTitleResponse = "Test.TitleResponse";
+    public const string TestModelId = "Test.ModelId";
+
     // Application settings
     public const string AppMaxPromptTokens = "App.MaxPromptTokens";
     public const string AppMaxOutputTokens = "App.MaxOutputTokens";
@@ -60,6 +65,7 @@ public static class KnownSettings
     public const string AppChatCompletionTimeout = "App.ChatCompletionTimeout";
     public const string AppAutoApprove = "App.AutoApprove";
     public const string AppAutoDeny = "App.AutoDeny";
+    public const string AppAutoGenerateTitles = "App.AutoGenerateTitles";
     
     #endregion
     
@@ -140,6 +146,11 @@ public static class KnownSettings
         { CopilotIntegrationId, "COPILOT_INTEGRATION_ID" },
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
         
+        // Test provider mappings
+        { TestDefaultResponse, "TEST_DEFAULT_RESPONSE" },
+        { TestTitleResponse, "TEST_TITLE_RESPONSE" },
+        { TestModelId, "TEST_MODEL_ID" },
+        
         // Application settings
         { AppMaxPromptTokens, "CYCOD_MAX_PROMPT_TOKENS" },
         { AppMaxOutputTokens, "CYCOD_MAX_OUTPUT_TOKENS" },
@@ -151,7 +162,8 @@ public static class KnownSettings
         { AppAutoSaveLog, "CYCOD_AUTO_SAVE_LOG" },
         { AppChatCompletionTimeout, "CYCOD_CHAT_COMPLETION_TIMEOUT" },
         { AppAutoApprove, "CYCOD_AUTO_APPROVE" },
-        { AppAutoDeny, "CYCOD_AUTO_DENY" }
+        { AppAutoDeny, "CYCOD_AUTO_DENY" },
+        { AppAutoGenerateTitles, "CYCOD_AUTO_GENERATE_TITLES" }
     };
     
     /// <summary>
@@ -196,6 +208,11 @@ public static class KnownSettings
         { CopilotApiEndpoint, "--copilot-api-endpoint" },
         { CopilotIntegrationId, "--copilot-integration-id" },
         { CopilotEditorVersion, "--copilot-editor-version" },
+        
+        // Test provider mappings
+        { TestDefaultResponse, "--test-default-response" },
+        { TestTitleResponse, "--test-title-response" },
+        { TestModelId, "--test-model-id" },
         
         // Application settings
         { AppMaxPromptTokens, "--max-prompt-tokens" },
@@ -308,6 +325,16 @@ public static class KnownSettings
         CopilotApiEndpoint,
         CopilotIntegrationId,
         CopilotEditorVersion
+    };
+    
+    /// <summary>
+    /// Collection of settings for test provider integration.
+    /// </summary>
+    public static readonly HashSet<string> TestSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        TestDefaultResponse,
+        TestTitleResponse,
+        TestModelId
     };
     
     /// <summary>

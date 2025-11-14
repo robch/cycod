@@ -152,6 +152,29 @@ public static class ChatClientFactory
         return chatClient.AsIChatClient();
     }
 
+    public static IChatClient CreateTestChatClient()
+    {
+        // You can customize responses via environment variables or config if desired
+        var responses = new Dictionary<string, string>();
+        
+        // Check for custom test responses (optional)
+        var titleResponse = EnvironmentHelpers.FindEnvVar("TEST_TITLE_RESPONSE");
+        if (!string.IsNullOrEmpty(titleResponse))
+        {
+            responses["title"] = titleResponse;
+            responses["generate a title"] = titleResponse;
+            responses["create a title"] = titleResponse;
+        }
+        
+        var defaultResponse = EnvironmentHelpers.FindEnvVar("TEST_DEFAULT_RESPONSE") ?? "This is a test response from TestChatClient.";
+        var modelId = EnvironmentHelpers.FindEnvVar("TEST_MODEL_ID") ?? "test-model";
+        
+        var chatClient = new TestChatClient(responses, defaultResponse, modelId);
+
+        ConsoleHelpers.WriteDebugLine("Using test chat client for predictable responses");
+        return chatClient;
+    }
+
     private static IChatClient? TryCreateChatClientFromPreferredProvider(out ChatOptions? options)
     {
         var preferredProvider = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreferredProvider).AsString()?.ToLowerInvariant();
@@ -162,7 +185,12 @@ public static class ChatClientFactory
             ConsoleHelpers.WriteDebugLine($"Using preferred provider: {preferredProvider}");
 
             // Try to create client based on preference
-            if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
+            if (preferredProvider == "test")
+            {
+                options = null;  // Test client doesn't need options
+                return CreateTestChatClient();
+            }
+            else if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
             {
                 return CreateCopilotChatClientWithGitHubToken();
             }
@@ -296,7 +324,11 @@ public static class ChatClientFactory
                     To use OpenAI, please set:
                     - OPENAI_API_KEY
                     - OPENAI_ENDPOINT (optional)
-                    - OPENAI_CHAT_MODEL_NAME (optional)"
+                    - OPENAI_CHAT_MODEL_NAME (optional)
+
+                    To use Test provider for development/testing, please set:
+                    - TEST_DEFAULT_RESPONSE (optional)
+                    - TEST_TITLE_RESPONSE (optional)"
                 .Split(new[] { '\n' })
                 .Select(line => line.Trim()));
 

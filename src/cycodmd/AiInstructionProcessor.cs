@@ -57,14 +57,16 @@ class AiInstructionProcessor
             File.WriteAllText(instructionsFileName, instructions);
             File.WriteAllText(contentFileName, content);
 
-            ConsoleHelpers.WriteDebugLine($"user:\n{File.ReadAllText(userPromptFileName)}\n\n");
-            ConsoleHelpers.WriteDebugLine($"system:\n{File.ReadAllText(systemPromptFileName)}\n\n");
-            ConsoleHelpers.WriteDebugLine($"instructions:\n{File.ReadAllText(instructionsFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"user:\n{FileHelpers.ReadAllText(userPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"system:\n{FileHelpers.ReadAllText(systemPromptFileName)}\n\n");
+            ConsoleHelpers.WriteDebugLine($"instructions:\n{FileHelpers.ReadAllText(instructionsFileName)}\n\n");
 
             var useCycoD = UseCycoD();
             var arguments = useCycoD
                 ? $"--input \"@{userPromptFileName}\" --system-prompt \"@{systemPromptFileName}\" --quiet --interactive false --no-templates"
                 : $"chat --user \"@{userPromptFileName}\" --system \"@{systemPromptFileName}\" --quiet true";
+
+            if (useCycoD) arguments += GetConfiguredAIProviders();
 
             if (useBuiltInFunctions && !useCycoD) arguments += " --built-in-functions";
 
@@ -105,6 +107,48 @@ class AiInstructionProcessor
             if (File.Exists(instructionsFileName)) File.Delete(instructionsFileName);
             if (File.Exists(contentFileName)) File.Delete(contentFileName);
         }
+    }
+
+    private static string GetConfiguredAIProviders()
+    {
+        var returnArguments = "";
+
+        // Check environment variable first (set by parent cycod process command-line flags)
+        var envProvider = Environment.GetEnvironmentVariable("CYCOD_AI_PROVIDER");
+
+        // Fall back to ConfigStore (for persistent user preferences)
+        var configProvider = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppPreferredProvider);
+
+        // Environment variable takes precedence (command-line session), then config (persistent)
+        var provider = envProvider ?? configProvider?.Value?.ToString();
+
+        if (!string.IsNullOrEmpty(provider))
+        {
+            // Get the appropriate flag for the provider
+            var providerFlag = provider.ToLowerInvariant() switch
+            {
+                "test" => "--use-test",
+                "openai" => "--use-openai",
+                "anthropic" => "--use-anthropic",
+                "azure-openai" => "--use-azure-openai",
+                "google-gemini" => "--use-gemini",
+                "grok" => "--use-grok",
+                "aws-bedrock" => "--use-bedrock",
+                "copilot" or "copilot-github" => "--use-copilot",
+                _ => null
+            };
+
+            if (providerFlag != null)
+            {
+                returnArguments += $" {providerFlag}";
+            }
+        }
+        else
+        {
+            ConsoleHelpers.WriteDebugLine("No AI Provider specified in environment or ConfigStore.");
+        }
+
+        return returnArguments;
     }
 
     private static string GetSystemPrompt()
@@ -158,7 +202,7 @@ class AiInstructionProcessor
 
     private static void RewriteExpandedFile(string userPromptFileName)
     {
-        var content = File.ReadAllText(userPromptFileName);
+        var content = FileHelpers.ReadAllText(userPromptFileName);
         
         // Find patterns that look like this {@FILENAME}, and replace them with the content of the file
         // For example, {@FILENAME} will be replaced with the content of the file FILENAME
@@ -171,7 +215,7 @@ class AiInstructionProcessor
             var filePath = Path.Combine(directoryName, fileName);
             if (File.Exists(filePath))
             {
-                var fileContent = File.ReadAllText(filePath);
+                var fileContent = FileHelpers.ReadAllText(filePath);
                 content = content.Replace(match.Value, fileContent);
             }
         }
