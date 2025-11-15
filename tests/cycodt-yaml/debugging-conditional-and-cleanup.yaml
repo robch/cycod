@@ -1,0 +1,14 @@
+tests:
+  - name: placeholder-conditional-breakpoint
+    optional: broken-test
+    script: |
+      echo "TODO: invoke SetConditionalBreakpoint then Continue and verify stop reason breakpoint only when condition met."
+    expect-regex:
+      - "SetConditionalBreakpoint"
+
+  - name: placeholder-idle-cleanup
+    optional: broken-test
+    script: |
+      echo "TODO: create session, wait, call CleanupIdleSessions and verify removal." 
+    expect-regex:
+      - "CleanupIdleSessions"

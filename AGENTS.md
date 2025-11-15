@@ -118,6 +118,21 @@ Commands follow a consistent pattern:
 - Commands should use existing helper methods when available
 - Commands should respect the configuration scope system
 
+
+## Debugging Feature (Preview)
+A .NET debugging capability is available (preview) under src/cycod/Debugging. Agents can:
+- Start sessions: StartDebugSession(programPath)
+- Manage breakpoints: SetBreakpoint / DeleteBreakpoint / ListBreakpoints
+- Control execution: Continue / StepOver / StepIn / StepOut
+- Inspect state: StackTrace / Scopes / Variables
+- Evaluate & mutate: Evaluate / SetVariable (capability dependent)
+- Retrieve events: FetchEvents(sinceSeq)
+- Manage lifecycle: ListSessions / TerminateSession / CleanupIdleSessions
+
+Error responses use a standardized JSON structure with codes like SESSION_NOT_FOUND, PROGRAM_NOT_FOUND, FEATURE_UNSUPPORTED.
+
+See docs/debug-tools.md for full details. Placeholder tests exist; full integration tests will follow.
+
 ## Testing with cycodt
 The project uses a YAML-based test framework called cycodt. Key operations:
 
