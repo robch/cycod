@@ -821,7 +821,9 @@ public class ChatCommand : CommandWithVariables
     private void CheckForDoubleEscapeInterrupt()
     {
         // Only check for ESC if console input is not redirected and we're in an interactive session
-        if (Console.IsInputRedirected || !Console.KeyAvailable)
+        // Skip during title generation to avoid consuming subprocess input
+        var titleGenerating = _currentChat?.Notifications.GetGenerationState(NotificationType.Title) != GenerationState.Idle;
+        if (Console.IsInputRedirected || !Console.KeyAvailable || titleGenerating)
             return;
 
         // Check if there are any keys available
