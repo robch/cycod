@@ -133,7 +133,9 @@ public static class TrxXmlTestReporter
         {
             var executionId = testRun.GetExecutionId(testCase).ToString();
             var qualifiedParts = testCase.FullyQualifiedName.Split('.');
-            var className = string.Join(".", qualifiedParts.Take(qualifiedParts.Length - 1));
+            var className = qualifiedParts.Length > 1 
+                ? string.Join(".", qualifiedParts.Take(qualifiedParts.Length - 1))
+                : "CycodtTests"; // Default class name when no dots in FullyQualifiedName
             var name = qualifiedParts.Last();
             var atIndex = name.LastIndexOf('@');
             if (atIndex > -1) name = name.Substring(0, atIndex);
