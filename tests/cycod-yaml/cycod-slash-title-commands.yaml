@@ -1022,8 +1022,6 @@ tests:
     bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/refresh-verification-test.jsonl
     
   - name: Start title refresh process
-    env:
-      TEST_WASTE_TIME_DELAY_MS: "5000"
     run: cycod --chat-history testfiles/refresh-verification-test.jsonl --input "/title refresh" --input "waste time" --input "/title view" --input "exit" --auto-save-chat-history 1 --use-test
     expect-regex: |
       User: /title refresh\r?\n

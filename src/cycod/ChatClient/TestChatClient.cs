@@ -9,7 +9,7 @@ public class TestChatClient : IChatClient
 {
     // Timing constants with environment variable overrides
     private const int DEFAULT_RESPONSE_DELAY_MS = 100;    // Fast by default
-    private const int DEFAULT_WASTE_TIME_DELAY_MS = 5000; // Longer for time burning
+    private const int DEFAULT_WASTE_TIME_DELAY_MS = 3000; // Longer for time burning
     private const int DEFAULT_STREAMING_DELAY_MS = 50;
     private const int DEFAULT_STREAMING_CHUNK_SIZE = 3; // Words per chunk
     
