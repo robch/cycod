@@ -681,8 +681,8 @@ public partial class YamlTestCaseParser
     private static string GetFullyQualifiedName(string area, string @class, string name, int stepNumber)
     {
         return stepNumber > 0
-            ? $"{area}.{@class}.{stepNumber:D2}.{name}"
-            : $"{area}.{@class}.{name}";
+            ? $"{area}.{@class}::{stepNumber:D2}.{name}"
+            : $"{area}.{@class}::{name}";
     }
 
     private static void SetTestCaseTagsAsTraits(TestCase test, Dictionary<string, List<string>> tags)
