@@ -680,10 +680,6 @@ public partial class YamlTestCaseParser
 
     private static string GetFullyQualifiedName(string area, string @class, string name, int stepNumber)
     {
-        area = area.Replace(".", "(period)");
-        @class = @class.Replace(".", "(period)");
-        name = name.Replace(".", "(period)");
-
         return stepNumber > 0
             ? $"{area}.{@class}.{stepNumber:D2}.{name}"
             : $"{area}.{@class}.{name}";
