@@ -6,8 +6,8 @@ tests:
   expect-regex: |
     Found 1 test...
 
-    Starting test: yaml.simple.simple.running simple process@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple.simple.running simple process@[0-9a-f]{6}
+    Starting test: yaml.simple.simple::running simple process@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple.simple::running simple process@[0-9a-f]{6}
 
     TEST RESULT SUMMARY:
 
@@ -21,12 +21,12 @@ tests:
   expect-regex: |
     Found 3 tests...
 
-    Starting test: yaml.simple.simple.running simple process@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple.simple.running simple process@[0-9a-f]{6}
-    Starting test: yaml.simple.simple.running script w/ regex expectation@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple.simple.running script w/ regex expectation@[0-9a-f]{6}
-    Starting test: yaml.simple.simple.running bash script w/ regex expectation@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple.simple.running bash script w/ regex expectation@[0-9a-f]{6}
+    Starting test: yaml.simple.simple::running simple process@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple.simple::running simple process@[0-9a-f]{6}
+    Starting test: yaml.simple.simple::running script w/ regex expectation@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple.simple::running script w/ regex expectation@[0-9a-f]{6}
+    Starting test: yaml.simple.simple::running bash script w/ regex expectation@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple.simple::running bash script w/ regex expectation@[0-9a-f]{6}
 
     TEST RESULT SUMMARY:
 
@@ -40,10 +40,10 @@ tests:
   expect-regex: |
     Found 2 tests...
 
-    Starting test: yaml.simple2.simple2.output into file@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple2.simple2.output into file@[0-9a-f]{6}
-    Starting test: yaml.simple2.simple2.checkout output into file@[0-9a-f]{6}
-    Passed \(.*\): yaml.simple2.simple2.checkout output into file@[0-9a-f]{6}
+    Starting test: yaml.simple2.simple2::output into file@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple2.simple2::output into file@[0-9a-f]{6}
+    Starting test: yaml.simple2.simple2::checkout output into file@[0-9a-f]{6}
+    Passed \(.*\): yaml.simple2.simple2::checkout output into file@[0-9a-f]{6}
 
     TEST RESULT SUMMARY:
 
@@ -62,11 +62,11 @@ tests:
   expect-exit-code: 1
   expect-regex: |
     ^Found 2 tests\.\.\.
-    Starting test: yaml.simple3\.simple3\.echo animals w/ expectation@[0-9a-f]{6}\r?$\n
-    ^Passed \(\d+ ms\): yaml.simple3\.simple3\.echo animals w/ expectation@[0-9a-f]{6}\r?$\n
-    ^Starting test: yaml.simple3\.simple3\.echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
+    Starting test: yaml.simple3.simple3::echo animals w/ expectation@[0-9a-f]{6}\r?$\n
+    ^Passed \(\d+ ms\): yaml.simple3.simple3::echo animals w/ expectation@[0-9a-f]{6}\r?$\n
+    ^Starting test: yaml.simple3.simple3::echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
     ^UNEXPECTED: Found 'dog' in 'dog'\r?$\n
-    ^Failed \(\d+ ms\): yaml.simple3\.simple3\.echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple3.simple3::echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
     ^at .*tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple3.yaml\(\d+\)\r?$\n
     ^echo cat\r?$\n
     ^echo dog\r?$\n
@@ -77,7 +77,7 @@ tests:
     ^\r?$\n
     ^\r?$\n
     ^FAILURE SUMMARY:\r?$\n
-    ^Failed \(\d+ ms\): yaml.simple3\.simple3\.echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
+    ^Failed \(\d+ ms\): yaml.simple3.simple3::echo animals wo/ expectation@[0-9a-f]{6}\r?$\n
     ^at .*tests[\\/]cycodt-yaml[\\/]inception-layer-1[\\/]simple3.yaml\(\d+\)\r?$\n
     ^echo cat\r?$\n
     ^echo dog\r?$\n
