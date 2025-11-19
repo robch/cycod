@@ -585,30 +585,42 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (arg == "--use-anthropic")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "anthropic");
         }
         else if (arg == "--use-aws" || arg == "--use-bedrock" || arg == "--use-aws-bedrock")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "aws-bedrock");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "aws-bedrock");
         }
         else if (arg == "--use-azure-openai" || arg == "--use-azure")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-openai");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "azure-openai");
         }
         else if (arg == "--use-google" || arg == "--use-gemini" || arg == "--use-google-gemini")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "google-gemini");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "google-gemini");
         }
         else if (arg == "--use-grok" || arg == "--use-x.ai")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "grok");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "grok");
         }
         else if (arg == "--use-openai")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "openai");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "openai");
+        }
+        else if (arg == "--use-test")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "test");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "test");
         }
         else if (arg == "--use-copilot")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "copilot");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "copilot");
         }
         else if (arg == "--use-copilot-token")
         {
@@ -644,6 +656,14 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             var imagePatterns = ValidateStrings(arg, imageArgs, "image pattern");
             command.ImagePatterns.AddRange(imagePatterns);
             i += imageArgs.Count();
+        }
+        else if (arg == "--auto-generate-title")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var value = max1Arg.FirstOrDefault() ?? "true";
+            var enableTitleGeneration = value.ToLower() == "true" || value == "1";
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppAutoGenerateTitles, enableTitleGeneration.ToString());
+            i += max1Arg.Count();
         }
         else
         {

@@ -1,21 +1,20 @@
 /// <summary>
-/// Handles slash commands by translating them to CYCODMD commands
+/// Handles slash commands by expanding them to prompt file contents.
+/// Implements the clean ISlashCommandHandler interface.
 /// </summary>
-public class SlashPromptCommandHandler
+public class SlashPromptCommandHandler : ISlashCommandHandler
 {
     /// <summary>
-    /// Checks if the handler can process a given command
+    /// Checks if this handler can process the given command.
     /// </summary>
-    /// <param name="commandWithArgs">The user's input</param>
-    /// <returns>True if the command can be handled</returns>
-    public bool IsCommand(string commandWithArgs)
+    public bool CanHandle(string userPrompt)
     {
-        if (string.IsNullOrWhiteSpace(commandWithArgs) || !commandWithArgs.StartsWith("/"))
+        if (string.IsNullOrWhiteSpace(userPrompt) || !userPrompt.StartsWith("/"))
         {
             return false;
         }
 
-        var commandName = ExtractCommandName(commandWithArgs);
+        var commandName = ExtractCommandName(userPrompt);
         var promptName = commandName.TrimStart('/');
         var promptFile = PromptFileHelpers.FindPromptFile(promptName);
 
@@ -24,11 +23,9 @@ public class SlashPromptCommandHandler
     }
     
     /// <summary>
-    /// Executes a slash command and returns the result
+    /// Handles the prompt command synchronously and returns the expanded prompt text.
     /// </summary>
-    /// <param name="userPrompt">The user's input</param>
-    /// <returns>The result of executing the command</returns>
-    public string? HandleCommand(string userPrompt)
+    public SlashCommandResult Handle(string userPrompt, FunctionCallingChat chat)
     {
         var command = ExtractCommandName(userPrompt);
         var arguments = ExtractArguments(userPrompt);
@@ -37,10 +34,12 @@ public class SlashPromptCommandHandler
         var promptName = command.TrimStart('/');
         var promptText = PromptFileHelpers.GetPromptText(promptName);
 
-        var found = !string.IsNullOrWhiteSpace(promptText);
-        if (found) return promptText!;
+        if (!string.IsNullOrWhiteSpace(promptText))
+        {
+            return SlashCommandResult.WithResponse(promptText);
+        }
 
-        return null;
+        return SlashCommandResult.NotHandled();
     }
 
     /// <summary>

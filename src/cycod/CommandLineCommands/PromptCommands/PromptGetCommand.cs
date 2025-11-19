@@ -77,7 +77,7 @@ class PromptGetCommand : PromptBaseCommand
         }
 
         // Read and display the prompt content
-        var content = File.ReadAllText(promptFilePath);
+        var content = FileHelpers.ReadAllText(promptFilePath);
         var foundInScope = ScopeFileHelpers.GetScopeFromPath(promptFilePath!);
         PromptDisplayHelpers.DisplayPrompt(promptName, promptFilePath, foundInScope, content);
 

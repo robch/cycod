@@ -58,7 +58,7 @@ public class StrReplaceEditorHelperFunctions
         if (noFile) return $"Path {path} does not exist or is not a file.";
 
         // Read all lines from file
-        var allLines = File.ReadAllText(path).Split('\n', StringSplitOptions.None)
+        var allLines = FileHelpers.ReadAllText(path).Split('\n', StringSplitOptions.None)
             .Select(line => line.TrimEnd('\r'))
             .ToArray();
         
@@ -288,7 +288,7 @@ public class StrReplaceEditorHelperFunctions
             return $"File {path} does not exist.";
         }
         
-        var text = File.ReadAllText(path);
+        var text = FileHelpers.ReadAllText(path);
         var replaced = StringHelpers.ReplaceOnce(text, oldStr, newStr, out var countFound);
         if (countFound != 1)
         {
@@ -317,7 +317,7 @@ public class StrReplaceEditorHelperFunctions
         {
             return $"File {path} does not exist.";
         }
-        var text = File.ReadAllText(path);
+        var text = FileHelpers.ReadAllText(path);
         var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
         if (insertLine < 0 || insertLine > lines.Count)
         {
