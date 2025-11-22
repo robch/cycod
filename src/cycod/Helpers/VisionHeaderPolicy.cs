@@ -57,14 +57,49 @@ public class VisionHeaderPolicy : PipelinePolicy
             var contentData = BinaryData.FromStream(contentStream);
             var contentString = contentData.ToString();
 
-            // Check for image content in the request - either as image_url type or data URL
-            // The "attached content" check was too restrictive - it only matched tool results
-            var hasImageType = contentString.Contains("\"type\":\"image_url\"") ||
-                               contentString.Contains("\"type\":\"image\"") ||
-                               contentString.Contains("\"type\": \"image_url\"") ||
-                               contentString.Contains("\"type\": \"image\"");
-            var hasDataUrl = contentString.Contains("data:image/");
+            // Parse the content string as JSON and check for image type and data URL
+            using var jsonDoc = JsonDocument.Parse(contentString);
+            bool hasImageType = false;
+            bool hasDataUrl = false;
 
+            void Traverse(JsonElement element)
+            {
+                if (element.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var property in element.EnumerateObject())
+                    {
+                        if (property.Name == "type" &&
+                            (property.Value.GetString() == "image_url" || property.Value.GetString() == "image"))
+                        {
+                            hasImageType = true;
+                        }
+                        if (property.Value.ValueKind == JsonValueKind.String &&
+                            property.Value.GetString() != null &&
+                            property.Value.GetString().Contains("data:image/"))
+                        {
+                            hasDataUrl = true;
+                        }
+                        Traverse(property.Value);
+                    }
+                }
+                else if (element.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in element.EnumerateArray())
+                    {
+                        Traverse(item);
+                    }
+                }
+                else if (element.ValueKind == JsonValueKind.String)
+                {
+                    var str = element.GetString();
+                    if (str != null && str.Contains("data:image/"))
+                    {
+                        hasDataUrl = true;
+                    }
+                }
+            }
+
+            Traverse(jsonDoc.RootElement);
             return hasImageType && hasDataUrl;
         }
         catch (Exception ex)
