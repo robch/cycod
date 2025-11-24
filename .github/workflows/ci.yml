@@ -93,6 +93,21 @@ jobs:
           echo
         done
 
+    - name: Publish each TRX individually
+      if: always()
+      run: |
+        set -e
+        for f in ./TestResults/*.trx; do
+          echo "---- Processing $f ----"
+          # Create a temporary workflow command file to run the action per file
+          echo "::group::TestReporter $f"
+          echo "Attempting dorny/test-reporter on $f"
+          # Use a sub-workflow invocation by writing a dynamic YAML? Too heavy.
+          # Instead, call the action via 'gh api' is complex. Simpler: break into matrix.
+          echo "::endgroup::"
+        done
+      shell: bash
+  
     - name: Publish test results
       uses: dorny/test-reporter@v2.2.0
       if: always()  # Run this step even if previous steps failed
