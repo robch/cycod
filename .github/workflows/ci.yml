@@ -80,6 +80,19 @@ jobs:
           ./TestResults/*.trx
           ./TestResults/test-results-cycodt.log
     
+    - name: Debug TRX files
+      if: always()
+      run: |
+        echo "TRX files and basic stats:"
+        for f in ./TestResults/*.trx; do
+          echo "==== $f ===="
+          ls -lh "$f"
+          grep -c "<UnitTest " "$f" || true
+          grep -c "<TestMethod " "$f" || true
+          tail -n 5 "$f"
+          echo
+        done
+
     - name: Publish test results
       uses: dorny/test-reporter@v2.2.0
       if: always()  # Run this step even if previous steps failed
