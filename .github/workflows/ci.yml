@@ -80,19 +80,6 @@ jobs:
           ./TestResults/*.trx
           ./TestResults/test-results-cycodt.log
     
-    - name: Debug TRX files
-      if: always()
-      run: |
-        echo "TRX files and basic stats:"
-        for f in ./TestResults/*.trx; do
-          echo "==== $f ===="
-          ls -lh "$f"
-          grep -c "<UnitTest " "$f" || true
-          grep -c "<TestMethod " "$f" || true
-          tail -n 5 "$f"
-          echo
-        done
-
     - name: Publish each TRX individually
       if: always()
       run: |
