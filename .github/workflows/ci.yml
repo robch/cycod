@@ -93,19 +93,6 @@ jobs:
           ./TestResults/*.trx
           ./TestResults/*.xml
           ./TestResults/test-results-cycodt.log
-    
-    - name: Debug JUnit XML files
-      if: always()
-      run: |
-        echo "JUnit XML files and basic stats:"
-        for f in ./TestResults/*.xml; do
-          echo "==== $f ===="
-          ls -lh "$f"
-          grep -c "<testsuite" "$f" || true
-          grep -c "<testcase" "$f" || true
-          tail -n 5 "$f"
-          echo
-        done
 
     - name: Publish JUnit results
       uses: dorny/test-reporter@v2.2.0
