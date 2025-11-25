@@ -1,14 +1,15 @@
-name: CI
+name: CI JUnit
 
 on:
   schedule:
     # Run at midnight UTC every day
     - cron: '0 0 * * *'
   push:
-    branches: [ main, master ]
+    branches: [ main, master, dorny-failure ]
   pull_request:
     branches: [ main, master ]
-  workflow_dispatch:
+  workflow_dispatch: 
+    
     # Allow manual triggering
 
 jobs:
@@ -54,72 +55,65 @@ jobs:
     - name: Build all projects
       run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
     
-    - name: Test
+    - name: Test (.NET - TRX)
       run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
-    - name: Run cycodt tests
+    - name: Run cycodt tests (JUnit)
       run: |
         export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
         which cycod
         which cycodmd
         which cycodt
-        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
+        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.xml --output-format junit
     
-    - name: Clean up inception test TRX files
+    - name: Clean up inception test result files
       run: |
-        # Remove TRX files created by inception tests to avoid interference with CI reporting
-        rm -f tests/cycodt-yaml/inception-layer-1/*.trx
-        echo "Cleaned up inception test TRX files"
+        # Remove TRX files created by inception tests (still may exist) and any stray trx
+        rm -f tests/cycodt-yaml/inception-layer-1/*.trx || true
+        echo "Cleaned up inception test legacy TRX files"
     
+    - name: Convert TRX to JUnit XML
+      if: always()
+      run: |
+        echo "Installing trx2junit global tool"
+        dotnet tool install --global trx2junit || echo "Tool already installed"
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        echo "Converting TRX files to JUnit XML"
+        ls -1 ./TestResults/*.trx || echo "No TRX files found"
+        trx2junit ./TestResults/*.trx || echo "Conversion produced warnings"
+        echo "Post-conversion listing:"
+        ls -lh ./TestResults/*.xml || echo "No XML files yet"
+
     - name: Upload test results
       uses: actions/upload-artifact@v4
-      if: always()  # Upload test results even if tests fail
+      if: always()
       with:
         name: test-results
         path: |
           ./TestResults/*.trx
+          ./TestResults/*.xml
           ./TestResults/test-results-cycodt.log
-
-    - name: Detailed TRX scan
+    
+    - name: Debug JUnit XML files
       if: always()
       run: |
-        for f in TestResults/*.trx; do
+        echo "JUnit XML files and basic stats:"
+        for f in ./TestResults/*.xml; do
           echo "==== $f ===="
           ls -lh "$f"
-          echo "UnitTest count:" $(grep -c "<UnitTest " "$f" || true)
-          echo "TestMethod count:" $(grep -c "<TestMethod " "$f" || true)
-          # Find UnitTests missing TestMethod
-          awk '
-            /<UnitTest /{u=1; m=0; buf=$0; next}
-            u && /<TestMethod /{m=1}
-            u {buf=buf "\n" $0}
-            /<\/UnitTest>/{ if(u && m==0){ print "UnitTest missing TestMethod:\n" buf "\n----"; } u=0; m=0; buf="" }
-          ' "$f"
+          grep -c "<testsuite" "$f" || true
+          grep -c "<testcase" "$f" || true
+          tail -n 5 "$f"
           echo
         done
-    
-    - name: Publish each TRX individually
-      if: always()
-      run: |
-        set -e
-        for f in ./TestResults/*.trx; do
-          echo "---- Processing $f ----"
-          # Create a temporary workflow command file to run the action per file
-          echo "::group::TestReporter $f"
-          echo "Attempting dorny/test-reporter on $f"
-          # Use a sub-workflow invocation by writing a dynamic YAML? Too heavy.
-          # Instead, call the action via 'gh api' is complex. Simpler: break into matrix.
-          echo "::endgroup::"
-        done
-      shell: bash
-  
-    - name: Publish test results
+
+    - name: Publish JUnit results
       uses: dorny/test-reporter@v2.2.0
-      if: always()  # Run this step even if previous steps failed
+      if: always()
       with:
-        name: .NET Tests
-        path: ./TestResults/*.trx
-        reporter: dotnet-trx
+        name: .NET Tests (JUnit)
+        path: ./TestResults/*.xml
+        reporter: java-junit
         fail-on-error: false
     
     - name: Upload cycod build artifacts
@@ -132,6 +126,15 @@ jobs:
           src/cycod/bin/Release/net9.0/linux-x64/publish/
           src/cycod/bin/Release/net9.0/osx-x64/publish/
     
+    - name: Publish .NET TRX results
+      uses: dorny/test-reporter@v2.2.0
+      if: always()
+      with:
+        name: .NET Tests (TRX)
+        path: ./TestResults/*.trx
+        reporter: dotnet-trx
+        fail-on-error: false
+
     - name: Upload cycodt build artifacts
       uses: actions/upload-artifact@v4
       with:
