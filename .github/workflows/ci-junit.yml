@@ -1,4 +1,4 @@
-name: CI - JUnit
+name: CI JUnit
 
 on:
   schedule:
@@ -55,10 +55,10 @@ jobs:
     - name: Build all projects
       run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
     
-    - name: Test
-      run: dotnet test --configuration Release --verbosity normal --logger "junit;LogFileName=test-results.xml" --results-directory ./TestResults
+    - name: Test (.NET - TRX)
+      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
-    - name: Run cycodt tests
+    - name: Run cycodt tests (JUnit)
       run: |
         export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
         which cycod
@@ -72,12 +72,25 @@ jobs:
         rm -f tests/cycodt-yaml/inception-layer-1/*.trx || true
         echo "Cleaned up inception test legacy TRX files"
     
-    - name: Upload test results (JUnit)
+    - name: Convert TRX to JUnit XML
+      if: always()
+      run: |
+        echo "Installing trx2junit global tool"
+        dotnet tool install --global trx2junit || echo "Tool already installed"
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        echo "Converting TRX files to JUnit XML"
+        ls -1 ./TestResults/*.trx || echo "No TRX files found"
+        trx2junit ./TestResults/*.trx || echo "Conversion produced warnings"
+        echo "Post-conversion listing:"
+        ls -lh ./TestResults/*.xml || echo "No XML files yet"
+
+    - name: Upload test results
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        name: test-results-junit
+        name: test-results
         path: |
+          ./TestResults/*.trx
           ./TestResults/*.xml
           ./TestResults/test-results-cycodt.log
     
@@ -94,7 +107,7 @@ jobs:
           echo
         done
 
-    - name: Publish test results (JUnit)
+    - name: Publish JUnit results
       uses: dorny/test-reporter@v2.2.0
       if: always()
       with:
@@ -113,6 +126,15 @@ jobs:
           src/cycod/bin/Release/net9.0/linux-x64/publish/
           src/cycod/bin/Release/net9.0/osx-x64/publish/
     
+    - name: Publish .NET TRX results
+      uses: dorny/test-reporter@v2.2.0
+      if: always()
+      with:
+        name: .NET Tests (TRX)
+        path: ./TestResults/*.trx
+        reporter: dotnet-trx
+        fail-on-error: false
+
     - name: Upload cycodt build artifacts
       uses: actions/upload-artifact@v4
       with:
