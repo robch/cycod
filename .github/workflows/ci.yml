@@ -1,4 +1,4 @@
-name: CI JUnit
+name: CI
 
 on:
   schedule:
