@@ -5,7 +5,7 @@ on:
     # Run at midnight UTC every day
     - cron: '0 0 * * *'
   push:
-    branches: [ main, master, dorny-failure ]
+    branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch: 
