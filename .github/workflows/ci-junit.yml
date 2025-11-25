@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  schedule:
+    # Run at midnight UTC every day
+    - cron: '0 0 * * *'
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT }}
+      AZURE_OPENAI_SYSTEM_PROMPT: ${{ secrets.AZURE_OPENAI_SYSTEM_PROMPT }}
+      BING_SEARCH_V7_ENDPOINT: ${{ secrets.BING_SEARCH_V7_ENDPOINT }}
+      BING_SEARCH_V7_KEY: ${{ secrets.BING_SEARCH_V7_KEY }}
+      GOOGLE_SEARCH_ENDPOINT: ${{ secrets.GOOGLE_SEARCH_ENDPOINT }}
+      GOOGLE_SEARCH_KEY: ${{ secrets.GOOGLE_SEARCH_KEY }}
+      GOOGLE_SEARCH_ENGINE_ID: ${{ secrets.GOOGLE_SEARCH_ENGINE_ID }}
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 9.0.x
+    
+    - name: Make scripts executable
+      run: chmod +x ./scripts/*.sh
+      
+    - name: Determine CI build version
+      id: get-version
+      run: |
+        # Source the functions library
+        source ./scripts/_functions.sh
+        
+        # Use a timestamp-based version for CI builds
+        YEAR=$(date +'%Y')
+        MONTH=$(date +'%m')
+        DAY=$(date +'%d')
+        
+        CI_VERSION="1.0.0-ci-$YEAR$MONTH$DAY.1"
+        echo "CI_VERSION=$CI_VERSION" >> $GITHUB_ENV
+        echo "version=$CI_VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Build all projects
+      run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
+    
+    - name: Test
+      run: dotnet test --configuration Release --verbosity normal --logger "junit;LogFileName=test-results.xml" --results-directory ./TestResults
+    
+    - name: Run cycodt tests
+      run: |
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
+        which cycod
+        which cycodmd
+        which cycodt
+        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.xml --format junit
+    
+    - name: Clean up inception test result files
+      run: |
+        # Remove TRX files created by inception tests (still may exist) and any stray trx
+        rm -f tests/cycodt-yaml/inception-layer-1/*.trx || true
+        echo "Cleaned up inception test legacy TRX files"
+    
+    - name: Upload test results (JUnit)
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results-junit
+        path: |
+          ./TestResults/*.xml
+          ./TestResults/test-results-cycodt.log
+    
+    - name: Debug JUnit XML files
+      if: always()
+      run: |
+        echo "JUnit XML files and basic stats:"
+        for f in ./TestResults/*.xml; do
+          echo "==== $f ===="
+          ls -lh "$f"
+          grep -c "<testsuite" "$f" || true
+          grep -c "<testcase" "$f" || true
+          tail -n 5 "$f"
+          echo
+        done
+
+    - name: Publish test results (JUnit)
+      uses: dorny/test-reporter@v2.2.0
+      if: always()
+      with:
+        name: .NET Tests (JUnit)
+        path: ./TestResults/*.xml
+        reporter: java-junit
+        fail-on-error: false
+    
+    - name: Upload cycod build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycod-build
+        path: |
+          src/cycod/bin/Release/net9.0/
+          src/cycod/bin/Release/net9.0/win-x64/publish/
+          src/cycod/bin/Release/net9.0/linux-x64/publish/
+          src/cycod/bin/Release/net9.0/osx-x64/publish/
+    
+    - name: Upload cycodt build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycodt-build
+        path: |
+          src/cycodt/bin/Release/net9.0/
+          src/cycodt/bin/Release/net9.0/win-x64/publish/
+          src/cycodt/bin/Release/net9.0/linux-x64/publish/
+          src/cycodt/bin/Release/net9.0/osx-x64/publish/
+          
+    - name: Upload cycodmd build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycodmd-build
+        path: |
+          src/cycodmd/bin/Release/net9.0/
+          src/cycodmd/bin/Release/net9.0/win-x64/publish/
+          src/cycodmd/bin/Release/net9.0/linux-x64/publish/
+          src/cycodmd/bin/Release/net9.0/osx-x64/publish/
