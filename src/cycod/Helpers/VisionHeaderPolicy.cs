@@ -57,11 +57,15 @@ public class VisionHeaderPolicy : PipelinePolicy
             var contentData = BinaryData.FromStream(contentStream);
             var contentString = contentData.ToString();
 
-            if (!contentString.Contains("attached content")) return false;
-            if (!contentString.Contains("\"type\":\"image")) return false;
-            if (!contentString.Contains("\"url\":\"data:image")) return false;
+            // Check for image content in the request - either as image_url type or data URL
+            // The "attached content" check was too restrictive - it only matched tool results
+            var hasImageType = contentString.Contains("\"type\":\"image_url\"") ||
+                               contentString.Contains("\"type\":\"image\"") ||
+                               contentString.Contains("\"type\": \"image_url\"") ||
+                               contentString.Contains("\"type\": \"image\"");
+            var hasDataUrl = contentString.Contains("data:image/");
 
-            return true;
+            return hasImageType && hasDataUrl;
         }
         catch (Exception ex)
         {
