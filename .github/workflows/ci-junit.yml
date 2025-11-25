@@ -64,7 +64,7 @@ jobs:
         which cycod
         which cycodmd
         which cycodt
-        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.xml --format junit
+        cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.xml --output-format junit
     
     - name: Clean up inception test result files
       run: |
