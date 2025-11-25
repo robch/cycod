@@ -79,6 +79,24 @@ jobs:
         path: |
           ./TestResults/*.trx
           ./TestResults/test-results-cycodt.log
+
+    - name: Detailed TRX scan
+      if: always()
+      run: |
+        for f in TestResults/*.trx; do
+          echo "==== $f ===="
+          ls -lh "$f"
+          echo "UnitTest count:" $(grep -c "<UnitTest " "$f" || true)
+          echo "TestMethod count:" $(grep -c "<TestMethod " "$f" || true)
+          # Find UnitTests missing TestMethod
+          awk '
+            /<UnitTest /{u=1; m=0; buf=$0; next}
+            u && /<TestMethod /{m=1}
+            u {buf=buf "\n" $0}
+            /<\/UnitTest>/{ if(u && m==0){ print "UnitTest missing TestMethod:\n" buf "\n----"; } u=0; m=0; buf="" }
+          ' "$f"
+          echo
+        done
     
     - name: Publish each TRX individually
       if: always()
