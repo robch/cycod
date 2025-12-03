@@ -57,11 +57,44 @@ public class VisionHeaderPolicy : PipelinePolicy
             var contentData = BinaryData.FromStream(contentStream);
             var contentString = contentData.ToString();
 
-            if (!contentString.Contains("attached content")) return false;
-            if (!contentString.Contains("\"type\":\"image")) return false;
-            if (!contentString.Contains("\"url\":\"data:image")) return false;
+            ConsoleHelpers.WriteDebugLine($"VisionHeaderPolicy: Checking payload content (first 500 chars): {contentString.Substring(0, Math.Min(500, contentString.Length))}");
 
-            return true;
+            // Check for various image content patterns
+            bool hasImageContent = false;
+
+            // Legacy format with "attached content" prefix
+            if (contentString.Contains("attached content") && 
+                contentString.Contains("\"type\":\"image") && 
+                contentString.Contains("\"url\":\"data:image"))
+            {
+                hasImageContent = true;
+                ConsoleHelpers.WriteDebugLine("VisionHeaderPolicy: Found legacy image format");
+            }
+            
+            // Modern OpenAI format with image_url
+            if (contentString.Contains("\"type\":\"image_url\""))
+            {
+                hasImageContent = true;
+                ConsoleHelpers.WriteDebugLine("VisionHeaderPolicy: Found modern image_url format");
+            }
+            
+            // Base64 encoded images
+            if (contentString.Contains("\"image_url\"") && contentString.Contains("data:image/"))
+            {
+                hasImageContent = true;
+                ConsoleHelpers.WriteDebugLine("VisionHeaderPolicy: Found base64 encoded image");
+            }
+            
+            // Check for image content in messages array
+            if (contentString.Contains("\"content\"") && 
+                (contentString.Contains("image/png") || contentString.Contains("image/jpeg") || contentString.Contains("image/webp")))
+            {
+                hasImageContent = true;
+                ConsoleHelpers.WriteDebugLine("VisionHeaderPolicy: Found image content by media type");
+            }
+
+            ConsoleHelpers.WriteDebugLine($"VisionHeaderPolicy: Image content detection result: {hasImageContent}");
+            return hasImageContent;
         }
         catch (Exception ex)
         {
