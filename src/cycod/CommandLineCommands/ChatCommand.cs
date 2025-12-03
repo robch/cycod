@@ -66,6 +66,7 @@ public class ChatCommand : CommandWithVariables
         
         // Async handlers - operations that may take time like process execution  
         _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));   // ← Async: external process execution
+        _slashCommandRouter.Register(new SlashScreenshotCommandHandler(this)); // ← Async: screenshot capture and file I/O
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -107,6 +108,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
         factory.AddFunctions(new ImageHelperFunctions(this));
+        factory.AddFunctions(new ScreenshotHelperFunctions());
         factory.AddFunctions(new ShellAndProcessHelperFunctions());
         
         // Add MCP functions if any are configured
@@ -429,6 +431,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine();
         helpBuilder.AppendLine("  /run         Run a command");
         helpBuilder.AppendLine("  /image       Add image file(s) to conversation");
+        helpBuilder.AppendLine("  /screenshot  Take screenshot and add to conversation");
         helpBuilder.AppendLine();
 
         // User-defined prompts
