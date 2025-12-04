@@ -18,6 +18,9 @@ public class DirectoryHelpersTests
         _testRootPath = Path.Combine(Path.GetTempPath(), $"DirectoryHelpersTests_{Guid.NewGuid()}");
         Directory.CreateDirectory(_testRootPath!);
         Directory.SetCurrentDirectory(_testRootPath!);
+        // Normalize path to the canonical resolved form to avoid /var vs /private/var differences on macOS
+        _testRootPath = Directory.GetCurrentDirectory();
+
     }
 
     [TestCleanup]
