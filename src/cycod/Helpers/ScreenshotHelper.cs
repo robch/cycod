@@ -10,16 +10,6 @@ using System.Runtime.InteropServices;
 /// </summary>
 public static class ScreenshotHelper
 {
-#if WINDOWS
-#pragma warning disable CA1416 // Validate platform compatibility
-    [DllImport("user32.dll")]
-    private static extern int GetSystemMetrics(int nIndex);
-
-    private const int SM_CXSCREEN = 0;  // Width of the primary display monitor
-    private const int SM_CYSCREEN = 1;  // Height of the primary display monitor
-#pragma warning restore CA1416 // Validate platform compatibility
-#endif
-
     /// <summary>
     /// Takes a screenshot of the primary screen and saves it to a temporary file.
     /// </summary>
@@ -79,4 +69,16 @@ public static class ScreenshotHelper
         
         return $"Screenshot functionality is currently only available on Windows. Current platform: {platform}";
     }
+
+#region Windows Interop
+#if WINDOWS
+#pragma warning disable CA1416 // Validate platform compatibility
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private const int SM_CXSCREEN = 0;  // Width of the primary display monitor
+    private const int SM_CYSCREEN = 1;  // Height of the primary display monitor
+#pragma warning restore CA1416 // Validate platform compatibility
+#endif
+#endregion
 }

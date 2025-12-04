@@ -429,7 +429,7 @@ public class ChatCommand : CommandWithVariables
         helpBuilder.AppendLine("  /search      Search the web");
         helpBuilder.AppendLine("  /get         Get content from URL");
         helpBuilder.AppendLine();
-         helpBuilder.AppendLine("  /run         Run a command");
+        helpBuilder.AppendLine("  /run         Run a command");
         helpBuilder.AppendLine("  /image       Add image file(s) to conversation");
         helpBuilder.AppendLine("  /screenshot  Take screenshot and add to conversation");
         helpBuilder.AppendLine();

@@ -12,6 +12,7 @@ public class ScreenshotHelperFunctions
         _chatCommand = chatCommand;
     }
 
+#if WINDOWS
     [Description("Take a screenshot of the primary screen and add it to the conversation. The screenshot will be included in the next message exchange. Only works on Windows.")]
     public object TakeScreenshot()
     {
@@ -46,6 +47,7 @@ public class ScreenshotHelperFunctions
             return $"Error capturing screenshot: {ex.Message}";
         }
     }
+#endif
 
     private readonly ChatCommand _chatCommand;
 }
