@@ -31,6 +31,7 @@ public class ScreenshotHelperFunctions
             // Load the screenshot and return as DataContent for immediate inclusion
             try
             {
+                if (filePath == null) return "Failed to capture screenshot - no file path returned.";
                 var imageBytes = File.ReadAllBytes(filePath);
                 var mediaType = ImageResolver.GetMediaTypeFromFileExtension(filePath);
                 return new DataContent(imageBytes, mediaType);

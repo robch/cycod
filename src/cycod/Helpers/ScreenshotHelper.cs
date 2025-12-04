@@ -1,7 +1,8 @@
+#if WINDOWS
 using System.Drawing;
 using System.Drawing.Imaging;
+#endif
 using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
 
 /// <summary>
 /// Helper class for capturing screenshots on Windows.
@@ -9,20 +10,23 @@ using System.Runtime.Versioning;
 /// </summary>
 public static class ScreenshotHelper
 {
+#if WINDOWS
+#pragma warning disable CA1416 // Validate platform compatibility
     [DllImport("user32.dll")]
-    [SupportedOSPlatform("windows6.1")]
     private static extern int GetSystemMetrics(int nIndex);
 
     private const int SM_CXSCREEN = 0;  // Width of the primary display monitor
     private const int SM_CYSCREEN = 1;  // Height of the primary display monitor
+#pragma warning restore CA1416 // Validate platform compatibility
+#endif
 
     /// <summary>
     /// Takes a screenshot of the primary screen and saves it to a temporary file.
     /// </summary>
     /// <returns>The file path to the saved screenshot, or null if the operation failed</returns>
-    [SupportedOSPlatform("windows6.1")]
     public static string? TakeScreenshot()
     {
+#if WINDOWS
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
             return null;
@@ -30,6 +34,7 @@ public static class ScreenshotHelper
 
         try
         {
+#pragma warning disable CA1416 // Validate platform compatibility
             // Get primary screen dimensions using Win32 API
             var screenWidth = GetSystemMetrics(SM_CXSCREEN);
             var screenHeight = GetSystemMetrics(SM_CYSCREEN);
@@ -51,12 +56,16 @@ public static class ScreenshotHelper
             bitmap.Save(fileName, ImageFormat.Png);
 
             return fileName;
+#pragma warning restore CA1416 // Validate platform compatibility
         }
         catch (Exception ex)
         {
             Logger.Error($"Failed to capture screenshot: {ex.Message}");
             return null;
         }
+#else
+        return null;
+#endif
     }
 
     /// <summary>
