@@ -1,6 +1,7 @@
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 /// <summary>
 /// Helper class for capturing screenshots on Windows.
@@ -9,6 +10,7 @@ using System.Runtime.InteropServices;
 public static class ScreenshotHelper
 {
     [DllImport("user32.dll")]
+    [SupportedOSPlatform("windows6.1")]
     private static extern int GetSystemMetrics(int nIndex);
 
     private const int SM_CXSCREEN = 0;  // Width of the primary display monitor
@@ -18,6 +20,7 @@ public static class ScreenshotHelper
     /// Takes a screenshot of the primary screen and saves it to a temporary file.
     /// </summary>
     /// <returns>The file path to the saved screenshot, or null if the operation failed</returns>
+    [SupportedOSPlatform("windows6.1")]
     public static string? TakeScreenshot()
     {
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

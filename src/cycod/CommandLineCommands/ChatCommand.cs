@@ -108,7 +108,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ThinkingToolHelperFunction());
         factory.AddFunctions(new CodeExplorationHelperFunctions());
         factory.AddFunctions(new ImageHelperFunctions(this));
-        factory.AddFunctions(new ScreenshotHelperFunctions());
+        factory.AddFunctions(new ScreenshotHelperFunctions(this));
         factory.AddFunctions(new ShellAndProcessHelperFunctions());
         
         // Add MCP functions if any are configured

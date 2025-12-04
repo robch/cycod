@@ -7,6 +7,11 @@ using Microsoft.Extensions.AI;
 /// </summary>
 public class ScreenshotHelperFunctions
 {
+    public ScreenshotHelperFunctions(ChatCommand chatCommand)
+    {
+        _chatCommand = chatCommand;
+    }
+
     [Description("Take a screenshot of the primary screen and add it to the conversation. The screenshot will be included in the next message exchange. Only works on Windows.")]
     public object TakeScreenshot()
     {
@@ -20,33 +25,26 @@ public class ScreenshotHelperFunctions
         {
             // Capture screenshot
             var filePath = ScreenshotHelper.TakeScreenshot();
-            if (filePath == null)
-            {
-                return "Failed to capture screenshot. Please check that the display is accessible.";
-            }
+            var fileExists = FileHelpers.FileExists(filePath);
+            if (!fileExists) return "Failed to capture screenshot. Please check that the display is accessible.";
 
-            // Read the image and return as DataContent for immediate inclusion in conversation
-            if (File.Exists(filePath))
+            // Load the screenshot and return as DataContent for immediate inclusion
+            try
             {
-                try
-                {
-                    var imageBytes = File.ReadAllBytes(filePath);
-                    var mediaType = "image/png";
-                    
-                    // Return DataContent so the image is immediately added to the conversation
-                    return new DataContent(imageBytes, mediaType);
-                }
-                catch (Exception ex)
-                {
-                    return $"Screenshot captured to {filePath}, but failed to load image: {ex.Message}";
-                }
+                var imageBytes = File.ReadAllBytes(filePath);
+                var mediaType = ImageResolver.GetMediaTypeFromFileExtension(filePath);
+                return new DataContent(imageBytes, mediaType);
             }
-
-            return $"Screenshot saved to {filePath}, but file not found.";
+            catch (Exception ex)
+            {
+                return $"Error loading screenshot {filePath}: {ex.Message}";
+            }
         }
         catch (Exception ex)
         {
             return $"Error capturing screenshot: {ex.Message}";
         }
     }
+
+    private readonly ChatCommand _chatCommand;
 }
