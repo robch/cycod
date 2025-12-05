@@ -28,6 +28,11 @@
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
+  <!-- Platform-specific compilation symbols -->
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Anthropic.SDK" Version="5.4.1" />
     <PackageReference Include="AWSSDK.Extensions.Bedrock.MEAI" Version="4.0.1.1" />
@@ -41,6 +46,7 @@
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.0.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -57,11 +57,24 @@ public class VisionHeaderPolicy : PipelinePolicy
             var contentData = BinaryData.FromStream(contentStream);
             var contentString = contentData.ToString();
 
-            if (!contentString.Contains("attached content")) return false;
-            if (!contentString.Contains("\"type\":\"image")) return false;
-            if (!contentString.Contains("\"url\":\"data:image")) return false;
+            ConsoleHelpers.WriteDebugLine($"VisionHeaderPolicy: Checking payload content (first 500 chars): {contentString.Substring(0, Math.Min(500, contentString.Length))}");
 
-            return true;
+            var hasImageUrl = contentString.Contains("\"type\":\"image_url\"");
+            if (hasImageUrl) return true;
+
+            var hasAttachedImage = contentString.Contains("attached content") &&
+                                   contentString.Contains("\"type\":\"image") &&
+                                   contentString.Contains("\"url\":\"data:image");
+            if (hasAttachedImage) return true;
+
+            var hasDataContent = contentString.Contains("image/png") || 
+                                 contentString.Contains("image/jpeg") || 
+                                 contentString.Contains("image/gif") || 
+                                 contentString.Contains("image/webp") || 
+                                 contentString.Contains("image/bmp");
+            if (hasDataContent) return true;
+
+            return false;
         }
         catch (Exception ex)
         {
