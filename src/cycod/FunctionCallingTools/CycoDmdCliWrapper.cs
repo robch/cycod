@@ -8,6 +8,29 @@ using System.Threading.Tasks;
 /// </summary>
 public class CycoDmdCliWrapper
 {
+    #region Error Message Constants
+    
+    /// <summary>
+    /// Error message pattern when cycodmd command exits with non-zero code.
+    /// </summary>
+    private const string ExitCodeErrorPattern = "<cycodmd command exited with code";
+    
+    /// <summary>
+    /// Error message pattern when cycodmd command has an exception.
+    /// </summary>
+    private const string ExceptionErrorPattern = "<cycodmd command exited with error";
+    
+    /// <summary>
+    /// Error message pattern when cycodmd command times out.
+    /// </summary>
+    private const string TimeoutErrorPattern = "<waiting";
+    
+    /// <summary>
+    /// Additional timeout error pattern to ensure complete match.
+    /// </summary>
+    private const string TimeoutErrorSuffix = "timed out";
+    
+    #endregion
     /// <summary>
     /// Truncates command output according to line and total character limits.
     /// </summary>
@@ -94,13 +117,13 @@ public class CycoDmdCliWrapper
             // Add exit code message if not successful
             if (result.ExitCode != 0)
             {
-                output += Environment.NewLine + $"<cycodmd command exited with code {result.ExitCode}>";
+                output += Environment.NewLine + $"{ExitCodeErrorPattern} {result.ExitCode}>";
             }
             
             // Handle the case where the process timed out
             if (result.CompletionState == ProcessCompletionState.TimedOut)
             {
-                output = $"<waiting {timeoutMs}ms for cycodmd to finish, timed out>\n{output}";
+                output = $"{TimeoutErrorPattern} {timeoutMs}ms for cycodmd to finish, {TimeoutErrorSuffix}>\n{output}";
             }
             
             // Write debug files if verbose is enabled
@@ -120,7 +143,7 @@ public class CycoDmdCliWrapper
         }
         catch (Exception ex)
         {
-            return $"<cycodmd command exited with error: {ex.Message}>";
+            return $"{ExceptionErrorPattern}: {ex.Message}>";
         }
     }
 
@@ -525,6 +548,79 @@ public class CycoDmdCliWrapper
         {
             sb.Append($"--instructions {EscapeArgument(processingInstructions)} ");
         }
+        
+        return sb.ToString().Trim();
+    }
+    
+    #endregion
+    
+    #region Title Generation Methods
+    
+    /// <summary>
+    /// Executes CYCODMD command to generate a conversation title.
+    /// </summary>
+    public async Task<string?> ExecuteGenerateTitleCommand(
+        string conversationContent,
+        string? systemPrompt = null,
+        int timeoutMs = 30000,
+        int maxCharsPerLine = 500,
+        int maxTotalChars = 1000)
+    {
+        var arguments = BuildGenerateTitleArguments(systemPrompt);
+        
+        // Create a temporary file with the conversation content
+        var tempFilePath = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(tempFilePath, conversationContent);
+            
+            // Convert to cross-platform path for the command
+            var quotedPath = EscapeArgument(tempFilePath);
+            var fullArguments = $"{quotedPath} {arguments}";
+            
+            var rawOutput = await ExecuteCycoDmdCommandAsync(fullArguments, timeoutMs);
+            
+            // Check if command failed, timed out, or had an exception
+            if (rawOutput.Contains(ExitCodeErrorPattern) || 
+                rawOutput.Contains(ExceptionErrorPattern) ||
+                (rawOutput.Contains(TimeoutErrorPattern) && rawOutput.Contains(TimeoutErrorSuffix)))
+            {
+                return null;
+            }
+            
+            return TruncateCommandOutput(rawOutput, maxCharsPerLine, maxTotalChars);
+        }
+        finally
+        {
+            // Clean up temp file
+            if (File.Exists(tempFilePath))
+            {
+                try
+                {
+                    File.Delete(tempFilePath);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warning($"Failed to delete temp file {tempFilePath}: {ex.Message}");
+                }
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Builds command arguments for title generation.
+    /// </summary>
+    private string BuildGenerateTitleArguments(string? systemPrompt)
+    {
+        var sb = new StringBuilder();
+
+        if (!string.IsNullOrEmpty(systemPrompt))
+        {
+            sb.Append($"--instructions {EscapeArgument(systemPrompt)} ");
+        }
+
+        sb.Append("--auto-save-chat-history false ");
+        sb.Append("--auto-generate-title false ");
         
         return sb.ToString().Trim();
     }

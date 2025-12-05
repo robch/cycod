@@ -83,7 +83,7 @@ class PromptDeleteCommand : PromptBaseCommand
         var additionalFilePattern = $"{fileBase}-*{fileExt}";
         
         // Check if prompt file references another file
-        var content = File.ReadAllText(promptFilePath);
+        var content = FileHelpers.ReadAllText(promptFilePath);
         string? referencedFilePath = null;
         if (content.StartsWith('@'))
         {

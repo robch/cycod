@@ -1,0 +1,25 @@
+class: spiral-4-recovery-boundaries-tests
+optional: needsAI
+tag: cycod
+tests:
+- name: Test case 400.SL.CMD.RTRY-037 - Shell command auto-retries after temporary failure
+  run: cycod --input "Use RunShellCommand to run a command that might fail initially 'bash -c \"if [ ! -f /tmp/retry_test ]; then touch /tmp/retry_test && exit 1; else rm /tmp/retry_test && echo RetrySuccess; fi\"' with expectedTimeout=8000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*exited with code 1.*
+
+- name: Test case 500.SL.RES.HMAX-045 - Shell command approaches but respects memory limits
+  run: cycod --input "Use RunShellCommand to run a memory-conscious command 'bash -c \"echo MemoryTest; for i in {1..1000}; do echo $i > /dev/null; done; echo MemoryComplete\"' with expectedTimeout=10000" --auto-approve all
+  timeout: 25000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*MemoryTest.*
+    .*MemoryComplete.*
+
+- name: Test case 510.SL.CMD.NEAR-049 - Shell command finishes just under timeout threshold
+  run: cycod --input "Use RunShellCommand to run a command that takes close to but under the timeout 'bash -c \"sleep 3; echo NearTimeout\"' with expectedTimeout=5000" --auto-approve all
+  timeout: 20000
+  expect-regex: |
+    .*RunShellCommand.*
+    .*NearTimeout.*

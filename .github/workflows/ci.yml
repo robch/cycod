@@ -81,7 +81,7 @@ jobs:
           ./TestResults/test-results-cycodt.log
     
     - name: Publish test results
-      uses: dorny/test-reporter@v1
+      uses: dorny/test-reporter@v2.2.0
       if: always()  # Run this step even if previous steps failed
       with:
         name: .NET Tests

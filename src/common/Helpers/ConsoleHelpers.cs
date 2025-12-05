@@ -245,6 +245,45 @@ public class ConsoleHelpers
         }
     }
 
+    /// <summary>
+    /// Displays a user function call in the standard format: "user-function: name => result"
+    /// </summary>
+    /// <param name="functionName">The name of the function being called</param>
+    /// <param name="result">The result of the function call, or null if still executing</param>
+    public static void DisplayUserFunctionCall(string functionName, string? result)
+    {
+        Write($"\ruser-function: {functionName} => ", ConsoleColor.DarkGray);
+
+        if (result == null) Write("...", ConsoleColor.DarkGray);
+        if (result != null)
+        {
+            WriteLine(result, ConsoleColor.DarkGray);
+            Write("\rUser: ", ConsoleColor.Green);
+            SetForegroundColor(ConsoleColor.White);
+        }
+    }
+
+    /// <summary>
+    /// Displays an assistant function call in the standard format: "assistant-function: name args => result"
+    /// </summary>
+    /// <param name="name">The name of the function being called</param>
+    /// <param name="args">The arguments passed to the function</param>
+    /// <param name="result">The result of the function call, or null if still executing</param>
+    public static void DisplayAssistantFunctionCall(string name, string args, object? result)
+    {
+        Write($"\rassistant-function: {name} {args} => ", ConsoleColor.DarkGray);
+
+        if (result == null)
+        {
+            Write("...", ConsoleColor.DarkGray);
+        }
+        else
+        {
+            var text = result as string ?? "non-string result";
+            WriteLine(text, ConsoleColor.DarkGray);
+        }
+    }
+
     private static List<string> ReadAllLinesFromStdin()
     {
         _allLinesFromStdin = new();
