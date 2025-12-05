@@ -538,12 +538,12 @@ public class ChatCommand : CommandWithVariables
         {
             // Start the AI streaming task
             var streamingTask = chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
-            (messages) => messageCallback?.Invoke(messages),
-            (update) => streamingCallback?.Invoke(update),
-            (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
-            (name, args, result) => functionCallCallback?.Invoke(name, args, result),
-            _interruptTokenSource.Token,
-            () => _displayBuffer);
+                (messages) => messageCallback?.Invoke(messages),
+                (update) => streamingCallback?.Invoke(update),
+                (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
+                (name, args, result) => functionCallCallback?.Invoke(name, args, result),
+                _interruptTokenSource.Token,
+                () => _displayBuffer);
             
             // Continuously poll for ESC key interrupts while streaming            
             while (!streamingTask.IsCompleted)
@@ -800,8 +800,6 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
-        
-        // Track displayed content for accurate interrupt saving
         UpdateDisplayBuffer(text);
     }
 
