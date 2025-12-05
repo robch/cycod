@@ -1,0 +1,30 @@
+class: trx-matrix-counts
+tag: inception
+tests:
+  - name: "Run simple5 matrix test and generate TRX"
+    run: cycodt run --file simple5.yaml --include-optional check-timeouts --output-file test-results-simple5-trx-check.trx
+    expect-exit-code: 1  # Expected because timeout tests fail
+    expect-regex:
+      - "Found 1 test"
+      - "TEST RESULT SUMMARY"
+
+  - name: "Count TRX UnitTestResults and UnitTest definitions - should fail until bug is fixed"
+    bash: |
+      echo "=== TRX Count Analysis ==="
+      RESULTS_COUNT=$(grep -c "UnitTestResult" test-results-simple5-trx-check.trx)
+      DEFS_COUNT=$(grep -c "<UnitTest " test-results-simple5-trx-check.trx)
+      echo "UnitTestResults: $RESULTS_COUNT"
+      echo "UnitTest definitions: $DEFS_COUNT"
+      # This test expects equal counts - it will FAIL until we fix the TRX bug
+      if [ "$RESULTS_COUNT" = "$DEFS_COUNT" ]; then
+        echo "SUCCESS: Counts match!"
+        exit 0
+      else
+        echo "FAILURE: Counts don't match (this demonstrates the bug)"
+        exit 1
+      fi
+    expect-exit-code: 0  # Expect success (equal counts) - will fail until bug is fixed
+      
+  - name: "Cleanup TRX file"
+    bash: |
+      rm -f test-results-simple5-trx-check.trx

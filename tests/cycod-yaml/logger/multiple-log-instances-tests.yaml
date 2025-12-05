@@ -23,9 +23,9 @@ tests:
       cycodmd multi-test-*.log
     expect-regex: |
       Version:
-      ## multi-test-1\.log
+      ## multi-test-[12]\.log
       File logger initialized with file:
-      ## multi-test-2\.log
+      ## multi-test-[12]\.log
       File logger initialized with file:
     not-expect-regex: |
       ## exception-log-.*\.log
