@@ -538,39 +538,26 @@ public class ChatCommand : CommandWithVariables
         {
             // Start the AI streaming task
             var streamingTask = chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
-                (messages) => messageCallback?.Invoke(messages),
-                (update) => streamingCallback?.Invoke(update),
-                (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
-                (name, args, result) => functionCallCallback?.Invoke(name, args, result),
-                _interruptTokenSource.Token,
-                () => _displayBuffer);
+            (messages) => messageCallback?.Invoke(messages),
+            (update) => streamingCallback?.Invoke(update),
+            (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
+            (name, args, result) => functionCallCallback?.Invoke(name, args, result),
+            _interruptTokenSource.Token,
+            () => _displayBuffer);
             
-            // Poll for interrupts throughout the entire streaming at AI token frequency
-            const int pollIntervalMs = 50; // Same frequency as typical AI token arrival
-            
+            // Continuously poll for ESC key interrupts while streaming            
             while (!streamingTask.IsCompleted)
             {
                 CheckForDoubleEscapeInterrupt();
-                if (_interruptTokenSource?.Token.IsCancellationRequested == true)
+                if (_interruptTokenSource.Token.IsCancellationRequested)
                 {
-                    // Interrupt detected during polling - handle immediately
                     ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
-                    
-                    // Properly cancel and await the streaming task to prevent duplicate messages
-                    try 
-                    {
-                        await streamingTask;
-                    }
-                    catch (OperationCanceledException) 
-                    {
-                    }
-                    return "";
+                    break;
                 }
-                
-                await Task.Delay(pollIntervalMs);
+                await Task.Delay(PollIntervalMs, CancellationToken.None);
             }
             
-            // Return the completed streaming result
+            // Always await the task to get result or handle cancellation
             return await streamingTask;
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
@@ -1379,5 +1366,6 @@ public class ChatCommand : CommandWithVariables
     private string _displayBuffer = ""; // Track last displayed content for accurate saving
     private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
     private const int DisplayBufferSize = 50; // Track last 50 characters displayed
+    private const int PollIntervalMs = 50;
 }
 

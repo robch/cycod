@@ -352,8 +352,7 @@ public static class KnownSettings
         AppAutoSaveLog,
         AppChatCompletionTimeout,
         AppAutoApprove,
-        AppAutoDeny,
-        AppAutoGenerateTitles
+        AppAutoDeny
     };
     
     #endregion
