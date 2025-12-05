@@ -5,6 +5,26 @@ using System.Text;
 
 public class ChatCommand : CommandWithVariables
 {
+    // Public constants for function call results
+    public const string CallDeniedMessage = "User did not approve function call";
+    public const string CancelledFunctionResultMessage = "User did not approve function call";
+    
+    // Function call decision enum
+    public enum FunctionCallDecision 
+    { 
+        Approved, 
+        Denied, 
+        UserWantsControl 
+    }
+    
+    // Inner exception class for user control requests
+    public class UserWantsControlException : Exception
+    {
+        public UserWantsControlException() : base("User requested control") 
+        { 
+        }
+    }
+    
     public ChatCommand()
     {
     }
@@ -187,8 +207,9 @@ public class ChatCommand : CommandWithVariables
                 var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
-                    (name, args) => HandleFunctionCallApproval(factory, name, args!),
-                    (name, args, result) => HandleFunctionCallCompleted(name, args, result));
+                    (name, args) => ConvertFunctionCallDecision(HandleFunctionCallApproval(factory, name, args!)),
+                    (name, args, result) => DisplayAssistantFunctionCall(name, args, result));
+
 
                 // Check for notifications that may have been generated during the assistant's response
                 ConsoleHelpers.WriteLine("\n", overrideQuiet: true);
@@ -510,21 +531,71 @@ public class ChatCommand : CommandWithVariables
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
 
+        // Create cancellation token source and interrupt manager for this streaming session
+        _interruptTokenSource = new CancellationTokenSource();
+        _suppressAssistantDisplay = false; // Reset display suppression
+        _displayBuffer = ""; // Reset display buffer for new response
+
+        using var interruptManager = new SimpleInterruptManager();
+        
         try
         {
-            var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
+            // Start monitoring for interrupts
+            interruptManager.StartMonitoring();
+            
+            // Start the AI streaming task
+            var streamingTask = chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
                 (update) => streamingCallback?.Invoke(update),
                 (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
-                (name, args, result) => functionCallCallback?.Invoke(name, args, result));
-
-            return response;
+                (name, args, result) => functionCallCallback?.Invoke(name, args, result),
+                _interruptTokenSource.Token,
+                () => _displayBuffer);
+            
+            // Wait for either streaming completion or user interrupt
+            var interruptTask = interruptManager.WaitForInterruptAsync();
+            var completedTask = await Task.WhenAny(streamingTask, interruptTask);
+            
+            if (completedTask == interruptTask)
+            {
+                // User interrupt detected
+                var interruptResult = await interruptTask;
+                HandleInterrupt(interruptResult);
+                _interruptTokenSource.Cancel();
+                
+                try
+                {
+                    // Wait for streaming to finish cancellation and get partial result
+                    return await streamingTask;
+                }
+                catch (OperationCanceledException)
+                {
+                    // Clean cancellation - return empty
+                    return "";
+                }
+            }
+            
+            // Normal completion
+            return await streamingTask;
+        }
+        catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
+        {
+            // Interruption handled - just return empty
+            return "";
         }
         catch (Exception ex)
         {
             ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
             SaveExceptionHistory(chat);
             throw;
+        }
+        finally
+        {
+            // Clean up the cancellation token source and reset state
+            _interruptTokenSource?.Dispose();
+            _interruptTokenSource = null;
+            _suppressAssistantDisplay = false;
+            _displayBuffer = "";
         }
     }
 
@@ -719,6 +790,12 @@ public class ChatCommand : CommandWithVariables
 
     private void HandleStreamingChatCompletionUpdate(ChatResponseUpdate update)
     {
+        // If display is suppressed due to cancellation, don't display anything
+        if (_suppressAssistantDisplay)
+        {
+            return;
+        }
+        
         var usageUpdate = update.Contents
             .Where(x => x is UsageContent)
             .Cast<UsageContent>()
@@ -741,16 +818,57 @@ public class ChatCommand : CommandWithVariables
             .Select(x => x.Text)
             .ToList());
         DisplayAssistantResponse(text);
+        UpdateDisplayBuffer(text);
     }
 
-    private bool HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
+    private void HandleInterrupt(InterruptResult interruptResult)
+    {
+        switch (interruptResult.Type)
+        {
+            case InterruptType.DoubleEscape:
+                ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
+                _suppressAssistantDisplay = true;
+                break;
+            default:
+                ConsoleHelpers.Write("[Interrupt]", ConsoleColor.Yellow);
+                _suppressAssistantDisplay = true;
+                break;
+        }
+    }
+
+    private void UpdateDisplayBuffer(string displayedText)
+    {
+        if (string.IsNullOrEmpty(displayedText))
+            return;
+            
+        _displayBuffer += displayedText;
+        
+        // Keep only the last DisplayBufferSize characters
+        if (_displayBuffer.Length > DisplayBufferSize)
+        {
+            _displayBuffer = _displayBuffer.Substring(_displayBuffer.Length - DisplayBufferSize);
+        }
+    }
+
+    private bool ConvertFunctionCallDecision(FunctionCallDecision decision)
+    {
+        return decision switch
+        {
+            FunctionCallDecision.Approved => true,
+            FunctionCallDecision.Denied => false,
+            FunctionCallDecision.UserWantsControl => throw new UserWantsControlException(),
+            _ => false
+        };
+    }
+
+    private FunctionCallDecision HandleFunctionCallApproval(McpFunctionFactory factory, string name, string args)
     {
         Logger.Info($"HandleFunctionCallApproval: Function '{name}' called with args: {args}");
         
         var autoApprove = ShouldAutoApprove(factory, name);
         Logger.Info($"HandleFunctionCallApproval: Auto-approve result for '{name}': {autoApprove}");
         
-        if (autoApprove) return true;
+        if (autoApprove) return FunctionCallDecision.Approved;
 
         while (true)
         {
@@ -772,23 +890,28 @@ public class ChatCommand : CommandWithVariables
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Approved (session)", ConsoleColor.Yellow);
                 _approvedFunctionCallNames.Add(name);
-                return true;
+                return FunctionCallDecision.Approved;
             }
             else if (key == null || key?.KeyChar == 'N')
             {
                 _deniedFunctionCallNames.Add(name);
                 ConsoleHelpers.WriteLine($"\b\b\b\b Declined (session)", ConsoleColor.Red);
-                return false;
+                return FunctionCallDecision.Denied;
             }
             else if (key?.KeyChar == 'y')
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Approved (once)", ConsoleColor.Yellow);
-                return true;
+                return FunctionCallDecision.Approved;
             }
             else if (key?.KeyChar == 'n')
             {
                 ConsoleHelpers.WriteLine($"\b\b\b\b Declined (once)", ConsoleColor.Red);
-                return false;
+                return FunctionCallDecision.Denied;
+            }
+            else if (key?.Key == ConsoleKey.Escape)
+            {
+                ConsoleHelpers.WriteLine($"\b\b\b\b Cancelled", ConsoleColor.Yellow);
+                return FunctionCallDecision.UserWantsControl;
             }
             else if (key?.KeyChar == '?')
             {
@@ -798,6 +921,7 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteLine("  y: Approve this function call for this one time");
                 ConsoleHelpers.WriteLine("  N: Decline this function call for this session");
                 ConsoleHelpers.WriteLine("  n: Decline this function call for this one time");
+                ConsoleHelpers.WriteLine("  ESC: Cancel function call and return to conversation");
                 ConsoleHelpers.WriteLine("  ?: Show this help message\n");
                 ConsoleHelpers.Write("  See ");
                 ConsoleHelpers.Write("cycod help function calls", ConsoleColor.Yellow);
@@ -808,11 +932,6 @@ public class ChatCommand : CommandWithVariables
                 ConsoleHelpers.WriteLine($"\b\b\b\b Invalid input", ConsoleColor.Red);
             }
         }
-    }
-
-    private void HandleFunctionCallCompleted(string name, string args, object? result)
-    {
-        DisplayAssistantFunctionCall(name, args, result);
     }
 
     private void DisplayUserPrompt()
@@ -1234,7 +1353,11 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
-
-
+    
+    // Event-driven interrupt tracking  
+    private CancellationTokenSource? _interruptTokenSource = null;
+    private bool _suppressAssistantDisplay = false;
+    private string _displayBuffer = ""; // Track last displayed content for accurate saving
+    private const int DisplayBufferSize = 50; // Track last 50 characters displayed
 }
 
