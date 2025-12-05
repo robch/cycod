@@ -188,8 +188,10 @@ public class SlashCycoDmdCommandHandler : IAsyncSlashCommandHandler
         if (string.IsNullOrWhiteSpace(arguments))
             return Task.FromResult("/image requires an image file path or pattern.");
 
-        _chatCommand.ImagePatterns.Add(arguments.Trim());
-        return Task.FromResult($"Added image pattern: {arguments.Trim()}");
+        var trimmed = arguments.Trim().Trim('"');
+        _chatCommand.ImagePatterns.Add(trimmed);
+
+        return Task.FromResult($"Added image pattern: {trimmed}");
     }
     
     private readonly CycoDmdCliWrapper _cycoDmdWrapper;
