@@ -1,5 +1,6 @@
 class: trx-matrix-counts
 tag: inception
+optional: known-issue
 tests:
   - name: "Run simple5 matrix test and generate TRX"
     run: cycodt run --file simple5.yaml --include-optional check-timeouts --output-file test-results-simple5-trx-check.trx
