@@ -3,6 +3,8 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 
+using Cycod.Debugging.Tools;
+
 public class ChatCommand : CommandWithVariables
 {
     public ChatCommand()
@@ -110,6 +112,8 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ImageHelperFunctions(this));
         factory.AddFunctions(new ScreenshotHelperFunctions(this));
         factory.AddFunctions(new ShellAndProcessHelperFunctions());
+        factory.AddFunctions(new DebuggerFunctions());
+        factory.AddFunctions(new DebugLifecycleFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
