@@ -87,7 +87,6 @@ public class FunctionCallingChat : IAsyncDisposable
         Func<string>? getDisplayBuffer = null)
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
-
         Conversation.Messages.Add(message);
         messageCallback?.Invoke(Conversation.Messages);
 
@@ -96,6 +95,7 @@ public class FunctionCallingChat : IAsyncDisposable
         {
             var responseContent = string.Empty;
 
+            // Surround streaming with try/catch to handle user interruption via OperationCancelledException
             try
             {
                 await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options, cancellationToken))
@@ -141,6 +141,7 @@ public class FunctionCallingChat : IAsyncDisposable
                 throw;
             }
 
+            // Surround assistant response handling with try/catch to handle user interruption via ChatCommand.UserWantsControlException
             try
             {
                 if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
@@ -212,36 +213,22 @@ public class FunctionCallingChat : IAsyncDisposable
             functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
         }
         // If the user cancels during function call approval, we need to handle that gracefully by 
-        // simulating the same callback pattern as if they had approved/denied the function call
+        // using the same logic as denying function calls
         catch (ChatCommand.UserWantsControlException)
         {
-            // User wants to regain control - simulate the same callback pattern as approve/deny
             var functionResultContents = new List<AIContent>();
-
-            // For each cancelled function call, replicate the exact approve/deny callback pattern
+            
             foreach (var functionCall in readyToCallFunctionCalls)
             {
-                // Zeroth callback: already showed the approval message, so we can skip that.
-                // `assistant-function: CreateFile {"path":"foo.txt","fileText":""} => Cancelled`
-
-                // First callback: null result
-                // `assistant-function: CreateFile {"path":"foo.txt","fileText":""} => ...`
-                functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
-
-                // Second callback: shows the AI response to the function call
-                // `assistant-function: CreateFile {"path":"foo.txt","fileText":""} => User did not approve function call`
-                var cancelResult = ChatCommand.CancelledFunctionResultMessage;
-                functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, cancelResult);
-
-                // Create the FunctionResultContent for the Tool message
+                var cancelResult = DontCallFunction(functionCall, functionCallCallback);
                 functionResultContents.Add(new FunctionResultContent(functionCall.CallId, cancelResult));
             }
 
-            // Add Tool message (same pattern as normal flow)
             Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, functionResultContents));
             messageCallback?.Invoke(Conversation.Messages);
-
-            // Re-throw so the main loop knows to exit
+            
+            // Re-throw so the main loop (CompleteChatStreamingAsync()) knows 
+            // to stop processing and return control to the user
             throw;
         }
 
