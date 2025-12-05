@@ -528,14 +528,18 @@ public class ChatCommand : CommandWithVariables
         streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
         functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
 
-        // Create a new cancellation token source for this streaming session
+        // Create cancellation token source and interrupt manager for this streaming session
         _interruptTokenSource = new CancellationTokenSource();
-        _lastEscKeyTime = null; // Reset ESC tracking
         _suppressAssistantDisplay = false; // Reset display suppression
         _displayBuffer = ""; // Reset display buffer for new response
 
+        using var interruptManager = new SimpleInterruptManager();
+        
         try
         {
+            // Start monitoring for interrupts
+            interruptManager.StartMonitoring();
+            
             // Start the AI streaming task
             var streamingTask = chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
                 (messages) => messageCallback?.Invoke(messages),
@@ -545,24 +549,35 @@ public class ChatCommand : CommandWithVariables
                 _interruptTokenSource.Token,
                 () => _displayBuffer);
             
-            // Continuously poll for ESC key interrupts while streaming            
-            while (!streamingTask.IsCompleted)
+            // Wait for either streaming completion or user interrupt
+            var interruptTask = interruptManager.WaitForInterruptAsync();
+            var completedTask = await Task.WhenAny(streamingTask, interruptTask);
+            
+            if (completedTask == interruptTask)
             {
-                CheckForDoubleEscapeInterrupt();
-                if (_interruptTokenSource.Token.IsCancellationRequested)
+                // User interrupt detected
+                var interruptResult = await interruptTask;
+                HandleInterrupt(interruptResult);
+                _interruptTokenSource.Cancel();
+                
+                try
                 {
-                    ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
-                    break;
+                    // Wait for streaming to finish cancellation and get partial result
+                    return await streamingTask;
                 }
-                await Task.Delay(PollIntervalMs, CancellationToken.None);
+                catch (OperationCanceledException)
+                {
+                    // Clean cancellation - return empty
+                    return "";
+                }
             }
             
-            // Always await the task to get result or handle cancellation
+            // Normal completion
             return await streamingTask;
         }
         catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
         {
-            // Interruption handled by polling - just return empty (no message display needed)
+            // Interruption handled - just return empty
             return "";
         }
         catch (Exception ex)
@@ -803,39 +818,18 @@ public class ChatCommand : CommandWithVariables
         UpdateDisplayBuffer(text);
     }
 
-    private void CheckForDoubleEscapeInterrupt()
+    private void HandleInterrupt(InterruptResult interruptResult)
     {
-        // Only check for ESC if console input is not redirected and we're in an interactive session
-        // Skip during title generation to avoid consuming subprocess input
-        var titleGenerating = _currentChat?.Notifications.GetGenerationState(NotificationType.Title) != GenerationState.Idle;
-        if (Console.IsInputRedirected || !Console.KeyAvailable || titleGenerating)
-            return;
-
-        // Check if there are any keys available
-        while (Console.KeyAvailable)
+        switch (interruptResult.Type)
         {
-            var keyInfo = Console.ReadKey(true);
-            
-            if (keyInfo.Key == ConsoleKey.Escape)
-            {
-                var currentTime = DateTime.UtcNow;
-                
-                if (_lastEscKeyTime.HasValue && 
-                    (currentTime - _lastEscKeyTime.Value).TotalMilliseconds <= DoubleEscTimeoutMs)
-                {
-                    // Double ESC detected - suppress further display and show interruption indicator
-                    _suppressAssistantDisplay = true;
-                    _interruptTokenSource?.Cancel();
-                    return;
-                }
-                
-                _lastEscKeyTime = currentTime;
-            }
-            else
-            {
-                // Reset ESC tracking if any other key is pressed
-                _lastEscKeyTime = null;
-            }
+            case InterruptType.DoubleEscape:
+                ConsoleHelpers.Write("[User Interrupt]", ConsoleColor.Yellow);
+                _suppressAssistantDisplay = true;
+                break;
+            default:
+                ConsoleHelpers.Write("[Interrupt]", ConsoleColor.Yellow);
+                _suppressAssistantDisplay = true;
+                break;
         }
     }
 
@@ -1357,13 +1351,10 @@ public class ChatCommand : CommandWithVariables
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
     
-    // Double-ESC interrupt tracking
-    private DateTime? _lastEscKeyTime = null;
+    // Event-driven interrupt tracking  
     private CancellationTokenSource? _interruptTokenSource = null;
     private bool _suppressAssistantDisplay = false;
     private string _displayBuffer = ""; // Track last displayed content for accurate saving
-    private const int DoubleEscTimeoutMs = 500; // Maximum time between ESC presses to count as double-ESC
     private const int DisplayBufferSize = 50; // Track last 50 characters displayed
-    private const int PollIntervalMs = 50;
 }
 
