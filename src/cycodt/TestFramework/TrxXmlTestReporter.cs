@@ -132,7 +132,7 @@ public static class TrxXmlTestReporter
         foreach (var testCase in testCases)
         {
             var executionId = testRun.GetExecutionId(testCase).ToString();
-            var qualifiedParts = testCase.FullyQualifiedName.Split('.');
+            var qualifiedParts = testCase.FullyQualifiedName.Split(new[] { "::" }, StringSplitOptions.None);
             var className = string.Join(".", qualifiedParts.Take(qualifiedParts.Length - 1));
             var name = qualifiedParts.Last();
             var atIndex = name.LastIndexOf('@');
