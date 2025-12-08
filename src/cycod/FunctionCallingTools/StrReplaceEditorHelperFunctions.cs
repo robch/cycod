@@ -349,6 +349,175 @@ public class StrReplaceEditorHelperFunctions
         EditHistory.Remove(path);
         return $"Reverted last edit made to {path}.";
     }
+    
+    [ReadOnly(false)]
+    [Description("Replace text across multiple files with preview and bulk operation capabilities. Supports both literal text and regex patterns.")]
+    public async Task<string> ReplaceAllInFiles(
+        [Description("File glob patterns to search (e.g., **/*.cs, src/*.md)")] string[] filePatterns,
+        [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
+        [Description("Only include files containing this regex pattern")] string fileContains = "",
+        [Description("Exclude files containing this regex pattern")] string fileNotContains = "",
+        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string modifiedAfter = "",
+        [Description("Only files modified before this time")] string modifiedBefore = "",
+        [Description("Maximum number of files to process.")] int maxFiles = 50,
+        [Description("Text or regex pattern to find")] string old = "",
+        [Description("Replacement text")] string @new = "",
+        [Description("Use regex patterns instead of literal text")] bool useRegex = false,
+        [Description("Preview mode - show what would be replaced without making changes")] bool preview = true)
+    {
+        Logger.Info($"ReplaceAllInFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
+        Logger.Info($"Replacing '{old}' with '{@new}' (useRegex: {useRegex}, preview: {preview})");
 
+        if (string.IsNullOrEmpty(old))
+        {
+            return "Error: 'old' parameter cannot be empty.";
+        }
+        
+        if (string.IsNullOrEmpty(@new))
+        {
+            return "Error: 'new' parameter cannot be empty.";
+        }
+
+        try
+        {
+            // For preview mode, just call cycodmd to show diff
+            if (preview)
+            {
+                return await CallCycoDmdForPreview(filePatterns, excludePatterns, fileContains, 
+                    fileNotContains, modifiedAfter, modifiedBefore, old, @new, useRegex);
+            }
+            else
+            {
+                // For execute mode, get file list first, store undo history, then execute
+                return await ExecuteReplacementWithUndo(filePatterns, excludePatterns, fileContains, 
+                    fileNotContains, modifiedAfter, modifiedBefore, old, @new, useRegex);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error in ReplaceAllInFiles: {ex.Message}");
+            return $"Error performing replacement: {ex.Message}";
+        }
+    }
+    
+    /// <summary>
+    /// Calls cycodmd for preview mode (shows diff without making changes)
+    /// </summary>
+    private async Task<string> CallCycoDmdForPreview(
+        string[] filePatterns, string[]? excludePatterns, string fileContains, 
+        string fileNotContains, string modifiedAfter, string modifiedBefore,
+        string old, string @new, bool useRegex)
+    {
+        var searchPattern = useRegex ? old : System.Text.RegularExpressions.Regex.Escape(old);
+        
+        var arguments = BuildCycoDmdArguments(filePatterns, excludePatterns, fileContains,
+            fileNotContains, modifiedAfter, modifiedBefore, searchPattern, @new, executeMode: false);
+        
+        Logger.Info($"Calling cycodmd for preview with arguments: {arguments}");
+        return await _cycoDmdWrapper.ExecuteRawCycoDmdCommandAsync(arguments);
+    }
+    
+    /// <summary>
+    /// Executes replacement with undo history integration
+    /// </summary>
+    private async Task<string> ExecuteReplacementWithUndo(
+        string[] filePatterns, string[]? excludePatterns, string fileContains, 
+        string fileNotContains, string modifiedAfter, string modifiedBefore,
+        string old, string @new, bool useRegex)
+    {
+        // First, get list of files that will be affected
+        var findFilesArgs = $"find-files {string.Join(" ", filePatterns.Select(p => $"\"{p}\""))}";
+        
+        if (excludePatterns?.Length > 0)
+            findFilesArgs += $" --exclude {string.Join(" ", excludePatterns.Select(p => $"\"{p}\""))}";
+        if (!string.IsNullOrEmpty(fileContains))
+            findFilesArgs += $" --file-contains \"{fileContains}\"";
+        if (!string.IsNullOrEmpty(fileNotContains))
+            findFilesArgs += $" --file-not-contains \"{fileNotContains}\"";
+        if (!string.IsNullOrEmpty(modifiedAfter))
+            findFilesArgs += $" --modified-after \"{modifiedAfter}\"";
+        if (!string.IsNullOrEmpty(modifiedBefore))
+            findFilesArgs += $" --modified-before \"{modifiedBefore}\"";
+        
+        findFilesArgs += " --files-only";
+        
+        var fileListOutput = await _cycoDmdWrapper.ExecuteRawCycoDmdCommandAsync(findFilesArgs);
+        var filesToProcess = fileListOutput
+            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(f => !string.IsNullOrWhiteSpace(f))
+            .ToList();
+        
+        if (filesToProcess.Count == 0)
+        {
+            return "No files found matching the specified criteria.";
+        }
+        
+        // Store original content for undo (only for files that will actually change)
+        var searchPattern = useRegex ? old : System.Text.RegularExpressions.Regex.Escape(old);
+        var regex = new System.Text.RegularExpressions.Regex(searchPattern);
+        var filesWithChanges = new List<string>();
+        
+        foreach (var file in filesToProcess)
+        {
+            if (File.Exists(file))
+            {
+                var content = await File.ReadAllTextAsync(file);
+                if (regex.IsMatch(content))
+                {
+                    // Store original content for undo
+                    EditHistory[file] = content;
+                    filesWithChanges.Add(file);
+                    Logger.Info($"Stored undo history for: {file}");
+                }
+            }
+        }
+        
+        if (filesWithChanges.Count == 0)
+        {
+            return "No files contain the specified search text.";
+        }
+        
+        // Now execute the replacement via cycodmd
+        var executeArgs = BuildCycoDmdArguments(filePatterns, excludePatterns, fileContains,
+            fileNotContains, modifiedAfter, modifiedBefore, searchPattern, @new, executeMode: true);
+        
+        Logger.Info($"Executing replacement with undo history stored for {filesWithChanges.Count} files");
+        var result = await _cycoDmdWrapper.ExecuteRawCycoDmdCommandAsync(executeArgs);
+        
+        return result + $"\n\nUndo history stored for {filesWithChanges.Count} file(s). Use UndoEdit to revert individual files.";
+    }
+    
+    /// <summary>
+    /// Builds cycodmd command arguments for replacement operations
+    /// </summary>
+    private string BuildCycoDmdArguments(
+        string[] filePatterns, string[]? excludePatterns, string fileContains,
+        string fileNotContains, string modifiedAfter, string modifiedBefore,
+        string searchPattern, string replacementText, bool executeMode)
+    {
+        var arguments = $"find-files {string.Join(" ", filePatterns.Select(p => $"\"{p}\""))}";
+        
+        if (excludePatterns?.Length > 0)
+            arguments += $" --exclude {string.Join(" ", excludePatterns.Select(p => $"\"{p}\""))}";
+        
+        if (!string.IsNullOrEmpty(fileContains))
+            arguments += $" --file-contains \"{fileContains}\"";
+        if (!string.IsNullOrEmpty(fileNotContains))
+            arguments += $" --file-not-contains \"{fileNotContains}\"";
+        if (!string.IsNullOrEmpty(modifiedAfter))
+            arguments += $" --modified-after \"{modifiedAfter}\"";
+        if (!string.IsNullOrEmpty(modifiedBefore))
+            arguments += $" --modified-before \"{modifiedBefore}\"";
+        
+        arguments += $" --contains \"{searchPattern}\"";
+        arguments += $" --replace-with \"{replacementText}\"";
+        
+        if (executeMode)
+            arguments += " --execute";
+        
+        return arguments;
+    }
+
+    private readonly CycoDmdCliWrapper _cycoDmdWrapper = new CycoDmdCliWrapper();
     private readonly Dictionary<string, string> EditHistory = new Dictionary<string, string>();
 }

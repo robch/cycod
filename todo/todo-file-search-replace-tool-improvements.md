@@ -226,15 +226,30 @@ public async Task<string> ReplaceAllInFiles(...)
 - Natural separation: cycodmd shows changes, cycod makes changes
 - No code duplication between projects
 
-### Implementation Order - UPDATED
+## Implementation Status
 
-With cycodmd handling replacement directly, the implementation order becomes:
+### ✅ COMPLETED
+1. **FindFiles/FindInFiles** (cycod - focused file discovery and content search)
+2. **cycodmd --replace-with** (cycodmd - replacement with preview/execute modes)  
+3. **ReplaceAllInFiles wrapper** (cycod - orchestrates preview + execute with undo)
 
-1. **FindFiles/FindInFiles** (cycod - simple refactor of QueryFiles functionality)
-2. **cycodmd --replace-with** (cycodmd - add replacement capability with preview/execute modes)
-3. **ReplaceAllInFiles wrapper** (cycod - simple wrapper that calls cycodmd)
+### Key Features Implemented
 
-This is much simpler than the original plan since we don't need `FileHelpers.BulkReplaceInFiles()` - cycodmd handles the complete replacement workflow internally.
+**Context lines in diff output:**
+- Shows 3 lines of context before and after changes
+- Git-style diff format with `-` (removed) and `+` (added) lines
+- Context lines prefixed with spaces for clarity
+
+**Undo history integration:**  
+- ReplaceAllInFiles stores original content for each modified file in EditHistory
+- Only files that actually have changes get undo history entries
+- Users can revert individual files using existing UndoEdit function
+- Execute mode reports how many files have undo history available
+
+**Complete workflow:**
+- Preview mode: Shows diff via cycodmd (no file changes)
+- Execute mode: Stores undo → calls cycodmd for replacement → reports results
+- Seamless integration with existing function calling infrastructure
 
 ---
 

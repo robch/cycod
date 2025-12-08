@@ -1,0 +1,131 @@
+tests:
+  - name: AI calls ReplaceAllInFiles for preview
+    optional: needsAI
+    run: |
+      cycod --input "use ReplaceAllInFiles to preview replacing 'FindFiles' with 'DiscoverFiles' in yaml files, limit to 2 files" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+    timeout: 45000
+
+  - name: AI uses ReplaceAllInFiles with preview mode default
+    optional: needsAI
+    run: |
+      cycod --input "use ReplaceAllInFiles to show changes for replacing 'test' with 'exam' in one txt file" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles.*preview.*true
+    timeout: 45000
+
+  - name: AI uses ReplaceAllInFiles with file filtering
+    optional: needsAI
+    run: |
+      cycod --input "use ReplaceAllInFiles to preview replacing text in markdown files only" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles.*\.md
+    timeout: 45000
+  - name: AI uses ReplaceAllInFiles for preview mode
+    optional: needsAI
+    run: |
+      cycod --input "show me what would happen if I replaced 'QueryFiles' with 'SearchFiles' in markdown files, but don't actually make the changes" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      preview.*true
+      ## .*\.md
+      - \d+:.*QueryFiles
+      \+ \d+:.*SearchFiles
+    not-expect-regex: |
+      Replaced \d+ occurrence
+    timeout: 30000
+
+  - name: AI uses ReplaceAllInFiles with git diff style output
+    optional: needsAI
+    run: |
+      cycod --input "preview replacing 'FindInFiles' with 'SearchInFiles' in documentation files" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      ## .*\.(md|txt)
+      - \d+:.*FindInFiles
+      \+ \d+:.*SearchInFiles
+      Will replace \d+ occurrence\(s\)
+    timeout: 30000
+
+  - name: AI uses ReplaceAllInFiles for execution mode with safety
+    optional: needsAI
+    run: |
+      cycod --input "I want to replace 'TODO' with 'DONE' in markdown files, but show me preview first and ask for confirmation" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      preview.*true
+      old.*TODO
+      new.*DONE
+    timeout: 30000
+
+  - name: ReplaceAllInFiles shows context lines around changes  
+    optional: needsAI
+    run: |
+      cycod --input "preview replacing 'test' with 'TEST' in yaml files and show surrounding context" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      ## .*\.ya?ml
+      \d+:.*
+      - \d+:.*test
+      \+ \d+:.*TEST
+      \d+:.*
+    timeout: 30000
+
+  - name: AI uses ReplaceAllInFiles with regex patterns
+    optional: needsAI
+    run: |
+      cycod --input "replace all occurrences of words starting with 'find' using regex pattern in code files" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      useRegex.*true
+    timeout: 30000
+
+  - name: ReplaceAllInFiles handles file pattern filtering
+    optional: needsAI
+    run: |
+      cycod --input "replace 'old' with 'new' but only in C# files under src directory" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      filePatterns.*src.*\.cs
+      old.*old
+      new.*new
+    timeout: 30000
+
+  - name: ReplaceAllInFiles with exclusion patterns
+    optional: needsAI
+    run: |
+      cycod --input "replace text in all files but exclude anything in bin or obj directories" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      excludePatterns.*bin|obj
+    timeout: 30000
+
+  - name: AI defaults to preview mode for safety
+    optional: needsAI
+    run: |
+      cycod --input "replace 'example' with 'sample' in documentation" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      preview.*true
+      Will replace \d+ occurrence\(s\)
+    not-expect-regex: |
+      Replaced \d+ occurrence\(s\)
+    timeout: 30000
+
+  - name: ReplaceAllInFiles shows summary of changes
+    optional: needsAI
+    run: |
+      cycod --input "preview replacing 'function' with 'method' in code files" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      Will replace \d+ occurrence\(s\) in this file\.
+    timeout: 30000
+
+  - name: ReplaceAllInFiles handles no matches gracefully
+    optional: needsAI
+    run: |
+      cycod --input "replace 'ThisTextDoesNotExist' with 'NewText' in any files" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+    timeout: 30000
