@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Text;
 using System.Text.RegularExpressions;
 
 /// <summary>
@@ -121,7 +122,7 @@ public class StrReplaceEditorHelperFunctions
             // If no further filtering needed, return cleaned content
             if (string.IsNullOrEmpty(lineContains))
             {
-                return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumberMapping.ToArray(), false, null, maxCharsPerLine, maxTotalChars);
+                return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumberMapping.ToArray(), false, null, maxCharsPerLine, maxTotalChars, fileLineCount);
             }
             
             // Store the line number mapping for later use
@@ -137,7 +138,7 @@ public class StrReplaceEditorHelperFunctions
         if (string.IsNullOrEmpty(lineContains))
         {
             var lineNumbersArray = Enumerable.Range(startLine, rangeLines.Length).ToArray();
-            return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumbersArray, false, null, maxCharsPerLine, maxTotalChars);
+            return FormatAndTruncateLines(rangeLines, lineNumbers, lineNumbersArray, false, null, maxCharsPerLine, maxTotalChars, fileLineCount);
         }
         
         // STEP 2: Apply lineContains filtering on the cleaned content
@@ -188,34 +189,105 @@ public class StrReplaceEditorHelperFunctions
         var matchedIndicesSet = matchedLineIndices.ToHashSet();
         
         return FormatAndTruncateLines(selectedLines, lineNumbers, selectedLineNumbers, shouldHighlight, 
-            expandedLineIndices.Select(i => matchedIndicesSet.Contains(i)).ToArray(), maxCharsPerLine, maxTotalChars);
+            expandedLineIndices.Select(i => matchedIndicesSet.Contains(i)).ToArray(), maxCharsPerLine, maxTotalChars, fileLineCount);
     }
     
     /// <summary>
     /// Helper method to format lines with optional line numbers and highlighting, then apply truncation
     /// </summary>
     private static string FormatAndTruncateLines(string[] lines, bool lineNumbers, int[] lineNumbersArray, 
-        bool shouldHighlight, bool[]? isMatchingLine, int maxCharsPerLine, int maxTotalChars)
+        bool shouldHighlight, bool[]? isMatchingLine, int maxCharsPerLine, int maxTotalChars, int fileLineCount)
     {
-        var formattedLines = lines.Select((line, idx) =>
+        var sb = new StringBuilder();
+        int firstLine = lineNumbersArray[0];
+        int lastLine = firstLine;
+        int linesShown = 0;
+        bool wasTruncated = false;
+        bool anyLineTruncated = false;
+        
+        for (int i = 0; i < lines.Length; i++)
         {
+            // Format this line
+            string formattedLine;
             if (lineNumbers)
             {
-                var actualLineNum = lineNumbersArray[idx];
-                var isMatch = isMatchingLine?[idx] == true;
+                var actualLineNum = lineNumbersArray[i];
+                var isMatch = isMatchingLine?[i] == true;
                 var prefix = shouldHighlight && isMatch ? "*" : " ";
-                return $"{prefix} {actualLineNum}: {line}";
+                
+                var content = lines[i];
+                if (content.Length > maxCharsPerLine)
+                {
+                    content = content.Substring(0, maxCharsPerLine) + "…";
+                    anyLineTruncated = true;
+                }
+                
+                formattedLine = $"{prefix} {actualLineNum}: {content}";
             }
             else
             {
-                var isMatch = isMatchingLine?[idx] == true;
+                var isMatch = isMatchingLine?[i] == true;
                 var prefix = shouldHighlight && isMatch ? "* " : "";
-                return $"{prefix}{line}";
+                
+                var content = lines[i];
+                if (content.Length > maxCharsPerLine)
+                {
+                    content = content.Substring(0, maxCharsPerLine) + "…";
+                    anyLineTruncated = true;
+                }
+                
+                formattedLine = $"{prefix}{content}";
             }
-        }).ToArray();
+            
+            // Check if adding this line would exceed total limit
+            var potentialLength = sb.Length + formattedLine.Length + (sb.Length > 0 ? 1 : 0); // +1 for newline if not first
+            if (potentialLength > maxTotalChars && linesShown > 0)
+            {
+                wasTruncated = true;
+                break;
+            }
+            
+            // Add the line
+            if (sb.Length > 0)
+            {
+                sb.AppendLine();
+            }
+            sb.Append(formattedLine);
+            
+            lastLine = lineNumbersArray[i];
+            linesShown++;
+        }
         
-        var output = string.Join("\n", formattedLines);
-        return TextTruncationHelper.TruncateOutput(output, maxCharsPerLine, maxTotalChars);
+        // Add metadata
+        sb.AppendLine();
+        sb.AppendLine();
+        sb.Append($"[Showing lines {firstLine}-{lastLine}");
+        
+        if (wasTruncated)
+        {
+            var linesNotShown = lines.Length - linesShown;
+            sb.Append($" (truncated: {linesNotShown} more matched lines not shown)");
+        }
+        
+        sb.Append($" of {fileLineCount} total]");
+        
+        if (lastLine >= fileLineCount)
+        {
+            sb.Append(" [End of file]");
+        }
+        else
+        {
+            var remaining = fileLineCount - lastLine;
+            sb.Append($" [{remaining} lines remaining]");
+        }
+        
+        if (anyLineTruncated)
+        {
+            sb.AppendLine();
+            sb.Append($"[Note: Some lines were truncated to {maxCharsPerLine} chars]");
+        }
+        
+        return sb.ToString();
     }
 
     [ReadOnly(false)]

@@ -218,7 +218,7 @@ class Program
         {
             var onlyOneFile = files.Count == 1 && commandLineOptions.Commands.Count == 1;
             var skipMarkdownWrapping = onlyOneFile && FileConverters.CanConvert(file);
-            var wrapInMarkdown = !skipMarkdownWrapping; ;
+            var wrapInMarkdown = !skipMarkdownWrapping;
 
             var getCheckSaveTask = GetCheckSaveFileContentAsync(
                 file,
@@ -865,8 +865,8 @@ class Program
                 }
             }
             
-            if (matchingLines.Count == 0)
-                return string.Empty;
+        if (matchingLines.Count == 0)
+            return string.Empty;
                 
         // If execute mode, actually perform the replacement
         if (executeMode)
