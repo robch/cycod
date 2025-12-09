@@ -1,0 +1,110 @@
+tests:
+  - name: File operations handle empty results gracefully
+    optional: needsAI
+    run: |
+      cycod --input "find files with extension .nonexistent in this project" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles
+    timeout: 30000
+
+  - name: SearchInFiles with complex search patterns
+    optional: needsAI
+    run: |
+      cycod --input "search for lines containing both 'public' and 'async' in C# files" --auto-approve *
+    expect-regex: |
+      assistant-function: SearchInFiles
+      searchPattern.*public.*async|async.*public
+    timeout: 30000
+
+  - name: File discovery with date filtering
+    optional: needsAI
+    run: |
+      cycod --input "find files modified in the last 7 days" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles
+      modifiedAfter.*\d+d|modifiedAfter.*\d{4}-\d{2}-\d{2}
+    timeout: 30000
+
+  - name: Content search with line filtering
+    optional: needsAI
+    run: |
+      cycod --input "search for 'test' but only show lines that also contain 'yaml'" --auto-approve *
+    expect-regex: |
+      assistant-function: SearchInFiles
+      searchPattern.*test
+      lineContains.*yaml
+    timeout: 30000
+
+  - name: File operations respect maxFiles parameter
+    optional: needsAI
+    run: |
+      cycod --input "find the first 5 files of any type in this directory" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles
+      maxFiles.*[1-5]
+    timeout: 30000
+
+  - name: SearchInFiles with context and line numbers
+    optional: needsAI
+    run: |
+      cycod --input "search for 'function' and show 3 lines before and after with line numbers" --auto-approve *
+    expect-regex: |
+      assistant-function: SearchInFiles
+      linesBeforeAndAfter.*3
+      lineNumbers.*true
+    timeout: 30000
+
+  - name: ReplaceAllInFiles with file content filtering
+    optional: needsAI
+    run: |
+      cycod --input "replace 'old' with 'new' but only in files that contain 'test'" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      fileContains.*test
+      old.*old
+      new.*new
+    timeout: 30000
+
+  - name: Mixed file operations in conversation
+    optional: needsAI
+    run: |
+      cycod --input "first find all yaml files, then search for 'name:' in those files" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles.*\.ya?ml
+    timeout: 45000
+
+  - name: AI chooses appropriate tool based on user intent
+    optional: needsAI
+    run: |
+      cycod --input "I want to see the content where 'FindFiles' is defined, not just the file paths" --auto-approve *
+    expect-regex: |
+      assistant-function: SearchInFiles
+    not-expect-regex: |
+      assistant-function: FindFiles.*FindFiles
+    timeout: 30000
+
+  - name: File operations handle special characters in patterns
+    optional: needsAI
+    run: |
+      cycod --input "find files with names containing spaces or special characters" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles
+    timeout: 30000
+
+  - name: Bulk replacement with literal vs regex modes
+    optional: needsAI
+    run: |
+      cycod --input "replace the literal text 'test.' with 'exam.' (not as regex pattern)" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+      useRegex.*false
+      old.*test\.
+    timeout: 30000
+
+  - name: Error handling for invalid patterns
+    optional: needsAI
+    run: |
+      cycod --input "search for files using an invalid regex pattern [unclosed bracket" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles|assistant-function: SearchInFiles
+    timeout: 30000

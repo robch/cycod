@@ -38,14 +38,14 @@ These functions allow the AI to interact with the file system:
 | `ListFiles` | List files and directories in a specified path (up to 2 levels deep) |
 | `ViewFile` | View the contents of a file, optionally with line numbers and line range |
 | `CreateFile` | Create a new file with specified content |
-| `StrReplace` | Replace text in a file (only replaces unique occurrences) |
+| `ReplaceOneInFile` | Replace text in a file (only replaces unique occurrences) |
 | `Insert` | Insert text at a specific line in a file |
 | `UndoEdit` | Revert the last edit made to a file |
 
 Key features of file operation functions:
 
 - `ViewFile` supports viewing specific line ranges and adding line numbers
-- `StrReplace` has built-in safety to only replace unique occurrences of text
+- `ReplaceOneInFile` has built-in safety to only replace unique occurrences of text
 - All file edits are tracked to support the `UndoEdit` function
 - `ListFiles` handles relative and absolute paths and displays directories as such
 
@@ -89,7 +89,7 @@ User:
 Can you help me fix the syntax error in my JavaScript file at ./src/app.js?
 ```
 
-The AI might use `ViewFile` to examine the code, identify errors, and then use `StrReplace` to fix them.
+The AI might use `ViewFile` to examine the code, identify errors, and then use `ReplaceOneInFile` to fix them.
 
 ## Security Considerations
 
@@ -111,7 +111,7 @@ CycoD provides powerful control mechanisms for managing which functions the AI a
 Functions in CycoD are categorized into three main types:
 
 - **read**: Functions that read content (ViewFile, ListFiles, etc.)
-- **write**: Functions that modify content (CreateFile, StrReplace, Insert, etc.)
+- **write**: Functions that modify content (CreateFile, ReplaceOneInFile, Insert, etc.)
 - **run**: Functions that execute commands (RunBashCommand, RunCmdCommand, RunPowershellCommand)
 
 ### Auto-Approve Options
@@ -197,7 +197,7 @@ cycod config set App.AutoDeny run --user
 cycod config set App.AutoDeny write --local
 
 # Auto-deny specific functions
-cycod config set App.AutoDeny "CreateFile StrReplace" --global
+cycod config set App.AutoDeny "CreateFile ReplaceOneInFile" --global
 ```
 
 #### Adding to Existing Lists
@@ -290,7 +290,7 @@ Each function has specific parameters it accepts:
 - `path`: Absolute or relative path for new file (required)
 - `fileText`: Content to write to the file (required)
 
-**StrReplace**:
+**ReplaceOneInFile**:
 - `path`: Absolute or relative path to file (required)
 - `oldStr`: Text to find and replace (required, must be unique)
 - `newStr`: Replacement text (required)

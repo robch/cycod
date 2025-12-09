@@ -369,7 +369,7 @@ public class StrReplaceEditorHelperFunctions {
         [HelperFunctionParameterDescription("Content to be written to the file.")] string fileText);
     
     [HelperFunctionDescription("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
-    public string StrReplace(
+    public string ReplaceOneInFile(
         [HelperFunctionParameterDescription("Absolute or relative path to file.")] string path,
         [HelperFunctionParameterDescription("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [HelperFunctionParameterDescription("New string content that will replace the old string.")] string newStr);

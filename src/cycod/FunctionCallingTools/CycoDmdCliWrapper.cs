@@ -183,34 +183,46 @@ public class CycoDmdCliWrapper
     #region Search Codebase Methods
     
     /// <summary>
-    /// Executes CYCODMD command with flexible query options for files and content.
+    /// Executes CYCODMD command for file discovery only (returns file paths, not content).
     /// </summary>
-    public async Task<string> ExecuteQueryFilesCommand(
+    public async Task<string> ExecuteFindFilesCommand(
         string[] filePatterns,
         string[]? excludePatterns = null,
-        
-        // File-level filtering
         string? fileContains = null,
         string? fileNotContains = null, 
         string? modifiedAfter = null,
         string? modifiedBefore = null,
-        
-        // Content extraction
+        int maxFiles = 50)
+    {
+        var arguments = BuildFindFilesArguments(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore);
+            
+        var rawOutput = await ExecuteCycoDmdCommandAsync(arguments);
+        return TruncateCommandOutput(rawOutput, 500, 100000); // Use reasonable defaults for file lists
+    }
+    
+    /// <summary>
+    /// Executes CYCODMD command for content search within files.
+    /// </summary>
+    public async Task<string> ExecuteSearchInFilesCommand(
+        string[] filePatterns,
+        string[]? excludePatterns = null,
+        string? fileContains = null,
+        string? fileNotContains = null, 
+        string? modifiedAfter = null,
+        string? modifiedBefore = null,
         string? searchPattern = null,
         string? lineContains = null,
         string? removeAllLines = null,
-        
-        // Presentation
         int linesBeforeAndAfter = 0,
         bool lineNumbers = true,
-        bool highlightMatches = false, // Internal parameter for highlighting
-        
-        // Limits
+        bool highlightMatches = false,
         int maxFiles = 50,
         int maxCharsPerLine = 500,
         int maxTotalChars = 100000)
     {
-        var arguments = BuildQueryFilesArguments(
+        var arguments = BuildFindInFilesArguments(
             filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains, 
             removeAllLines, linesBeforeAndAfter, lineNumbers, highlightMatches);
@@ -220,21 +232,23 @@ public class CycoDmdCliWrapper
     }
     
     /// <summary>
-    /// Builds command arguments for querying files with flexible options.
+    /// Executes CYCODMD command with raw arguments string.
     /// </summary>
-    private string BuildQueryFilesArguments(
+    public async Task<string> ExecuteRawCycoDmdCommandAsync(string arguments)
+    {
+        return await ExecuteCycoDmdCommandAsync(arguments);
+    }
+    
+    /// <summary>
+    /// Builds command arguments for finding files (paths only, no content).
+    /// </summary>
+    private string BuildFindFilesArguments(
         string[] filePatterns,
         string[]? excludePatterns,
         string? fileContains,
         string? fileNotContains, 
         string? modifiedAfter,
-        string? modifiedBefore,
-        string? searchPattern,
-        string? lineContains,
-        string? removeAllLines,
-        int linesBeforeAndAfter,
-        bool lineNumbers,
-        bool highlightMatches)
+        string? modifiedBefore)
     {
         var sb = new StringBuilder();
         
@@ -251,6 +265,7 @@ public class CycoDmdCliWrapper
                     sb.Append($"{EscapeArgument(pattern)} ");
         }
         
+        // Add file-level filtering
         if (IsValidParameter(fileContains))
             sb.Append($"--file-contains {EscapeRegexPattern(fileContains!)} ");
             
@@ -263,6 +278,61 @@ public class CycoDmdCliWrapper
         if (IsValidParameter(modifiedBefore))
             sb.Append($"--modified-before {EscapeArgument(modifiedBefore!)} ");
         
+        // Add flag to indicate we want file paths only (no content)
+        sb.Append("--files-only ");
+            
+        return sb.ToString().Trim();
+    }
+    
+    /// <summary>
+    /// Builds command arguments for content search within files.
+    /// </summary>
+    private string BuildFindInFilesArguments(
+        string[] filePatterns,
+        string[]? excludePatterns,
+        string? fileContains,
+        string? fileNotContains, 
+        string? modifiedAfter,
+        string? modifiedBefore,
+        string? searchPattern,
+        string? lineContains,
+        string? removeAllLines,
+        int linesBeforeAndAfter,
+        bool lineNumbers,
+        bool highlightMatches)
+    {
+        var sb = new StringBuilder();
+        
+        // Add find-files command
+        sb.Append("find-files ");
+        
+        // Add file patterns
+        foreach (var pattern in filePatterns)
+            sb.Append($"{EscapeArgument(pattern)} ");
+            
+        // Add exclude patterns
+        if (excludePatterns?.Length > 0 && !IsNullString(excludePatterns[0]))
+        {
+            sb.Append("--exclude ");
+            foreach (var pattern in excludePatterns)
+                if (!IsNullString(pattern))
+                    sb.Append($"{EscapeArgument(pattern)} ");
+        }
+        
+        // Add file-level filtering
+        if (IsValidParameter(fileContains))
+            sb.Append($"--file-contains {EscapeRegexPattern(fileContains!)} ");
+            
+        if (IsValidParameter(fileNotContains))
+            sb.Append($"--file-not-contains {EscapeRegexPattern(fileNotContains!)} ");
+            
+        if (IsValidParameter(modifiedAfter))
+            sb.Append($"--modified-after {EscapeArgument(modifiedAfter!)} ");
+            
+        if (IsValidParameter(modifiedBefore))
+            sb.Append($"--modified-before {EscapeArgument(modifiedBefore!)} ");
+        
+        // Add content filtering
         if (IsValidParameter(searchPattern))
         {
             sb.Append($"--contains {EscapeRegexPattern(searchPattern!)} ");
