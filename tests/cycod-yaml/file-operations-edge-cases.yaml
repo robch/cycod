@@ -7,12 +7,12 @@ tests:
       assistant-function: FindFiles
     timeout: 30000
 
-  - name: FindInFiles with complex search patterns
+  - name: SearchInFiles with complex search patterns
     optional: needsAI
     run: |
       cycod --input "search for lines containing both 'public' and 'async' in C# files" --auto-approve *
     expect-regex: |
-      assistant-function: FindInFiles
+      assistant-function: SearchInFiles
       searchPattern.*public.*async|async.*public
     timeout: 30000
 
@@ -30,7 +30,7 @@ tests:
     run: |
       cycod --input "search for 'test' but only show lines that also contain 'yaml'" --auto-approve *
     expect-regex: |
-      assistant-function: FindInFiles
+      assistant-function: SearchInFiles
       searchPattern.*test
       lineContains.*yaml
     timeout: 30000
@@ -44,12 +44,12 @@ tests:
       maxFiles.*[1-5]
     timeout: 30000
 
-  - name: FindInFiles with context and line numbers
+  - name: SearchInFiles with context and line numbers
     optional: needsAI
     run: |
       cycod --input "search for 'function' and show 3 lines before and after with line numbers" --auto-approve *
     expect-regex: |
-      assistant-function: FindInFiles
+      assistant-function: SearchInFiles
       linesBeforeAndAfter.*3
       lineNumbers.*true
     timeout: 30000
@@ -78,7 +78,7 @@ tests:
     run: |
       cycod --input "I want to see the content where 'FindFiles' is defined, not just the file paths" --auto-approve *
     expect-regex: |
-      assistant-function: FindInFiles
+      assistant-function: SearchInFiles
     not-expect-regex: |
       assistant-function: FindFiles.*FindFiles
     timeout: 30000
@@ -106,5 +106,5 @@ tests:
     run: |
       cycod --input "search for files using an invalid regex pattern [unclosed bracket" --auto-approve *
     expect-regex: |
-      assistant-function: FindFiles|assistant-function: FindInFiles
+      assistant-function: FindFiles|assistant-function: SearchInFiles
     timeout: 30000

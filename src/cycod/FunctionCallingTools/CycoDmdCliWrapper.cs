@@ -205,7 +205,7 @@ public class CycoDmdCliWrapper
     /// <summary>
     /// Executes CYCODMD command for content search within files.
     /// </summary>
-    public async Task<string> ExecuteFindInFilesCommand(
+    public async Task<string> ExecuteSearchInFilesCommand(
         string[] filePatterns,
         string[]? excludePatterns = null,
         string? fileContains = null,

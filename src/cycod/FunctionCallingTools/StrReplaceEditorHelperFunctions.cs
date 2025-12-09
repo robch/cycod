@@ -350,7 +350,7 @@ public class StrReplaceEditorHelperFunctions
 
     [ReadOnly(false)]
     [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
-    public string StrReplace(
+    public string ReplaceOneInFile(
         [Description("Absolute or relative path to file.")] string path,
         [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [Description("New string content that will replace the old string.")] string newStr)

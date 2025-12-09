@@ -47,7 +47,7 @@ To get a new shell, you can use the `exit` command to close all persistent shell
 
 ### Notes on Directories
 1. The working directory is shell-specific. Bash shell's current directory is/can be different from Powershell or CMD shells' current directories.
-2. Shell-specific working directories have no impact on any tools (e.g. ListFiles, ViewView, StrReplace). These tools always use the working directory when we started this conversation.
+2. Shell-specific working directories have no impact on any tools (e.g. ListFiles, ViewView, ReplaceOneInFile). These tools always use the working directory when we started this conversation.
 
 ## Thinking
 

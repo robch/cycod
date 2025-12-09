@@ -34,7 +34,7 @@ public class CodeExplorationHelperFunctions
     
     [ReadOnly(true)]
     [Description("Search for content within files and display matches with context. Shows file content with highlighted matches.")]
-    public async Task<string> FindInFiles(
+    public async Task<string> SearchInFiles(
         [Description("File glob patterns to search (e.g., **/*.cs, src/*.md)")] string[] filePatterns,
         [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
         [Description("Only include files containing this regex pattern")] string fileContains = "",
@@ -50,7 +50,7 @@ public class CodeExplorationHelperFunctions
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        Logger.Info($"FindInFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
+        Logger.Info($"SearchInFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
         Logger.InfoIf(!string.IsNullOrEmpty(searchPattern), $"Search pattern: '{searchPattern}'");
         Logger.InfoIf(!string.IsNullOrEmpty(lineContains), $"Line contains: '{lineContains}'");
         Logger.InfoIf(!string.IsNullOrEmpty(fileContains), $"File contains: '{fileContains}'");
@@ -58,12 +58,45 @@ public class CodeExplorationHelperFunctions
         // Determine if we should highlight matches (when linesBeforeAndAfter > 0)
         var shouldHighlight = linesBeforeAndAfter > 0;
         
-        return await _cycoDmdWrapper.ExecuteFindInFilesCommand(
+        return await _cycoDmdWrapper.ExecuteSearchInFilesCommand(
             filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains,
             removeAllLines, linesBeforeAndAfter, lineNumbers, shouldHighlight,
             maxFiles, maxCharsPerLine, maxTotalChars);
     }
+    
+    [ReadOnly(true)]
+    [Description("View content of multiple files. For reading/browsing files without searching for specific patterns.")]
+    public async Task<string> ViewFiles(
+        [Description("File glob patterns to view (e.g., **/*.cs, src/*.md)")] string[] filePatterns,
+        [Description("File glob patterns to exclude")] string[]? excludePatterns = null,
+        [Description("Only include files containing this regex pattern")] string fileContains = "",
+        [Description("Exclude files containing this regex pattern")] string fileNotContains = "",
+        [Description("Only files modified after this time (e.g., '3d', '2023-01-01')")] string modifiedAfter = "",
+        [Description("Only files modified before this time")] string modifiedBefore = "",
+        [Description("Remove lines containing this regex pattern. Useful for filtering out noise.")] string removeAllLines = "",
+        [Description("Include line numbers in output.")] bool lineNumbers = true,
+        [Description("Maximum number of files to process.")] int maxFiles = 50,
+        [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
+        [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
+    {
+        Logger.Info($"ViewFiles called with filePatterns: [{string.Join(", ", filePatterns)}]");
+        Logger.InfoIf(!string.IsNullOrEmpty(fileContains), $"File contains: '{fileContains}'");
+
+        // ViewFiles is a wrapper around SearchInFiles with no search pattern
+        // This makes it clear that we're viewing/reading files, not searching for matches
+        return await _cycoDmdWrapper.ExecuteSearchInFilesCommand(
+            filePatterns, excludePatterns, fileContains, fileNotContains,
+            modifiedAfter, modifiedBefore, 
+            searchPattern: "",           // No search pattern - we're viewing, not searching
+            lineContains: "",            // No line filtering - show all content
+            removeAllLines,              // Allow removing noise lines
+            linesBeforeAndAfter: 0,      // No context lines needed
+            lineNumbers,                 // Show line numbers
+            highlightMatches: false,     // No highlighting
+            maxFiles, maxCharsPerLine, maxTotalChars);
+    }
+
     
     #endregion
     

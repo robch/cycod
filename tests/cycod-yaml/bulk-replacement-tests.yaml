@@ -39,7 +39,7 @@ tests:
   - name: AI uses ReplaceAllInFiles with git diff style output
     optional: needsAI
     run: |
-      cycod --input "preview replacing 'FindInFiles' with 'SearchInFiles' in documentation files" --auto-approve *
+      cycod --input "preview replacing 'SearchInFiles' with 'FindContentInFiles' in documentation files" --auto-approve *
     expect-regex: |
       assistant-function: ReplaceAllInFiles
       ## .*\.(md|txt)

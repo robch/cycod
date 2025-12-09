@@ -10,8 +10,8 @@ Improve the file discovery and replacement tools to reduce user confusion and ad
 - **Evidence**: User experience shows frequent confusion when looking for files vs searching within files
 - **Parameter Analysis**: About half of QueryFiles parameters are irrelevant for file-discovery-only use cases
 
-### StrReplace Limitations  
-- **Problem**: `StrReplace` only works on single files with literal strings
+### ReplaceOneInFile Limitations  
+- **Problem**: `ReplaceOneInFile` only works on single files with literal strings
 - **Gap**: No bulk replacement capability across multiple files
 - **Workaround**: Users fall back to shell commands for bulk operations
 
@@ -26,9 +26,9 @@ FindFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
 → Output: File paths only
 ```
 
-**FindInFiles** (Content Search)  
+**SearchInFiles** (Content Search)  
 ```
-FindInFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
+SearchInFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains, 
             removeAllLines, linesBeforeAndAfter, lineNumbers,
             maxFiles, maxCharsPerLine, maxTotalChars)
@@ -67,9 +67,9 @@ FindFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
 → Output: File paths only
 ```
 
-**FindInFiles** (Content Search - with highlighting)  
+**SearchInFiles** (Content Search - with highlighting)  
 ```
-FindInFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
+SearchInFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
             modifiedAfter, modifiedBefore, searchPattern, lineContains, 
             removeAllLines, linesBeforeAndAfter, lineNumbers,
             maxFiles, maxCharsPerLine, maxTotalChars)
@@ -89,12 +89,12 @@ ReplaceAllInFiles(filePatterns, excludePatterns, fileContains, fileNotContains,
 
 ### What Changes
 - Add 3 new tools with focused responsibilities
-- Keep existing `StrReplace` for single-file operations
-- Replace `QueryFiles` with `FindFiles` and `FindInFiles`
+- Keep existing `ReplaceOneInFile` for single-file operations
+- Replace `QueryFiles` with `FindFiles` and `SearchInFiles`
 
 ### What Stays
 - All existing file modification tools (`CreateFile`, `Insert`, `UndoEdit`)
-- Single-file `StrReplace` (works great for its use case)
+- Single-file `ReplaceOneInFile` (works great for its use case)
 - All shell and process management tools
 
 ## Benefits

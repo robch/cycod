@@ -7,12 +7,12 @@ tests:
       assistant-function: FindFiles
     timeout: 30000
 
-  - name: AI calls FindInFiles function
+  - name: AI calls SearchInFiles function
     optional: needsAI
     run: |
-      cycod --input "use FindInFiles to search for 'async' in C# files" --auto-approve * --log test-findinfiles.log
+      cycod --input "use SearchInFiles to search for 'async' in C# files" --auto-approve * --log test-searchinfiles.log
     expect-regex: |
-      assistant-function: FindInFiles
+      assistant-function: SearchInFiles
     timeout: 45000
 
   - name: AI calls ReplaceAllInFiles function for preview
