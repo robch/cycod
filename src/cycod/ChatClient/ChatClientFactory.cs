@@ -22,14 +22,13 @@ public static class ChatClientFactory
         var apiKey = EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY") ?? throw new EnvVarSettingException("ANTHROPIC_API_KEY is not set.");
         var endpoint = EnvironmentHelpers.FindEnvVar("ANTHROPIC_ENDPOINT");
 
-        // Create HttpClient with traffic logging
         var httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
 
-        // Create standard Anthropic client
-        var client = !string.IsNullOrEmpty(endpoint)
-            ? new AnthropicClient() { APIKey = apiKey, BaseUrl = new Uri(endpoint), HttpClient = httpClient }
-            : new AnthropicClient() { APIKey = apiKey, HttpClient = httpClient };
-        
+        var noEndpoint = string.IsNullOrEmpty(endpoint);
+        var client = noEndpoint
+            ? new AnthropicClient() { APIKey = apiKey, HttpClient = httpClient }
+            : new AnthropicClient() { APIKey = apiKey, BaseUrl = new Uri(endpoint!), HttpClient = httpClient }; 
+       
         var chatClient = client.AsIChatClient();
         ConsoleHelpers.WriteDebugLine($"Using Anthropic endpoint: {endpoint ?? "default (api.anthropic.com)"}");
         
@@ -50,14 +49,10 @@ public static class ChatClientFactory
         var apiKey = EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_API_KEY") ?? throw new EnvVarSettingException("AZURE_ANTHROPIC_API_KEY is not set.");
         var endpoint = EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_ENDPOINT") ?? throw new EnvVarSettingException("AZURE_ANTHROPIC_ENDPOINT is not set.");
 
-        // Create HttpClient with traffic logging
-        var httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
-
-        // Extract resource name from Azure endpoint (e.g., "my-resource" from "https://my-resource.services.ai.azure.com/anthropic")
         var uri = new Uri(endpoint);
         var resourceName = uri.Host.Split('.')[0];
         
-        // Create Azure Foundry credentials and client
+        var httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
         var credentials = new AnthropicFoundryApiKeyCredentials(apiKey, resourceName);
         var foundryClient = new AnthropicFoundryClient(credentials) { HttpClient = httpClient };
         var chatClient = foundryClient.AsIChatClient();
@@ -159,27 +154,17 @@ public static class ChatClientFactory
         var integrationId = EnvironmentHelpers.FindEnvVar("COPILOT_INTEGRATION_ID") ?? string.Empty;
         var editorVersion = EnvironmentHelpers.FindEnvVar("COPILOT_EDITOR_VERSION") ?? "vscode/1.80.1";
 
-        // Get the Copilot token using the GitHub token
         var helper = new GitHubCopilotHelper();
         var tokenDetails = helper.GetCopilotTokenDetailsSync(githubToken);
 
-        if (string.IsNullOrEmpty(tokenDetails.token))
-        {
-            throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'cycod github login' to authenticate.");
-        }
+        var failedToGetToken = string.IsNullOrEmpty(tokenDetails.token);
+        if (failedToGetToken) throw new EnvVarSettingException("Failed to get a valid Copilot token from GitHub. Please run 'cycod github login' to authenticate.");
 
-        // Create options with the initial auth header
         var options = InitOpenAIClientOptions(endpoint, $"Bearer {tokenDetails.token}");
 
-        // Create the refresh policy with automatic token refresh capability
-        var refreshPolicy = CopilotTokenRefreshPolicy.CreateWithAutoRefresh(
-            tokenDetails.token!,
-            tokenDetails.expires_at!.Value,
-            githubToken,
-            helper);
-
-        // Add the vision + refresh + interaction policies to the pipeline
+        var refreshPolicy = CopilotTokenRefreshPolicy.CreateWithAutoRefresh(tokenDetails.token!, tokenDetails.expires_at!.Value, githubToken, helper);
         options.AddPolicy(refreshPolicy, PipelinePosition.BeforeTransport);
+
         options.AddPolicy(new VisionHeaderPolicy(), PipelinePosition.BeforeTransport);
         options.AddPolicy(new InteractionHeadersPolicy(new InteractionService()), PipelinePosition.BeforeTransport);
 
@@ -230,7 +215,6 @@ public static class ChatClientFactory
             // Try to create client based on preference
             if (preferredProvider == "test")
             {
-                options = null;  // Test client doesn't need options
                 return CreateTestChatClient();
             }
             else if ((preferredProvider == "copilot-github" || preferredProvider == "copilot") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
@@ -270,7 +254,6 @@ public static class ChatClientFactory
                 return CreateOpenAIChatClientWithApiKey();
             }
 
-            // If preferred provider credentials aren't available, warn the user
             ConsoleHelpers.WriteWarning($"Preferred provider '{preferredProvider}' credentials not found. Falling back to default selection.");
             ConsoleHelpers.WriteLine(overrideQuiet: true);
         }
@@ -329,65 +312,59 @@ public static class ChatClientFactory
 
     public static IChatClient CreateChatClient(out ChatOptions? options)
     {
-        // First try to create client from preferred provider
-        var client = TryCreateChatClientFromPreferredProvider(out options);
+        var client = TryCreateChatClientFromPreferredProvider(out options) ??
+                     TryCreateChatClientFromEnv(out options);
 
-        // If that fails, try to create from environment variables
-        client ??= TryCreateChatClientFromEnv(out options);
+        var validClient = client != null;
+        if (validClient) return client!;
 
-        // If no client could be created, throw an exception with helpful message
-        if (client == null)
-        {
-            var message =
-                string.Join('\n',
-                    @"No valid environment variables found.
+        var message =
+            string.Join('\n',
+                @"No valid environment variables found.
 
-                    To use Anthropic, please set:
-                    - ANTHROPIC_API_KEY
-                    - ANTHROPIC_MODEL_NAME (optional)
-                    
-                    To use AWS Bedrock, please set:
-                    - AWS_BEDROCK_ACCESS_KEY
-                    - AWS_BEDROCK_SECRET_KEY
-                    - AWS_BEDROCK_REGION (optional, default: us-east-1)
-                    - AWS_BEDROCK_MODEL_ID (optional, default: anthropic.claude-3-7-sonnet-20250219-v1:0)
-                    
-                    To use Azure OpenAI, please set:
-                    - AZURE_OPENAI_API_KEY
-                    - AZURE_OPENAI_ENDPOINT
-                    - AZURE_OPENAI_CHAT_DEPLOYMENT
+                To use Anthropic, please set:
+                - ANTHROPIC_API_KEY
+                - ANTHROPIC_MODEL_NAME (optional)
+                
+                To use AWS Bedrock, please set:
+                - AWS_BEDROCK_ACCESS_KEY
+                - AWS_BEDROCK_SECRET_KEY
+                - AWS_BEDROCK_REGION (optional, default: us-east-1)
+                - AWS_BEDROCK_MODEL_ID (optional, default: anthropic.claude-3-7-sonnet-20250219-v1:0)
+                
+                To use Azure OpenAI, please set:
+                - AZURE_OPENAI_API_KEY
+                - AZURE_OPENAI_ENDPOINT
+                - AZURE_OPENAI_CHAT_DEPLOYMENT
 
-                    To use GitHub Copilot with token authentication, please set:
-                    - GITHUB_TOKEN
-                    - COPILOT_API_ENDPOINT (optional)
-                    - COPILOT_INTEGRATION_ID (optional)
-                    - COPILOT_EDITOR_VERSION (optional)
-                    - COPILOT_MODEL_NAME (optional)
+                To use GitHub Copilot with token authentication, please set:
+                - GITHUB_TOKEN
+                - COPILOT_API_ENDPOINT (optional)
+                - COPILOT_INTEGRATION_ID (optional)
+                - COPILOT_EDITOR_VERSION (optional)
+                - COPILOT_MODEL_NAME (optional)
 
-                    To use Google Gemini, please set:
-                    - GOOGLE_GEMINI_API_KEY
-                    - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
+                To use Google Gemini, please set:
+                - GOOGLE_GEMINI_API_KEY
+                - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
 
-                    To use Grok, please set:
-                    - GROK_API_KEY
-                    - GROK_ENDPOINT (optional, default: https://api.x.ai/v1)
-                    - GROK_MODEL_NAME (optional, default: grok-3)
+                To use Grok, please set:
+                - GROK_API_KEY
+                - GROK_ENDPOINT (optional, default: https://api.x.ai/v1)
+                - GROK_MODEL_NAME (optional, default: grok-3)
 
-                    To use OpenAI, please set:
-                    - OPENAI_API_KEY
-                    - OPENAI_ENDPOINT (optional)
-                    - OPENAI_CHAT_MODEL_NAME (optional)
+                To use OpenAI, please set:
+                - OPENAI_API_KEY
+                - OPENAI_ENDPOINT (optional)
+                - OPENAI_CHAT_MODEL_NAME (optional)
 
-                    To use Test provider for development/testing, please set:
-                    - TEST_DEFAULT_RESPONSE (optional)
-                    - TEST_TITLE_RESPONSE (optional)"
-                .Split(new[] { '\n' })
-                .Select(line => line.Trim()));
+                To use Test provider for development/testing, please set:
+                - TEST_DEFAULT_RESPONSE (optional)
+                - TEST_TITLE_RESPONSE (optional)"
+            .Split(new[] { '\n' })
+            .Select(line => line.Trim()));
 
-            throw new EnvVarSettingException(message);
-        }
-
-        return client;
+        throw new EnvVarSettingException(message);
     }
 
     private static AzureOpenAIClientOptions InitAzureOpenAIClientOptions()
