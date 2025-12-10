@@ -428,7 +428,7 @@ public class ShellAndProcessHelperFunctions
     [Description("Waits for output matching a pattern from a shell or process. Useful for detecting when a specific condition or state has been reached in a running application.")]
     public async Task<string> WaitForShellOrProcessOutput(
         [Description("Shell or process name")] string name,
-        [Description("Regular expression pattern to wait for")] string pattern,
+        [Description("Regular expression pattern to wait for")] string waitPattern,
         [Description("Timeout in milliseconds, -1 for indefinite")] int timeoutMs = -1,
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
@@ -438,7 +438,7 @@ public class ShellAndProcessHelperFunctions
             return "Error: Shell or process name cannot be empty";
         }
 
-        if (string.IsNullOrEmpty(pattern))
+        if (string.IsNullOrEmpty(waitPattern))
         {
             return "Error: Pattern cannot be empty";
         }
@@ -452,11 +452,11 @@ public class ShellAndProcessHelperFunctions
             {
                 // This is a shell - wait for pattern
                 string result = await NamedShellProcessManager.Instance.WaitForShellOutputAsync(
-                    name, pattern, timeoutMs);
+                    name, waitPattern, timeoutMs);
                 
                 if (result == null)
                 {
-                    return $"Timeout waiting for pattern '{pattern}' in shell '{name}'";
+                    return $"Timeout waiting for pattern '{waitPattern}' in shell '{name}'";
                 }
                 
                 return TextTruncationHelper.TruncateOutput($"Pattern matched: \"{result}\"", maxCharsPerLine, maxTotalChars);
@@ -468,11 +468,11 @@ public class ShellAndProcessHelperFunctions
                 {
                     // Wait for pattern in process output
                     bool matched = NamedProcessManager.WaitForProcessOutput(
-                        name, pattern, timeoutMs, out string matchedOutput);
+                        name, waitPattern, timeoutMs, out string matchedOutput);
                     
                     if (!matched)
                     {
-                        return $"Timeout waiting for pattern '{pattern}' in process '{name}'";
+                        return $"Timeout waiting for pattern '{waitPattern}' in process '{name}'";
                     }
                     
                     return TextTruncationHelper.TruncateOutput($"Pattern matched: \"{matchedOutput}\"", maxCharsPerLine, maxTotalChars);

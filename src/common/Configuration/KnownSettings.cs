@@ -13,6 +13,12 @@ public static class KnownSettings
     // Anthropic settings
     public const string AnthropicApiKey = "Anthropic.ApiKey";
     public const string AnthropicModelName = "Anthropic.ModelName";
+    public const string AnthropicEndpoint = "Anthropic.Endpoint";
+    
+    // Azure Anthropic settings
+    public const string AzureAnthropicApiKey = "Azure.Anthropic.ApiKey";
+    public const string AzureAnthropicEndpoint = "Azure.Anthropic.Endpoint";
+    public const string AzureAnthropicModelName = "Azure.Anthropic.ModelName";
     
     // AWS Bedrock settings
     public const string AWSBedrockAccessKey = "AWS.Bedrock.AccessKey";
@@ -111,7 +117,13 @@ public static class KnownSettings
         // Anthropic mappings
         { AnthropicApiKey, "ANTHROPIC_API_KEY" },
         { AnthropicModelName, "ANTHROPIC_MODEL_NAME" },
+        { AnthropicEndpoint, "ANTHROPIC_ENDPOINT" },
         
+        // Azure Anthropic mappings
+        { AzureAnthropicApiKey, "AZURE_ANTHROPIC_API_KEY" },
+        { AzureAnthropicEndpoint, "AZURE_ANTHROPIC_ENDPOINT" },
+        { AzureAnthropicModelName, "AZURE_ANTHROPIC_MODEL_NAME" },
+                
         // AWS Bedrock mappings
         { AWSBedrockAccessKey, "AWS_BEDROCK_ACCESS_KEY" },
         { AWSBedrockSecretKey, "AWS_BEDROCK_SECRET_KEY" },
@@ -174,7 +186,13 @@ public static class KnownSettings
         // Anthropic mappings
         { AnthropicApiKey, "--anthropic-api-key" },
         { AnthropicModelName, "--anthropic-model-name" },
+        { AnthropicEndpoint, "--anthropic-endpoint" },
         
+        // Azure Anthropic mappings
+        { AzureAnthropicApiKey, "--azure-anthropic-api-key" },
+        { AzureAnthropicEndpoint, "--azure-anthropic-endpoint" },
+        { AzureAnthropicModelName, "--azure-anthropic-model-name" },
+                
         // AWS Bedrock mappings
         { AWSBedrockAccessKey, "--aws-bedrock-access-key" },
         { AWSBedrockSecretKey, "--aws-bedrock-secret-key" },
@@ -255,7 +273,18 @@ public static class KnownSettings
     public static readonly HashSet<string> AnthropicSettings = new(StringComparer.OrdinalIgnoreCase)
     {
         AnthropicApiKey,
-        AnthropicModelName
+        AnthropicModelName,
+        AnthropicEndpoint
+    };
+    
+    /// <summary>
+    /// Collection of settings for Azure Anthropic integration.
+    /// </summary>
+    public static readonly HashSet<string> AzureAnthropicSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        AzureAnthropicApiKey,
+        AzureAnthropicEndpoint,
+        AzureAnthropicModelName
     };
     
     /// <summary>

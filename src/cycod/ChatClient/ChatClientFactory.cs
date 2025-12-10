@@ -1,5 +1,5 @@
-using Anthropic.SDK;
-using Anthropic.SDK.Messaging;
+using Anthropic;
+using Anthropic.Foundry;
 using Amazon;
 using Amazon.BedrockRuntime;
 using GeminiDotnet;
@@ -17,11 +17,21 @@ public static class ChatClientFactory
 {
     public static IChatClient? CreateAnthropicChatClientWithApiKey(out ChatOptions? options)
     {
-        var model = EnvironmentHelpers.FindEnvVar("ANTHROPIC_MODEL_NAME") ?? "claude-3-7-sonnet-latest";
+        var model = EnvironmentHelpers.FindEnvVar("ANTHROPIC_MODEL_NAME") ?? "claude-sonnet-4-20250514";
         var apiKey = EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY") ?? throw new EnvVarSettingException("ANTHROPIC_API_KEY is not set.");
+        var endpoint = EnvironmentHelpers.FindEnvVar("ANTHROPIC_ENDPOINT");
 
-        var client = new HttpClient(new LogTrafficHttpMessageHandler());
-        var chatClient = new AnthropicClient(apiKey, client).Messages;
+        // Create HttpClient with traffic logging
+        var httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
+
+        // Create standard Anthropic client
+        var client = !string.IsNullOrEmpty(endpoint)
+            ? new AnthropicClient() { APIKey = apiKey, BaseUrl = new Uri(endpoint), HttpClient = httpClient }
+            : new AnthropicClient() { APIKey = apiKey, HttpClient = httpClient };
+        
+        var chatClient = client.AsIChatClient();
+        ConsoleHelpers.WriteDebugLine($"Using Anthropic endpoint: {endpoint ?? "default (api.anthropic.com)"}");
+        
         options = new ChatOptions
         {
             ModelId = model,
@@ -30,6 +40,38 @@ public static class ChatClientFactory
         };
 
         ConsoleHelpers.WriteDebugLine("Using Anthropic API key for authentication");
+        return chatClient;
+    }
+
+    public static IChatClient? CreateAzureAnthropicChatClientWithApiKey(out ChatOptions? options)
+    {
+        var model = EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_MODEL_NAME") ?? "claude-sonnet-4-5";
+        var apiKey = EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_API_KEY") ?? throw new EnvVarSettingException("AZURE_ANTHROPIC_API_KEY is not set.");
+        var endpoint = EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_ENDPOINT") ?? throw new EnvVarSettingException("AZURE_ANTHROPIC_ENDPOINT is not set.");
+
+        // Create HttpClient with traffic logging
+        var httpClient = new HttpClient(new LogTrafficHttpMessageHandler());
+
+        // Extract resource name from Azure endpoint (e.g., "my-resource" from "https://my-resource.services.ai.azure.com/anthropic")
+        var uri = new Uri(endpoint);
+        var resourceName = uri.Host.Split('.')[0];
+        
+        // Create Azure Foundry credentials and client
+        var credentials = new AnthropicFoundryApiKeyCredentials(apiKey, resourceName);
+        var foundryClient = new AnthropicFoundryClient(credentials) { HttpClient = httpClient };
+        var chatClient = foundryClient.AsIChatClient();
+        
+        ConsoleHelpers.WriteDebugLine($"Using Azure Anthropic endpoint: {endpoint}");
+        ConsoleHelpers.WriteDebugLine($"Azure resource name: {resourceName}");
+        
+        options = new ChatOptions
+        {
+            ModelId = model,
+            ToolMode = ChatToolMode.Auto,
+            MaxOutputTokens = 4000
+        };
+
+        ConsoleHelpers.WriteDebugLine("Using Azure Anthropic API key for authentication");
         return chatClient;
     }
 
@@ -218,6 +260,10 @@ public static class ChatClientFactory
             {
                 return CreateAzureOpenAIChatClientWithApiKey();
             }
+            else if ((preferredProvider == "azure-anthropic") && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_API_KEY")))
+            {
+                return CreateAzureAnthropicChatClientWithApiKey(out options);
+            }
             else if (preferredProvider == "openai" && !string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("OPENAI_API_KEY")))
             {
                 return CreateOpenAIChatClientWithApiKey();
@@ -239,6 +285,11 @@ public static class ChatClientFactory
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("GITHUB_TOKEN")))
         {
             return CreateCopilotChatClientWithGitHubToken();
+        }
+
+        if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("AZURE_ANTHROPIC_API_KEY")))
+        {
+            return CreateAzureAnthropicChatClientWithApiKey(out options);
         }
 
         if (!string.IsNullOrEmpty(EnvironmentHelpers.FindEnvVar("ANTHROPIC_API_KEY")))
