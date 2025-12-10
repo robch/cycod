@@ -85,6 +85,9 @@ public static class KnownSettings
         // Anthropic secrets
         AnthropicApiKey,
         
+        // Azure Anthropic secrets
+        AzureAnthropicApiKey,
+        
         // AWS Bedrock secrets
         AWSBedrockAccessKey,
         AWSBedrockSecretKey,
@@ -381,7 +384,8 @@ public static class KnownSettings
         AppAutoSaveLog,
         AppChatCompletionTimeout,
         AppAutoApprove,
-        AppAutoDeny
+        AppAutoDeny,
+        AppAutoGenerateTitles
     };
     
     #endregion

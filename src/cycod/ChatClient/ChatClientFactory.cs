@@ -1,17 +1,18 @@
-using Anthropic;
-using Anthropic.Foundry;
-using Amazon;
-using Amazon.BedrockRuntime;
-using GeminiDotnet;
-using GeminiDotnet.Extensions.AI;
-using Azure;
-using Azure.AI.OpenAI;
-using Microsoft.Extensions.AI;
-using OpenAI;
-using OpenAI.Chat;
 using System;
 using System.ClientModel;
 using System.ClientModel.Primitives;
+
+using Amazon;
+using Amazon.BedrockRuntime;
+using Anthropic;
+using Anthropic.Foundry;
+using Azure;
+using Azure.AI.OpenAI;
+using GeminiDotnet;
+using GeminiDotnet.Extensions.AI;
+using Microsoft.Extensions.AI;
+using OpenAI;
+using OpenAI.Chat;
 
 public static class ChatClientFactory
 {
