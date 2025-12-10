@@ -68,6 +68,12 @@ public partial class YamlTestCaseParser
             return children;
         }
 
+        // Check if we have a matrix - if so, expand it into multiple test cases
+        if (context.Matrix != null && context.Matrix.Count > 0)
+        {
+            return ExpandMatrixIntoTestCases(context, mapping);
+        }
+
         var test = GetTestFromNode(context, mapping);
         if (test != null)
         {
@@ -75,6 +81,63 @@ public partial class YamlTestCaseParser
         }
 
         return null;
+    }
+
+    private static IEnumerable<TestCase> ExpandMatrixIntoTestCases(YamlTestCaseParseContext context, YamlMappingNode mapping)
+    {
+        var tests = new List<TestCase>();
+        var originalMatrix = context.Matrix;
+
+        foreach (var matrixCombination in originalMatrix)
+        {
+            // Create a new context with only this matrix combination
+            var singleItemMatrix = new List<Dictionary<string, string>> { matrixCombination };
+            var expandedContext = new YamlTestCaseParseContext
+            {
+                Source = context.Source,
+                File = context.File,
+                Area = context.Area,
+                Class = context.Class,
+                Tags = context.Tags,
+                Environment = context.Environment,
+                WorkingDirectory = context.WorkingDirectory,
+                Matrix = singleItemMatrix
+            };
+
+            var test = GetTestFromNode(expandedContext, mapping);
+            if (test != null)
+            {
+                // Update the test name to include matrix parameters
+                var paramSuffix = FormatMatrixParameters(matrixCombination);
+                test.FullyQualifiedName += paramSuffix;
+                
+                tests.Add(test);
+            }
+        }
+
+        return tests;
+    }
+
+    private static string FormatMatrixParameters(Dictionary<string, string> combination)
+    {
+        if (combination == null || combination.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        // Filter out internal parameters (those starting with __)
+        var pairs = combination
+            .Where(kvp => !kvp.Key.StartsWith("__"))
+            .OrderBy(kvp => kvp.Key) // Sort for consistency
+            .Select(kvp => $"{kvp.Key}={kvp.Value}");
+        
+        var filteredPairs = pairs.ToList();
+        if (filteredPairs.Count == 0)
+        {
+            return string.Empty;
+        }
+
+        return $"[{string.Join(",", filteredPairs)}]";
     }
 
     private static List<Dictionary<string, string>> CheckUpdateExpandMatrix(YamlTestCaseParseContext context, YamlMappingNode mapping)
@@ -681,8 +744,8 @@ public partial class YamlTestCaseParser
     private static string GetFullyQualifiedName(string area, string @class, string name, int stepNumber)
     {
         return stepNumber > 0
-            ? $"{area}.{@class}.{stepNumber:D2}.{name}"
-            : $"{area}.{@class}.{name}";
+            ? $"{area}.{@class}::{stepNumber:D2}.{name}"
+            : $"{area}.{@class}::{name}";
     }
 
     private static void SetTestCaseTagsAsTraits(TestCase test, Dictionary<string, List<string>> tags)

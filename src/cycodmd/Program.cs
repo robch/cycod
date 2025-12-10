@@ -101,7 +101,7 @@ class Program
 
             var tasksThisCommand = command switch
             {
-                FindFilesCommand findFilesCommand => HandleFindFileCommand(commandLineOptions, findFilesCommand, throttler, delayOutputToApplyInstructions),
+                FindFilesCommand findFilesCommand => await HandleFindFileCommand(commandLineOptions, findFilesCommand, throttler, delayOutputToApplyInstructions),
                 WebSearchCommand webSearchCommand => await HandleWebSearchCommandAsync(commandLineOptions, webSearchCommand, throttler, delayOutputToApplyInstructions),
                 WebGetCommand webGetCommand => HandleWebGetCommand(commandLineOptions, webGetCommand, throttler, delayOutputToApplyInstructions),
                 RunCommand runCommand => HandleRunCommand(commandLineOptions, runCommand, throttler, delayOutputToApplyInstructions),
@@ -160,7 +160,7 @@ class Program
         if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n");
     }
 
-    private static List<Task<string>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static async Task<List<Task<string>>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
     {
         // Log the search operation being initiated
         Logger.Info($"Finding files matching glob pattern(s): '{string.Join("', '", findFilesCommand.Globs)}'");
@@ -191,12 +191,34 @@ class Program
             findFilesCommand.AnyTimeBefore)
             .ToList();
 
+        // If FilesOnly mode, return just the file paths
+        if (findFilesCommand.FilesOnly)
+        {
+            var fileListOutput = string.Join(Environment.NewLine, files);
+            var task = Task.FromResult(fileListOutput);
+            
+            if (!delayOutputToApplyInstructions)
+            {
+                ConsoleHelpers.WriteLineIfNotEmpty(fileListOutput);
+            }
+            
+            return new List<Task<string>> { task };
+        }
+        
+        // If replacement mode (both --contains and --replace-with), handle diff/replacement
+        if (!string.IsNullOrEmpty(findFilesCommand.ReplaceWithText) && 
+            findFilesCommand.IncludeLineContainsPatternList.Count > 0)
+        {
+            return await HandleReplacementMode(
+                findFilesCommand, files, throttler, delayOutputToApplyInstructions);
+        }
+
         var tasks = new List<Task<string>>();
         foreach (var file in files)
         {
             var onlyOneFile = files.Count == 1 && commandLineOptions.Commands.Count == 1;
             var skipMarkdownWrapping = onlyOneFile && FileConverters.CanConvert(file);
-            var wrapInMarkdown = !skipMarkdownWrapping; ;
+            var wrapInMarkdown = !skipMarkdownWrapping;
 
             var getCheckSaveTask = GetCheckSaveFileContentAsync(
                 file,
@@ -767,6 +789,179 @@ class Program
         {
             return $"## Error fetching {url}\n\n{ex.Message}\n{ex.StackTrace}";
         }
+    }
+    
+    /// <summary>
+    /// Handles replacement mode - shows diff preview or executes replacements
+    /// </summary>
+    private static async Task<List<Task<string>>> HandleReplacementMode(
+        FindFilesCommand findFilesCommand, 
+        List<string> files, 
+        SemaphoreSlim throttler, 
+        bool delayOutputToApplyInstructions)
+    {
+        var searchPatterns = findFilesCommand.IncludeLineContainsPatternList;
+        var replacementText = findFilesCommand.ReplaceWithText!;
+        var executeMode = findFilesCommand.ExecuteMode;
+        
+        var tasks = new List<Task<string>>();
+        
+        foreach (var file in files)
+        {
+            var task = ProcessFileForReplacement(
+                file, searchPatterns, replacementText, executeMode, throttler);
+            tasks.Add(task);
+        }
+        
+        var results = await Task.WhenAll(tasks);
+        var allResults = string.Join(Environment.NewLine, results.Where(r => !string.IsNullOrEmpty(r)));
+        
+        if (!delayOutputToApplyInstructions)
+        {
+            ConsoleHelpers.WriteLineIfNotEmpty(allResults);
+        }
+        
+        return new List<Task<string>> { Task.FromResult(allResults) };
+    }
+    
+    /// <summary>
+    /// Processes a single file for replacement (preview or execute)
+    /// </summary>
+    private static async Task<string> ProcessFileForReplacement(
+        string filePath, 
+        List<Regex> searchPatterns, 
+        string replacementText, 
+        bool executeMode, 
+        SemaphoreSlim throttler)
+    {
+        await throttler.WaitAsync();
+        try
+        {
+            if (!File.Exists(filePath))
+                return string.Empty;
+                
+            var content = await File.ReadAllTextAsync(filePath);
+            var lines = content.Split('\n');
+            
+            var matchingLines = new List<(int lineNumber, string originalLine, string newLine)>();
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                var hasMatch = searchPatterns.Any(pattern => pattern.IsMatch(line));
+                
+                if (hasMatch)
+                {
+                    var newLine = line;
+                    foreach (var pattern in searchPatterns)
+                    {
+                        newLine = pattern.Replace(newLine, replacementText);
+                    }
+                    
+                    if (newLine != line)
+                    {
+                        matchingLines.Add((i + 1, line, newLine));
+                    }
+                }
+            }
+            
+        if (matchingLines.Count == 0)
+            return string.Empty;
+                
+        // If execute mode, actually perform the replacement
+        if (executeMode)
+        {
+            var newContent = content;
+            foreach (var pattern in searchPatterns)
+            {
+                newContent = pattern.Replace(newContent, replacementText);
+            }
+            
+            await File.WriteAllTextAsync(filePath, newContent);
+        }
+            
+            // Return diff format
+            return FormatReplacementDiff(filePath, matchingLines, executeMode);
+        }
+        finally
+        {
+            throttler.Release();
+        }
+    }
+    
+    /// <summary>
+    /// Formats replacement results as git-style diff with context
+    /// </summary>
+    private static string FormatReplacementDiff(
+        string filePath, 
+        List<(int lineNumber, string originalLine, string newLine)> matchingLines,
+        bool wasExecuted)
+    {
+        if (matchingLines.Count == 0)
+            return string.Empty;
+            
+        var sb = new StringBuilder();
+        sb.AppendLine($"## {filePath}");
+        sb.AppendLine();
+        
+        // Read file to get context lines
+        var allLines = File.ReadAllLines(filePath);
+        const int contextLines = 3;
+        
+        // Find the range we need to show (with context)
+        var minLine = matchingLines.Min(m => m.lineNumber) - 1; // Convert to 0-indexed
+        var maxLine = matchingLines.Max(m => m.lineNumber) - 1;
+        
+        var startLine = Math.Max(0, minLine - contextLines);
+        var endLine = Math.Min(allLines.Length - 1, maxLine + contextLines);
+        
+        var changedLineNumbers = new HashSet<int>(matchingLines.Select(m => m.lineNumber - 1));
+        
+        // Show context and removed lines
+        for (int i = startLine; i <= endLine; i++)
+        {
+            if (changedLineNumbers.Contains(i))
+            {
+                // This is a line that will be changed - show as removed
+                var match = matchingLines.First(m => m.lineNumber - 1 == i);
+                sb.AppendLine($"- {i + 1}: {match.originalLine.TrimEnd()}");
+            }
+            else
+            {
+                // Context line
+                sb.AppendLine($"  {i + 1}: {allLines[i].TrimEnd()}");
+            }
+        }
+        
+        sb.AppendLine();
+        
+        // Show added lines (replacement)
+        for (int i = startLine; i <= endLine; i++)
+        {
+            if (changedLineNumbers.Contains(i))
+            {
+                // This is a line that was/will be changed - show as added
+                var match = matchingLines.First(m => m.lineNumber - 1 == i);
+                sb.AppendLine($"+ {i + 1}: {match.newLine.TrimEnd()}");
+            }
+            else
+            {
+                // Context line
+                sb.AppendLine($"  {i + 1}: {allLines[i].TrimEnd()}");
+            }
+        }
+        
+        sb.AppendLine();
+        if (wasExecuted)
+        {
+            sb.AppendLine($"Replaced {matchingLines.Count} occurrence(s) in this file.");
+        }
+        else
+        {
+            sb.AppendLine($"Will replace {matchingLines.Count} occurrence(s) in this file.");
+        }
+        
+        return sb.ToString();
     }
 
     public const string Name = "cycodmd";

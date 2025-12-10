@@ -166,6 +166,20 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         {
             command.HighlightMatches = true;
         }
+        else if (arg == "--files-only")
+        {
+            command.FilesOnly = true;
+        }
+        else if (arg == "--replace-with")
+        {
+            var replacementText = GetInputOptionArgs(i + 1, args, required: 1).First();
+            command.ReplaceWithText = replacementText;
+            i += 1;
+        }
+        else if (arg == "--execute")
+        {
+            command.ExecuteMode = true;
+        }
         // Time-based filtering options
         else if (arg == "--modified")
         {

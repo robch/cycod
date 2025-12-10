@@ -1,0 +1,24 @@
+tests:
+  - name: AI calls FindFiles function
+    optional: needsAI
+    run: |
+      cycod --input "find yaml files" --auto-approve *
+    expect-regex: |
+      assistant-function: FindFiles
+    timeout: 30000
+
+  - name: AI calls SearchInFiles function
+    optional: needsAI
+    run: |
+      cycod --input "use SearchInFiles to search for 'async' in C# files" --auto-approve * --log test-searchinfiles.log
+    expect-regex: |
+      assistant-function: SearchInFiles
+    timeout: 45000
+
+  - name: AI calls ReplaceAllInFiles function for preview
+    optional: needsAI
+    run: |
+      cycod --input "use ReplaceAllInFiles to preview replacing 'QueryFiles' with 'SearchFiles' in the todo folder" --auto-approve *
+    expect-regex: |
+      assistant-function: ReplaceAllInFiles
+    timeout: 30000

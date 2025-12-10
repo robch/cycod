@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 public class TestRun
@@ -5,13 +6,13 @@ public class TestRun
     public void StartTest(TestCase testCase, Guid? guid = null)
     {
         _startTime ??= DateTime.Now;
-        _testCases.Add(testCase);
+        _testCases.Enqueue(testCase);
         SetExecutionId(testCase, guid ?? Guid.NewGuid());
     }
 
     public void RecordTest(TestResult testResult)
     {
-        _testResults.Add(testResult);
+        _testResults.Enqueue(testResult);
     }
 
     public void EndTest(TestCase testCase, TestOutcome outcome)
@@ -63,7 +64,7 @@ public class TestRun
     private DateTime? _startTime;
     private DateTime? _endTime;
 
-    private List<TestCase> _testCases = new List<TestCase>();
+    private ConcurrentQueue<TestCase> _testCases = new ConcurrentQueue<TestCase>();
     private Dictionary<Guid, Guid> _testToExecutionMap = new Dictionary<Guid, Guid>();
-    private List<TestResult> _testResults = new List<TestResult>();
+    private ConcurrentQueue<TestResult> _testResults = new ConcurrentQueue<TestResult>();
 }
