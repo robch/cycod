@@ -15,6 +15,7 @@ class SearchCommand : CycoGhCommand
         FileExtension = string.Empty;
         SortBy = "stars";
         IncludeForks = false;
+        Format = "url";
     }
 
     public List<string> Keywords { get; set; }
@@ -27,6 +28,7 @@ class SearchCommand : CycoGhCommand
     public string FileExtension { get; set; }
     public string SortBy { get; set; }
     public bool IncludeForks { get; set; }
+    public string Format { get; set; } // url, table, json, csv, detailed
 
     override public string GetCommandName()
     {

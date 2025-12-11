@@ -96,6 +96,20 @@ public class CycoGhCommandLineOptions : CommandLineOptions
         {
             command.IncludeForks = true;
         }
+        else if (arg == "--format")
+        {
+            var format = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(format))
+            {
+                throw new CommandLineException($"Missing format for {arg}");
+            }
+            var validFormats = new[] { "url", "table", "json", "csv", "detailed" };
+            if (!validFormats.Contains(format.ToLower()))
+            {
+                throw new CommandLineException($"Invalid format '{format}'. Valid formats: {string.Join(", ", validFormats)}");
+            }
+            command.Format = format.ToLower();
+        }
         else if (!arg.StartsWith("--"))
         {
             // Positional arguments are keywords
