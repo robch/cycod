@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using System.Threading;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -60,7 +61,9 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null,
+        CancellationToken cancellationToken = default,
+        Func<string>? getDisplayBuffer = null)
     {
         return await CompleteChatStreamingAsync(
             userPrompt, 
@@ -68,7 +71,9 @@ public class FunctionCallingChat : IAsyncDisposable
             messageCallback, 
             streamingCallback, 
             approveFunctionCall, 
-            functionCallCallback);
+            functionCallCallback,
+            cancellationToken,
+            getDisplayBuffer);
     }
 
     public async Task<string> CompleteChatStreamingAsync(
@@ -77,10 +82,11 @@ public class FunctionCallingChat : IAsyncDisposable
         Action<IList<ChatMessage>>? messageCallback = null,
         Action<ChatResponseUpdate>? streamingCallback = null,
         Func<string, string?, bool>? approveFunctionCall = null,
-        Action<string, string, object?>? functionCallCallback = null)
+        Action<string, string, object?>? functionCallCallback = null,
+        CancellationToken cancellationToken = default,
+        Func<string>? getDisplayBuffer = null)
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
-        
         Conversation.Messages.Add(message);
         messageCallback?.Invoke(Conversation.Messages);
 
@@ -88,38 +94,100 @@ public class FunctionCallingChat : IAsyncDisposable
         while (true)
         {
             var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options))
+
+            // Surround streaming with try/catch to handle user interruption via OperationCancelledException
+            try
             {
-                _functionCallDetector.CheckForFunctionCall(update);
-
-                var content = string.Join("", update.Contents
-                    .Where(c => c is TextContent)
-                    .Cast<TextContent>()
-                    .Select(c => c.Text)
-                    .ToList());
-
-                if (update.FinishReason == ChatFinishReason.ContentFilter)
+                await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options, cancellationToken))
                 {
-                    content = $"{content}\nWARNING: Content filtered!";
+                    // Check for cancellation before processing each update
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    _functionCallDetector.CheckForFunctionCall(update);
+
+                    var content = string.Join("", update.Contents
+                        .Where(c => c is TextContent)
+                        .Cast<TextContent>()
+                        .Select(c => c.Text)
+                        .ToList());
+
+                    if (update.FinishReason == ChatFinishReason.ContentFilter)
+                    {
+                        content = $"{content}\nWARNING: Content filtered!";
+                    }
+
+                    responseContent += content;
+                    contentToReturn += content;
+
+                    streamingCallback?.Invoke(update);
+                }
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // User interrupted - trim content to match what was actually displayed
+                var displayBuffer = getDisplayBuffer?.Invoke() ?? "";
+
+                // If we have both the display buffer and the content to return, trim the content to match what was displayed
+                // This avoids showing content that was generated but not actually seen by the user due to the slight delay in cancellation
+                if (!string.IsNullOrEmpty(displayBuffer) && !string.IsNullOrEmpty(contentToReturn))
+                {
+                    var trimmedContent = TrimContentToDisplayBuffer(contentToReturn, displayBuffer);
+                    if (!string.IsNullOrEmpty(trimmedContent))
+                    {
+                        Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, trimmedContent));
+                        messageCallback?.Invoke(Conversation.Messages);
+                    }
+                }
+                throw;
+            }
+
+            // Surround assistant response handling with try/catch to handle user interruption via ChatCommand.UserWantsControlException
+            try
+            {
+                if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
+                {
+                    _functionCallDetector.Clear();
+                    continue;
                 }
 
-                responseContent += content;
-                contentToReturn += content;
-
-                streamingCallback?.Invoke(update);
+                Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
+                messageCallback?.Invoke(Conversation.Messages);
             }
-
-            if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
+            catch (ChatCommand.UserWantsControlException)
             {
+                // User cancelled function call - exit streaming entirely and return control to user
                 _functionCallDetector.Clear();
-                continue;
+                return ""; // Empty response - will show blank Assistant line
             }
-
-            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
-            messageCallback?.Invoke(Conversation.Messages);
 
             return contentToReturn;
         }
+    }
+
+    /// <summary>
+    /// Trims the full content to match what was actually displayed in the display buffer. 
+    /// This is used to ensure that if the user cancels the response, we only show the content that was actually seen by the user, 
+    /// and not any additional content that may have been generated but not displayed due to cancellation.
+    /// </summary>
+    /// <param name="fullContent">Content generated by the AI so far (usually more than what has been displayed)</param>
+    /// <param name="displayBuffer">The tail end of the content that was actually displayed to the user</param>
+    /// <returns>All content that was shown on screen to the user</returns>
+    private string TrimContentToDisplayBuffer(string fullContent, string displayBuffer)
+    {
+        if (string.IsNullOrEmpty(displayBuffer) || string.IsNullOrEmpty(fullContent))
+            return "";
+
+        // Find where the display buffer content appears in the full content
+        var displayBufferIndex = fullContent.LastIndexOf(displayBuffer);
+        if (displayBufferIndex >= 0)
+        {
+            // Trim to end where display buffer ends
+            return fullContent.Substring(0, displayBufferIndex + displayBuffer.Length);
+        }
+
+        // If we can't find the display buffer in the content, return the display buffer
+        // This handles edge cases where the content might have been modified
+        return displayBuffer;
     }
 
     private bool TryCallFunctions(string responseContent, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
@@ -139,7 +207,30 @@ public class FunctionCallingChat : IAsyncDisposable
         Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
         messageCallback?.Invoke(Conversation.Messages);
 
-        var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
+        List<AIContent> functionCallResults;
+        try
+        {
+            functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
+        }
+        // If the user cancels during function call approval, we need to handle that gracefully by 
+        // using the same logic as denying function calls
+        catch (ChatCommand.UserWantsControlException)
+        {
+            var functionResultContents = new List<AIContent>();
+            
+            foreach (var functionCall in readyToCallFunctionCalls)
+            {
+                var cancelResult = DontCallFunction(functionCall, functionCallCallback);
+                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, cancelResult));
+            }
+
+            Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, functionResultContents));
+            messageCallback?.Invoke(Conversation.Messages);
+            
+            // Re-throw so the main loop (CompleteChatStreamingAsync()) knows 
+            // to stop processing and return control to the user
+            throw;
+        }
 
         var attachToToolMessage = functionCallResults
             .Where(c => c is FunctionResultContent)
@@ -174,7 +265,16 @@ public class FunctionCallingChat : IAsyncDisposable
         var functionResultContents = new List<AIContent>();
         foreach (var functionCall in readyToCallFunctionCalls)
         {
-            var approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
+            bool approved;
+            try
+            {
+                approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
+            }
+            catch (ChatCommand.UserWantsControlException)
+            {
+                // Re-throw so TryCallFunctions can handle it
+                throw;
+            }
 
             var functionResult = approved
                 ? CallFunction(functionCall, functionCallCallback)
@@ -215,7 +315,7 @@ public class FunctionCallingChat : IAsyncDisposable
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
 
         ConsoleHelpers.WriteDebugLine($"Function call not approved: {functionCall.Name} with arguments: {functionCall.Arguments}");
-        var functionResult = "User did not approve function call";
+        var functionResult = ChatCommand.CallDeniedMessage;
 
         functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
 
