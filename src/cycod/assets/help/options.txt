@@ -48,6 +48,7 @@ USAGE: cycod [...]
     --use-copilot                         Prefer use of GitHub Copilot
     --use-azure-openai                    Prefer use of Azure OpenAI API as the chat provider
     --use-anthropic                       Prefer use of Anthropic Claude
+    --use-azure-anthropic                 Prefer use of Azure Anthropic (Foundry)
     --use-bedrock                         Prefer use of AWS Bedrock
     --use-gemini                          Prefer use of Google Gemini
     --use-grok                            Prefer use of Grok (x.ai)
@@ -55,7 +56,15 @@ USAGE: cycod [...]
 
   ANTHROPIC OPTIONS                       (see: cycod help use anthropic)
     --anthropic-api-key KEY               Use a specific API key for Anthropic
+    --anthropic-endpoint ENDPOINT         Use a specific endpoint (for Azure or custom endpoints)
     --anthropic-model-name NAME           Use a specific chat model (default: claude-sonnet-4)
+
+
+  AZURE ANTHROPIC OPTIONS                 (see: cycod help use azure anthropic)
+    --azure-anthropic-api-key KEY         Use a specific Azure API key for Anthropic
+    --azure-anthropic-endpoint ENDPOINT   Use a specific Azure endpoint
+    --azure-anthropic-model-name NAME     Use a specific Azure model deployment (default: claude-sonnet-4-5)
+
 
   AWS BEDROCK                             (see: cycod help use aws bedrock)
     --aws-bedrock-api-key KEY             Use a specific authentication key

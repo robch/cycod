@@ -47,3 +47,34 @@ USE ANTHROPIC
     EXAMPLE 3: Use Claude Sonnet 4 for advanced reasoning tasks
 
       cycod chat --anthropic-model-name claude-sonnet-4
+
+
+  ENDPOINT CONFIGURATION
+
+    EXAMPLE 1: Set Anthropic endpoint via config (for Azure Foundry or custom endpoints)
+
+      cycod config set Anthropic.Endpoint https://my-resource.services.ai.azure.com/anthropic
+      cycod config set Anthropic.Endpoint https://my-resource.services.ai.azure.com/anthropic --local
+      cycod config set Anthropic.Endpoint https://my-resource.services.ai.azure.com/anthropic --user
+      cycod config set Anthropic.Endpoint https://my-resource.services.ai.azure.com/anthropic --global
+
+    EXAMPLE 2: Set Anthropic endpoint via environment variable
+
+      # Bash (Linux/macOS)
+      export ANTHROPIC_ENDPOINT="https://my-resource.services.ai.azure.com/anthropic"
+
+      # CMD (Windows)
+      set ANTHROPIC_ENDPOINT=https://my-resource.services.ai.azure.com/anthropic
+
+      # PowerShell (Windows)
+      $env:ANTHROPIC_ENDPOINT = "https://my-resource.services.ai.azure.com/anthropic"
+
+    EXAMPLE 3: Use Azure Claude via command line with all parameters
+
+      cycod chat --use-anthropic \
+        --anthropic-endpoint https://my-resource.services.ai.azure.com/anthropic \
+        --anthropic-api-key YOUR_AZURE_API_KEY \
+        --anthropic-model-name claude-sonnet-4-5
+
+    NOTE: When using Azure endpoints (containing ".azure.com"), the Anthropic Foundry 
+          client is automatically used for proper Azure authentication and routing.

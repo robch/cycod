@@ -1,0 +1,99 @@
+USE AZURE ANTHROPIC
+
+  AUTHENTICATION
+
+    EXAMPLE 1: Set Azure Anthropic API key via config
+
+      cycod config set Azure.Anthropic.ApiKey KEY
+      cycod config set Azure.Anthropic.ApiKey KEY --local
+      cycod config set Azure.Anthropic.ApiKey KEY --user
+      cycod config set Azure.Anthropic.ApiKey KEY --global
+
+    EXAMPLE 2: Set Azure Anthropic API key via environment variable
+
+      # Bash (Linux/macOS)
+      export AZURE_ANTHROPIC_API_KEY="YOUR_AZURE_API_KEY"
+
+      # CMD (Windows)
+      set AZURE_ANTHROPIC_API_KEY=YOUR_AZURE_API_KEY
+
+      # PowerShell (Windows)
+      $env:AZURE_ANTHROPIC_API_KEY = "YOUR_AZURE_API_KEY"
+
+    EXAMPLE 3: Supply Azure Anthropic API key via command line
+
+      cycod chat --use-azure-anthropic --azure-anthropic-api-key KEY
+
+  ENDPOINT 
+
+    EXAMPLE 1: Set Azure Anthropic endpoint via config
+
+      cycod config set Azure.Anthropic.Endpoint https://your-resource.services.ai.azure.com/anthropic
+      cycod config set Azure.Anthropic.Endpoint https://your-resource.services.ai.azure.com/anthropic --local
+      cycod config set Azure.Anthropic.Endpoint https://your-resource.services.ai.azure.com/anthropic --user
+      cycod config set Azure.Anthropic.Endpoint https://your-resource.services.ai.azure.com/anthropic --global
+
+    EXAMPLE 2: Set Azure Anthropic endpoint via environment variable
+
+      # Bash (Linux/macOS)
+      export AZURE_ANTHROPIC_ENDPOINT="https://your-resource.services.ai.azure.com/anthropic"
+
+      # CMD (Windows)
+      set AZURE_ANTHROPIC_ENDPOINT=https://your-resource.services.ai.azure.com/anthropic
+
+      # PowerShell (Windows)
+      $env:AZURE_ANTHROPIC_ENDPOINT = "https://your-resource.services.ai.azure.com/anthropic"
+
+    EXAMPLE 3: Supply Azure Anthropic endpoint via command line
+
+      cycod chat --use-azure-anthropic --azure-anthropic-endpoint https://your-resource.services.ai.azure.com/anthropic
+
+  MODEL SELECTION
+
+    EXAMPLE 1: Set Azure Anthropic model deployment name via config
+
+      cycod config set Azure.Anthropic.ModelName claude-sonnet-4-5
+      cycod config set Azure.Anthropic.ModelName claude-sonnet-4-5 --local
+      cycod config set Azure.Anthropic.ModelName claude-sonnet-4-5 --user
+      cycod config set Azure.Anthropic.ModelName claude-sonnet-4-5 --global
+
+    EXAMPLE 2: Set Azure Anthropic model name via environment variable
+
+      # Bash (Linux/macOS)
+      export AZURE_ANTHROPIC_MODEL_NAME="claude-sonnet-4-5"
+
+      # CMD (Windows)
+      set AZURE_ANTHROPIC_MODEL_NAME=claude-sonnet-4-5
+
+      # PowerShell (Windows)
+      $env:AZURE_ANTHROPIC_MODEL_NAME = "claude-sonnet-4-5"
+
+    EXAMPLE 3: Supply Azure Anthropic model name via command line
+
+      cycod chat --use-azure-anthropic --azure-anthropic-model-name claude-sonnet-4-5
+
+  COMPLETE EXAMPLE
+
+    Using all Azure Anthropic settings together:
+
+      cycod chat --use-azure-anthropic \
+        --azure-anthropic-endpoint https://your-resource.services.ai.azure.com/anthropic \
+        --azure-anthropic-api-key YOUR_AZURE_API_KEY \
+        --azure-anthropic-model-name claude-sonnet-4-5
+
+    Or set them in config once:
+
+      cycod config set Azure.Anthropic.Endpoint https://your-resource.services.ai.azure.com/anthropic --local
+      cycod config set Azure.Anthropic.ApiKey YOUR_AZURE_API_KEY --local
+      cycod config set Azure.Anthropic.ModelName claude-sonnet-4-5 --local
+      cycod config set app.preferredProvider azure-anthropic --local
+
+    Then just use:
+
+      cycod chat
+
+  SEE ALSO
+
+    cycod help use anthropic        Standard Anthropic usage
+    cycod help options              All available options
+    cycod help provider             Provider selection

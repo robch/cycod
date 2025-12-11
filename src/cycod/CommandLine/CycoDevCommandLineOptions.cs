@@ -587,6 +587,11 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "anthropic");
             Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "anthropic");
         }
+        else if (arg == "--use-azure-anthropic")
+        {
+            ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "azure-anthropic");
+            Environment.SetEnvironmentVariable("CYCOD_AI_PROVIDER", "azure-anthropic");
+        }
         else if (arg == "--use-aws" || arg == "--use-bedrock" || arg == "--use-aws-bedrock")
         {
             ConfigStore.Instance.SetFromCommandLine(KnownSettings.AppPreferredProvider, "aws-bedrock");
