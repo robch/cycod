@@ -33,7 +33,8 @@ REPO COMMAND OPTIONS
 
   REPOSITORY-SPECIFIC FILTERS
 
-    --sort FIELD               Sort by: stars, forks, or updated (default: stars)
+    --sort FIELD               Sort by: stars, forks, updated, or help-wanted-issues
+                               (default: relevance/best-match when not specified)
     --include-forks            Include forked repositories in results
     --exclude-fork             Exclude forked repositories
     --only-forks               Show only forked repositories

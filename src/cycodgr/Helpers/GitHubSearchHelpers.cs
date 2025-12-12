@@ -20,7 +20,25 @@ class GitHubSearchHelpers
 
     private static async Task<List<RepoInfo>> SearchRepositoriesByKeywordsAsync(RepoCommand command)
     {
-        var query = string.Join(" ", command.Keywords);
+        // Build query from keywords - keep them separate unless they contain spaces
+        // This allows: hello world → AND search, "hello world" → phrase search
+        var queryParts = new List<string>();
+        
+        foreach (var keyword in command.Keywords)
+        {
+            if (keyword.Contains(' '))
+            {
+                // Keyword contains space - user originally quoted it, keep as phrase
+                queryParts.Add($"\"{keyword}\"");
+            }
+            else
+            {
+                // Single word - keep separate for AND behavior
+                queryParts.Add(keyword);
+            }
+        }
+        
+        var query = string.Join(" ", queryParts);
         
         // Add repo qualifiers if specified
         if (command.Repos.Any())
@@ -103,7 +121,25 @@ class GitHubSearchHelpers
 
     private static async Task<List<CodeMatch>> SearchCodeForMatchesAsync(CodeCommand command)
     {
-        var query = string.Join(" ", command.Keywords);
+        // Build query from keywords - keep them separate unless they contain spaces
+        // This allows: hello world → AND search, "hello world" → phrase search
+        var queryParts = new List<string>();
+        
+        foreach (var keyword in command.Keywords)
+        {
+            if (keyword.Contains(' '))
+            {
+                // Keyword contains space - user originally quoted it, keep as phrase
+                queryParts.Add($"\"{keyword}\"");
+            }
+            else
+            {
+                // Single word - keep separate for AND behavior
+                queryParts.Add(keyword);
+            }
+        }
+        
+        var query = string.Join(" ", queryParts);
         
         // Add repo qualifiers if specified
         if (command.Repos.Any())

@@ -1,0 +1,108 @@
+CYCODGR QUERY SYNTAX
+
+Understanding how cycodgr searches GitHub
+
+BASIC SYNTAX
+
+  Multiple words (space-separated) perform AND search:
+    cycodgr repo hello world
+    → Finds repos containing BOTH "hello" AND "world" (anywhere)
+  
+  Quoted phrases perform exact phrase search:
+    cycodgr repo "hello world"
+    → Finds repos containing the exact phrase "hello world"
+
+KEYWORDS
+
+  Single keywords:
+    cycodgr repo dotnet
+    → Finds repos containing "dotnet"
+  
+  Multiple keywords (AND search):
+    cycodgr repo dotnet aspire
+    → Finds repos containing BOTH "dotnet" AND "aspire"
+  
+  Exact phrases:
+    cycodgr repo "minimal api"
+    → Finds repos containing the exact phrase "minimal api"
+  
+  Mixed (keywords + phrases):
+    cycodgr repo dotnet "minimal api"
+    → Finds repos containing "dotnet" AND the phrase "minimal api"
+
+BOOLEAN OPERATORS
+
+  GitHub search supports OR and NOT operators (must be uppercase):
+  
+  OR operator:
+    cycodgr repo "python OR ruby"
+    → Finds repos containing either "python" or "ruby"
+  
+  NOT operator:
+    cycodgr repo "python NOT django"
+    → Finds repos containing "python" but not "django"
+  
+  Note: Operators must be uppercase and usually work best in quotes
+
+QUALIFIERS
+
+  Add filters to narrow results:
+    cycodgr repo authentication --language csharp --owner microsoft
+    cycodgr repo "rate limiting" --min-stars 100
+    cycodgr code "error handling" --extension cs --repo dotnet/aspire
+
+SORTING
+
+  By default, results are sorted by relevance (best-match), which considers:
+  - How well search terms match (name > description)
+  - Repository activity and recency
+  - Popularity (stars, but weighted with other factors)
+  
+  This gives you the most targeted results for your specific query.
+  
+  For other sort orders:
+    cycodgr repo dotnet --sort stars          # Most popular first
+    cycodgr repo dotnet --sort forks          # Most forked first
+    cycodgr repo dotnet --sort updated        # Most recently updated first
+  
+  Best-match (default) is recommended for problem-solving and finding
+  specific examples. Use --sort stars when you want the most popular/trusted
+  libraries regardless of how well they match your specific query.
+
+EXAMPLES
+
+  EXAMPLE 1: AND search (multiple keywords)
+    cycodgr repo machine learning framework
+    → Repos with "machine" AND "learning" AND "framework"
+  
+  EXAMPLE 2: Exact phrase
+    cycodgr code "import React"
+    → Code containing exactly "import React"
+  
+  EXAMPLE 3: Mixed search
+    cycodgr repo dotnet "web api" microservices
+    → Repos with "dotnet" AND exact phrase "web api" AND "microservices"
+  
+  EXAMPLE 4: With qualifiers
+    cycodgr repo authentication authorization --language csharp
+    → C# repos with both "authentication" and "authorization"
+
+HOW SHELL QUOTING WORKS
+
+  When you type commands in your shell:
+  
+  Unquoted words become separate arguments:
+    cycodgr repo hello world
+    → Shell passes: ["hello", "world"] → AND search
+  
+  Quoted strings become single arguments:
+    cycodgr repo "hello world"
+    → Shell passes: ["hello world"] → Phrase search
+  
+  This is how cycodgr knows your intent!
+
+SEE ALSO
+
+  cycodgr help repo
+  cycodgr help code
+  cycodgr help examples
