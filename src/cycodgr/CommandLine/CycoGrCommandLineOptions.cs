@@ -87,6 +87,81 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             }
             command.Language = lang!;
         }
+        // Language shortcuts - Tier 1 (Primary)
+        else if (arg == "--cs" || arg == "--csharp")
+        {
+            command.Language = "csharp";
+        }
+        else if (arg == "--js" || arg == "--javascript")
+        {
+            command.Language = "javascript";
+        }
+        else if (arg == "--ts" || arg == "--typescript")
+        {
+            command.Language = "typescript";
+        }
+        else if (arg == "--py" || arg == "--python")
+        {
+            command.Language = "python";
+        }
+        else if (arg == "--java")
+        {
+            command.Language = "java";
+        }
+        else if (arg == "--go")
+        {
+            command.Language = "go";
+        }
+        else if (arg == "--md" || arg == "--markdown")
+        {
+            command.Language = "markdown";
+        }
+        // Language shortcuts - Tier 2 (Popular)
+        else if (arg == "--rb" || arg == "--ruby")
+        {
+            command.Language = "ruby";
+        }
+        else if (arg == "--rs" || arg == "--rust")
+        {
+            command.Language = "rust";
+        }
+        else if (arg == "--php")
+        {
+            command.Language = "php";
+        }
+        else if (arg == "--cpp" || arg == "--c++")
+        {
+            command.Language = "cpp";
+        }
+        else if (arg == "--swift")
+        {
+            command.Language = "swift";
+        }
+        else if (arg == "--kt" || arg == "--kotlin")
+        {
+            command.Language = "kotlin";
+        }
+        // Language shortcuts - Tier 3 (Config/Markup)
+        else if (arg == "--yml" || arg == "--yaml")
+        {
+            command.Language = "yaml";
+        }
+        else if (arg == "--json")
+        {
+            command.Language = "json";
+        }
+        else if (arg == "--xml")
+        {
+            command.Language = "xml";
+        }
+        else if (arg == "--html")
+        {
+            command.Language = "html";
+        }
+        else if (arg == "--css")
+        {
+            command.Language = "css";
+        }
         else if (arg == "--owner")
         {
             var owner = i + 1 < args.Count() ? args.ElementAt(++i) : null;
@@ -170,6 +245,81 @@ public class CycoGrCommandLineOptions : CommandLineOptions
                 throw new CommandLineException($"Missing language for {arg}");
             }
             command.Language = lang!;
+        }
+        // Language shortcuts - Tier 1 (Primary)
+        else if (arg == "--cs" || arg == "--csharp")
+        {
+            command.Language = "csharp";
+        }
+        else if (arg == "--js" || arg == "--javascript")
+        {
+            command.Language = "javascript";
+        }
+        else if (arg == "--ts" || arg == "--typescript")
+        {
+            command.Language = "typescript";
+        }
+        else if (arg == "--py" || arg == "--python")
+        {
+            command.Language = "python";
+        }
+        else if (arg == "--java")
+        {
+            command.Language = "java";
+        }
+        else if (arg == "--go")
+        {
+            command.Language = "go";
+        }
+        else if (arg == "--md" || arg == "--markdown")
+        {
+            command.Language = "markdown";
+        }
+        // Language shortcuts - Tier 2 (Popular)
+        else if (arg == "--rb" || arg == "--ruby")
+        {
+            command.Language = "ruby";
+        }
+        else if (arg == "--rs" || arg == "--rust")
+        {
+            command.Language = "rust";
+        }
+        else if (arg == "--php")
+        {
+            command.Language = "php";
+        }
+        else if (arg == "--cpp" || arg == "--c++")
+        {
+            command.Language = "cpp";
+        }
+        else if (arg == "--swift")
+        {
+            command.Language = "swift";
+        }
+        else if (arg == "--kt" || arg == "--kotlin")
+        {
+            command.Language = "kotlin";
+        }
+        // Language shortcuts - Tier 3 (Config/Markup)
+        else if (arg == "--yml" || arg == "--yaml")
+        {
+            command.Language = "yaml";
+        }
+        else if (arg == "--json")
+        {
+            command.Language = "json";
+        }
+        else if (arg == "--xml")
+        {
+            command.Language = "xml";
+        }
+        else if (arg == "--html")
+        {
+            command.Language = "html";
+        }
+        else if (arg == "--css")
+        {
+            command.Language = "css";
         }
         else if (arg == "--owner")
         {
