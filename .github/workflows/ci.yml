@@ -119,3 +119,13 @@ jobs:
           src/cycodmd/bin/Release/net9.0/win-x64/publish/
           src/cycodmd/bin/Release/net9.0/linux-x64/publish/
           src/cycodmd/bin/Release/net9.0/osx-x64/publish/
+    
+    - name: Upload cycodgr build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycodgr-build
+        path: |
+          src/cycodgr/bin/Release/net9.0/
+          src/cycodgr/bin/Release/net9.0/win-x64/publish/
+          src/cycodgr/bin/Release/net9.0/linux-x64/publish/
+          src/cycodgr/bin/Release/net9.0/osx-x64/publish/
