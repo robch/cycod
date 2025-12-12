@@ -115,7 +115,7 @@ cycod_build_dotnet() {
   echo "Building cycod projects with Version=$VERSION, NumericVersion=$NUMERIC_VERSION"
   
   # List of projects to build
-  local PROJECTS=("src/common/common.csproj" "src/cycod/cycod.csproj" "src/cycodt/cycodt.csproj" "src/cycodmd/cycodmd.csproj")
+  local PROJECTS=("src/common/common.csproj" "src/cycod/cycod.csproj" "src/cycodt/cycodt.csproj" "src/cycodmd/cycodmd.csproj" "src/cycodgr/cycodgr.csproj")
   
   # First restore dependencies
   echo "Restoring dependencies..."
@@ -161,7 +161,7 @@ cycod_pack_dotnet() {
   mkdir -p "$OUTPUT_DIR"
   
   # List of tools to pack
-  local TOOLS=("cycod" "cycodt" "cycodmd")
+  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
   
   # List of runtimes to publish for
   local RIDS=("win-x64" "linux-x64" "osx-x64")
@@ -220,7 +220,7 @@ cycod_pack_dotnet() {
 set -euo pipefail
 
 VERSION="${VERSION}"
-TOOLS=("cycod" "cycodt" "cycodmd")
+TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
 
 # Resolve this script's folder, then the feed folder
 DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
@@ -262,7 +262,7 @@ cycod_publish_self_contained() {
   mkdir -p "$OUTPUT_DIR"
   
   # List of tools to publish
-  local TOOLS=("cycod" "cycodt" "cycodmd")
+  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
   
   # List of runtimes to publish for
   local RIDS=("win-x64" "linux-x64" "osx-x64")

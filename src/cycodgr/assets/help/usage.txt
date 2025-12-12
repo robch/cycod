@@ -1,0 +1,201 @@
+# cycodgr - GitHub Repository and Code Search CLI
+
+Search GitHub repositories and code files.
+
+## Usage
+
+```
+cycodgr repo <keywords...> [options]    # Search for repositories
+cycodgr code <keywords...> [options]    # Search for code/files
+```
+
+## Common Options
+
+- `--help` - Display help information
+- `--version` - Display version information
+- `--verbose` - Enable verbose output
+- `--quiet` - Suppress non-essential output
+
+## Commands
+
+- `repo` - Search GitHub repositories (default command)
+- `code` - Search code within files
+- `help` - Display help for a specific topic
+- `version` - Display version information
+
+## Repo Command Options
+
+- `--max-results N` - Maximum search results (default: 10)
+- `--clone` - Clone repositories locally
+- `--max-clone N` - Max repos to clone (default: 10)
+- `--clone-dir PATH` - Clone directory (default: "./external")
+- `--language LANG` - Filter by programming language
+- `--owner ORG` - Filter by owner/organization
+- `--sort FIELD` - Sort by: stars, forks, updated
+- `--include-forks` - Include forked repositories
+- `--exclude-fork` - Exclude forked repositories (inverse of --include-forks)
+- `--only-forks` - Show only forked repositories
+- `--min-stars N` - Filter repositories with at least N stars
+- `--as-submodules` - Add as git submodules
+- `--format FORMAT` - Output format: url, detailed, table, json, csv (default: detailed)
+- `--repo OWNER/REPO` - Search within specific repository (repeatable)
+- `--repos REPO1 REPO2 @FILE` - Search within multiple repositories
+- `--exclude PATTERN [PATTERN...]` - Exclude results matching regex pattern(s)
+- `--save-output FILE` - Save search results to file
+- `--save-json FILE` - Save results as JSON
+- `--save-csv FILE` - Save results as CSV
+- `--save-table FILE` - Save results as Markdown table
+- `--save-urls FILE` - Save results as URLs only
+
+## Code Command Options
+
+- `--max-results N` - Maximum search results (default: 10)
+- `--language LANG` - Filter by programming language
+- `--owner ORG` - Filter by owner/organization
+- `--min-stars N` - Filter repositories with at least N stars
+- `--in-files EXT` - Search code in files with extension (e.g., cs, md)
+- `--extension EXT` - Alias for --in-files
+- `--format FORMAT` - Output format: detailed, filenames, files, repos, urls, json, csv (default: detailed)
+- `--lines N` - Context lines before/after matches (default: 5)
+- `--lines-before-and-after N` - Alias for --lines
+- `--repo OWNER/REPO` - Search within specific repository (repeatable)
+- `--repos REPO1 REPO2 @FILE` - Search within multiple repositories
+- `--exclude PATTERN [PATTERN...]` - Exclude results matching regex pattern(s)
+- `--save-output FILE` - Save search results to file
+- `--save-json FILE` - Save results as JSON
+- `--save-csv FILE` - Save results as CSV
+- `--save-urls FILE` - Save results as URLs only
+
+## Output Formats
+
+### Repo Command
+- **detailed** - URL | ⭐ stars | language | description (default)
+- **url** - Just repository URLs
+- **table** - Markdown table
+- **json** - JSON array
+- **csv** - CSV format
+
+### Code Command
+- **detailed** - Markdown with code fences and match markers (*) (default)
+- **filenames** - File paths grouped by repository
+- **files** - Raw file URLs (raw.githubusercontent.com)
+- **repos** - Unique repository URLs only
+- **urls** - Repository and file URLs
+- **json** - Structured JSON with matches
+- **csv** - Flattened CSV
+
+## Examples
+
+### Repository Search
+
+Search for repositories:
+```
+cycodgr repo dotnet aspire
+```
+
+Search with specific format:
+```
+cycodgr repo "ai agents" --format table
+```
+
+Clone top 5 results:
+```
+cycodgr repo machine-learning --clone --max-clone 5
+```
+
+Save in multiple formats:
+```
+cycodgr repo "dotnet aspire" --format detailed --save-json results.json --save-csv data.csv
+```
+
+Exclude forked repositories:
+```
+cycodgr repo "ai agents" --exclude fork
+```
+
+Exclude multiple patterns:
+```
+cycodgr repo aspire --exclude archived deprecated
+```
+
+Filter by organization:
+```
+cycodgr repo "ai agents" --owner microsoft
+```
+
+Filter by minimum stars:
+```
+cycodgr repo "dotnet cli" --min-stars 100
+```
+
+Exclude forked repositories:
+```
+cycodgr repo "aspire" --exclude-fork
+```
+
+Show only forked repositories:
+```
+cycodgr repo "dotnet examples" --only-forks
+```
+
+### Code Search
+
+Search for code:
+```
+cycodgr code "AGENTS.md"
+```
+
+Search in specific file types:
+```
+cycodgr code Microsoft.Extensions.AI --in-files csproj
+```
+
+Search within specific repository:
+```
+cycodgr code "AGENTS.md" --repo microsoft/vscode
+```
+
+Search within multiple repositories:
+```
+cycodgr code "AGENTS.md" --repo microsoft/vscode --repo dotnet/aspire
+cycodgr code "AGENTS.md" --repos microsoft/vscode dotnet/aspire openai/codex
+```
+
+Load repositories from file:
+```
+cycodgr code "error handling" --repos @my-repos.txt
+```
+
+Get just filenames:
+```
+cycodgr code "error handling" --format filenames
+```
+
+Adjust context lines:
+```
+cycodgr code config --lines 3
+```
+
+Save multiple formats simultaneously:
+```
+cycodgr code "AGENTS.md" --save-json search.json --save-csv search.csv --save-urls urls.txt
+```
+
+Exclude results from specific organizations:
+```
+cycodgr code "error handling" --exclude "github.com/archived"
+```
+
+Filter by organization:
+```
+cycodgr code "AGENTS.md" --owner microsoft
+```
+
+Filter by minimum stars:
+```
+cycodgr code "error handling" --language csharp --min-stars 100
+```
+
+## For More Information
+
+Visit: https://github.com/robch/cycod

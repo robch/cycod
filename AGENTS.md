@@ -12,6 +12,39 @@ This is a cycod CLI application written in C#. It consists of multiple component
 - Look for existing helper methods before implementing your own functionality
 - Leverage the FileHelpers class for file operations
 
+## Problem-Solving Approach
+When encountering complexity or difficult implementations:
+
+### **Progressive Implementation** (Not Procrastination)
+- **Start messy, refine iteratively**: Get something working first, then improve it
+- **Break down problems**: Split complex tasks into smaller, concrete steps
+- **Work through resistance**: Initial complexity is normal - push through systematically
+- **Document obstacles**: Note what's hard and why, but keep working on solutions
+
+### **When to Persist vs. When to Pivot**
+**PERSIST when:**
+- The core requirement is clear and necessary
+- You're learning/discovering the API or dependencies
+- The complexity is in implementation details, not fundamental approach
+- Time investment will pay off for the specific goal
+
+**PIVOT when:**
+- Requirements are unclear or conflicting
+- The approach is fundamentally wrong for the problem
+- Technical constraints make the goal impossible
+- There's a much simpler alternative that meets the same need
+
+### **Handling "Scope Creep" vs. "Legitimate Complexity"**
+- **Scope creep**: Additional features beyond the original request → discuss with user
+- **Legitimate complexity**: Implementation details needed to achieve the goal → work through it
+- **When in doubt**: Ask the user if they want to simplify the goal or push through the complexity
+
+### **Communication During Complex Work**
+- Provide progress updates, not abandonment suggestions
+- Explain what you're learning and what challenges remain
+- Ask specific questions about trade-offs rather than suggesting to "do it later"
+- Show incremental progress even if it's not perfect yet
+
 ## Code Style
 
 For detailed coding style guidance, refer to our:

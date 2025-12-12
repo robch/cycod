@@ -28,8 +28,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Fetch all history for proper version determination
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -74,11 +72,18 @@ jobs:
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0
         which cycod
         which cycodmd
+        which cycodgr
         which cycodt
         cycodt run --output-file ./TestResults/test-results-cycodt.trx
+    
+    - name: Clean up inception test TRX files
+      run: |
+        # Remove TRX files created by inception tests to avoid interference with CI reporting
+        rm -f tests/cycodt-yaml/inception-layer-1/*.trx
+        echo "Cleaned up inception test TRX files"
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -104,7 +109,7 @@ jobs:
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
-        name: cycod-cycodt-cycodmd-nuget-packages
+        name: cycod-cycodt-cycodmd-cycodgr-nuget-packages
         path: nuget-packages/*
     
     - name: Build self-contained executables
@@ -152,6 +157,9 @@ jobs:
             - cycodmd-win-x64-${{ env.VERSION }}.zip
             - cycodmd-linux-x64-${{ env.VERSION }}.zip
             - cycodmd-osx-x64-${{ env.VERSION }}.zip
+            - cycodgr-win-x64-${{ env.VERSION }}.zip
+            - cycodgr-linux-x64-${{ env.VERSION }}.zip
+            - cycodgr-osx-x64-${{ env.VERSION }}.zip
 
           - Platform packages (all tools):
             - cycodev-tools-win-x64-${{ env.VERSION }}.zip

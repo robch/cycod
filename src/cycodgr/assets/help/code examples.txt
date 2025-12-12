@@ -1,0 +1,83 @@
+CYCODGR CODE COMMAND EXAMPLES
+
+USAGE: cycodgr code <keywords...> [options]
+
+EXAMPLES
+
+  EXAMPLE 1: Find AI agent instruction files (learn from others!)
+
+    cycodgr code "AGENTS.md" --extension md
+    cycodgr code "AI Instructions" --extension md --owner openai
+    cycodgr code "AI_INSTRUCTIONS" --in-files md --format filenames
+
+  EXAMPLE 2: Find authentication implementations
+
+    cycodgr code "AddJwtBearer" --extension cs
+    cycodgr code "passport.use" --extension js --owner expressjs
+    cycodgr code "OAuth2PasswordBearer" --extension py --language python
+
+  EXAMPLE 3: Find configuration patterns
+
+    cycodgr code "appsettings.json" --owner dotnet --lines 5
+    cycodgr code "IConfiguration" --extension cs --repo dotnet/aspire
+    cycodgr code "dotenv.config" --extension js
+
+  EXAMPLE 3: Find GitHub Actions workflow examples
+
+    cycodgr code "actions/checkout" --extension yml --owner microsoft
+    cycodgr code "runs-on ubuntu-latest" --in-files yml --format filenames
+    cycodgr code "github.event.pull_request" --extension yml --lines 10
+
+  EXAMPLE 4: Find database migration patterns
+
+    cycodgr code "Add-Migration" --extension cs --repo efcore/EFCore
+    cycodgr code "DbMigration" --language csharp --format filenames
+    cycodgr code "Flyway" --extension java --owner flyway
+
+  EXAMPLE 5: Find Docker and containerization examples
+
+    cycodgr code "FROM mcr.microsoft.com" --in-files Dockerfile
+    cycodgr code "docker-compose.yml" --extension yml --owner docker
+    cycodgr code "ENTRYPOINT" --in-files Dockerfile --lines 3
+
+  EXAMPLE 6: Find dependency injection patterns
+
+    cycodgr code "AddSingleton" --extension cs --min-stars 100
+    cycodgr code "@Injectable" --extension ts --owner nestjs
+    cycodgr code "wire.Build" --extension go
+
+  EXAMPLE 7: Find API endpoint patterns
+
+    cycodgr code "MapGet" --extension cs --repo dotnet/aspnetcore
+    cycodgr code "@RestController" --extension java --language java
+    cycodgr code "app.get" --extension js --owner expressjs
+
+  EXAMPLE 8: Find test patterns and examples
+
+    cycodgr code "[Fact]" --extension cs --owner xunit
+    cycodgr code "describe(" --extension js --owner mochajs
+    cycodgr code "@pytest.fixture" --extension py
+
+  EXAMPLE 9: Find logging implementations
+
+    cycodgr code "ILogger<" --extension cs --min-stars 100 --lines 2
+    cycodgr code "winston.createLogger" --extension js
+    cycodgr code "logging.getLogger" --extension py
+
+  EXAMPLE 10: Save and format results
+
+    cycodgr code "rate limit" --extension cs --save-json rate-limiting.json
+    cycodgr code "circuit breaker" --extension cs --format filenames --save-urls files.txt
+    cycodgr code "retry policy" --language csharp --save-csv retry-patterns.csv
+
+  EXAMPLE 11: Search with context control
+
+    cycodgr code "UseCors" --extension cs --lines 0  # Only matching lines
+    cycodgr code "middleware" --extension cs --lines 10 --owner dotnet
+
+SEE ALSO
+
+  cycodgr help code
+  cycodgr help code options
+  cycodgr help examples
+  cycodgr help options
