@@ -28,8 +28,6 @@ jobs:
     
     steps:
     - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0  # Fetch all history for proper version determination
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
@@ -80,6 +78,12 @@ jobs:
         which cycodgr
         which cycodt
         cycodt run --output-file ./TestResults/test-results-cycodt.trx
+    
+    - name: Clean up inception test TRX files
+      run: |
+        # Remove TRX files created by inception tests to avoid interference with CI reporting
+        rm -f tests/cycodt-yaml/inception-layer-1/*.trx
+        echo "Cleaned up inception test TRX files"
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
