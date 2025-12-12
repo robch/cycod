@@ -74,9 +74,10 @@ jobs:
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0
         which cycod
         which cycodmd
+        which cycodgr
         which cycodt
         cycodt run --output-file ./TestResults/test-results-cycodt.trx
     
@@ -104,7 +105,7 @@ jobs:
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
-        name: cycod-cycodt-cycodmd-nuget-packages
+        name: cycod-cycodt-cycodmd-cycodgr-nuget-packages
         path: nuget-packages/*
     
     - name: Build self-contained executables
@@ -152,6 +153,9 @@ jobs:
             - cycodmd-win-x64-${{ env.VERSION }}.zip
             - cycodmd-linux-x64-${{ env.VERSION }}.zip
             - cycodmd-osx-x64-${{ env.VERSION }}.zip
+            - cycodgr-win-x64-${{ env.VERSION }}.zip
+            - cycodgr-linux-x64-${{ env.VERSION }}.zip
+            - cycodgr-osx-x64-${{ env.VERSION }}.zip
 
           - Platform packages (all tools):
             - cycodev-tools-win-x64-${{ env.VERSION }}.zip

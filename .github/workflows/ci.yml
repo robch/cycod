@@ -59,9 +59,10 @@ jobs:
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0
         which cycod
         which cycodmd
+        which cycodgr
         which cycodt
         cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
     
