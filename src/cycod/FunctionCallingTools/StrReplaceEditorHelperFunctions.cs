@@ -298,7 +298,7 @@ public class StrReplaceEditorHelperFunctions
     {
         if (File.Exists(path))
         {
-            return $"Path {path} already exists; cannot create file. Use ViewFile and then StrReplace to edit the file.";
+            return $"Path {path} already exists; cannot create file. Use ViewFile and then ReplaceOneInFile to edit the file.";
         }
         DirectoryHelpers.EnsureDirectoryForFileExists(path);
         File.WriteAllText(path, fileText);

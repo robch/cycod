@@ -1,4 +1,4 @@
-namespace CycoGh.Models;
+namespace CycoGr.Models;
 
 public class RepoInfo
 {

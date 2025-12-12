@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
-    <AssemblyName>cycodgh</AssemblyName>
+    <AssemblyName>cycodgr</AssemblyName>
   
     <OutputType>Exe</OutputType>
     
@@ -15,7 +15,7 @@
     <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
     
     <!-- NuGet Package Properties -->
-    <PackageId>CycoGh</PackageId>
+    <PackageId>CycoGr</PackageId>
     <Authors>Rob Chambers</Authors>
     <Description>GitHub Search and Repository Management CLI</Description>
     <PackageTags>cli;github;search;git;repository</PackageTags>
@@ -25,7 +25,7 @@
     
     <!-- .NET Tool Configuration -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>cycodgh</ToolCommandName>
+    <ToolCommandName>cycodgr</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
