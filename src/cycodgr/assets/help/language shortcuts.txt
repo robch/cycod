@@ -1,0 +1,67 @@
+CYCODGR LANGUAGE SHORTCUTS
+
+Convenient shortcuts for the --language filter.
+
+USAGE: cycodgr repo <keywords> --LANG
+   OR: cycodgr code <keywords> --LANG
+
+SHORTCUTS
+
+  Tier 1: Primary Languages
+  
+    --cs, --csharp              C# / .NET
+    --js, --javascript          JavaScript
+    --ts, --typescript          TypeScript
+    --py, --python              Python
+    --java                      Java
+    --go                        Go
+    --md, --markdown            Markdown
+
+  Tier 2: Popular Languages
+  
+    --rb, --ruby                Ruby
+    --rs, --rust                Rust
+    --php                       PHP
+    --cpp, --c++                C++
+    --swift                     Swift
+    --kt, --kotlin              Kotlin
+
+  Tier 3: Config/Markup Languages
+  
+    --yml, --yaml               YAML
+    --json                      JSON
+    --xml                       XML
+    --html                      HTML
+    --css                       CSS
+
+EXAMPLES
+
+  Search for C# repositories:
+    cycodgr repo "minimal api" --cs
+    cycodgr repo "web framework" --csharp
+
+  Search for Python code:
+    cycodgr code "def main" --py
+    cycodgr code "fastapi" --python
+
+  Search for TypeScript code:
+    cycodgr code "use client" --ts
+    cycodgr code "React.FC" --typescript
+
+  Search for configuration files:
+    cycodgr code "github.event" --yml
+    cycodgr code "appsettings" --json
+
+EQUIVALENT TO
+
+  These are shortcuts for --language:
+    --cs        ≡  --language csharp
+    --py        ≡  --language python
+    --js        ≡  --language javascript
+    --md        ≡  --language markdown
+
+SEE ALSO
+
+  cycodgr help options
+  cycodgr help repo
+  cycodgr help code
