@@ -9,7 +9,7 @@ A command-line tool for searching GitHub repositories and code files.
 - **Clone repositories** to a local directory
 - **Add as git submodules** (optional)
 - **Filter by programming language**
-- **Sort results** by stars, forks, or updated date
+- **Sort results** by relevance (default), stars, forks, or updated date
 - **Multiple output formats**: detailed, url, filenames, files, repos, table, json, csv
 
 ## Installation
@@ -86,7 +86,7 @@ cycodgr repo <keywords...> [options]
 - `--as-submodules` - Add cloned repos as git submodules
 - `--language LANG` - Filter by programming language (e.g., csharp, python)
 - `--owner ORG` - Filter by owner/organization
-- `--sort FIELD` - Sort by: stars, forks, or updated (default: stars)
+- `--sort FIELD` - Sort by: stars, forks, updated, or help-wanted-issues (default: relevance)
 - `--include-forks` - Include forked repositories in results
 - `--exclude-fork` - Exclude forked repositories
 - `--only-forks` - Show only forked repositories

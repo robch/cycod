@@ -86,6 +86,8 @@ cycodgr code <keywords...> [options]    # Search for code/files
 
 ## Examples
 
+**Note:** For details on how multiple keywords and quoted phrases work, see `cycodgr help query syntax`
+
 ### Repository Search
 
 Search for repositories:

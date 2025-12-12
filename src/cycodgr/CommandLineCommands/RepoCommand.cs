@@ -13,7 +13,7 @@ class RepoCommand : CycoGrCommand
         AsSubmodules = false;
         Language = string.Empty;
         Owner = string.Empty;
-        SortBy = "stars";
+        SortBy = string.Empty;  // Empty = use GitHub's default (relevance/best-match)
         IncludeForks = false;
         ExcludeForks = false;
         OnlyForks = false;
