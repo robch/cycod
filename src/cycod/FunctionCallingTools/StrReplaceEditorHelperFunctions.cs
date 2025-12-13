@@ -305,6 +305,43 @@ public class StrReplaceEditorHelperFunctions
         return $"Created file {path} with {fileText.Length} characters.";
     }
 
+    [ReadOnly(false)]
+    [Description("Replaces the entire content of an existing file. Requires knowing the current line count as verification that you've read the file.")]
+    public string ReplaceFileContent(
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("New content to replace the entire file.")] string newContent,
+        [Description("Current line count of the file (for verification).")] int oldContentLineCount)
+    {
+        if (!File.Exists(path))
+        {
+            return $"File {path} does not exist. Use CreateFile to create a new file.";
+        }
+
+        // Read current content and count lines
+        var currentContent = File.ReadAllText(path);
+        var currentLines = currentContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        var actualLineCount = currentLines.Length;
+
+        // Verify line count matches
+        if (actualLineCount != oldContentLineCount)
+        {
+            return $"Line count mismatch: you specified {oldContentLineCount} but file has {actualLineCount} lines. Please read the file with ViewFile and verify the line count.";
+        }
+
+        // Save current content for undo
+        if (!EditHistory.ContainsKey(path))
+        {
+            EditHistory[path] = currentContent;
+        }
+
+        // Replace entire content
+        File.WriteAllText(path, newContent);
+        var newLines = newContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        
+        return $"Replaced content in {path}: {actualLineCount} lines → {newLines.Length} lines ({newContent.Length} characters).";
+    }
+
+
     // [ReadOnly(false)]
     // [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
     // public string LinesReplace(
