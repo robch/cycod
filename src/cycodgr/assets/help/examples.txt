@@ -1,39 +1,60 @@
-USAGE: cycodgr repo <keywords...> [options]
-   OR: cycodgr code <keywords...> [options]
+USAGE: cycodgr [REPO_PATTERN ...] [OPTIONS]
 
 EXAMPLES
 
-  EXAMPLE 1: Find popular .NET libraries
+  EXAMPLE 1: Get repository information
 
-    cycodgr repo "minimal api" --language csharp --min-stars 500
-    cycodgr repo "mediator pattern" --owner dotnet --min-stars 1000
+    cycodgr microsoft/vscode
+    cycodgr microsoft/vscode dotnet/aspire gnome/vte
 
-  EXAMPLE 2: Search for React component libraries
+  EXAMPLE 2: Search for repositories by keywords
 
-    cycodgr repo "headless ui components" --language typescript
-    cycodgr code "use client" --extension tsx --owner vercel --lines 5
+    cycodgr --repo-contains "jwt authentication" --max-results 10
+    cycodgr --repo-contains "terminal emulator" --language rust --min-stars 1000
+    cycodgr --repo-contains "machine learning" --language python --sort stars
 
-  EXAMPLE 3: Find authentication implementations
+  EXAMPLE 3: Search for code
 
-    cycodgr code "JwtBearer" --extension cs --min-stars 100
-    cycodgr code "passport.authenticate" --extension js --repo expressjs/express
+    cycodgr --file-contains "CreatePseudoConsole" --language cpp --max-results 10
+    cycodgr --file-contains "AddJwtBearer" --language csharp --max-results 5
+    cycodgr --file-contains "OSC 133" --max-results 10
 
-  EXAMPLE 4: Find GitHub Actions workflows
+  EXAMPLE 4: Search within specific repositories
 
-    cycodgr code "uses: actions/checkout" --extension yml --owner microsoft
-    cycodgr code "runs-on: ubuntu-latest" --in-files yml --format filenames
+    cycodgr microsoft/terminal --file-contains "StateMachine"
+    cycodgr wez/wezterm alacritty/alacritty --file-contains "vte"
+    cycodgr @@my-repos.txt --file-contains "TODO"
 
-  EXAMPLE 5: Clone and study popular repos
+  EXAMPLE 5: Use unified search (repos + code)
 
-    cycodgr repo "rate limiting middleware" --language csharp --clone --max-clone 3
-    cycodgr repo "retry policy" --owner App-vNext --save-json polly-repos.json
+    cycodgr --contains "jwt" --max-results 5
+    cycodgr --contains "shell integration" --language cpp --max-results 3
 
-  EXAMPLE 6: Find configuration examples
+  EXAMPLE 6: Use language-specific shortcuts
 
-    cycodgr code "Serilog.Settings" --extension json --lines 10
-    cycodgr code "appsettings.json" --repo dotnet/aspire --owner dotnet
+    cycodgr --cs-file-contains "async Task" --max-results 5
+    cycodgr --py-file-contains "import asyncio" --max-results 5
+    cycodgr --rs-file-contains "async fn" --max-results 5
+    cycodgr --ts-file-contains "interface" --max-results 5
+
+  EXAMPLE 7: Filter by repository criteria
+
+    cycodgr --repo-contains "web framework" --language go --min-stars 10000
+    cycodgr --repo-contains "testing" --owner microsoft --max-results 20
+    cycodgr --repo-contains "compiler" --exclude llvm/llvm-project
+
+  EXAMPLE 8: Save results to files
+
+    cycodgr --repo-contains "dotnet libraries" --save-output results.md
+    cycodgr --file-contains "parser" --save-output code-results.md
 
 SEE ALSO
 
   cycodgr help
   cycodgr help usage
+  cycodgr help options
+  cycodgr help language shortcuts
+  cycodgr help filtering
+  cycodgr help unified search
+  cycodgr help cloning
+  cycodgr help output formats

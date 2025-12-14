@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CycoGr.CommandLineCommands;
+
+namespace CycoGr.CommandLine;
 
 public class CycoGrCommandLineOptions : CommandLineOptions
 {
@@ -12,45 +15,71 @@ public class CycoGrCommandLineOptions : CommandLineOptions
 
     override protected Command? NewDefaultCommand()
     {
-        return new RepoCommand();
-    }
-
-    override protected string PeekCommandName(string[] args, int i)
-    {
-        var name1 = GetInputOptionArgs(i, args, max: 1).FirstOrDefault();
-        return name1 switch
-        {
-            "repo" => "repo",
-            "code" => "code",
-            _ => base.PeekCommandName(args, i)
-        };
+        return new SearchCommand();
     }
 
     override protected Command? NewCommandFromName(string commandName)
     {
-        return commandName switch
-        {
-            "repo" => new RepoCommand(),
-            "code" => new CodeCommand(),
-            _ => base.NewCommandFromName(commandName)
-        };
+        return base.NewCommandFromName(commandName);
     }
 
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
     {
-        return TryParseRepoCommandOptions(command as RepoCommand, args, ref i, arg) ||
-               TryParseCodeCommandOptions(command as CodeCommand, args, ref i, arg) ||
+        return TryParseSearchCommandOptions(command as SearchCommand, args, ref i, arg) ||
                TryParseSharedCycoGrCommandOptions(command as CycoGrCommand, args, ref i, arg);
     }
 
-    private bool TryParseRepoCommandOptions(RepoCommand? command, string[] args, ref int i, string arg)
+    private bool TryParseSearchCommandOptions(SearchCommand? command, string[] args, ref int i, string arg)
     {
-        bool parsed = true;
-
         if (command == null)
         {
-            parsed = false;
+            return false;
         }
+
+        bool parsed = true;
+
+        // Content search flags
+        if (arg == "--contains")
+        {
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.Contains = terms!;
+        }
+        else if (arg == "--file-contains")
+        {
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.FileContains = terms!;
+        }
+        else if (arg == "--repo-contains")
+        {
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.RepoContains = terms!;
+        }
+        // Extension-specific file-contains shortcuts
+        else if (arg.StartsWith("--") && arg.EndsWith("-file-contains"))
+        {
+            // Extract extension: --cs-file-contains → cs
+            var ext = arg.Substring(2, arg.Length - 2 - "-file-contains".Length);
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.FileContains = terms!;
+            command.Language = MapExtensionToLanguage(ext);
+        }
+        // Other options
         else if (arg == "--max-results")
         {
             var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
@@ -197,6 +226,20 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             var starsStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
             command.MinStars = ValidateNonNegativeNumber(arg, starsStr);
         }
+        else if (arg == "--lines-before-and-after" || arg == "--lines")
+        {
+            var linesStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            command.LinesBeforeAndAfter = ValidateNonNegativeNumber(arg, linesStr);
+        }
+        else if (arg == "--extension" || arg == "--in-files")
+        {
+            var ext = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(ext))
+            {
+                throw new CommandLineException($"Missing extension for {arg}");
+            }
+            command.Language = MapExtensionToLanguage(ext!);
+        }
         else if (arg == "--format")
         {
             var format = i + 1 < args.Count() ? args.ElementAt(++i) : null;
@@ -204,17 +247,7 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             {
                 throw new CommandLineException($"Missing format for {arg}");
             }
-            var validFormats = new[] { "url", "table", "json", "csv", "detailed" };
-            if (!validFormats.Contains(format.ToLower()))
-            {
-                throw new CommandLineException($"Invalid format '{format}'. Valid formats: {string.Join(", ", validFormats)}");
-            }
-            command.Format = format.ToLower();
-        }
-        else if (!arg.StartsWith("--"))
-        {
-            // Positional arguments are keywords
-            command.Keywords.Add(arg);
+            command.Format = format!;
         }
         else
         {
@@ -224,156 +257,35 @@ public class CycoGrCommandLineOptions : CommandLineOptions
         return parsed;
     }
 
-    private bool TryParseCodeCommandOptions(CodeCommand? command, string[] args, ref int i, string arg)
+    override protected bool TryParseOtherCommandArg(Command? command, string arg)
     {
-        bool parsed = true;
-
-        if (command == null)
+        if (command is SearchCommand searchCommand)
         {
-            parsed = false;
-        }
-        else if (arg == "--max-results")
-        {
-            var countStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            command.MaxResults = ValidatePositiveNumber(arg, countStr);
-        }
-        else if (arg == "--language")
-        {
-            var lang = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            if (string.IsNullOrWhiteSpace(lang))
-            {
-                throw new CommandLineException($"Missing language for {arg}");
-            }
-            command.Language = lang!;
-        }
-        // Language shortcuts - Tier 1 (Primary)
-        else if (arg == "--cs" || arg == "--csharp")
-        {
-            command.Language = "csharp";
-        }
-        else if (arg == "--js" || arg == "--javascript")
-        {
-            command.Language = "javascript";
-        }
-        else if (arg == "--ts" || arg == "--typescript")
-        {
-            command.Language = "typescript";
-        }
-        else if (arg == "--py" || arg == "--python")
-        {
-            command.Language = "python";
-        }
-        else if (arg == "--java")
-        {
-            command.Language = "java";
-        }
-        else if (arg == "--go")
-        {
-            command.Language = "go";
-        }
-        else if (arg == "--md" || arg == "--markdown")
-        {
-            command.Language = "markdown";
-        }
-        // Language shortcuts - Tier 2 (Popular)
-        else if (arg == "--rb" || arg == "--ruby")
-        {
-            command.Language = "ruby";
-        }
-        else if (arg == "--rs" || arg == "--rust")
-        {
-            command.Language = "rust";
-        }
-        else if (arg == "--php")
-        {
-            command.Language = "php";
-        }
-        else if (arg == "--cpp" || arg == "--c++")
-        {
-            command.Language = "cpp";
-        }
-        else if (arg == "--swift")
-        {
-            command.Language = "swift";
-        }
-        else if (arg == "--kt" || arg == "--kotlin")
-        {
-            command.Language = "kotlin";
-        }
-        // Language shortcuts - Tier 3 (Config/Markup)
-        else if (arg == "--yml" || arg == "--yaml")
-        {
-            command.Language = "yaml";
-        }
-        else if (arg == "--json")
-        {
-            command.Language = "json";
-        }
-        else if (arg == "--xml")
-        {
-            command.Language = "xml";
-        }
-        else if (arg == "--html")
-        {
-            command.Language = "html";
-        }
-        else if (arg == "--css")
-        {
-            command.Language = "css";
-        }
-        else if (arg == "--owner")
-        {
-            var owner = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            if (string.IsNullOrWhiteSpace(owner))
-            {
-                throw new CommandLineException($"Missing owner/organization for {arg}");
-            }
-            command.Owner = owner!;
-        }
-        else if (arg == "--min-stars")
-        {
-            var starsStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            command.MinStars = ValidateNonNegativeNumber(arg, starsStr);
-        }
-        else if (arg == "--in-files" || arg == "--file-extension" || arg == "--extension")
-        {
-            var ext = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            if (string.IsNullOrWhiteSpace(ext))
-            {
-                throw new CommandLineException($"Missing file extension for {arg}");
-            }
-            command.FileExtension = ext!;
-        }
-        else if (arg == "--format")
-        {
-            var format = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            if (string.IsNullOrWhiteSpace(format))
-            {
-                throw new CommandLineException($"Missing format for {arg}");
-            }
-            var validFormats = new[] { "detailed", "filenames", "files", "repos", "urls", "json", "csv" };
-            if (!validFormats.Contains(format.ToLower()))
-            {
-                throw new CommandLineException($"Invalid format '{format}'. Valid formats: {string.Join(", ", validFormats)}");
-            }
-            command.Format = format.ToLower();
-        }
-        else if (arg == "--lines-before-and-after" || arg == "--lines")
-        {
-            var linesStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
-            command.LinesBeforeAndAfter = ValidateNonNegativeNumber(arg, linesStr);
-        }
-        else if (!arg.StartsWith("--"))
-        {
-            // Positional arguments are keywords
-            command.Keywords.Add(arg);
-        }
-        else
-        {
-            parsed = false;
+            searchCommand.RepoPatterns.Add(arg);
+            return true;
         }
 
-        return parsed;
+        return false;
+    }
+
+    private string MapExtensionToLanguage(string ext)
+    {
+        // Map file extension shorthand to GitHub language names
+        return ext.ToLower() switch
+        {
+            "cs" => "csharp",
+            "js" => "javascript",
+            "ts" => "typescript",
+            "py" => "python",
+            "rb" => "ruby",
+            "rs" => "rust",
+            "kt" => "kotlin",
+            "cpp" => "cpp",
+            "c++" => "cpp",
+            "yml" => "yaml",
+            "md" => "markdown",
+            _ => ext.ToLower()  // Pass through as-is
+        };
     }
 
     private bool TryParseSharedCycoGrCommandOptions(CycoGrCommand? command, string[] args, ref int i, string arg)

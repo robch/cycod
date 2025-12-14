@@ -1,4 +1,6 @@
-abstract class CycoGrCommand : Command
+namespace CycoGr.CommandLine;
+
+public abstract class CycoGrCommand : Command
 {
     public CycoGrCommand()
     {
