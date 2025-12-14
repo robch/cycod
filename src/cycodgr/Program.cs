@@ -218,7 +218,7 @@ class Program
         // Output code matches (with file sections under repos)
         if (codeMatches.Count > 0)
         {
-            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, overrideQuiet: true);
+            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, overrideQuiet: true);
         }
 
         // Save output if requested
@@ -336,7 +336,7 @@ class Program
         }
 
         // Output results grouped by repository
-        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, overrideQuiet: true);
+        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, overrideQuiet: true);
 
         // Save output if requested
         if (!string.IsNullOrEmpty(command.SaveOutput))
@@ -459,7 +459,7 @@ class Program
         }
     }
 
-    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, bool overrideQuiet = false)
+    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, List<string> repoInstructionsList, bool overrideQuiet = false)
     {
         // Group by repository
         var byRepo = codeMatches.GroupBy(m => m.Repository.FullName).ToList();
@@ -513,11 +513,23 @@ class Program
                 async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, fileInstructionsList, overrideQuiet)
             );
 
-            // Output all file results
-            foreach (var fileOutput in fileOutputs)
+            // Combine all file outputs for this repo
+            var repoOutput = string.Join("", fileOutputs);
+
+            // Apply repo instructions if any
+            if (repoInstructionsList.Any())
             {
-                ConsoleHelpers.WriteLine(fileOutput, overrideQuiet: overrideQuiet);
+                Logger.Info($"Applying {repoInstructionsList.Count} repo instruction(s) to repository: {repo.FullName}");
+                repoOutput = AiInstructionProcessor.ApplyAllInstructions(
+                    repoInstructionsList,
+                    repoOutput,
+                    useBuiltInFunctions: false,
+                    saveChatHistory: string.Empty);
+                Logger.Info($"Repo instructions applied successfully to repository: {repo.FullName}");
             }
+
+            // Output the final repo content
+            ConsoleHelpers.WriteLine(repoOutput, overrideQuiet: overrideQuiet);
         }
     }
 
