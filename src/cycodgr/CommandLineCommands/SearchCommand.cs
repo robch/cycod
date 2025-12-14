@@ -26,6 +26,7 @@ public class SearchCommand : CycoGrCommand
         AsSubmodules = false;
         FileInstructionsList = new List<Tuple<string, string>>();
         RepoInstructionsList = new List<string>();
+        InstructionsList = new List<string>();
     }
 
     public override string GetCommandName()
@@ -72,6 +73,7 @@ public class SearchCommand : CycoGrCommand
     // AI instruction options
     public List<Tuple<string, string>> FileInstructionsList { get; set; }
     public List<string> RepoInstructionsList { get; set; }
+    public List<string> InstructionsList { get; set; }
 
     // Output options
     public string Format { get; set; }
