@@ -24,6 +24,7 @@ public class SearchCommand : CycoGrCommand
         MaxClone = 10;
         CloneDirectory = "external";
         AsSubmodules = false;
+        FileInstructionsList = new List<Tuple<string, string>>();
     }
 
     public override string GetCommandName()
@@ -66,6 +67,9 @@ public class SearchCommand : CycoGrCommand
 
     // Code-specific options
     public int LinesBeforeAndAfter { get; set; }
+
+    // AI instruction options
+    public List<Tuple<string, string>> FileInstructionsList { get; set; }
 
     // Output options
     public string Format { get; set; }

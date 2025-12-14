@@ -249,6 +249,26 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             }
             command.Format = format!;
         }
+        else if (arg == "--file-instructions")
+        {
+            var instructions = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new CommandLineException($"Missing instructions for {arg}");
+            }
+            command.FileInstructionsList.Add(new Tuple<string, string>(instructions!, ""));
+        }
+        else if (arg.StartsWith("--") && arg.EndsWith("-file-instructions"))
+        {
+            // Extract extension: --cs-file-instructions → cs, --md-file-instructions → md
+            var ext = arg.Substring(2, arg.Length - 2 - "-file-instructions".Length);
+            var instructions = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new CommandLineException($"Missing instructions for {arg}");
+            }
+            command.FileInstructionsList.Add(new Tuple<string, string>(instructions!, ext));
+        }
         else
         {
             parsed = false;

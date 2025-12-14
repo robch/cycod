@@ -41,6 +41,9 @@
     <EmbeddedResource Include="assets\help\**">
       <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </EmbeddedResource>
+    <EmbeddedResource Include="assets\prompts\**">
+      <Link>prompts\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
