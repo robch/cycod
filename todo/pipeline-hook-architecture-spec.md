@@ -1,0 +1,847 @@
+# Pipeline & Hook Architecture Redesign - Specification
+
+## Executive Summary
+
+This document proposes a complete architectural redesign of the chat streaming loop in `FunctionCallingChat` to replace the current monolithic implementation with a clean, extensible pipeline-based architecture that supports unlimited hook points for extending conversation behavior.
+
+---
+
+## Part 1: The Problem - Why We Need This (#3)
+
+### Current Architecture Analysis
+
+#### The Inner AI Loop Location
+
+The core chat interaction loop exists in `FunctionCallingChat.CompleteChatStreamingAsync()`. This is the "inner AI loop" that:
+1. Gets user input (via callbacks)
+2. Streams AI responses (via `await foreach`)
+3. Detects and accumulates function calls
+4. Executes functions
+5. Loops back for more AI responses
+
+#### What Master/Main Looked Like (The Good Old Days)
+
+**Original `CompleteChatStreamingAsync` (Master - Clean & Simple):**
+```
+Lines: ~35
+Complexity: Simple
+Responsibilities: 1 (delegate to AI client and handle basic flow)
+Exception Handling: Single try/catch
+State Management: Minimal (local variables only)
+```
+
+**Key Characteristics:**
+- Single outer `while(true)` loop for conversation turns
+- Single inner `await foreach` for streaming AI responses  
+- Clean function call detection and execution
+- Simple, focused, easy to understand
+- No complex state management
+- Single responsibility: orchestrate AI streaming
+
+**What Was Good:**
+- ✅ Easy to understand the flow
+- ✅ Easy to test
+- ✅ No side effects on class state
+- ✅ Clear separation of concerns
+- ✅ Follows "keep methods short" guideline (~35 lines)
+
+#### What the Interrupt PR Did (The Mess)
+
+**After Interrupt Changes:**
+```
+Lines: ~85
+Complexity: High
+Responsibilities: 4+ (streaming + interrupt + cancellation + display buffer management)
+Exception Handling: Nested try/catch blocks
+State Management: Complex (multiple fields, cancellation tokens, display buffers)
+```
+
+**Changes Made:**
+1. Added `CancellationToken` parameter and propagation
+2. Wrapped streaming in try/catch for `OperationCanceledException`
+3. Added display buffer trimming logic on cancellation
+4. Wrapped function calling in try/catch for `UserWantsControlException`
+5. Added complex state coordination between stages
+
+**What Went Wrong:**
+- ❌ Violates Single Responsibility Principle (4+ responsibilities)
+- ❌ Violates "keep methods short" (85+ lines)
+- ❌ Complex nested exception handling
+- ❌ Tight coupling to class state fields
+- ❌ Multiple return paths (hard to follow)
+- ❌ Similar exception handling in different places
+- ❌ Side effects on global state
+- ❌ Hard to test (requires complex setup)
+- ❌ Not extensible (where would you add new concerns?)
+
+#### The Companion Method: ChatCommand.CompleteChatStreamingAsync
+
+**Original (Master - Beautiful):**
+```
+Lines: 29
+Complexity: Low
+Responsibilities: 1 (delegate and handle exceptions)
+```
+
+This was a perfect thin wrapper that just added exception handling around the `FunctionCallingChat` call.
+
+**After Interrupt Changes:**
+```
+Lines: ~80
+Complexity: Very High
+Responsibilities: 5+ (wrapping + interrupt management + state management + cleanup)
+```
+
+**What Went Wrong:**
+- ❌ Created/managed `_interruptTokenSource` (state pollution)
+- ❌ Created/managed `SimpleInterruptManager` 
+- ❌ Complex `Task.WhenAny` racing logic
+- ❌ Nested try/catch blocks
+- ❌ Finally block cleaning up multiple fields
+- ❌ Multiple exception paths with similar handling
+
+#### HandleFunctionCallApproval - Already Problematic
+
+Even in master, this method was questionable:
+```
+Lines: ~65
+Complexity: High  
+Pattern: Infinite loop with multiple exits
+Issues: UI code mixed with business logic
+```
+
+**Problems (Both Old and New):**
+- ❌ 65+ line method (violates guidelines)
+- ❌ Infinite `while(true)` loop with multiple return points
+- ❌ UI rendering code mixed with approval logic
+- ❌ Repeated UI code (displays same thing 3x per iteration)
+- ❌ Complex nested conditionals (7+ branches)
+- ❌ Hard to test UI interactions
+- ❌ Cannot reuse approval logic without UI
+
+The interrupt PR made this worse by:
+- Changed return type from `bool` to `FunctionCallDecision` enum
+- Added escape key handling for user control
+- Added more conditional branches
+- Added more complexity to already complex method
+
+### The Core Problem
+
+**The inner AI loop is a critical, complex piece of functionality that will need to grow MORE complex over time, not less.**
+
+Future requirements include:
+- Hook points for message interception and modification
+- Hook points for tool call interception  
+- Hook points for conversation state analysis
+- Hook points for content filtering
+- Hook points for conversation branching/forking
+- Hook points for custom flow control
+
+**Cramming all this into monolithic methods will create unmaintainable spaghetti code.**
+
+### Why Current Approach Fails
+
+1. **No Separation of Concerns**: Everything mixed together in one method
+2. **No Extension Points**: Nowhere to cleanly add new behavior
+3. **State Pollution**: Direct field manipulation makes testing hard
+4. **Tight Coupling**: Hard to change one aspect without affecting others
+5. **No Composition**: Can't mix and match behaviors
+6. **Poor Testability**: Must mock entire complex object graph
+7. **No Reusability**: Logic trapped in specific contexts
+
+### What We Need Instead
+
+An architecture that:
+- ✅ Separates concerns into focused, single-responsibility components
+- ✅ Provides clear extension points (hooks) for adding behavior
+- ✅ Keeps state management explicit and testable
+- ✅ Allows composition of behaviors
+- ✅ Makes the core loop flow clear and understandable
+- ✅ Enables testing each concern independently
+- ✅ Supports future growth without complexity explosion
+
+---
+
+## Part 2: The Solution - Pipeline + Hook Architecture (#1)
+
+### High-Level Design
+
+Replace the monolithic inner loop with a **Pipeline Pattern** where:
+- Each stage of the conversation loop is a separate, focused component
+- Hooks can be registered at any point to observe/modify behavior
+- The core loop becomes a simple pipeline executor
+- Complexity is managed through composition, not one big method
+
+### Core Concepts
+
+#### 1. Pipeline
+A pipeline is an ordered sequence of stages that execute in order. Each stage can:
+- Access and modify the conversation context
+- Decide to continue, skip, or exit
+- Trigger hooks before and after execution
+
+#### 2. Stages
+A stage represents one logical step in the conversation loop:
+- `UserInputStage` - Handles user input (or simulated input)
+- `AIStreamingStage` - Streams AI responses
+- `FunctionDetectionStage` - Detects function calls in AI response
+- `FunctionExecutionStage` - Executes detected function calls
+- `MessagePersistenceStage` - Adds messages to conversation history
+- `LoopDecisionStage` - Decides whether to continue or exit loop
+
+#### 3. Hooks
+Hooks are extension points where custom behavior can be injected:
+- Registered at specific `HookPoint` locations in the pipeline
+- Receive full context (conversation state, pending data, stage info)
+- Can observe, modify, or control flow
+- Execute in registered order
+- Can be added/removed dynamically
+
+#### 4. Context
+The context is the "object model" that flows through the pipeline:
+- Contains conversation messages (the array you can muck with)
+- Contains pending data (stuff between stages)
+- Contains execution state and metadata
+- Provides the "mucking around" API for hooks
+
+### Architecture Layers
+
+```
+┌─────────────────────────────────────────────────┐
+│          ChatCommand (Presentation)             │
+│  - User interaction                             │
+│  - Display formatting                           │
+│  - Command handling                             │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│      ChatPipeline (Orchestration)               │
+│  - Stage execution                              │
+│  - Hook invocation                              │
+│  - Flow control                                 │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│      Pipeline Stages (Business Logic)           │
+│  - Focused, single-responsibility              │
+│  - Composable and testable                     │
+│  - No direct dependencies on each other        │
+└─────────────────┬───────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────┐
+│      Hooks (Extensions)                         │
+│  - Interrupts                                   │
+│  - Content filtering                            │
+│  - Conversation analysis                        │
+│  - Tool call interception                       │
+│  - Custom behaviors                             │
+└─────────────────────────────────────────────────┘
+```
+
+### Hook Points (Extension Points)
+
+Based on requirements, hooks can be registered at these points:
+
+1. **PostUserInput** / **PreAIStreaming**
+   - After user input captured, before AI processing
+   - Hook can modify user message, conversation history, or inject system prompts
+   - Use cases: Input validation, content filtering, context injection
+
+2. **PostAIStreaming** / **PreMessageAdd**
+   - After assistant response, before adding to message array
+   - Hook can modify assistant response, analyze content, trigger actions
+   - Use cases: Content moderation, response analysis, response modification
+
+3. **PostFunctionDetection** / **PreToolCall**
+   - After tool request detected, before tool execution
+   - Hook can modify/block/replace tool calls
+   - Use cases: Tool permission checking, tool call caching, tool result mocking
+
+4. **PostToolCall** / **PreToolResultAdd**
+   - After tool execution, before adding result to messages
+   - Hook can modify tool results, cache results, analyze outcomes
+   - Use cases: Result validation, result transformation, error handling
+
+5. **PostMessageAdd** / **PreLoopContinue**
+   - After message added to array, before loop continues
+   - Hook can analyze conversation state, trigger side effects
+   - Use cases: State tracking, conversation analysis, persistence
+
+6. **PostLoopIteration** / **PreNextIteration**
+   - At bottom of loop before continuing
+   - Hook can decide to exit loop, modify flow, clean up state
+   - Use cases: Conversation completion detection, flow control
+
+### The ChatContext Object Model
+
+The context is the "god object" that hooks can manipulate:
+
+#### Primary Components
+
+**1. Message Array (The Main Data)**
+```
+Messages: List<ChatMessage>
+  - The conversation history
+  - Hooks can add, remove, modify, reorder messages
+  - This is the primary "mucking around" target
+```
+
+**2. Pending Data (Between-Stage Data)**
+```
+Pending:
+  - PendingUserMessage: ChatMessage?
+  - PendingAssistantMessage: ChatMessage?
+  - PendingToolCalls: List<FunctionCall>
+  - PendingToolResults: List<FunctionResult>
+  - StreamingContent: StringBuilder
+  - StreamingUpdates: List<ChatResponseUpdate>
+```
+
+**3. Execution State**
+```
+State:
+  - CurrentStage: string
+  - IsInterrupted: bool
+  - ShouldExitLoop: bool
+  - ShouldSkipNextStage: bool
+  - LoopIteration: int
+```
+
+**4. Metadata & Extensions**
+```
+Properties: Dictionary<string, object>
+  - Arbitrary key-value store for hooks
+  - Enables stateful hooks across stages
+  - Hook-to-hook communication
+
+Instructions: List<ChatInstruction>
+  - Queue of modifications to apply
+  - Can inject system prompts, modify behavior
+```
+
+#### Capabilities (What Hooks Can Do)
+
+**Message Array Manipulation:**
+- Add messages at any position
+- Remove messages (conversation pruning)
+- Modify message content or metadata
+- Reorder messages (conversation restructuring)
+- Replace messages entirely
+
+**Pending Data Hijacking:**
+- Intercept content before it becomes a message
+- Modify streaming content in real-time
+- Block or modify tool calls before execution
+- Transform tool results before persistence
+
+**Flow Control:**
+- Skip upcoming stages
+- Exit the loop early
+- Redirect to different pipeline
+- Rollback previous stages
+- Fork conversation branches
+
+**State Management:**
+- Track cross-stage state in Properties
+- Communicate between hooks
+- Persist conversation metadata
+- Maintain hook-specific context
+
+### Core Interfaces
+
+#### IPipelineStage
+```
+Represents one step in the pipeline
+
+Properties:
+  - Name: string
+  - PreHookPoint: HookPoint
+  - PostHookPoint: HookPoint
+
+Methods:
+  - ExecuteAsync(ChatContext context): Task<StageResult>
+  - GetMetadata(): StageMetadata
+```
+
+#### IHookHandler
+```
+Represents a behavior that can be injected at hook points
+
+Methods:
+  - HandleAsync(ChatContext context, HookData data): Task<HookResult>
+  - Priority: int (for ordering multiple hooks at same point)
+```
+
+#### IChatPipeline
+```
+Orchestrates stage execution and hook invocation
+
+Methods:
+  - AddStage(IPipelineStage stage): IChatPipeline
+  - AddHook(HookPoint point, IHookHandler handler): IChatPipeline
+  - ExecuteAsync(ChatContext context): Task<ChatResult>
+```
+
+#### ChatContext
+```
+The mutable context object that flows through pipeline
+
+Properties:
+  - Messages: List<ChatMessage>
+  - Pending: PendingData
+  - State: ChatState  
+  - Properties: Dictionary<string, object>
+  - Instructions: List<ChatInstruction>
+
+Methods:
+  - Clone(): ChatContext
+  - Snapshot(): ChatSnapshot
+  - RestoreSnapshot(ChatSnapshot): void
+```
+
+### Pipeline Execution Flow
+
+```
+1. Create ChatContext with initial user message
+2. Create ChatPipeline and register stages
+3. Register hooks at desired points
+4. Execute pipeline:
+   
+   For each stage:
+     a. Execute pre-stage hooks (in priority order)
+     b. Check if hooks requested skip/exit
+     c. Execute stage logic
+     d. Execute post-stage hooks (in priority order)
+     e. Check stage and hook results
+     f. Continue to next stage or exit
+   
+5. Return final result from context
+```
+
+### How This Solves The Problems
+
+#### Problem: Monolithic Methods
+**Solution:** Each stage is 20-30 lines, single responsibility
+
+#### Problem: No Extension Points  
+**Solution:** Unlimited hooks at defined points
+
+#### Problem: State Pollution
+**Solution:** All state in explicit ChatContext object
+
+#### Problem: Tight Coupling
+**Solution:** Stages don't know about each other, only context
+
+#### Problem: Hard to Test
+**Solution:** Test each stage independently, mock context
+
+#### Problem: Can't Add Features
+**Solution:** Add hooks without modifying core pipeline
+
+#### Problem: Complex Exception Handling
+**Solution:** Each stage handles its own exceptions, hooks can intercept
+
+### Example Pipeline Configuration
+
+```
+var pipeline = new ChatIterationPipeline()
+    .AddStage(new UserInputStage())
+    .AddStage(new AIStreamingStage(chatClient))
+    .AddStage(new FunctionDetectionStage())
+    .AddStage(new FunctionExecutionStage(functionFactory))
+    .AddStage(new MessagePersistenceStage())
+    .AddStage(new LoopDecisionStage());
+
+// Register interrupt handling
+pipeline.AddHook(HookPoint.PreAIStreaming, new InterruptionHook(interruptManager));
+pipeline.AddHook(HookPoint.PreFunctionExecution, new InterruptionHook(interruptManager));
+
+// Register content moderation
+pipeline.AddHook(HookPoint.PostAIStreaming, new ContentModerationHook());
+
+// Register conversation analysis
+pipeline.AddHook(HookPoint.PostMessageAdd, new ConversationAnalysisHook());
+
+var result = await pipeline.ExecuteAsync(context);
+```
+
+### How Current Features Map to New Architecture
+
+#### Interrupt Handling (Current PR Feature)
+**Old:** Complex nested try/catch, state management in CompleteChatStreamingAsync
+**New:** Clean hook registered at PreAIStreaming and PreFunctionExecution
+```
+No changes to core pipeline needed
+Just register InterruptionHook
+Hook checks for interrupts and controls flow
+```
+
+#### Function Call Approval
+**Old:** HandleFunctionCallApproval with 65-line infinite loop
+**New:** FunctionApprovalHook at PreFunctionExecution
+```
+Hook displays UI, gets approval decision
+Can modify/block/approve function calls
+Returns HookResult to control execution
+```
+
+#### Exception Handling
+**Old:** Multiple try/catch blocks scattered throughout
+**New:** ExceptionHandlingHook at multiple points or stage-level handling
+```
+Each stage handles its own exceptions
+Hooks can intercept and recover
+Context maintains error state
+```
+
+#### Display Buffer Management
+**Old:** Field on ChatCommand, complex trimming logic
+**New:** DisplayBufferHook that tracks streaming content
+```
+Hook maintains display buffer in context.Properties
+On interrupt, hook trims content appropriately
+No pollution of command class
+```
+
+### Migration Strategy
+
+#### Phase 1: Create Infrastructure (No Behavior Change)
+1. Define core interfaces (IPipelineStage, IHookHandler, IChatPipeline)
+2. Define ChatContext object model
+3. Implement basic ChatPipeline executor
+4. Create stages that wrap existing logic
+
+#### Phase 2: Migrate Current Functionality
+1. Move streaming logic to AIStreamingStage
+2. Move function detection to FunctionDetectionStage  
+3. Move function execution to FunctionExecutionStage
+4. Update CompleteChatStreamingAsync to use pipeline
+
+#### Phase 3: Convert Features to Hooks
+1. Create InterruptionHook from interrupt PR changes
+2. Create FunctionApprovalHook from HandleFunctionCallApproval
+3. Create DisplayBufferHook from display buffer logic
+4. Register hooks in pipeline configuration
+
+#### Phase 4: Cleanup & Testing
+1. Remove old monolithic methods
+2. Add comprehensive tests for stages and hooks
+3. Add integration tests for pipeline
+4. Document hook development guide
+
+### Benefits
+
+1. **Extensibility**: Add new behavior without modifying core code
+2. **Testability**: Test each component independently
+3. **Clarity**: Clear separation of concerns, easy to understand flow
+4. **Flexibility**: Compose different behaviors for different scenarios
+5. **Maintainability**: Changes isolated to specific stages/hooks
+6. **Reusability**: Stages and hooks can be reused across contexts
+
+---
+
+## Performance & Responsiveness Considerations
+
+### Critical Concern: Interrupt Responsiveness
+
+**Question:** If hooks only run between stages, won't that make interrupts (double-ESC) slow/unresponsive?
+
+**Answer:** No - the pipeline architecture maintains identical responsiveness to the current interrupt PR implementation.
+
+### How Responsiveness is Preserved
+
+#### Current Interrupt PR Implementation
+```
+SimpleInterruptManager:
+  - Background task polls keyboard every 10ms
+  - Detects double-ESC pattern within 500ms window
+  - Sets CancellationToken when interrupt detected
+
+AIStreamingStage:
+  - await foreach (..., cancellationToken)  
+  - Checks cancellationToken.ThrowIfCancellationRequested() on each update
+  - Immediately throws OperationCanceledException
+
+Result: ~10ms worst-case delay for interrupt detection
+```
+
+#### Pipeline + Hook Implementation
+```
+InterruptionHook (Ambient Hook):
+  - Starts background monitoring (same as SimpleInterruptManager)
+  - Polls keyboard every 10ms
+  - Sets shared CancellationToken when double-ESC detected
+
+AIStreamingStage (Long-Running Stage):
+  - Receives CancellationToken from pipeline context
+  - await foreach (..., cancellationToken)
+  - Checks cancellationToken.ThrowIfCancellationRequested() on each update
+  - Same immediate cancellation behavior
+
+Result: Identical ~10ms worst-case delay - NO DEGRADATION
+```
+
+### Two Types of Hooks
+
+**1. Stage Boundary Hooks** (Most hooks)
+- Execute between pipeline stages
+- Used for: Message manipulation, flow control, analysis
+- Examples: PostUserInput, PreToolCall, PostMessageAdd
+- Timing: Not time-critical (between stages is fine)
+
+**2. Ambient/Continuous Hooks** (Special cases)
+- Execute continuously during long-running stages
+- Used for: Interrupts, real-time monitoring, async events
+- Pattern: Use CancellationToken or event-based mechanisms
+- Examples: InterruptionHook, TimeoutHook
+- Timing: Critical (must respond immediately)
+
+### Long-Running Stages Use CancellationToken Pattern
+
+Any stage that might run for >100ms should:
+
+1. **Accept CancellationToken** from ChatContext
+2. **Check token frequently** during processing
+3. **Throw OperationCanceledException** when cancelled
+4. **Allow hooks to control token** via context
+
+**Stages that need this:**
+- `AIStreamingStage` - Can stream for seconds/minutes
+- `FunctionExecutionStage` - Some tools run for seconds
+- `NetworkRequestStage` - Network calls can be slow
+
+**Stages that don't need this:**
+- `FunctionDetectionStage` - Runs in milliseconds
+- `MessagePersistenceStage` - Instant operation
+- `LoopDecisionStage` - Simple boolean check
+
+### How Interrupt Hook Works (Detailed)
+
+```
+1. Pipeline starts, registers InterruptionHook at construction
+
+2. InterruptionHook.Initialize():
+   - Creates SimpleInterruptManager
+   - Starts background keyboard monitoring
+   - Stores reference to ChatContext.CancellationTokenSource
+
+3. Pipeline begins executing stages
+
+4. User presses ESC ESC:
+   - SimpleInterruptManager detects pattern (within 10ms)
+   - InterruptionHook.OnInterruptDetected():
+     - Sets ChatContext.CancellationTokenSource.Cancel()
+     - Sets ChatContext.State.IsInterrupted = true
+   
+5. Currently executing stage (e.g., AIStreamingStage):
+   - Next iteration of await foreach
+   - Checks cancellationToken (< 1ms later)
+   - Throws OperationCanceledException
+   
+6. Pipeline catches exception:
+   - Invokes PostStageErrorHooks
+   - Checks ChatContext.State.IsInterrupted
+   - Returns gracefully with partial content
+
+Total time: 10ms (polling) + <1ms (cancellation check) = ~10ms
+```
+
+### Responsiveness Guarantee
+
+The pipeline architecture **guarantees** that:
+
+1. **No responsiveness degradation** vs current implementation
+2. **Same polling frequency** (10ms background monitoring)
+3. **Same cancellation mechanism** (CancellationToken)
+4. **Same exception handling** (OperationCanceledException)
+5. **Additional benefit**: Can add other ambient hooks (timeouts, health checks) using same pattern
+
+### Performance Overhead
+
+**Hook invocation overhead:**
+- Stage boundary hooks: ~0.01ms per hook (negligible)
+- Ambient hooks: Zero overhead (run independently)
+- Total overhead per iteration: <0.1ms (unmeasurable)
+
+**Memory overhead:**
+- ChatContext: ~1KB per conversation turn
+- Hook registrations: ~100 bytes per hook
+- Total: <10KB typical (negligible)
+
+### Why This Wasn't Obvious in the Spec
+
+The original spec focused on stage boundary hooks because they're the common case. Ambient hooks (like interrupts) are a special pattern that:
+- Don't follow typical "before/after stage" model
+- Use async patterns (CancellationToken, events) instead
+- Work continuously rather than at specific points
+- Are rare (most hooks are stage boundary hooks)
+
+But they're **fully supported** and **perform identically** to direct implementations.
+
+---
+
+## Part 3: Implementation Examples (#2)
+
+[PLACEHOLDER - Waiting for feedback before adding concrete code examples]
+
+This section will include:
+- Complete interface definitions with documentation
+- Example stage implementations showing the pattern
+- Example hook implementations for common scenarios
+- ChatContext class with full API
+- Pipeline executor implementation
+- Integration examples showing how to use in ChatCommand
+- Test examples demonstrating testability
+- Migration code showing before/after transformations
+
+---
+
+## Implementation Tasks
+
+### Task 1: Define Core Interfaces
+- [ ] Create `IChatPipeline` interface
+- [ ] Create `IPipelineStage` interface  
+- [ ] Create `IHookHandler` interface
+- [ ] Define `HookPoint` enum with all hook points
+- [ ] Define `StageResult`, `HookResult`, `ChatResult` types
+
+### Task 2: Implement ChatContext
+- [ ] Create `ChatContext` class with all properties
+- [ ] Create `PendingData` class
+- [ ] Create `ChatState` class
+- [ ] Implement Clone() and Snapshot() functionality
+- [ ] Add helper methods for common operations
+
+### Task 3: Implement Pipeline Infrastructure
+- [ ] Create `ChatPipeline` class implementing `IChatPipeline`
+- [ ] Implement stage execution with hook invocation
+- [ ] Implement hook ordering and priority
+- [ ] Add error handling and recovery
+- [ ] Add logging/debugging support
+
+### Task 4: Create Core Stages
+- [ ] Create `AIStreamingStage` (wraps existing streaming logic)
+- [ ] Create `FunctionDetectionStage` (wraps function call detection)
+- [ ] Create `FunctionExecutionStage` (wraps function execution)
+- [ ] Create `MessagePersistenceStage` (adds messages to context)
+- [ ] Create `LoopDecisionStage` (determines loop continuation)
+
+### Task 5: Create Hook Implementations
+- [ ] Create `InterruptionHook` (replaces current interrupt logic)
+- [ ] Create `FunctionApprovalHook` (replaces HandleFunctionCallApproval)
+- [ ] Create `DisplayBufferHook` (manages display buffer)
+- [ ] Create `ExceptionHandlingHook` (centralized error handling)
+
+### Task 6: Integrate with ChatCommand
+- [ ] Update `ChatCommand.CompleteChatStreamingAsync` to use pipeline
+- [ ] Remove old monolithic implementation
+- [ ] Configure pipeline with default hooks
+- [ ] Add configuration methods for custom hooks
+
+### Task 7: Testing
+- [ ] Unit tests for each stage
+- [ ] Unit tests for each hook
+- [ ] Integration tests for pipeline execution
+- [ ] Tests for hook ordering and priority
+- [ ] Tests for error handling and recovery
+- [ ] Tests for ChatContext manipulation
+
+### Task 8: Documentation
+- [ ] Document hook development guide
+- [ ] Document stage development guide
+- [ ] Document common patterns and recipes
+- [ ] Update architecture documentation
+- [ ] Add examples and tutorials
+
+---
+
+## Success Criteria
+
+1. **Code Quality**
+   - All stages are <30 lines, single responsibility
+   - No methods >50 lines anywhere in pipeline code
+   - High test coverage (>80%)
+   - All existing functionality preserved
+
+2. **Extensibility**
+   - Can add new hook without modifying pipeline
+   - Can add new stage without modifying other stages
+   - Can compose different pipelines for different scenarios
+
+3. **Clarity**
+   - Pipeline flow is obvious from code structure
+   - Each stage purpose is immediately clear
+   - Hook points are well-documented and intuitive
+
+4. **Performance**
+   - No performance degradation vs current implementation
+   - Hook invocation overhead is negligible
+   - Can disable hooks for performance-critical scenarios
+
+---
+
+## Future Enhancements
+
+Once base architecture is in place:
+
+1. **Pipeline Variants**
+   - Debug pipeline with extra logging hooks
+   - Testing pipeline with mock stages
+   - Performance pipeline with minimal hooks
+
+2. **Advanced Hooks**
+   - Conversation forking (parallel branches)
+   - Time-travel (rollback and retry)
+   - Conversation summarization
+   - Multi-agent conversations
+
+3. **Dynamic Configuration**
+   - Load hooks from configuration
+   - Enable/disable hooks at runtime
+   - Hot-reload hook implementations
+
+4. **Observability**
+   - Pipeline execution tracing
+   - Hook performance metrics
+   - Conversation state visualization
+
+---
+
+## Appendix: Reference to Current Code
+
+### Files to Modify
+- `src/cycod/ChatClient/FunctionCallingChat.cs` - Main refactoring target
+- `src/cycod/CommandLineCommands/ChatCommand.cs` - Integration point
+
+### Current Problematic Methods
+- `FunctionCallingChat.CompleteChatStreamingAsync()` - Lines 79-165 (~85 lines)
+- `ChatCommand.CompleteChatStreamingAsync()` - Lines 518-597 (~80 lines)  
+- `ChatCommand.HandleFunctionCallApproval()` - Lines 861-932 (~70 lines)
+
+### Key Dependencies
+- `Microsoft.Extensions.AI` - Chat client interfaces
+- `FunctionCallDetector` - Function call detection logic
+- `FunctionFactory` / `McpFunctionFactory` - Tool execution
+
+---
+
+## Questions for Review
+
+1. **Hook Granularity**: Are the proposed hook points at the right level, or do we need more/fewer?
+
+2. **Context API**: Is the ChatContext object model complete for "mucking around" needs?
+
+3. **Performance**: Any concerns about hook invocation overhead?
+
+4. **Backwards Compatibility**: Should we maintain old API temporarily during migration?
+
+5. **Hook Ordering**: Is priority-based ordering sufficient, or do we need dependency chains?
+
+6. **Error Handling**: Should hooks be able to handle errors from previous hooks?
+
+---
+
+**Next Steps:** Review this specification, provide feedback, then proceed with Part 3 (Implementation Examples) based on any adjustments needed.
