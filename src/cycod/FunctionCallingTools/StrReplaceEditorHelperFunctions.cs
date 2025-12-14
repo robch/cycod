@@ -416,6 +416,75 @@ public class StrReplaceEditorHelperFunctions
     }
 
     [ReadOnly(false)]
+    [Description("Replaces multiple text patterns in a single file atomically. All replacements must be unique occurrences.")]
+    public string ReplaceMultipleInFile(
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Array of old strings to be replaced. Each must match exactly one occurrence.")] string[] oldStrings,
+        [Description("Array of new strings to replace with. Must be same length as oldStrings.")] string[] newStrings)
+    {
+        if (!File.Exists(path))
+        {
+            return $"File {path} does not exist.";
+        }
+
+        if (oldStrings.Length != newStrings.Length)
+        {
+            return $"Error: oldStrings array length ({oldStrings.Length}) must match newStrings array length ({newStrings.Length}).";
+        }
+
+        if (oldStrings.Length == 0)
+        {
+            return "Error: No replacements specified.";
+        }
+
+        var originalText = FileHelpers.ReadAllText(path);
+        var currentText = originalText;
+
+        // Validate all patterns exist and are unique before making any changes
+        for (int i = 0; i < oldStrings.Length; i++)
+        {
+            var oldStr = oldStrings[i];
+            var newStr = newStrings[i];
+            
+            var testReplacement = StringHelpers.ReplaceOnce(currentText, oldStr, newStr, out var countFound);
+            if (countFound != 1)
+            {
+                var message = countFound == 0
+                    ? $"Replacement {i + 1}: No occurrences of specified text found."
+                    : $"Replacement {i + 1}: Multiple matches found for specified text; must be unique.";
+                return $"{message}\nNo changes made to {path}.";
+            }
+        }
+
+        // All validations passed, now perform the replacements
+        for (int i = 0; i < oldStrings.Length; i++)
+        {
+            var oldStr = oldStrings[i];
+            var newStr = newStrings[i];
+            
+            var replacedText = StringHelpers.ReplaceOnce(currentText, oldStr, newStr, out var countFound);
+            if (replacedText != null && countFound == 1)
+            {
+                currentText = replacedText;
+            }
+            else
+            {
+                // This shouldn't happen since we validated, but handle gracefully
+                return $"Unexpected error during replacement {i + 1}. File may be in inconsistent state.";
+            }
+        }
+
+        // Save original content for undo before writing
+        if (!EditHistory.ContainsKey(path))
+        {
+            EditHistory[path] = originalText;
+        }
+
+        File.WriteAllText(path, currentText);
+        
+        return $"File {path} updated: replaced {oldStrings.Length} occurrences.";
+    }
+    [ReadOnly(false)]
     [Description("Inserts the specified string `newStr` into the file at `path` after the specified line number (`insertLine`). Use 0 to insert at the beginning of the file.")]
     public string Insert(
         [Description("Absolute or relative path to file.")] string path,
