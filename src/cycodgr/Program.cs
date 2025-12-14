@@ -506,7 +506,7 @@ class Program
             }
             ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
 
-            // Output file sections
+            // Output file sections with real line numbers
             foreach (var fileGroup in fileGroups)
             {
                 var firstMatch = fileGroup.First();
@@ -515,37 +515,88 @@ class Program
                 ConsoleHelpers.WriteLine($"## {firstMatch.Path}", ConsoleColor.White, overrideQuiet: overrideQuiet);
                 ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
 
-                // Code blocks from fragments
-                foreach (var match in fileGroup)
+                // Fetch full file content and display with real line numbers
+                var rawUrl = ConvertToRawUrl(firstMatch.Url);
+                try
                 {
-                    if (match.TextMatches?.Any() == true)
+                    // Create FoundTextFile with lambda to load content
+                    var foundFile = new FoundTextFile
                     {
-                        var lang = DetectLanguageFromPath(match.Path);
-                        ConsoleHelpers.WriteLine($"```{lang}", overrideQuiet: overrideQuiet);
-                        
-                        foreach (var textMatch in match.TextMatches)
+                        Path = firstMatch.Path,
+                        LoadContent = async () =>
                         {
-                            var fragment = textMatch.Fragment;
-                            var lines = fragment.Split(new[] { '\n' }, StringSplitOptions.None);
-                            
-                            // Simple output - just show the fragment with line numbers
-                            int lineNum = 1;
-                            foreach (var line in lines)
-                            {
-                                var isMatch = LineContainsQuery(line, query);
-                                var prefix = isMatch ? "*" : " ";
-                                ConsoleHelpers.WriteLine($"{prefix} {lineNum,4}: {line}", overrideQuiet: overrideQuiet);
-                                lineNum++;
-                            }
+                            using var httpClient = new System.Net.Http.HttpClient();
+                            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CycoGr/1.0");
+                            return await httpClient.GetStringAsync(rawUrl);
+                        },
+                        Metadata = new Dictionary<string, object>
+                        {
+                            { "Repository", repo },
+                            { "Sha", firstMatch.Sha },
+                            { "Url", firstMatch.Url }
                         }
-                        
+                    };
+
+                    // Load the content
+                    foundFile.Content = await foundFile.LoadContent();
+
+                    // Use LineHelpers to filter and display with real line numbers
+                    var includePatterns = new List<System.Text.RegularExpressions.Regex>
+                    {
+                        new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(query), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                    };
+                    var excludePatterns = new List<System.Text.RegularExpressions.Regex>();
+
+                    var lang = DetectLanguageFromPath(firstMatch.Path);
+                    var backticks = $"```{lang}";
+                    
+                    var filteredContent = LineHelpers.FilterAndExpandContext(
+                        foundFile.Content,
+                        includePatterns,
+                        contextLines,  // lines before
+                        contextLines,  // lines after
+                        true,          // include line numbers
+                        excludePatterns,
+                        backticks,
+                        true           // highlight matches
+                    );
+
+                    if (filteredContent != null)
+                    {
+                        ConsoleHelpers.WriteLine(backticks, overrideQuiet: overrideQuiet);
+                        ConsoleHelpers.WriteLine(filteredContent, overrideQuiet: overrideQuiet);
                         ConsoleHelpers.WriteLine("```", overrideQuiet: overrideQuiet);
-                        ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+                    }
+                    else
+                    {
+                        ConsoleHelpers.WriteLine($"(No matches found in full file content)", overrideQuiet: overrideQuiet);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    ConsoleHelpers.WriteLine($"Error fetching file content: {ex.Message}", ConsoleColor.Yellow, overrideQuiet: overrideQuiet);
+                    ConsoleHelpers.WriteLine($"Falling back to fragment display...", overrideQuiet: overrideQuiet);
+                    
+                    // Fallback to fragment display
+                    foreach (var match in fileGroup)
+                    {
+                        if (match.TextMatches?.Any() == true)
+                        {
+                            var lang = DetectLanguageFromPath(match.Path);
+                            ConsoleHelpers.WriteLine($"```{lang}", overrideQuiet: overrideQuiet);
+                            
+                            foreach (var textMatch in match.TextMatches)
+                            {
+                                var fragment = textMatch.Fragment;
+                                ConsoleHelpers.WriteLine(fragment, overrideQuiet: overrideQuiet);
+                            }
+                            
+                            ConsoleHelpers.WriteLine("```", overrideQuiet: overrideQuiet);
+                        }
                     }
                 }
 
-                // Raw URL
-                var rawUrl = ConvertToRawUrl(firstMatch.Url);
+                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
                 ConsoleHelpers.WriteLine($"Raw: {rawUrl}", overrideQuiet: overrideQuiet);
                 ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
             }
