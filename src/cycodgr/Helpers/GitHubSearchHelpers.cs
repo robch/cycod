@@ -6,71 +6,180 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using CycoGr.Models;
 
+namespace CycoGr.Helpers;
+
 class GitHubSearchHelpers
 {
-    public static async Task<List<RepoInfo>> SearchRepositoriesAsync(RepoCommand command)
+    public static async Task<List<RepoInfo>> SearchRepositoriesAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string sortBy,
+        bool includeForks,
+        bool excludeForks,
+        bool onlyForks,
+        int maxResults)
     {
-        return await SearchRepositoriesByKeywordsAsync(command);
+        return await SearchRepositoriesByKeywordsAsync(
+            query, repos, language, owner, minStars, sortBy,
+            includeForks, excludeForks, onlyForks, maxResults);
     }
 
-    public static async Task<List<CodeMatch>> SearchCodeAsync(CodeCommand command)
+    public static async Task<List<CodeMatch>> SearchCodeAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
     {
-        return await SearchCodeForMatchesAsync(command);
+        return await SearchCodeForMatchesAsync(
+            query, repos, language, owner, minStars, fileExtension, maxResults);
     }
 
-    private static async Task<List<RepoInfo>> SearchRepositoriesByKeywordsAsync(RepoCommand command)
+    public static async Task<RepoInfo?> GetRepositoryMetadataAsync(string repoPattern)
     {
-        // Build query from keywords - keep them separate unless they contain spaces
-        // This allows: hello world → AND search, "hello world" → phrase search
-        var queryParts = new List<string>();
-        
-        foreach (var keyword in command.Keywords)
+        // Fetch single repo metadata using gh api
+        // Pattern: owner/repo
+        if (!repoPattern.Contains('/'))
         {
-            if (keyword.Contains(' '))
-            {
-                // Keyword contains space - user originally quoted it, keep as phrase
-                queryParts.Add($"\"{keyword}\"");
-            }
-            else
-            {
-                // Single word - keep separate for AND behavior
-                queryParts.Add(keyword);
-            }
+            throw new ArgumentException($"Invalid repository pattern: {repoPattern}. Expected format: owner/repo");
         }
-        
-        var query = string.Join(" ", queryParts);
+
+        try
+        {
+            var ghCommand = $"gh api repos/{repoPattern}";
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                Logger.Error($"gh api failed for {repoPattern}: {result.StandardError}");
+                return null;
+            }
+
+            var jsonDoc = JsonDocument.Parse(result.StandardOutput);
+            var root = jsonDoc.RootElement;
+
+            var fullName = root.TryGetProperty("full_name", out var fnEl) ? fnEl.GetString() : null;
+            var name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+            var owner = root.TryGetProperty("owner", out var ownerEl) && ownerEl.TryGetProperty("login", out var loginEl)
+                ? loginEl.GetString()
+                : null;
+            var htmlUrl = root.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() : null;
+            var description = root.TryGetProperty("description", out var descEl) && descEl.ValueKind != JsonValueKind.Null
+                ? descEl.GetString()
+                : null;
+            var language = root.TryGetProperty("language", out var langEl) && langEl.ValueKind != JsonValueKind.Null
+                ? langEl.GetString()
+                : null;
+            var stars = root.TryGetProperty("stargazers_count", out var starsEl) ? starsEl.GetInt32() : 0;
+            var forks = root.TryGetProperty("forks_count", out var forksEl) ? forksEl.GetInt32() : 0;
+            var isFork = root.TryGetProperty("fork", out var forkEl) && forkEl.GetBoolean();
+            
+            DateTime? updatedAt = null;
+            if (root.TryGetProperty("updated_at", out var updatedEl))
+            {
+                var updatedStr = updatedEl.GetString();
+                if (!string.IsNullOrEmpty(updatedStr) && DateTime.TryParse(updatedStr, out var parsed))
+                {
+                    updatedAt = parsed;
+                }
+            }
+
+            var topics = new List<string>();
+            if (root.TryGetProperty("topics", out var topicsEl) && topicsEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var topic in topicsEl.EnumerateArray())
+                {
+                    var topicStr = topic.GetString();
+                    if (!string.IsNullOrEmpty(topicStr))
+                    {
+                        topics.Add(topicStr);
+                    }
+                }
+            }
+
+            // Parse owner/name from pattern if not in response
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(owner))
+            {
+                var parts = repoPattern.Split('/');
+                owner ??= parts[0];
+                name ??= parts[1];
+            }
+
+            var repo = new RepoInfo
+            {
+                Name = name!,
+                Owner = owner!,
+                FullName = fullName ?? repoPattern,
+                Url = htmlUrl ?? $"https://github.com/{repoPattern}",
+                Description = description ?? "",
+                Language = language ?? "unknown",
+                Stars = stars,
+                Forks = forks,
+                IsFork = isFork,
+                UpdatedAt = updatedAt,
+                Topics = topics,
+                OpenIssues = 0  // Not querying issues for metadata lookup
+            };
+
+            return repo;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to fetch metadata for {repoPattern}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static async Task<List<RepoInfo>> SearchRepositoriesByKeywordsAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string sortBy,
+        bool includeForks,
+        bool excludeForks,
+        bool onlyForks,
+        int maxResults)
+    {
+        // Query is already built - just add qualifiers
         
         // Add repo qualifiers if specified
-        if (command.Repos.Any())
+        if (repos.Any())
         {
-            var repoQualifiers = string.Join(" ", command.Repos.Select(r => $"repo:{r}"));
+            var repoQualifiers = string.Join(" ", repos.Select(r => $"repo:{r}"));
             query = $"{query} {repoQualifiers}";
         }
         
         // Add owner qualifier if specified
-        if (!string.IsNullOrEmpty(command.Owner))
+        if (!string.IsNullOrEmpty(owner))
         {
-            query = $"{query} user:{command.Owner}";
+            query = $"{query} user:{owner}";
         }
         
         // Add fork filter
-        if (command.OnlyForks)
+        if (onlyForks)
         {
             query = $"{query} fork:only";
         }
-        else if (command.ExcludeForks)
+        else if (excludeForks)
         {
             query = $"{query} fork:false";
         }
-        else if (command.IncludeForks)
+        else if (includeForks)
         {
             query = $"{query} fork:true";
         }
         
         // Add stars filter if specified
-        if (command.MinStars > 0)
+        if (minStars > 0)
         {
-            query = $"{query} stars:>={command.MinStars}";
+            query = $"{query} stars:>={minStars}";
         }
         
         var args = new List<string>();
@@ -79,18 +188,18 @@ class GitHubSearchHelpers
         args.Add("repos");
         args.Add($"\"{query}\"");
         args.Add("--limit");
-        args.Add(command.MaxResults.ToString());
+        args.Add(maxResults.ToString());
         
-        if (!string.IsNullOrEmpty(command.Language))
+        if (!string.IsNullOrEmpty(language))
         {
             args.Add("--language");
-            args.Add(command.Language);
+            args.Add(language);
         }
         
-        if (!string.IsNullOrEmpty(command.SortBy))
+        if (!string.IsNullOrEmpty(sortBy))
         {
             args.Add("--sort");
-            args.Add(command.SortBy);
+            args.Add(sortBy);
         }
         
         args.Add("--json");
@@ -119,45 +228,34 @@ class GitHubSearchHelpers
         }
     }
 
-    private static async Task<List<CodeMatch>> SearchCodeForMatchesAsync(CodeCommand command)
+    private static async Task<List<CodeMatch>> SearchCodeForMatchesAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
     {
-        // Build query from keywords - keep them separate unless they contain spaces
-        // This allows: hello world → AND search, "hello world" → phrase search
-        var queryParts = new List<string>();
-        
-        foreach (var keyword in command.Keywords)
-        {
-            if (keyword.Contains(' '))
-            {
-                // Keyword contains space - user originally quoted it, keep as phrase
-                queryParts.Add($"\"{keyword}\"");
-            }
-            else
-            {
-                // Single word - keep separate for AND behavior
-                queryParts.Add(keyword);
-            }
-        }
-        
-        var query = string.Join(" ", queryParts);
+        // Query is already built - just add qualifiers
         
         // Add repo qualifiers if specified
-        if (command.Repos.Any())
+        if (repos.Any())
         {
-            var repoQualifiers = string.Join(" ", command.Repos.Select(r => $"repo:{r}"));
+            var repoQualifiers = string.Join(" ", repos.Select(r => $"repo:{r}"));
             query = $"{query} {repoQualifiers}";
         }
         
         // Add owner qualifier if specified
-        if (!string.IsNullOrEmpty(command.Owner))
+        if (!string.IsNullOrEmpty(owner))
         {
-            query = $"{query} user:{command.Owner}";
+            query = $"{query} user:{owner}";
         }
         
         // Add stars filter if specified
-        if (command.MinStars > 0)
+        if (minStars > 0)
         {
-            query = $"{query} stars:>={command.MinStars}";
+            query = $"{query} stars:>={minStars}";
         }
         
         var args = new List<string>();
@@ -166,18 +264,18 @@ class GitHubSearchHelpers
         args.Add("code");
         args.Add($"\"{query}\"");
         args.Add("--limit");
-        args.Add(command.MaxResults.ToString());
+        args.Add(maxResults.ToString());
         
-        if (!string.IsNullOrEmpty(command.FileExtension))
+        if (!string.IsNullOrEmpty(fileExtension))
         {
             args.Add("--extension");
-            args.Add(command.FileExtension.TrimStart('.'));
+            args.Add(fileExtension.TrimStart('.'));
         }
         
-        if (!string.IsNullOrEmpty(command.Language))
+        if (!string.IsNullOrEmpty(language))
         {
             args.Add("--language");
-            args.Add(command.Language);
+            args.Add(language);
         }
         
         args.Add("--json");
@@ -501,6 +599,8 @@ class GitHubSearchHelpers
                 ? issuesElement.GetInt32()
                 : 0;
 
+            var isFork = repoElement.TryGetProperty("isFork", out var forkElement) && forkElement.GetBoolean();
+
             return new RepoInfo
             {
                 Url = url,
@@ -511,7 +611,9 @@ class GitHubSearchHelpers
                 Description = description,
                 UpdatedAt = updatedAt,
                 Forks = forks,
-                OpenIssues = openIssues
+                OpenIssues = openIssues,
+                IsFork = isFork,
+                Topics = null  // GraphQL query doesn't include topics by default
             };
         }
         catch
@@ -520,24 +622,27 @@ class GitHubSearchHelpers
         }
     }
 
-    public static async Task<List<string>> CloneRepositoriesAsync(List<RepoInfo> repos, RepoCommand command)
+    public static async Task<List<string>> CloneRepositoriesAsync(
+        List<RepoInfo> repos,
+        bool asSubmodules,
+        string cloneDirectory,
+        int maxClone)
     {
-        var cloneDir = command.CloneDirectory;
-        var maxClone = Math.Min(command.MaxClone, repos.Count);
         var clonedRepos = new List<string>();
+        var actualMaxClone = Math.Min(maxClone, repos.Count);
         
         // Create clone directory if it doesn't exist
-        if (!Directory.Exists(cloneDir))
+        if (!Directory.Exists(cloneDirectory))
         {
-            Directory.CreateDirectory(cloneDir);
-            Logger.Info($"Created directory: {cloneDir}");
+            Directory.CreateDirectory(cloneDirectory);
+            Logger.Info($"Created directory: {cloneDirectory}");
         }
         
-        for (int i = 0; i < maxClone; i++)
+        for (int i = 0; i < actualMaxClone; i++)
         {
             var repo = repos[i];
             var repoName = repo.Name;
-            var targetPath = Path.Combine(cloneDir, repoName);
+            var targetPath = Path.Combine(cloneDirectory, repoName);
             
             // Skip if already exists
             if (Directory.Exists(targetPath))
@@ -550,9 +655,9 @@ class GitHubSearchHelpers
             
             try
             {
-                ConsoleHelpers.DisplayStatus($"Cloning {repoName} ({i + 1}/{maxClone})...");
+                ConsoleHelpers.DisplayStatus($"Cloning {repoName} ({i + 1}/{actualMaxClone})...");
                 
-                if (command.AsSubmodules)
+                if (asSubmodules)
                 {
                     await CloneAsSubmoduleAsync(repo.Url, targetPath);
                 }

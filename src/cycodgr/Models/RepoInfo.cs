@@ -11,8 +11,15 @@ public class RepoInfo
     public DateTime? UpdatedAt { get; set; }
     public int Forks { get; set; }
     public int OpenIssues { get; set; }
+    public bool IsFork { get; set; }
+    public List<string>? Topics { get; set; }
 
-    public string FullName => $"{Owner}/{Name}";
+    public string FullName 
+    { 
+        get => _fullName ?? $"{Owner}/{Name}";
+        set => _fullName = value;
+    }
+    private string? _fullName;
     
     public string FormattedStars => Stars switch
     {

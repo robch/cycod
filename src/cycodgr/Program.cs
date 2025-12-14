@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CycoGr.CommandLine;
 
 class Program
 {
@@ -58,88 +59,304 @@ class Program
 
         foreach (var command in commandLineOptions.Commands)
         {
-            if (command is RepoCommand repoCommand)
+            if (command is CycoGr.CommandLineCommands.SearchCommand searchCommand)
             {
-                await HandleRepoCommandAsync(repoCommand);
-            }
-            else if (command is CodeCommand codeCommand)
-            {
-                await HandleCodeCommandAsync(codeCommand);
+                await HandleSearchCommandAsync(searchCommand);
             }
         }
 
         return 0;
     }
 
-    private static async Task HandleRepoCommandAsync(RepoCommand command)
+    private static async Task HandleSearchCommandAsync(CycoGr.CommandLineCommands.SearchCommand command)
     {
         try
         {
-            var query = string.Join(" ", command.Keywords);
-            ConsoleHelpers.WriteLine($"## GitHub repository search for '{query}'", ConsoleColor.Cyan);
-            ConsoleHelpers.WriteLine();
+            // Determine what type of search based on flags
+            var hasFileContains = !string.IsNullOrEmpty(command.FileContains);
+            var hasRepoContains = !string.IsNullOrEmpty(command.RepoContains);
+            var hasContains = !string.IsNullOrEmpty(command.Contains);
+            var hasRepoPatterns = command.RepoPatterns.Any();
 
-            // Search GitHub
-            var repos = await GitHubSearchHelpers.SearchRepositoriesAsync(command);
-
-            if (repos.Count == 0)
+            // Scenario 1: Repo patterns only (no content search) - Show repo metadata
+            if (hasRepoPatterns && !hasFileContains && !hasRepoContains && !hasContains)
             {
-                ConsoleHelpers.WriteLine("No results found", ConsoleColor.Yellow);
-                return;
+                await ShowRepoMetadataAsync(command);
             }
-
-            // Apply exclude filters
-            repos = ApplyExcludeFilters(repos, command.Exclude, r => r.Url);
-
-            if (repos.Count == 0)
+            // Scenario 2: --contains (unified search - both repos and code)
+            else if (hasContains)
             {
-                ConsoleHelpers.WriteLine("No results after filtering", ConsoleColor.Yellow);
-                return;
+                await HandleUnifiedSearchAsync(command);
             }
-
-            // Output results in requested format
-            var output = FormatRepoOutput(repos, command.Format);
-            ConsoleHelpers.WriteLine(output);
-            ConsoleHelpers.WriteLine();
-
-            // Clone if requested
-            if (command.Clone)
+            // Scenario 3: --file-contains only (code search)
+            else if (hasFileContains)
             {
-                var maxClone = Math.Min(command.MaxClone, repos.Count);
-                ConsoleHelpers.WriteLine($"Cloning top {maxClone} repositories to '{command.CloneDirectory}'...", ConsoleColor.Cyan);
-                ConsoleHelpers.WriteLine();
-
-                var clonedRepos = await GitHubSearchHelpers.CloneRepositoriesAsync(repos, command);
-
-                ConsoleHelpers.WriteLine();
-                ConsoleHelpers.WriteLine($"Successfully cloned {clonedRepos.Count} of {maxClone} repositories", ConsoleColor.Green);
+                await HandleCodeSearchAsync(command);
             }
-
-            // Save output if requested
-            if (!string.IsNullOrEmpty(command.SaveOutput))
+            // Scenario 4: --repo-contains only (repo search)
+            else if (hasRepoContains)
             {
-                var saveOutput = new StringBuilder();
-                saveOutput.AppendLine($"## GitHub repository search for '{query}'");
-                saveOutput.AppendLine();
-                saveOutput.AppendLine(output);
-                
-                var saveFileName = FileHelpers.GetFileNameFromTemplate("repo-output.md", command.SaveOutput)!;
-                FileHelpers.WriteAllText(saveFileName, saveOutput.ToString());
-                ConsoleHelpers.WriteLine($"Saved output to: {saveFileName}", ConsoleColor.Green);
+                await HandleRepoSearchAsync(command);
             }
-
-            // Save additional formats if requested
-            SaveAdditionalFormats(command, repos, query, "repository search");
+            else
+            {
+                ConsoleHelpers.WriteErrorLine("No search criteria specified. Use --contains, --file-contains, or --repo-contains");
+            }
         }
         catch (Exception ex)
         {
             ConsoleHelpers.WriteErrorLine($"Error: {ex.Message}");
-            Logger.Error($"Repo command failed: {ex.Message}");
+            Logger.Error($"Search command failed: {ex.Message}");
             Logger.Error(ex.StackTrace ?? string.Empty);
         }
     }
 
-    private static void SaveAdditionalFormats(CycoGrCommand command, object data, string query, string searchType)
+    private static async Task ShowRepoMetadataAsync(CycoGr.CommandLineCommands.SearchCommand command)
+    {
+        foreach (var repoPattern in command.RepoPatterns)
+        {
+            try
+            {
+                var repo = await CycoGr.Helpers.GitHubSearchHelpers.GetRepositoryMetadataAsync(repoPattern);
+                
+                if (repo == null)
+                {
+                    ConsoleHelpers.WriteLine($"{repoPattern}", ConsoleColor.Yellow, overrideQuiet: true);
+                    ConsoleHelpers.WriteLine($"  Not found", overrideQuiet: true);
+                    ConsoleHelpers.WriteLine(overrideQuiet: true);
+                    continue;
+                }
+
+                // Format: ## owner/repo (⭐ stars) (language)
+                var header = $"## {repo.FullName} (⭐ {repo.FormattedStars})";
+                if (!string.IsNullOrEmpty(repo.Language))
+                {
+                    header += $" ({repo.Language})";
+                }
+                ConsoleHelpers.WriteLine(header, ConsoleColor.White, overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+                // Repo URL and Description
+                ConsoleHelpers.WriteLine($"Repo: {repo.Url}", overrideQuiet: true);
+                if (!string.IsNullOrEmpty(repo.Description))
+                {
+                    ConsoleHelpers.WriteLine($"Desc: {repo.Description}", overrideQuiet: true);
+                }
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+                // Topics and Updated
+                if (repo.Topics?.Any() == true)
+                {
+                    ConsoleHelpers.WriteLine($"Topics: {string.Join(", ", repo.Topics)}", overrideQuiet: true);
+                }
+                if (repo.UpdatedAt.HasValue)
+                {
+                    ConsoleHelpers.WriteLine($"Updated: {repo.UpdatedAt.Value:yyyy-MM-dd}", overrideQuiet: true);
+                }
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteLine($"{repoPattern}", ConsoleColor.Yellow, overrideQuiet: true);
+                ConsoleHelpers.WriteLine($"  Error: {ex.Message}", overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                Logger.Error($"Failed to fetch metadata for {repoPattern}: {ex.Message}");
+            }
+        }
+    }
+
+    private static async Task HandleUnifiedSearchAsync(CycoGr.CommandLineCommands.SearchCommand command)
+    {
+        var query = command.Contains;
+        ConsoleHelpers.WriteLine($"## GitHub unified search for '{query}'", ConsoleColor.Cyan, overrideQuiet: true);
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+        // Search both repos and code (N of each per spec recommendation)
+        var repoTask = CycoGr.Helpers.GitHubSearchHelpers.SearchRepositoriesAsync(
+            query,
+            command.RepoPatterns,
+            command.Language,
+            command.Owner,
+            command.MinStars,
+            command.SortBy,
+            command.IncludeForks,
+            command.ExcludeForks,
+            command.OnlyForks,
+            command.MaxResults);
+
+        var codeTask = CycoGr.Helpers.GitHubSearchHelpers.SearchCodeAsync(
+            query,
+            command.RepoPatterns,
+            command.Language,
+            command.Owner,
+            command.MinStars,
+            "",
+            command.MaxResults);
+
+        await Task.WhenAll(repoTask, codeTask);
+
+        var repos = repoTask.Result;
+        var codeMatches = codeTask.Result;
+
+        // Apply exclude filters
+        repos = ApplyExcludeFilters(repos, command.Exclude, r => r.Url);
+        codeMatches = ApplyExcludeFilters(codeMatches, command.Exclude, m => m.Repository.Url);
+
+        if (repos.Count == 0 && codeMatches.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No results found", ConsoleColor.Yellow, overrideQuiet: true);
+            return;
+        }
+
+        // Output repos that matched (no file sections)
+        if (repos.Count > 0)
+        {
+            var repoOutput = FormatRepoOutput(repos, "detailed");
+            ConsoleHelpers.WriteLine(repoOutput, overrideQuiet: true);
+        }
+
+        // Output code matches (with file sections under repos)
+        if (codeMatches.Count > 0)
+        {
+            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, overrideQuiet: true);
+        }
+
+        // Save output if requested
+        if (!string.IsNullOrEmpty(command.SaveOutput))
+        {
+            // TODO: Build save output
+            var saveFileName = FileHelpers.GetFileNameFromTemplate("unified-output.md", command.SaveOutput)!;
+            // FileHelpers.WriteAllText(saveFileName, saveOutput.ToString());
+            ConsoleHelpers.WriteLine($"Saved output to: {saveFileName}", ConsoleColor.Green, overrideQuiet: true);
+        }
+    }
+
+    private static async Task HandleRepoSearchAsync(CycoGr.CommandLineCommands.SearchCommand command)
+    {
+        var query = !string.IsNullOrEmpty(command.RepoContains) ? command.RepoContains : command.Contains;
+        ConsoleHelpers.WriteLine($"## GitHub repository search for '{query}'", ConsoleColor.Cyan, overrideQuiet: true);
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+        // Search GitHub using new helper signature
+        var repos = await CycoGr.Helpers.GitHubSearchHelpers.SearchRepositoriesAsync(
+            query,
+            command.RepoPatterns,
+            command.Language,
+            command.Owner,
+            command.MinStars,
+            command.SortBy,
+            command.IncludeForks,
+            command.ExcludeForks,
+            command.OnlyForks,
+            command.MaxResults);
+
+        if (repos.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No results found", ConsoleColor.Yellow, overrideQuiet: true);
+            return;
+        }
+
+        // Apply exclude filters
+        repos = ApplyExcludeFilters(repos, command.Exclude, r => r.Url);
+
+        if (repos.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No results after filtering", ConsoleColor.Yellow, overrideQuiet: true);
+            return;
+        }
+
+        // Output results in requested format
+        var output = FormatRepoOutput(repos, command.Format);
+        ConsoleHelpers.WriteLine(output, overrideQuiet: true);
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+        // Clone if requested
+        if (command.Clone)
+        {
+            var maxClone = Math.Min(command.MaxClone, repos.Count);
+            ConsoleHelpers.WriteLine($"Cloning top {maxClone} repositories to '{command.CloneDirectory}'...", ConsoleColor.Cyan, overrideQuiet: true);
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+            var clonedRepos = await CycoGr.Helpers.GitHubSearchHelpers.CloneRepositoriesAsync(repos, command.AsSubmodules, command.CloneDirectory, maxClone);
+
+            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            ConsoleHelpers.WriteLine($"Successfully cloned {clonedRepos.Count} of {maxClone} repositories", ConsoleColor.Green, overrideQuiet: true);
+        }
+
+        // Save output if requested
+        if (!string.IsNullOrEmpty(command.SaveOutput))
+        {
+            var saveOutput = new StringBuilder();
+            saveOutput.AppendLine($"## GitHub repository search for '{query}'");
+            saveOutput.AppendLine();
+            saveOutput.AppendLine(output);
+            
+            var saveFileName = FileHelpers.GetFileNameFromTemplate("repo-output.md", command.SaveOutput)!;
+            FileHelpers.WriteAllText(saveFileName, saveOutput.ToString());
+            ConsoleHelpers.WriteLine($"Saved output to: {saveFileName}", ConsoleColor.Green, overrideQuiet: true);
+        }
+
+        // Save additional formats if requested
+        SaveAdditionalFormats(command, repos, query, "repository search");
+    }
+
+    private static async Task HandleCodeSearchAsync(CycoGr.CommandLineCommands.SearchCommand command)
+    {
+        var query = !string.IsNullOrEmpty(command.FileContains) ? command.FileContains : command.Contains;
+        var searchType = !string.IsNullOrEmpty(command.Language) 
+            ? $"code search in {command.Language} files" 
+            : "code search";
+            
+        ConsoleHelpers.WriteLine($"## GitHub {searchType} for '{query}'", ConsoleColor.Cyan, overrideQuiet: true);
+        ConsoleHelpers.WriteLine(overrideQuiet: true);
+
+        // Search GitHub code using new helper signature
+        var codeMatches = await CycoGr.Helpers.GitHubSearchHelpers.SearchCodeAsync(
+            query,
+            command.RepoPatterns,
+            command.Language,
+            command.Owner,
+            command.MinStars,
+            "",
+            command.MaxResults);
+
+        if (codeMatches.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No results found", ConsoleColor.Yellow, overrideQuiet: true);
+            return;
+        }
+
+        // Apply exclude filters (filter by repo URL)
+        codeMatches = ApplyExcludeFilters(codeMatches, command.Exclude, m => m.Repository.Url);
+
+        if (codeMatches.Count == 0)
+        {
+            ConsoleHelpers.WriteLine("No results after filtering", ConsoleColor.Yellow, overrideQuiet: true);
+            return;
+        }
+
+        // Output results grouped by repository
+        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, overrideQuiet: true);
+
+        // Save output if requested
+        if (!string.IsNullOrEmpty(command.SaveOutput))
+        {
+            var saveOutput = new StringBuilder();
+            saveOutput.AppendLine($"## GitHub {searchType} for '{query}'");
+            saveOutput.AppendLine();
+            
+            // TODO: Format for saving
+            
+            var saveFileName = FileHelpers.GetFileNameFromTemplate("code-output.md", command.SaveOutput)!;
+            FileHelpers.WriteAllText(saveFileName, saveOutput.ToString());
+            ConsoleHelpers.WriteLine($"Saved output to: {saveFileName}", ConsoleColor.Green, overrideQuiet: true);
+        }
+
+        // Save additional formats if requested
+        SaveAdditionalFormats(command, codeMatches, query, searchType);
+    }
+
+    private static void SaveAdditionalFormats(CycoGr.CommandLine.CycoGrCommand command, object data, string query, string searchType)
     {
         var savedFiles = new List<string>();
 
@@ -242,63 +459,146 @@ class Program
         }
     }
 
-    private static async Task HandleCodeCommandAsync(CodeCommand command)
+    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, bool overrideQuiet = false)
     {
-        try
+        // Group by repository
+        var byRepo = codeMatches.GroupBy(m => m.Repository.FullName).ToList();
+
+        foreach (var repoGroup in byRepo)
         {
-            var query = string.Join(" ", command.Keywords);
-            var searchType = !string.IsNullOrEmpty(command.FileExtension) 
-                ? $"code search in .{command.FileExtension} files" 
-                : "code search";
+            var repo = repoGroup.First().Repository;
+            var files = repoGroup.ToList();
+
+            // Output repo header
+            var header = $"## {repo.FullName}";
+            if (repo.Stars > 0)
+            {
+                header += $" (⭐ {repo.FormattedStars})";
+            }
+            if (!string.IsNullOrEmpty(repo.Language))
+            {
+                header += $" ({repo.Language})";
+            }
+            ConsoleHelpers.WriteLine(header, ConsoleColor.White, overrideQuiet: overrideQuiet);
+            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+
+            // Repo URL and Desc
+            ConsoleHelpers.WriteLine($"Repo: {repo.Url}", overrideQuiet: overrideQuiet);
+            if (!string.IsNullOrEmpty(repo.Description))
+            {
+                ConsoleHelpers.WriteLine($"Desc: {repo.Description}", overrideQuiet: overrideQuiet);
+            }
+            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+
+            // Count total matches across all files
+            var totalMatches = files.Sum(f => f.TextMatches?.Count ?? 0);
+            var fileCount = files.Select(f => f.Path).Distinct().Count();
+            
+            ConsoleHelpers.WriteLine($"Found {fileCount} file(s) with {totalMatches} matches:", overrideQuiet: overrideQuiet);
+            
+            // Output file URLs with match counts
+            var fileGroups = files.GroupBy(f => f.Path).ToList();
+            foreach (var fileGroup in fileGroups)
+            {
+                var firstMatch = fileGroup.First();
+                var matchCount = fileGroup.Sum(f => f.TextMatches?.Count ?? 0);
+                ConsoleHelpers.WriteLine($"- {firstMatch.Url} ({matchCount} matches)", overrideQuiet: overrideQuiet);
+            }
+            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+
+            // Output file sections
+            foreach (var fileGroup in fileGroups)
+            {
+                var firstMatch = fileGroup.First();
                 
-            ConsoleHelpers.WriteLine($"## GitHub {searchType} for '{query}'", ConsoleColor.Cyan);
-            ConsoleHelpers.WriteLine();
+                // File header
+                ConsoleHelpers.WriteLine($"## {firstMatch.Path}", ConsoleColor.White, overrideQuiet: overrideQuiet);
+                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
 
-            // Search GitHub code
-            var codeMatches = await GitHubSearchHelpers.SearchCodeAsync(command);
+                // Code blocks from fragments
+                foreach (var match in fileGroup)
+                {
+                    if (match.TextMatches?.Any() == true)
+                    {
+                        var lang = DetectLanguageFromPath(match.Path);
+                        ConsoleHelpers.WriteLine($"```{lang}", overrideQuiet: overrideQuiet);
+                        
+                        foreach (var textMatch in match.TextMatches)
+                        {
+                            var fragment = textMatch.Fragment;
+                            var lines = fragment.Split(new[] { '\n' }, StringSplitOptions.None);
+                            
+                            // Simple output - just show the fragment with line numbers
+                            int lineNum = 1;
+                            foreach (var line in lines)
+                            {
+                                var isMatch = LineContainsQuery(line, query);
+                                var prefix = isMatch ? "*" : " ";
+                                ConsoleHelpers.WriteLine($"{prefix} {lineNum,4}: {line}", overrideQuiet: overrideQuiet);
+                                lineNum++;
+                            }
+                        }
+                        
+                        ConsoleHelpers.WriteLine("```", overrideQuiet: overrideQuiet);
+                        ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+                    }
+                }
 
-            if (codeMatches.Count == 0)
-            {
-                ConsoleHelpers.WriteLine("No results found", ConsoleColor.Yellow);
-                return;
+                // Raw URL
+                var rawUrl = ConvertToRawUrl(firstMatch.Url);
+                ConsoleHelpers.WriteLine($"Raw: {rawUrl}", overrideQuiet: overrideQuiet);
+                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
             }
-
-            // Apply exclude filters (filter by repo URL)
-            codeMatches = ApplyExcludeFilters(codeMatches, command.Exclude, m => m.Repository.Url);
-
-            if (codeMatches.Count == 0)
-            {
-                ConsoleHelpers.WriteLine("No results after filtering", ConsoleColor.Yellow);
-                return;
-            }
-
-            // Output results in requested format
-            var output = FormatCodeOutput(codeMatches, command.Format, command.LinesBeforeAndAfter, query);
-            ConsoleHelpers.WriteLine(output);
-            ConsoleHelpers.WriteLine();
-
-            // Save output if requested
-            if (!string.IsNullOrEmpty(command.SaveOutput))
-            {
-                var saveOutput = new StringBuilder();
-                saveOutput.AppendLine($"## GitHub {searchType} for '{query}'");
-                saveOutput.AppendLine();
-                saveOutput.AppendLine(output);
-                
-                var saveFileName = FileHelpers.GetFileNameFromTemplate("code-output.md", command.SaveOutput)!;
-                FileHelpers.WriteAllText(saveFileName, saveOutput.ToString());
-                ConsoleHelpers.WriteLine($"Saved output to: {saveFileName}", ConsoleColor.Green);
-            }
-
-            // Save additional formats if requested
-            SaveAdditionalFormats(command, codeMatches, query, searchType);
         }
-        catch (Exception ex)
+    }
+
+    private static bool LineContainsQuery(string line, string query)
+    {
+        return line.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static string ConvertToRawUrl(string blobUrl)
+    {
+        // Convert https://github.com/owner/repo/blob/sha/path to https://raw.githubusercontent.com/owner/repo/sha/path
+        if (blobUrl.Contains("/blob/"))
         {
-            ConsoleHelpers.WriteErrorLine($"Error: {ex.Message}");
-            Logger.Error($"Code command failed: {ex.Message}");
-            Logger.Error(ex.StackTrace ?? string.Empty);
+            return blobUrl.Replace("github.com", "raw.githubusercontent.com").Replace("/blob/", "/");
         }
+        return blobUrl;
+    }
+
+    private static string DetectLanguageFromPath(string path)
+    {
+        var ext = System.IO.Path.GetExtension(path).ToLowerInvariant();
+        return ext switch
+        {
+            ".cs" => "csharp",
+            ".js" => "javascript",
+            ".ts" => "typescript",
+            ".py" => "python",
+            ".java" => "java",
+            ".cpp" or ".cc" or ".cxx" => "cpp",
+            ".c" => "c",
+            ".h" or ".hpp" => "cpp",
+            ".go" => "go",
+            ".rs" => "rust",
+            ".rb" => "ruby",
+            ".php" => "php",
+            ".swift" => "swift",
+            ".kt" or ".kts" => "kotlin",
+            ".scala" => "scala",
+            ".sh" or ".bash" => "bash",
+            ".ps1" => "powershell",
+            ".sql" => "sql",
+            ".html" or ".htm" => "html",
+            ".css" => "css",
+            ".xml" => "xml",
+            ".json" => "json",
+            ".yaml" or ".yml" => "yaml",
+            ".md" or ".markdown" => "markdown",
+            ".txt" => "text",
+            _ => ""
+        };
     }
 
     private static string FormatCodeOutput(List<CycoGr.Models.CodeMatch> matches, string format, int contextLines, string query)
@@ -576,15 +876,38 @@ class Program
     private static string FormatAsDetailed(List<CycoGr.Models.RepoInfo> repos)
     {
         var output = new StringBuilder();
+        
         foreach (var repo in repos)
         {
-            var lang = repo.Language ?? "unknown";
-            var desc = string.IsNullOrWhiteSpace(repo.Description) 
-                ? "(no description)" 
-                : (repo.Description.Length > 80 ? repo.Description.Substring(0, 77) + "..." : repo.Description);
-            
-            output.AppendLine($"{repo.Url} | ⭐ {repo.FormattedStars} | {lang} | {desc}");
+            // Format: ## owner/repo (⭐ stars) (language)
+            var header = $"## {repo.FullName} (⭐ {repo.FormattedStars})";
+            if (!string.IsNullOrEmpty(repo.Language))
+            {
+                header += $" ({repo.Language})";
+            }
+            output.AppendLine(header);
+            output.AppendLine();
+
+            // Repo URL and Description
+            output.AppendLine($"Repo: {repo.Url}");
+            if (!string.IsNullOrEmpty(repo.Description))
+            {
+                output.AppendLine($"Desc: {repo.Description}");
+            }
+            output.AppendLine();
+
+            // Topics and Updated
+            if (repo.Topics?.Any() == true)
+            {
+                output.AppendLine($"Topics: {string.Join(", ", repo.Topics)}");
+            }
+            if (repo.UpdatedAt.HasValue)
+            {
+                output.AppendLine($"Updated: {repo.UpdatedAt.Value:yyyy-MM-dd}");
+            }
+            output.AppendLine();
         }
+        
         return output.ToString().TrimEnd();
     }
 
