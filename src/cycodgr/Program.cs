@@ -218,7 +218,7 @@ class Program
         // Output code matches (with file sections under repos)
         if (codeMatches.Count > 0)
         {
-            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, overrideQuiet: true);
+            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, overrideQuiet: true);
         }
 
         // Save output if requested
@@ -336,7 +336,7 @@ class Program
         }
 
         // Output results grouped by repository
-        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, overrideQuiet: true);
+        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, overrideQuiet: true);
 
         // Save output if requested
         if (!string.IsNullOrEmpty(command.SaveOutput))
@@ -459,7 +459,7 @@ class Program
         }
     }
 
-    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, bool overrideQuiet = false)
+    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, bool overrideQuiet = false)
     {
         // Group by repository
         var byRepo = codeMatches.GroupBy(m => m.Repository.FullName).ToList();
@@ -510,7 +510,7 @@ class Program
             var parallelProcessor = new ParallelProcessor(Environment.ProcessorCount);
             var fileOutputs = await parallelProcessor.ProcessAsync(
                 fileGroups,
-                async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, overrideQuiet)
+                async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, fileInstructionsList, overrideQuiet)
             );
 
             // Output all file results
@@ -525,7 +525,8 @@ class Program
         IGrouping<string, CycoGr.Models.CodeMatch> fileGroup, 
         CycoGr.Models.RepoInfo repo,
         string query, 
-        int contextLines, 
+        int contextLines,
+        List<Tuple<string, string>> fileInstructionsList,
         bool overrideQuiet)
     {
         var firstMatch = fileGroup.First();
@@ -620,7 +621,32 @@ class Program
         output.AppendLine($"Raw: {rawUrl}");
         output.AppendLine();
 
-        return output.ToString();
+        // Apply file instructions if any match this file
+        var formattedOutput = output.ToString();
+        var instructionsForThisFile = fileInstructionsList
+            .Where(x => FileNameMatchesInstructionsCriteria(firstMatch.Path, x.Item2))
+            .Select(x => x.Item1)
+            .ToList();
+
+        if (instructionsForThisFile.Any())
+        {
+            Logger.Info($"Applying {instructionsForThisFile.Count} instruction(s) to file: {firstMatch.Path}");
+            formattedOutput = AiInstructionProcessor.ApplyAllInstructions(
+                instructionsForThisFile, 
+                formattedOutput, 
+                useBuiltInFunctions: false, 
+                saveChatHistory: string.Empty);
+            Logger.Info($"Instructions applied successfully to file: {firstMatch.Path}");
+        }
+
+        return formattedOutput;
+    }
+
+    private static bool FileNameMatchesInstructionsCriteria(string fileName, string fileNameCriteria)
+    {
+        return string.IsNullOrEmpty(fileNameCriteria) ||
+            fileName.EndsWith($".{fileNameCriteria}") ||
+            fileName == fileNameCriteria;
     }
 
     private static bool LineContainsQuery(string line, string query)
