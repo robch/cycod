@@ -218,7 +218,7 @@ class Program
         // Output code matches (with file sections under repos)
         if (codeMatches.Count > 0)
         {
-            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, overrideQuiet: true);
+            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, overrideQuiet: true);
         }
 
         // Save output if requested
@@ -336,7 +336,7 @@ class Program
         }
 
         // Output results grouped by repository
-        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, overrideQuiet: true);
+        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, overrideQuiet: true);
 
         // Save output if requested
         if (!string.IsNullOrEmpty(command.SaveOutput))
@@ -459,15 +459,19 @@ class Program
         }
     }
 
-    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, List<string> repoInstructionsList, bool overrideQuiet = false)
+    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, List<string> repoInstructionsList, List<string> instructionsList, bool overrideQuiet = false)
     {
         // Group by repository
         var byRepo = codeMatches.GroupBy(m => m.Repository.FullName).ToList();
+
+        var allRepoOutputs = new List<string>();
 
         foreach (var repoGroup in byRepo)
         {
             var repo = repoGroup.First().Repository;
             var files = repoGroup.ToList();
+
+            var repoOutputBuilder = new System.Text.StringBuilder();
 
             // Output repo header
             var header = $"## {repo.FullName}";
@@ -479,22 +483,22 @@ class Program
             {
                 header += $" ({repo.Language})";
             }
-            ConsoleHelpers.WriteLine(header, ConsoleColor.White, overrideQuiet: overrideQuiet);
-            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+            repoOutputBuilder.AppendLine(header);
+            repoOutputBuilder.AppendLine();
 
             // Repo URL and Desc
-            ConsoleHelpers.WriteLine($"Repo: {repo.Url}", overrideQuiet: overrideQuiet);
+            repoOutputBuilder.AppendLine($"Repo: {repo.Url}");
             if (!string.IsNullOrEmpty(repo.Description))
             {
-                ConsoleHelpers.WriteLine($"Desc: {repo.Description}", overrideQuiet: overrideQuiet);
+                repoOutputBuilder.AppendLine($"Desc: {repo.Description}");
             }
-            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+            repoOutputBuilder.AppendLine();
 
             // Count total matches across all files
             var totalMatches = files.Sum(f => f.TextMatches?.Count ?? 0);
             var fileCount = files.Select(f => f.Path).Distinct().Count();
             
-            ConsoleHelpers.WriteLine($"Found {fileCount} file(s) with {totalMatches} matches:", overrideQuiet: overrideQuiet);
+            repoOutputBuilder.AppendLine($"Found {fileCount} file(s) with {totalMatches} matches:");
             
             // Output file URLs with match counts
             var fileGroups = files.GroupBy(f => f.Path).ToList();
@@ -502,9 +506,9 @@ class Program
             {
                 var firstMatch = fileGroup.First();
                 var matchCount = fileGroup.Sum(f => f.TextMatches?.Count ?? 0);
-                ConsoleHelpers.WriteLine($"- {firstMatch.Url} ({matchCount} matches)", overrideQuiet: overrideQuiet);
+                repoOutputBuilder.AppendLine($"- {firstMatch.Url} ({matchCount} matches)");
             }
-            ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+            repoOutputBuilder.AppendLine();
 
             // Process files in parallel using ParallelProcessor
             var parallelProcessor = new ParallelProcessor(Environment.ProcessorCount);
@@ -514,7 +518,11 @@ class Program
             );
 
             // Combine all file outputs for this repo
-            var repoOutput = string.Join("", fileOutputs);
+            var repoFilesOutput = string.Join("", fileOutputs);
+            repoOutputBuilder.Append(repoFilesOutput);
+
+            // Get the complete repo output
+            var repoOutput = repoOutputBuilder.ToString();
 
             // Apply repo instructions if any
             if (repoInstructionsList.Any())
@@ -528,9 +536,27 @@ class Program
                 Logger.Info($"Repo instructions applied successfully to repository: {repo.FullName}");
             }
 
-            // Output the final repo content
-            ConsoleHelpers.WriteLine(repoOutput, overrideQuiet: overrideQuiet);
+            // Collect this repo's output
+            allRepoOutputs.Add(repoOutput);
         }
+
+        // Combine all repo outputs
+        var combinedOutput = string.Join("\n", allRepoOutputs);
+
+        // Apply final/global instructions if any
+        if (instructionsList.Any())
+        {
+            Logger.Info($"Applying {instructionsList.Count} final instruction(s) to all combined output");
+            combinedOutput = AiInstructionProcessor.ApplyAllInstructions(
+                instructionsList,
+                combinedOutput,
+                useBuiltInFunctions: false,
+                saveChatHistory: string.Empty);
+            Logger.Info($"Final instructions applied successfully");
+        }
+
+        // Output the final result
+        ConsoleHelpers.WriteLine(combinedOutput, overrideQuiet: overrideQuiet);
     }
 
     private static async Task<string> ProcessFileGroupAsync(
