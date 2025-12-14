@@ -269,6 +269,15 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             }
             command.FileInstructionsList.Add(new Tuple<string, string>(instructions!, ext));
         }
+        else if (arg == "--repo-instructions")
+        {
+            var instructions = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new CommandLineException($"Missing instructions for {arg}");
+            }
+            command.RepoInstructionsList.Add(instructions!);
+        }
         else
         {
             parsed = false;
