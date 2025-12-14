@@ -506,101 +506,121 @@ class Program
             }
             ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
 
-            // Output file sections with real line numbers
-            foreach (var fileGroup in fileGroups)
+            // Process files in parallel using ParallelProcessor
+            var parallelProcessor = new ParallelProcessor(Environment.ProcessorCount);
+            var fileOutputs = await parallelProcessor.ProcessAsync(
+                fileGroups,
+                async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, overrideQuiet)
+            );
+
+            // Output all file results
+            foreach (var fileOutput in fileOutputs)
             {
-                var firstMatch = fileGroup.First();
-                
-                // File header
-                ConsoleHelpers.WriteLine($"## {firstMatch.Path}", ConsoleColor.White, overrideQuiet: overrideQuiet);
-                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
-
-                // Fetch full file content and display with real line numbers
-                var rawUrl = ConvertToRawUrl(firstMatch.Url);
-                try
-                {
-                    // Create FoundTextFile with lambda to load content
-                    var foundFile = new FoundTextFile
-                    {
-                        Path = firstMatch.Path,
-                        LoadContent = async () =>
-                        {
-                            using var httpClient = new System.Net.Http.HttpClient();
-                            httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CycoGr/1.0");
-                            return await httpClient.GetStringAsync(rawUrl);
-                        },
-                        Metadata = new Dictionary<string, object>
-                        {
-                            { "Repository", repo },
-                            { "Sha", firstMatch.Sha },
-                            { "Url", firstMatch.Url }
-                        }
-                    };
-
-                    // Load the content
-                    foundFile.Content = await foundFile.LoadContent();
-
-                    // Use LineHelpers to filter and display with real line numbers
-                    var includePatterns = new List<System.Text.RegularExpressions.Regex>
-                    {
-                        new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(query), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-                    };
-                    var excludePatterns = new List<System.Text.RegularExpressions.Regex>();
-
-                    var lang = DetectLanguageFromPath(firstMatch.Path);
-                    var backticks = $"```{lang}";
-                    
-                    var filteredContent = LineHelpers.FilterAndExpandContext(
-                        foundFile.Content,
-                        includePatterns,
-                        contextLines,  // lines before
-                        contextLines,  // lines after
-                        true,          // include line numbers
-                        excludePatterns,
-                        backticks,
-                        true           // highlight matches
-                    );
-
-                    if (filteredContent != null)
-                    {
-                        ConsoleHelpers.WriteLine(backticks, overrideQuiet: overrideQuiet);
-                        ConsoleHelpers.WriteLine(filteredContent, overrideQuiet: overrideQuiet);
-                        ConsoleHelpers.WriteLine("```", overrideQuiet: overrideQuiet);
-                    }
-                    else
-                    {
-                        ConsoleHelpers.WriteLine($"(No matches found in full file content)", overrideQuiet: overrideQuiet);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ConsoleHelpers.WriteLine($"Error fetching file content: {ex.Message}", ConsoleColor.Yellow, overrideQuiet: overrideQuiet);
-                    ConsoleHelpers.WriteLine($"Falling back to fragment display...", overrideQuiet: overrideQuiet);
-                    
-                    // Fallback to fragment display
-                    foreach (var match in fileGroup)
-                    {
-                        if (match.TextMatches?.Any() == true)
-                        {
-                            var lang = DetectLanguageFromPath(match.Path);
-                            ConsoleHelpers.WriteLine($"```{lang}", overrideQuiet: overrideQuiet);
-                            
-                            foreach (var textMatch in match.TextMatches)
-                            {
-                                var fragment = textMatch.Fragment;
-                                ConsoleHelpers.WriteLine(fragment, overrideQuiet: overrideQuiet);
-                            }
-                            
-                            ConsoleHelpers.WriteLine("```", overrideQuiet: overrideQuiet);
-                        }
-                    }
-                }
-
-                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
-                ConsoleHelpers.WriteLine($"Raw: {rawUrl}", overrideQuiet: overrideQuiet);
-                ConsoleHelpers.WriteLine(overrideQuiet: overrideQuiet);
+                ConsoleHelpers.WriteLine(fileOutput, overrideQuiet: overrideQuiet);
             }
         }
+    }
+
+    private static async Task<string> ProcessFileGroupAsync(
+        IGrouping<string, CycoGr.Models.CodeMatch> fileGroup, 
+        CycoGr.Models.RepoInfo repo,
+        string query, 
+        int contextLines, 
+        bool overrideQuiet)
+    {
+        var firstMatch = fileGroup.First();
+        var output = new System.Text.StringBuilder();
+        
+        // File header
+        output.AppendLine($"## {firstMatch.Path}");
+        output.AppendLine();
+
+        // Fetch full file content and display with real line numbers
+        var rawUrl = ConvertToRawUrl(firstMatch.Url);
+        try
+        {
+            // Create FoundTextFile with lambda to load content
+            var foundFile = new FoundTextFile
+            {
+                Path = firstMatch.Path,
+                LoadContent = async () =>
+                {
+                    using var httpClient = new System.Net.Http.HttpClient();
+                    httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("CycoGr/1.0");
+                    return await httpClient.GetStringAsync(rawUrl);
+                },
+                Metadata = new Dictionary<string, object>
+                {
+                    { "Repository", repo },
+                    { "Sha", firstMatch.Sha },
+                    { "Url", firstMatch.Url }
+                }
+            };
+
+            // Load the content
+            foundFile.Content = await foundFile.LoadContent();
+
+            // Use LineHelpers to filter and display with real line numbers
+            var includePatterns = new List<System.Text.RegularExpressions.Regex>
+            {
+                new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(query), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            };
+            var excludePatterns = new List<System.Text.RegularExpressions.Regex>();
+
+            var lang = DetectLanguageFromPath(firstMatch.Path);
+            var backticks = $"```{lang}";
+            
+            var filteredContent = LineHelpers.FilterAndExpandContext(
+                foundFile.Content,
+                includePatterns,
+                contextLines,  // lines before
+                contextLines,  // lines after
+                true,          // include line numbers
+                excludePatterns,
+                backticks,
+                true           // highlight matches
+            );
+
+            if (filteredContent != null)
+            {
+                output.AppendLine(backticks);
+                output.AppendLine(filteredContent);
+                output.AppendLine("```");
+            }
+            else
+            {
+                output.AppendLine("(No matches found in full file content)");
+            }
+        }
+        catch (Exception ex)
+        {
+            output.AppendLine($"Error fetching file content: {ex.Message}");
+            output.AppendLine("Falling back to fragment display...");
+            
+            // Fallback to fragment display
+            foreach (var match in fileGroup)
+            {
+                if (match.TextMatches?.Any() == true)
+                {
+                    var lang = DetectLanguageFromPath(match.Path);
+                    output.AppendLine($"```{lang}");
+                    
+                    foreach (var textMatch in match.TextMatches)
+                    {
+                        var fragment = textMatch.Fragment;
+                        output.AppendLine(fragment);
+                    }
+                    
+                    output.AppendLine("```");
+                }
+            }
+        }
+
+        output.AppendLine();
+        output.AppendLine($"Raw: {rawUrl}");
+        output.AppendLine();
+
+        return output.ToString();
     }
 
     private static bool LineContainsQuery(string line, string query)
