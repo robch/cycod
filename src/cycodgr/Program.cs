@@ -510,9 +510,9 @@ class Program
             }
             repoOutputBuilder.AppendLine();
 
-            // Process files in parallel using ParallelProcessor
-            var parallelProcessor = new ParallelProcessor(Environment.ProcessorCount);
-            var fileOutputs = await parallelProcessor.ProcessAsync(
+            // Process files in parallel using ThrottledProcessor
+            var throttledProcessor = new ThrottledProcessor(Environment.ProcessorCount);
+            var fileOutputs = await throttledProcessor.ProcessAsync(
                 fileGroups,
                 async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, fileInstructionsList, overrideQuiet)
             );

@@ -166,6 +166,10 @@ public class CycoDmdCommandLineOptions : CommandLineOptions
         {
             command.HighlightMatches = true;
         }
+        else if (arg == "--no-highlight-matches")
+        {
+            command.HighlightMatches = false;
+        }
         else if (arg == "--files-only")
         {
             command.FilesOnly = true;
