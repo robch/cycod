@@ -10,6 +10,9 @@ public class SearchCommand : CycoGrCommand
         Contains = string.Empty;
         FileContains = string.Empty;
         RepoContains = string.Empty;
+        RepoFileContains = string.Empty;
+        RepoFileContainsExtension = string.Empty;
+        FilePaths = new List<string>();
         MaxResults = 10;
         Language = string.Empty;
         Owner = string.Empty;
@@ -40,7 +43,8 @@ public class SearchCommand : CycoGrCommand
         return !RepoPatterns.Any() && 
                string.IsNullOrEmpty(Contains) && 
                string.IsNullOrEmpty(FileContains) && 
-               string.IsNullOrEmpty(RepoContains);
+               string.IsNullOrEmpty(RepoContains) &&
+               string.IsNullOrEmpty(RepoFileContains);
     }
 
     // Positional repo patterns (like cycodmd's file patterns)
@@ -50,6 +54,9 @@ public class SearchCommand : CycoGrCommand
     public string Contains { get; set; }        // Search both repo metadata AND code
     public string FileContains { get; set; }    // Search code files only
     public string RepoContains { get; set; }    // Search repo metadata only
+    public string RepoFileContains { get; set; } // Search for repos containing files with text (pre-filter)
+    public string RepoFileContainsExtension { get; set; } // Extension filter for repo pre-filter (empty = any file)
+    public List<string> FilePaths { get; set; } // File paths to filter results (from --file-path / --file-paths)
 
     // Filtering options (work for both repo and code searches)
     public int MaxResults { get; set; }

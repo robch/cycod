@@ -552,6 +552,299 @@ This consolidates all line-level processing in one place, making it reusable by 
 
 ---
 
+## Section 5: Complete Filter Architecture and Save/Resume Workflow
+
+**Status**: 📋 **PLANNED** - Not yet implemented  
+**Date Designed**: 2025-01-15
+
+### Overview
+
+This section documents the complete three-level filtering architecture for cycodgr, enabling surgical precision in GitHub searches and progressive refinement through saved results.
+
+### The Three-Level Filter Hierarchy
+
+```
+Repos → Files → Lines
+  ↓       ↓       ↓
+Level 1  Level 2  Level 3
+```
+
+### Filter Types and Their Scope
+
+#### 1. Universal Broadcast Filter: `--contains`
+
+**Applies to ALL levels simultaneously:**
+- Repo-level: Repos must contain the text
+- File-level: Files must contain the text
+- Line-level: Lines must contain the text
+
+**Example:**
+```bash
+cycodgr --contains "authentication"
+```
+
+This is the "search everything" filter that broadcasts across the entire hierarchy.
+
+#### 2. Dual-Purpose Filters: `--file-contains` and `--(ext)-file-contains`
+
+**Used for BOTH repo selection AND file selection:**
+
+When repo pre-filtering is active (e.g., `--repo-csproj-file-contains` is present):
+- Acts as additional **file selection** within pre-filtered repos
+
+When no repo pre-filtering:
+- Acts as **repo selection** (find repos with files containing X)
+- AND as **file selection** (find files containing X within those repos)
+
+**Examples:**
+```bash
+# File selection only (repos already filtered)
+cycodgr --repo-csproj-file-contains "Microsoft.Extensions.AI" \
+        --cs-file-contains "anthropic"
+
+# Both repo and file selection (no repo pre-filter)
+cycodgr --cs-file-contains "anthropic"
+```
+
+**Extension-specific variants:**
+- `--cs-file-contains` - C# files
+- `--js-file-contains` - JavaScript files
+- `--py-file-contains` - Python files
+- `--md-file-contains` - Markdown files
+- etc. (following existing extension shortcuts)
+
+#### 3. Repo Selection Only: `--repo-file-contains` and `--repo-(ext)-file-contains`
+
+**Used ONLY for repo pre-filtering:**
+
+These are pure repo filters that find repositories containing files with specific content. They do NOT affect file or line filtering.
+
+**Generic version:**
+```bash
+--repo-file-contains "text"  # Any file containing "text"
+```
+
+**Extension-specific versions:**
+```bash
+--repo-csproj-file-contains "Microsoft.Extensions.AI"  # .csproj files only
+--repo-json-file-contains "express"                    # .json files only  
+--repo-yaml-file-contains "kubernetes"                 # .yaml/.yml files only
+--repo-py-file-contains "tensorflow"                   # .py files only
+--repo-md-file-contains "Quick Start"                  # .md files only
+```
+
+**Use Cases:**
+- Find C# projects using a specific NuGet package
+- Find Node.js projects using a specific npm package
+- Find projects with specific configuration in YAML files
+- Find projects with specific documentation
+
+#### 4. Line Filtering Only: `--line-contains`
+
+**Used ONLY for display filtering:**
+
+Filters which lines are shown in the output. Works with `--lines N` to provide context.
+
+**Example:**
+```bash
+cycodgr --cs-file-contains "anthropic" \
+        --line-contains "AsChatClient" \
+        --lines 20
+```
+
+### Complete Example: Three-Level Search
+
+**Goal**: Find how Anthropic clients are converted to IChatClient in projects using Microsoft.Extensions.AI
+
+```bash
+cycodgr --repo-csproj-file-contains "Microsoft.Extensions.AI" \
+        --cs-file-contains "anthropic" \
+        --line-contains "AsChatClient" \
+        --lines 20
+```
+
+**What happens:**
+1. **Level 1 (Repos)**: Find repos with .csproj files containing "Microsoft.Extensions.AI"
+2. **Level 2 (Files)**: Within those repos, find .cs files containing "anthropic"
+3. **Level 3 (Lines)**: Within those files, show lines containing "AsChatClient" with 20 lines of context
+
+### Save/Resume Workflow
+
+#### Save Options at Each Level
+
+**Repo-level saves:**
+```bash
+--save-repos repos.txt         # Saves owner/name format (one per line)
+--save-repo-urls urls.txt      # Saves clone URLs (https://github.com/owner/name.git)
+```
+
+**File-level saves:**
+```bash
+--save-file-paths paths.txt    # Saves qualified paths (owner/repo:src/Program.cs)
+--save-file-urls urls.txt      # Saves raw GitHub URLs (https://raw.githubusercontent.com/...)
+```
+
+**Output saves (existing):**
+```bash
+--save-output output.md        # Saves formatted markdown output
+--save-json data.json          # Saves structured JSON data
+--save-csv data.csv            # Saves CSV format
+--save-table table.txt         # Saves table format
+--save-urls urls.txt           # Saves GitHub file URLs (existing functionality)
+```
+
+#### Resume/Restart from Saved Results
+
+**Loading from files using `@` syntax:**
+
+```bash
+# Load repos from file
+cycodgr @repos.txt --cs-file-contains "something"
+
+# Or using --repos flag
+cycodgr --repos @repos.txt --cs-file-contains "something"
+
+# Load file paths from file (future feature)
+cycodgr --file-paths @files.txt --line-contains "pattern"
+
+# Load file URLs from file (future feature)
+cycodgr --file-urls @urls.txt --line-contains "pattern"
+```
+
+**Note**: The `@filename` syntax for `--repos` already exists (see `CycoGrCommandLineOptions.cs` lines 351-362). Need to extend this pattern to file paths and URLs.
+
+#### Progressive Refinement Pipeline
+
+**Phase 1: Discovery - Find relevant repos**
+```bash
+cycodgr --repo-csproj-file-contains "Microsoft.Extensions.AI" \
+        --cs-file-contains "Anthropic" \
+        --save-repos ai-anthropic-repos.txt \
+        --save-file-paths ai-anthropic-files.txt \
+        --save-output phase1-discovery.md
+```
+
+**Phase 2: Deep Dive - Analyze specific patterns**
+```bash
+cycodgr @ai-anthropic-repos.txt \
+        --line-contains "AsChatClient" \
+        --lines 30 \
+        --save-output phase2-conversion-patterns.md
+```
+
+**Phase 3: Focused Analysis - Specific files**
+```bash
+cycodgr --file-paths @ai-anthropic-files.txt \
+        --line-contains "Configure" \
+        --instructions "Summarize the configuration patterns for Anthropic client setup"
+```
+
+**Phase 4: Share Results - Team collaboration**
+```bash
+# Share repo list with team
+cat ai-anthropic-repos.txt
+# Team members can use the same list
+cycodgr @ai-anthropic-repos.txt --cs-file-contains "different-pattern"
+```
+
+### Benefits of This Architecture
+
+1. **Surgical Precision**: Three-level filtering eliminates noise
+2. **Efficiency**: Pre-filtering repos saves API calls and time
+3. **Composability**: Mix and match filters at each level
+4. **Cacheability**: Save expensive searches, reuse results
+5. **Reproducibility**: Share repo/file lists with team
+6. **Incrementality**: Build complex queries step-by-step
+7. **Pipeline-Friendly**: Chain searches with Unix-style composition
+
+### Implementation Notes
+
+#### Existing Support
+
+**Already implemented:**
+- `--repo-contains` (repo metadata filtering)
+- `--file-contains` (file content filtering)
+- `--contains` (general search term)
+- `--line-contains` (line filtering for display)
+- `--lines` (context lines)
+- `--save-repos` loading via `@repos.txt` syntax
+
+#### Needs Implementation
+
+**Repo selection filters:**
+- `--repo-file-contains` (generic file content)
+- `--repo-csproj-file-contains`
+- `--repo-json-file-contains`
+- `--repo-yaml-file-contains`
+- `--repo-py-file-contains`
+- `--repo-md-file-contains`
+- etc. (all extension variants)
+
+**Extension-specific file filtering:**
+- `--cs-file-contains`
+- `--js-file-contains`
+- `--py-file-contains`
+- `--md-file-contains`
+- etc. (all extension variants)
+
+**Save options:**
+- `--save-repos` (save format)
+- `--save-repo-urls` (clone URLs)
+- `--save-file-paths` (qualified paths)
+- `--save-file-urls` (raw URLs)
+
+**Load options:**
+- `--file-paths @files.txt`
+- `--file-urls @urls.txt`
+
+#### Technical Challenges
+
+**Two-stage GitHub API Search:**
+
+For repo pre-filtering, we need:
+1. **Stage 1**: GitHub code search to find repos with files containing X
+   - Query: `extension:csproj Microsoft.Extensions.AI`
+   - Result: List of repo names
+2. **Stage 2**: Within those repos, search for files
+   - Regular file search within pre-filtered repo list
+
+**Dual behavior of `--file-contains`:**
+- Need logic to determine if it acts as repo filter or only file filter
+- Decision based on presence of `--repo-*-file-contains` flags
+
+**File format for saved paths:**
+- Qualified format: `owner/repo:src/Program.cs`
+- Enables reloading specific files across multiple repos
+- Need parser for this format
+
+**Rate limiting and parallelism:**
+- Repo pre-filtering is sequential (one API call)
+- File searches within repos can be parallel
+- Need to balance API rate limits with speed
+
+### Future Enhancements
+
+**Additional filter levels:**
+- `--repo-stars-min`, `--repo-stars-max` (numeric filters)
+- `--repo-updated-after`, `--repo-updated-before` (date filters)
+- `--file-size-min`, `--file-size-max` (file size filters)
+
+**Advanced save/load:**
+- `--save-results results.json` (complete structured results)
+- `--load-results results.json` (resume from checkpoint)
+- Binary cache format for faster loading
+
+**Query language:**
+- Consider SQL-like syntax for complex queries
+- Boolean operators: AND, OR, NOT across filters
+- Parenthetical grouping for complex logic
+
+**Pipeline operators:**
+- Unix-style pipe chaining: `cycodgr ... | cycodgr-refine ...`
+- Streaming results between stages
+
+---
+
 ## Open Questions
 
 1. **Repo-level parallelism throttling**: Should we limit concurrent repo searches separately from file downloads?

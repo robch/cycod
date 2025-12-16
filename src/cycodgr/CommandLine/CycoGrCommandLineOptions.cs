@@ -66,6 +66,30 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             }
             command.RepoContains = terms!;
         }
+        else if (arg == "--repo-file-contains")
+        {
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.RepoFileContains = terms!;
+        }
+        // Extension-specific repo-file-contains shortcuts
+        else if (arg.StartsWith("--repo-") && arg.EndsWith("-file-contains"))
+        {
+            // Extract extension: --repo-csproj-file-contains → csproj
+            var prefix = "--repo-";
+            var suffix = "-file-contains";
+            var ext = arg.Substring(prefix.Length, arg.Length - prefix.Length - suffix.Length);
+            var terms = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(terms))
+            {
+                throw new CommandLineException($"Missing search terms for {arg}");
+            }
+            command.RepoFileContains = terms!;
+            command.RepoFileContainsExtension = MapExtensionToLanguage(ext);
+        }
         // Extension-specific file-contains shortcuts
         else if (arg.StartsWith("--") && arg.EndsWith("-file-contains"))
         {
@@ -368,6 +392,55 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             }
             i += repoArgs.Count();
         }
+        else if (arg == "--file-path" && command is CycoGr.CommandLineCommands.SearchCommand searchCmd)
+        {
+            var path = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                throw new CommandLineException($"Missing file path for {arg}");
+            }
+            searchCmd.FilePaths.Add(path!);
+        }
+        else if (arg == "--file-paths" && command is CycoGr.CommandLineCommands.SearchCommand searchCmd2)
+        {
+            var pathArgs = GetInputOptionArgs(i + 1, args);
+            
+            foreach (var pathArg in pathArgs)
+            {
+                // Handle @ file loading (if @ wasn't already expanded)
+                if (pathArg.StartsWith("@"))
+                {
+                    var fileName = pathArg.Substring(1);
+                    if (!FileHelpers.FileExists(fileName))
+                    {
+                        throw new CommandLineException($"File paths file not found: {fileName}");
+                    }
+                    var fileContent = File.ReadAllText(fileName, System.Text.Encoding.UTF8);
+                    var normalized = fileContent.Replace("\r\n", "\n").Replace("\r", "\n");
+                    var pathsFromFile = normalized
+                        .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Where(line => !string.IsNullOrWhiteSpace(line))
+                        .Select(line => line.Trim());
+                    searchCmd2.FilePaths.AddRange(pathsFromFile);
+                }
+                // Handle case where @ was already expanded to a single string with embedded newlines
+                else if (pathArg.Contains("\n") || pathArg.Contains("\r"))
+                {
+                    var normalized = pathArg.Replace("\r\n", "\n").Replace("\r", "\n");
+                    var paths = normalized
+                        .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Where(line => !string.IsNullOrWhiteSpace(line))
+                        .Select(line => line.Trim());
+                    searchCmd2.FilePaths.AddRange(paths);
+                }
+                // Regular path arg
+                else
+                {
+                    searchCmd2.FilePaths.Add(pathArg);
+                }
+            }
+            i += pathArgs.Count();
+        }
         else if (arg == "--save-output")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -410,6 +483,36 @@ public class CycoGrCommandLineOptions : CommandLineOptions
                 throw new CommandLineException($"Missing file path for {arg}");
             }
             command.SaveUrls = file!;
+        }
+        else if (arg == "--save-repos")
+        {
+            var file = i + 1 < args.Count() ? args.ElementAt(++i) : null;
+            if (string.IsNullOrWhiteSpace(file))
+            {
+                throw new CommandLineException($"Missing file path for {arg}");
+            }
+            command.SaveRepos = file!;
+        }
+        else if (arg == "--save-file-paths")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var template = max1Arg.FirstOrDefault() ?? "files-{repo}.txt";
+            command.SaveFilePaths = template;
+            i += max1Arg.Count();
+        }
+        else if (arg == "--save-repo-urls")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var template = max1Arg.FirstOrDefault() ?? "repo-urls.txt";
+            command.SaveRepoUrls = template;
+            i += max1Arg.Count();
+        }
+        else if (arg == "--save-file-urls")
+        {
+            var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
+            var template = max1Arg.FirstOrDefault() ?? "file-urls-{repo}.txt";
+            command.SaveFileUrls = template;
+            i += max1Arg.Count();
         }
         else if (arg == "--exclude")
         {

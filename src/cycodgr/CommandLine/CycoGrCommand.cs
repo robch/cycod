@@ -9,6 +9,10 @@ public abstract class CycoGrCommand : Command
         SaveCsv = string.Empty;
         SaveTable = string.Empty;
         SaveUrls = string.Empty;
+        SaveRepos = string.Empty;
+        SaveFilePaths = string.Empty;
+        SaveRepoUrls = string.Empty;
+        SaveFileUrls = string.Empty;
         Repos = new List<string>();
         Exclude = new List<string>();
     }
@@ -23,6 +27,10 @@ public abstract class CycoGrCommand : Command
     public string SaveCsv;
     public string SaveTable;
     public string SaveUrls;
+    public string SaveRepos;
+    public string SaveFilePaths;
+    public string SaveRepoUrls;
+    public string SaveFileUrls;
     public List<string> Repos;
     public List<string> Exclude;
 }
