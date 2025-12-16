@@ -685,17 +685,399 @@ But they're **fully supported** and **perform identically** to direct implementa
 
 ## Part 3: Implementation Examples (#2)
 
-[PLACEHOLDER - Waiting for feedback before adding concrete code examples]
+### Section 2.1: Core Interfaces & Types
 
-This section will include:
-- Complete interface definitions with documentation
-- Example stage implementations showing the pattern
-- Example hook implementations for common scenarios
-- ChatContext class with full API
-- Pipeline executor implementation
-- Integration examples showing how to use in ChatCommand
-- Test examples demonstrating testability
-- Migration code showing before/after transformations
+These are the foundational contracts that define the pipeline architecture.
+
+#### IChatPipeline Interface
+
+The main orchestrator that executes stages and invokes hooks.
+
+```csharp
+/// <summary>
+/// Orchestrates the execution of pipeline stages with hook support.
+/// Manages the conversation flow from user input through AI response to function execution.
+/// </summary>
+public interface IChatPipeline
+{
+    /// <summary>
+    /// Adds a stage to the pipeline. Stages execute in the order they are added.
+    /// </summary>
+    /// <param name="stage">The stage to add to the pipeline</param>
+    /// <returns>The pipeline instance for fluent chaining</returns>
+    IChatPipeline AddStage(IPipelineStage stage);
+    
+    /// <summary>
+    /// Registers a hook handler at a specific hook point.
+    /// Multiple hooks can be registered at the same point and will execute in priority order.
+    /// </summary>
+    /// <param name="hookPoint">The point in the pipeline where the hook should execute</param>
+    /// <param name="handler">The hook handler to execute</param>
+    /// <returns>The pipeline instance for fluent chaining</returns>
+    IChatPipeline AddHook(HookPoint hookPoint, IHookHandler handler);
+    
+    /// <summary>
+    /// Executes the pipeline with the given context.
+    /// Runs all stages in order, invoking hooks at appropriate points.
+    /// </summary>
+    /// <param name="context">The chat context containing conversation state and data</param>
+    /// <returns>The result of the pipeline execution</returns>
+    Task<ChatResult> ExecuteAsync(ChatContext context);
+    
+    /// <summary>
+    /// Gets all stages currently registered in the pipeline.
+    /// </summary>
+    IReadOnlyList<IPipelineStage> Stages { get; }
+    
+    /// <summary>
+    /// Gets all hooks registered in the pipeline, organized by hook point.
+    /// </summary>
+    IReadOnlyDictionary<HookPoint, IReadOnlyList<IHookHandler>> Hooks { get; }
+}
+```
+
+#### IPipelineStage Interface
+
+Represents one logical step in the conversation loop.
+
+```csharp
+/// <summary>
+/// Represents a single stage in the chat pipeline.
+/// Each stage should have a single, focused responsibility.
+/// </summary>
+public interface IPipelineStage
+{
+    /// <summary>
+    /// The name of this stage (for logging and debugging).
+    /// </summary>
+    string Name { get; }
+    
+    /// <summary>
+    /// The hook point that fires before this stage executes.
+    /// </summary>
+    HookPoint PreHookPoint { get; }
+    
+    /// <summary>
+    /// The hook point that fires after this stage executes.
+    /// </summary>
+    HookPoint PostHookPoint { get; }
+    
+    /// <summary>
+    /// Executes the stage logic.
+    /// Should be focused, single-responsibility, and <30 lines of code.
+    /// </summary>
+    /// <param name="context">The chat context with full read/write access</param>
+    /// <returns>The result indicating whether to continue, skip, or exit</returns>
+    Task<StageResult> ExecuteAsync(ChatContext context);
+    
+    /// <summary>
+    /// Gets metadata about this stage for logging/debugging.
+    /// </summary>
+    StageMetadata GetMetadata();
+}
+```
+
+#### IHookHandler Interface
+
+Extension point for custom behavior at any hook point.
+
+```csharp
+/// <summary>
+/// Handles custom behavior at a specific hook point in the pipeline.
+/// Hooks can observe, modify, or control the flow of execution.
+/// </summary>
+public interface IHookHandler
+{
+    /// <summary>
+    /// The name of this hook (for logging and debugging).
+    /// </summary>
+    string Name { get; }
+    
+    /// <summary>
+    /// Priority for ordering when multiple hooks registered at same point.
+    /// Lower numbers execute first. Default is 100.
+    /// </summary>
+    int Priority { get; }
+    
+    /// <summary>
+    /// Executes the hook logic.
+    /// Can read/modify context, control flow, or trigger side effects.
+    /// </summary>
+    /// <param name="context">The chat context with full read/write access</param>
+    /// <param name="data">Additional data about the current execution point</param>
+    /// <returns>The result indicating how execution should proceed</returns>
+    Task<HookResult> HandleAsync(ChatContext context, HookData data);
+}
+```
+
+#### HookPoint Enum
+
+Defines all extension points in the pipeline.
+
+```csharp
+/// <summary>
+/// Defines the points in the pipeline where hooks can be registered.
+/// These represent key moments in the conversation flow where custom behavior can be injected.
+/// </summary>
+public enum HookPoint
+{
+    /// <summary>
+    /// After user input is captured, before AI processing begins.
+    /// Use for: Input validation, content filtering, context injection.
+    /// </summary>
+    PostUserInput = 1,
+    
+    /// <summary>
+    /// Just before AI streaming begins (same timing as PostUserInput).
+    /// Use for: Pre-processing, interrupt monitoring setup.
+    /// </summary>
+    PreAIStreaming = 2,
+    
+    /// <summary>
+    /// After AI streaming completes, before adding to message array.
+    /// Use for: Content moderation, response analysis, response modification.
+    /// </summary>
+    PostAIStreaming = 3,
+    
+    /// <summary>
+    /// Just before adding assistant message to array (same timing as PostAIStreaming).
+    /// Use for: Final message modifications, metadata injection.
+    /// </summary>
+    PreMessageAdd = 4,
+    
+    /// <summary>
+    /// After function calls detected, before execution begins.
+    /// Use for: Tool permission checking, tool call caching, function approval UI.
+    /// </summary>
+    PostFunctionDetection = 5,
+    
+    /// <summary>
+    /// Just before function execution (same timing as PostFunctionDetection).
+    /// Use for: Function call interception, mocking, blocking.
+    /// </summary>
+    PreToolCall = 6,
+    
+    /// <summary>
+    /// After function execution, before adding result to messages.
+    /// Use for: Result validation, transformation, error handling.
+    /// </summary>
+    PostToolCall = 7,
+    
+    /// <summary>
+    /// Just before adding tool result to array (same timing as PostToolCall).
+    /// Use for: Final result modifications, caching.
+    /// </summary>
+    PreToolResultAdd = 8,
+    
+    /// <summary>
+    /// After message added to array, before loop continues.
+    /// Use for: State tracking, conversation analysis, persistence.
+    /// </summary>
+    PostMessageAdd = 9,
+    
+    /// <summary>
+    /// Just before continuing to next loop iteration (same timing as PostMessageAdd).
+    /// Use for: Loop control, cleanup, state transitions.
+    /// </summary>
+    PreLoopContinue = 10,
+    
+    /// <summary>
+    /// At bottom of loop iteration, before starting next one.
+    /// Use for: Completion detection, flow control, state cleanup.
+    /// </summary>
+    PostLoopIteration = 11,
+    
+    /// <summary>
+    /// Just before next iteration begins (same timing as PostLoopIteration).
+    /// Use for: Loop setup, pre-iteration validation.
+    /// </summary>
+    PreNextIteration = 12
+}
+```
+
+#### Result Types
+
+**StageResult** - Returned by stages to control execution flow:
+
+```csharp
+/// <summary>
+/// Result of a pipeline stage execution.
+/// </summary>
+public class StageResult
+{
+    /// <summary>
+    /// Whether the stage completed successfully.
+    /// </summary>
+    public bool Success { get; set; }
+    
+    /// <summary>
+    /// Whether to continue to the next stage.
+    /// </summary>
+    public bool ShouldContinue { get; set; } = true;
+    
+    /// <summary>
+    /// Whether to exit the entire pipeline.
+    /// </summary>
+    public bool ShouldExit { get; set; }
+    
+    /// <summary>
+    /// Optional error message if stage failed.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+    
+    /// <summary>
+    /// Optional data to pass to subsequent stages/hooks.
+    /// </summary>
+    public object? Data { get; set; }
+    
+    // Factory methods
+    public static StageResult Continue() => new() { Success = true, ShouldContinue = true };
+    public static StageResult Exit() => new() { Success = true, ShouldExit = true };
+    public static StageResult Skip() => new() { Success = true, ShouldContinue = false };
+    public static StageResult Error(string message) => new() { Success = false, ErrorMessage = message };
+}
+```
+
+**HookResult** - Returned by hooks to control execution:
+
+```csharp
+/// <summary>
+/// Result of a hook execution.
+/// </summary>
+public class HookResult
+{
+    /// <summary>
+    /// Whether the hook completed successfully.
+    /// </summary>
+    public bool Success { get; set; } = true;
+    
+    /// <summary>
+    /// Whether to skip the associated stage.
+    /// </summary>
+    public bool ShouldSkipStage { get; set; }
+    
+    /// <summary>
+    /// Whether to exit the entire pipeline.
+    /// </summary>
+    public bool ShouldExitPipeline { get; set; }
+    
+    /// <summary>
+    /// Optional modified result to override stage result.
+    /// </summary>
+    public StageResult? OverrideStageResult { get; set; }
+    
+    /// <summary>
+    /// Optional error message if hook failed.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+    
+    // Factory methods
+    public static HookResult Continue() => new();
+    public static HookResult SkipStage() => new() { ShouldSkipStage = true };
+    public static HookResult ExitPipeline() => new() { ShouldExitPipeline = true };
+    public static HookResult Error(string message) => new() { Success = false, ErrorMessage = message };
+}
+```
+
+**ChatResult** - Final result from pipeline execution:
+
+```csharp
+/// <summary>
+/// Final result of the entire pipeline execution.
+/// </summary>
+public class ChatResult
+{
+    /// <summary>
+    /// Whether the pipeline completed successfully.
+    /// </summary>
+    public bool Success { get; set; }
+    
+    /// <summary>
+    /// The final content to return (typically the AI's response).
+    /// </summary>
+    public string Content { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Whether the conversation should continue (loop again).
+    /// </summary>
+    public bool ShouldContinue { get; set; }
+    
+    /// <summary>
+    /// Optional error information if pipeline failed.
+    /// </summary>
+    public string? ErrorMessage { get; set; }
+    
+    /// <summary>
+    /// The final state of the conversation context.
+    /// </summary>
+    public ChatContext? FinalContext { get; set; }
+    
+    // Factory methods
+    public static ChatResult Success(string content, bool shouldContinue = false) 
+        => new() { Success = true, Content = content, ShouldContinue = shouldContinue };
+    
+    public static ChatResult Failure(string error) 
+        => new() { Success = false, ErrorMessage = error };
+}
+```
+
+#### Supporting Types
+
+**StageMetadata** - Information about a stage:
+
+```csharp
+/// <summary>
+/// Metadata about a pipeline stage for debugging/logging.
+/// </summary>
+public class StageMetadata
+{
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public TimeSpan EstimatedDuration { get; set; }
+    public bool IsLongRunning { get; set; }
+    public Dictionary<string, object> Properties { get; set; } = new();
+}
+```
+
+**HookData** - Context passed to hooks:
+
+```csharp
+/// <summary>
+/// Data passed to hooks during execution.
+/// Provides context about where and why the hook is being invoked.
+/// </summary>
+public class HookData
+{
+    /// <summary>
+    /// The hook point where this hook is executing.
+    /// </summary>
+    public HookPoint HookPoint { get; set; }
+    
+    /// <summary>
+    /// The name of the stage associated with this hook point.
+    /// </summary>
+    public string StageName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// When this hook is executing.
+    /// </summary>
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// The result from the stage (if this is a post-stage hook).
+    /// </summary>
+    public StageResult? StageResult { get; set; }
+    
+    /// <summary>
+    /// Arbitrary properties for stage-specific data.
+    /// </summary>
+    public Dictionary<string, object> Properties { get; set; } = new();
+}
+```
+
+---
+
+**Next:** Section 2.2 - ChatContext Object Model
 
 ---
 
@@ -832,16 +1214,31 @@ Once base architecture is in place:
 
 1. **Hook Granularity**: Are the proposed hook points at the right level, or do we need more/fewer?
 
+   **ANSWER**: Yes. Perfect (for now... everything can be 'changed in future' with new info)
+
 2. **Context API**: Is the ChatContext object model complete for "mucking around" needs?
+
+   **ANSWER**: Yes. Perfect. :-)
 
 3. **Performance**: Any concerns about hook invocation overhead?
 
+   **ANSWER**: No. Seems good for this prototype of implementation w/ this plan.
+
 4. **Backwards Compatibility**: Should we maintain old API temporarily during migration?
+
+   **ANSWER**: Zero care about compatibility from a code api/function name/class/etc... I don't think anything above changes files/options inputs/outputs...
 
 5. **Hook Ordering**: Is priority-based ordering sufficient, or do we need dependency chains?
 
+   **ANSWER**: This is sufficient for now.
+
 6. **Error Handling**: Should hooks be able to handle errors from previous hooks?
+
+   **ANSWER**: No. Hooks should not handle errors from previous hooks; error handling should be centralized in the pipeline.
 
 ---
 
 **Next Steps:** Review this specification, provide feedback, then proceed with Part 3 (Implementation Examples) based on any adjustments needed.
+
+1. [x] Reviewed!
+2. Feedback provided to questions above...
