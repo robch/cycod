@@ -3028,7 +3028,167 @@ Once base architecture is in place:
 
 ---
 
-**Next Steps:** Review this specification, provide feedback, then proceed with Part 3 (Implementation Examples) based on any adjustments needed.
+---
+
+## Questions for Review
+
+Before implementation begins, these questions should be addressed to clarify design decisions and priorities.
+
+### 1. Hook Point Granularity - Right Level?
+
+The spec defines 12 hook points (6 pairs of Pre/Post). Is this:
+- **Too many?** (Should we consolidate some?)
+- **Too few?** (Missing critical extension points?)
+- **Just right?**
+
+**Specific concern:** Do we really need BOTH `PostAIStreaming` AND `PreMessageAdd`? They fire at the same time but might serve different semantic purposes (observing vs. modifying).
+
+**Decision needed:** [ ]
+
+---
+
+### 2. Context Properties Dictionary - Type Safety?
+
+The `Properties` dictionary is `Dictionary<string, object>` for maximum flexibility, but:
+- Should we add **typed extension methods**? (e.g., `context.GetDisplayBuffer()`)
+- Should we have a **registry of "known" property keys**? (constants or enum)
+- Or keep it **completely free-form**? (current approach)
+
+**Trade-offs:**
+- Free-form: Maximum flexibility, no type safety
+- Extension methods: Type-safe access, but requires changes for new properties
+- Registry: Discoverable keys, but could limit innovation
+
+**Decision needed:** [ ]
+
+---
+
+### 3. Hook Failure Strategy - Configurable?
+
+Currently hooks fail-soft (log and continue). Should this be:
+- **Configurable per-hook?** (Some hooks are critical, others optional)
+- **Configurable per-pipeline?** (Strict mode vs lenient mode)
+- **Always fail-soft?** (current approach)
+
+**Use cases:**
+- Critical hook (interrupt) should maybe fail-fast
+- Optional hook (analysis) should fail-soft
+- Test pipeline should fail-fast for debugging
+
+**Decision needed:** [ ]
+
+---
+
+### 4. Stage Redirection - Needed?
+
+The `context.Pending.RedirectToStage` feature is specced but not fully implemented. Is this:
+- **Critical for your vision?** (Should we flesh it out completely?)
+- **Nice-to-have?** (Can wait for future iteration)
+- **YAGNI?** (Remove from spec entirely)
+
+**Complexity:** Stage redirection adds significant complexity to pipeline executor and makes flow harder to reason about.
+
+**Alternative:** Most redirect scenarios can be handled with Skip/Exit and external orchestration.
+
+**Decision needed:** [ ]
+
+---
+
+### 5. Conversation Forking - Real Requirement?
+
+The `ConversationForkingHook` example shows parallel conversation branches. Is this:
+- **Something you actually want soon?** (Should influence core architecture)
+- **Just a "whacko thing" demo?** (Shows flexibility, not required)
+- **Future exploration?** (Nice to know it's possible, not implementing yet)
+
+**Architecture impact:** If real requirement, might need:
+- Branch management in context
+- Branch merging strategies
+- Branch result comparison/selection
+
+**Decision needed:** [ ]
+
+---
+
+### 6. Migration Strategy - Phased or Big Bang?
+
+For actual implementation, would you prefer:
+- **Phased**: New pipeline runs alongside old code, gradually migrate features
+  - Pros: Lower risk, can compare behavior, easy rollback
+  - Cons: More code to maintain during transition
+  
+- **Big Bang**: Replace `CompleteChatStreamingAsync` entirely in one shot
+  - Pros: Clean break, no dual maintenance
+  - Cons: Higher risk, harder to debug issues
+  
+- **Branch-based**: Keep old code on master, new architecture on branch until proven
+  - Pros: No risk to main, time to shake out bugs
+  - Cons: Merging later could be painful
+
+**Decision needed:** [ ]
+
+---
+
+### 7. Performance Monitoring - Built In?
+
+Should we add performance tracking to the pipeline infrastructure?
+- **Hook execution time tracking**
+- **Stage execution time tracking**
+- **Context size monitoring**
+- **Token usage tracking**
+
+**Options:**
+- **Built-in**: Pipeline tracks everything automatically
+  - Pros: Always available, consistent
+  - Cons: Overhead, more complexity in core
+  
+- **Via hooks**: Add PerformanceMonitoringHook when needed
+  - Pros: Clean core, opt-in overhead
+  - Cons: Not available by default, requires setup
+
+**Decision needed:** [ ]
+
+---
+
+### 8. Implementation Timeline - When Do You Want This?
+
+- **ASAP** - This is blocking other work
+  - Start immediately, prioritize getting basic pipeline working
+  
+- **Soon** - Want it in the next few weeks
+  - Plan implementation, coordinate with other work
+  
+- **Eventually** - Good to have spec, no rush
+  - Let it marinate, gather more feedback
+  
+- **Exploratory** - Just thinking about it
+  - Spec is the deliverable, implementation TBD
+
+**Decision needed:** [ ]
+
+---
+
+### 9. [Additional Questions]
+
+Space for any other questions that come up during review:
+
+- 
+
+---
+
+## Decision Log
+
+Once decisions are made, record them here with rationale:
+
+| Question | Decision | Rationale | Date |
+|----------|----------|-----------|------|
+| | | | |
+
+---
+
+**Next Steps:** Review questions, make decisions, update spec accordingly, then proceed to implementation.
+
+
 
 1. [x] Reviewed!
 2. Feedback provided to questions above...
