@@ -1971,6 +1971,370 @@ var pipeline = new ChatPipelineBuilder()
 
 ---
 
+### Section 2.6: Integration Examples
+
+How the pipeline architecture integrates into the existing ChatCommand structure.
+
+#### Before: ChatCommand.CompleteChatStreamingAsync (Master)
+
+**Original method (clean and simple):**
+```csharp
+private async Task<string> CompleteChatStreamingAsync(
+    FunctionCallingChat chat,
+    string userPrompt,
+    IEnumerable<string> imageFiles,
+    Action<IList<ChatMessage>>? messageCallback = null,
+    Action<ChatResponseUpdate>? streamingCallback = null,
+    Func<string, string?, bool>? approveFunctionCall = null,
+    Action<string, string, object?>? functionCallCallback = null)
+{
+    messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
+    streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
+    functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
+
+    try
+    {
+        var response = await chat.CompleteChatStreamingAsync(userPrompt, imageFiles,
+            (messages) => messageCallback?.Invoke(messages),
+            (update) => streamingCallback?.Invoke(update),
+            (name, args) => approveFunctionCall?.Invoke(name, args) ?? true,
+            (name, args, result) => functionCallCallback?.Invoke(name, args, result));
+
+        return response;
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
+        SaveExceptionHistory(chat);
+        throw;
+    }
+}
+```
+
+**What was good:**
+- 29 lines total
+- Single responsibility: delegate and handle exceptions
+- Easy to understand
+- Clean callback wrapping
+
+#### After Interrupt PR: ChatCommand.CompleteChatStreamingAsync (Messy)
+
+**What it became:**
+```csharp
+private async Task<string> CompleteChatStreamingAsync(...)
+{
+    // Same callback wrapping...
+    
+    // NEW: Create interrupt manager and cancellation token
+    using var interruptManager = new SimpleInterruptManager();
+    _interruptTokenSource = new CancellationTokenSource();
+    var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(
+        _interruptTokenSource.Token, cancellationToken);
+    
+    try
+    {
+        // NEW: Race streaming vs interrupt
+        var streamingTask = chat.CompleteChatStreamingAsync(..., linkedToken.Token, ...);
+        var interruptTask = interruptManager.WaitForInterruptAsync();
+        
+        var completedTask = await Task.WhenAny(streamingTask, interruptTask);
+        
+        if (completedTask == interruptTask)
+        {
+            try
+            {
+                return await streamingTask;
+            }
+            catch (OperationCanceledException)
+            {
+                return "";
+            }
+        }
+        
+        return await streamingTask;
+    }
+    catch (OperationCanceledException) when (_interruptTokenSource.Token.IsCancellationRequested)
+    {
+        return "";
+    }
+    catch (Exception ex)
+    {
+        // Same exception handling...
+    }
+    finally
+    {
+        // NEW: Cleanup multiple things
+        _interruptTokenSource?.Dispose();
+        _interruptTokenSource = null;
+        _suppressAssistantDisplay = false;
+        _displayBuffer = "";
+    }
+}
+```
+
+**What went wrong:**
+- 80+ lines
+- Multiple responsibilities
+- Complex state management
+- Hard to test
+
+#### NEW: ChatCommand with Pipeline Architecture
+
+**Clean integration:**
+```csharp
+private async Task<string> CompleteChatStreamingAsync(
+    string userPrompt,
+    IEnumerable<string> imageFiles,
+    Action<IList<ChatMessage>>? messageCallback = null,
+    Action<ChatResponseUpdate>? streamingCallback = null,
+    Func<string, string?, bool>? approveFunctionCall = null,
+    Action<string, string, object?>? functionCallCallback = null)
+{
+    // Wrap callbacks for safety
+    messageCallback = TryCatchHelpers.NoThrowWrap(messageCallback);
+    streamingCallback = TryCatchHelpers.NoThrowWrap(streamingCallback);
+    functionCallCallback = TryCatchHelpers.NoThrowWrap(functionCallCallback);
+
+    try
+    {
+        // Create context with initial user message
+        var context = CreateChatContext(userPrompt, imageFiles);
+        
+        // Store callbacks in context for stages to use
+        context.Properties["MessageCallback"] = messageCallback;
+        context.Properties["StreamingCallback"] = streamingCallback;
+        context.Properties["FunctionCallCallback"] = functionCallCallback;
+        
+        // Create and configure pipeline
+        var pipeline = CreateChatPipeline(approveFunctionCall != null);
+        
+        // Execute pipeline
+        var result = await pipeline.ExecuteAsync(context);
+        
+        // Update conversation state
+        _conversation = context.Messages;
+        
+        return result.Content;
+    }
+    catch (Exception ex)
+    {
+        ConsoleHelpers.LogException(ex, "Exception occurred during chat completion", showToUser: false);
+        SaveExceptionHistory();
+        throw;
+    }
+}
+
+private ChatContext CreateChatContext(string userPrompt, IEnumerable<string> imageFiles)
+{
+    var context = new ChatContext();
+    
+    // Add existing conversation history
+    context.Messages.AddRange(_conversation);
+    
+    // Add new user message
+    var userMessage = CreateUserMessage(userPrompt, imageFiles);
+    context.Pending.PendingUserMessage = userMessage;
+    
+    return context;
+}
+
+private IChatPipeline CreateChatPipeline(bool needsApproval)
+{
+    var builder = new ChatPipelineBuilder()
+        // Core stages
+        .WithStage(new AIStreamingStage(_chatClient, _chatOptions))
+        .WithStage(new FunctionDetectionStage())
+        .WithStage(new FunctionExecutionStage(_functionFactory))
+        .WithStage(new MessagePersistenceStage())
+        .WithStage(new LoopDecisionStage())
+        
+        // Always add interrupt support
+        .WithHook(HookPoint.PreAIStreaming, new InterruptionHook(_interruptManager))
+        .WithHook(HookPoint.PreAIStreaming, new DisplayBufferHook())
+        .WithHook(HookPoint.PostAIStreaming, new DisplayBufferHook())
+        .WithHook(HookPoint.PostLoopIteration, new DisplayBufferHook());
+    
+    // Conditionally add function approval
+    if (needsApproval)
+    {
+        builder.WithHook(HookPoint.PreToolCall, 
+            new FunctionApprovalHook(_approvalUI, autoApprove: false));
+    }
+    
+    // Add any custom hooks from configuration
+    AddCustomHooks(builder);
+    
+    return builder.Build();
+}
+
+private void AddCustomHooks(ChatPipelineBuilder builder)
+{
+    // Could load hooks from configuration
+    // Could enable/disable hooks based on settings
+    // Could add hooks for specific scenarios
+    
+    if (_settings.EnableConversationAnalysis)
+    {
+        builder.WithHook(HookPoint.PostUserInput, 
+            new ConversationAnalysisHook(_analyzer));
+    }
+    
+    if (_settings.EnableContentModeration)
+    {
+        builder.WithHook(HookPoint.PostAIStreaming,
+            new ContentModerationHook(_moderator));
+    }
+}
+```
+
+**What's better:**
+- Back to ~40 lines for main method
+- Single responsibility restored
+- All complexity moved to focused components
+- Easy to add new hooks
+- Clean, testable, maintainable
+
+#### Migration Path
+
+**Phase 1: Side-by-side (both approaches work)**
+```csharp
+private async Task<string> CompleteChatStreamingAsync(...)
+{
+    if (_settings.UsePipelineArchitecture)
+    {
+        return await CompleteChatStreamingAsync_Pipeline(...);
+    }
+    else
+    {
+        return await CompleteChatStreamingAsync_Legacy(...);
+    }
+}
+```
+
+**Phase 2: Default to pipeline, legacy as fallback**
+```csharp
+private async Task<string> CompleteChatStreamingAsync(...)
+{
+    try
+    {
+        return await CompleteChatStreamingAsync_Pipeline(...);
+    }
+    catch (Exception ex) when (_settings.FallbackToLegacy)
+    {
+        ConsoleHelpers.WriteLine("Pipeline failed, falling back to legacy", ConsoleColor.Yellow);
+        return await CompleteChatStreamingAsync_Legacy(...);
+    }
+}
+```
+
+**Phase 3: Remove legacy completely**
+```csharp
+// Just the pipeline version remains
+private async Task<string> CompleteChatStreamingAsync(...)
+{
+    var context = CreateChatContext(...);
+    var pipeline = CreateChatPipeline(...);
+    var result = await pipeline.ExecuteAsync(context);
+    return result.Content;
+}
+```
+
+#### Configuration Examples
+
+**Enable/disable hooks via settings:**
+```csharp
+// appsettings.json or equivalent
+{
+  "ChatPipeline": {
+    "EnableInterrupts": true,
+    "EnableFunctionApproval": true,
+    "EnableConversationAnalysis": false,
+    "EnableContentModeration": true,
+    "CustomHooks": [
+      "Cycod.Hooks.CustomHook1",
+      "Cycod.Hooks.CustomHook2"
+    ]
+  }
+}
+
+// Load hooks dynamically
+private void AddCustomHooks(ChatPipelineBuilder builder)
+{
+    foreach (var hookTypeName in _settings.CustomHooks)
+    {
+        var hookType = Type.GetType(hookTypeName);
+        if (hookType != null && typeof(IHookHandler).IsAssignableFrom(hookType))
+        {
+            var hook = (IHookHandler)Activator.CreateInstance(hookType);
+            builder.WithHook(hook.PreferredHookPoint, hook);
+        }
+    }
+}
+```
+
+**Different pipelines for different scenarios:**
+```csharp
+private IChatPipeline CreateChatPipeline(ChatScenario scenario)
+{
+    return scenario switch
+    {
+        ChatScenario.Interactive => CreateInteractivePipeline(),
+        ChatScenario.Batch => CreateBatchPipeline(),
+        ChatScenario.Debug => CreateDebugPipeline(),
+        ChatScenario.Testing => CreateTestingPipeline(),
+        _ => CreateDefaultPipeline()
+    };
+}
+
+private IChatPipeline CreateInteractivePipeline()
+{
+    return new ChatPipelineBuilder()
+        .WithStage(/* standard stages */)
+        .WithHook(HookPoint.PreAIStreaming, new InterruptionHook(_interruptManager))
+        .WithHook(HookPoint.PreToolCall, new FunctionApprovalHook(_approvalUI))
+        .Build();
+}
+
+private IChatPipeline CreateBatchPipeline()
+{
+    return new ChatPipelineBuilder()
+        .WithStage(/* standard stages */)
+        // No interrupts or approvals for batch processing
+        .WithHook(HookPoint.PostAIStreaming, new BatchLoggingHook(_logger))
+        .Build();
+}
+
+private IChatPipeline CreateDebugPipeline()
+{
+    return new ChatPipelineBuilder()
+        .WithStage(/* standard stages */)
+        .WithHook(HookPoint.PreAIStreaming, new DebugLoggingHook(_logger))
+        .WithHook(HookPoint.PostAIStreaming, new DebugLoggingHook(_logger))
+        .WithHook(HookPoint.PostToolCall, new DebugLoggingHook(_logger))
+        .Build();
+}
+```
+
+#### Benefits in Practice
+
+**Before (Interrupt PR):**
+- Want to add timeout feature? Modify CompleteChatStreamingAsync (already 80 lines)
+- Want to add conversation forking? Modify FunctionCallingChat loop (already complex)
+- Want to add content filtering? Insert into streaming callback (scattered logic)
+- Each feature makes code worse
+
+**After (Pipeline):**
+- Want to add timeout? Create TimeoutHook, register at PreAIStreaming
+- Want to add conversation forking? Create ForkingHook, register at PostMessageAdd
+- Want to add content filtering? Create FilteringHook, register at PostAIStreaming
+- Each feature is independent, clean, testable
+
+---
+
+**Next:** Section 2.7 - Testing Examples
+
+---
+
 ---
 
 ## Implementation Tasks
