@@ -1422,6 +1422,257 @@ var pipeline = new ChatPipelineBuilder()
 
 ---
 
+### Section 2.4: Example Stages
+
+Stages are focused, single-responsibility components that perform one step in the conversation loop. Each stage is <30 lines of core logic.
+
+#### Full Implementation
+
+See: [examples/PipelineStages.cs](examples/PipelineStages.cs)
+
+The implementation includes five core stages:
+- **AIStreamingStage** - Streams AI responses (long-running, cancellable)
+- **FunctionDetectionStage** - Detects function calls (fast, synchronous)
+- **FunctionExecutionStage** - Executes functions (long-running, cancellable)
+- **MessagePersistenceStage** - Adds messages to history (fast, synchronous)
+- **LoopDecisionStage** - Decides loop continuation (fast, decision-only)
+
+#### Stage Pattern
+
+All stages follow this pattern:
+
+```csharp
+public class ExampleStage : IPipelineStage
+{
+    // 1. Identity
+    public string Name => "ExampleStage";
+    public HookPoint PreHookPoint => HookPoint.PreExample;
+    public HookPoint PostHookPoint => HookPoint.PostExample;
+    
+    // 2. Dependencies (injected via constructor)
+    private readonly IDependency _dependency;
+    
+    public ExampleStage(IDependency dependency)
+    {
+        _dependency = dependency;
+    }
+    
+    // 3. Execute logic (focused, <30 lines)
+    public async Task<StageResult> ExecuteAsync(ChatContext context)
+    {
+        // a. Get cancellation token if long-running
+        var cancellationToken = context.CancellationTokenSource.Token;
+        
+        // b. Do the work (single responsibility)
+        await DoSomethingFocusedAsync(context, cancellationToken);
+        
+        // c. Update context with results
+        context.Pending.SomeData = result;
+        
+        // d. Return appropriate result
+        return StageResult.Continue();
+    }
+    
+    // 4. Metadata for debugging/logging
+    public StageMetadata GetMetadata()
+    {
+        return new StageMetadata
+        {
+            Name = Name,
+            Description = "What this stage does",
+            EstimatedDuration = TimeSpan.FromSeconds(1),
+            IsLongRunning = false
+        };
+    }
+}
+```
+
+#### AIStreamingStage - Key Points
+
+**Responsibility:** Stream AI responses and accumulate content
+
+**Cancellation Support:**
+```csharp
+await foreach (var update in _chatClient.GetStreamingResponseAsync(
+    context.Messages, 
+    _options, 
+    cancellationToken))
+{
+    // Check cancellation frequently for responsiveness
+    cancellationToken.ThrowIfCancellationRequested();
+    
+    // Accumulate content
+    context.Pending.StreamingContent.Append(update.Text);
+}
+```
+
+**Why This Works for Interrupts:**
+- Checks cancellation token on every streaming update
+- Update frequency ~10-50ms (maintains <10ms interrupt responsiveness)
+- Gracefully handles cancellation, returns partial content
+- No polling needed - async cancellation pattern
+
+**Output:**
+- `context.Pending.PendingAssistantMessage` - Accumulated AI response
+
+#### FunctionDetectionStage - Key Points
+
+**Responsibility:** Detect function calls in AI response
+
+**Fast & Simple:**
+```csharp
+foreach (var update in context.Pending.StreamingUpdates)
+{
+    foreach (var content in update.Contents)
+    {
+        if (content is FunctionCallContent functionCall)
+        {
+            context.Pending.PendingToolCalls.Add(new FunctionCall
+            {
+                CallId = functionCall.CallId,
+                Name = functionCall.Name,
+                Arguments = functionCall.Arguments?.ToString() ?? "{}"
+            });
+        }
+    }
+}
+```
+
+**No External Dependencies:**
+- Just analyzes data already in context
+- Synchronous, completes in <1ms
+- No error handling needed (simple data transformation)
+
+**Output:**
+- `context.Pending.PendingToolCalls` - List of detected function calls
+
+#### FunctionExecutionStage - Key Points
+
+**Responsibility:** Execute detected function calls
+
+**Cancellation Support:**
+```csharp
+foreach (var toolCall in context.Pending.PendingToolCalls)
+{
+    cancellationToken.ThrowIfCancellationRequested();
+    
+    var function = _functionFactory.GetFunction(toolCall.Name);
+    var result = await function.InvokeAsync(toolCall.Arguments, cancellationToken);
+    
+    context.Pending.PendingToolResults.Add(result);
+}
+```
+
+**Error Handling:**
+- Per-function try/catch (one failure doesn't stop others)
+- Records errors in FunctionResult
+- Continues execution even on errors
+
+**Output:**
+- `context.Pending.PendingToolResults` - Results from all function calls
+
+#### MessagePersistenceStage - Key Points
+
+**Responsibility:** Move pending data into Messages array
+
+**Simple Transfer:**
+```csharp
+if (context.Pending.PendingUserMessage != null)
+{
+    context.Messages.Add(context.Pending.PendingUserMessage);
+    context.Pending.PendingUserMessage = null;
+}
+
+if (context.Pending.PendingAssistantMessage != null)
+{
+    context.Messages.Add(context.Pending.PendingAssistantMessage);
+    context.Pending.PendingAssistantMessage = null;
+}
+
+foreach (var toolResult in context.Pending.PendingToolResults)
+{
+    context.Messages.Add(CreateToolResultMessage(toolResult));
+}
+```
+
+**Why This is a Separate Stage:**
+- Hooks can intercept BEFORE messages are committed
+- PreMessageAdd hooks can modify/block messages
+- PostMessageAdd hooks can observe what was added
+- Clean separation between "what we're about to do" and "what we did"
+
+#### LoopDecisionStage - Key Points
+
+**Responsibility:** Decide whether to continue loop or exit
+
+**Decision Logic:**
+```csharp
+context.State.LoopIteration++;
+
+if (context.State.ShouldExitLoop || context.Pending.ShouldExitLoop)
+    return StageResult.Exit();
+
+if (context.State.IsInterrupted)
+    return StageResult.Exit();
+
+if (context.Pending.PendingToolCalls.Count > 0)
+    return StageResult.Continue(); // More work to do
+
+return StageResult.Exit(); // All done
+```
+
+**Why This is a Separate Stage:**
+- Makes loop logic explicit (not buried in conditionals)
+- Hooks can influence decision (PostLoopIteration)
+- Easy to modify decision logic (add max iterations, timeout, etc.)
+- Testable in isolation
+
+#### Stage Composition
+
+These stages compose into the full conversation loop:
+
+```
+Loop:
+  1. AIStreamingStage          → Get AI response
+  2. FunctionDetectionStage    → Find function calls
+  3. FunctionExecutionStage    → Execute functions
+  4. MessagePersistenceStage   → Save to history
+  5. LoopDecisionStage         → Continue or exit?
+     ↓
+  If Continue: Back to step 1
+  If Exit: Return result
+```
+
+This replaces the old 85-line monolithic method with 5 focused stages of ~20-25 lines each.
+
+#### Design Benefits
+
+**Single Responsibility:**
+- Each stage does exactly one thing
+- Easy to understand at a glance
+- Easy to modify independently
+
+**Testability:**
+- Mock context, call ExecuteAsync
+- No complex setup required
+- Test each stage in isolation
+
+**Reusability:**
+- Stages can be reused in different pipelines
+- Can create variations (DebugAIStreamingStage, MockFunctionExecutionStage)
+- Can compose different pipelines for different scenarios
+
+**Extensibility:**
+- Add new stages without modifying existing ones
+- Hooks provide even finer-grained extension points
+- Clear contracts via interfaces
+
+---
+
+**Next:** Section 2.5 - Example Hooks
+
+---
+
 ---
 
 ## Implementation Tasks
