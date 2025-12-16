@@ -1243,6 +1243,185 @@ await Task.WhenAll(mainTask, experimentalTask);
 
 ---
 
+### Section 2.3: Pipeline Infrastructure
+
+The `ChatPipeline` class is the orchestrator that executes stages and invokes hooks in the correct order.
+
+#### Full Implementation
+
+See: [examples/ChatPipeline.cs](examples/ChatPipeline.cs)
+
+The implementation includes:
+- **ChatPipeline** - Main executor with stage and hook management
+- **ChatPipelineBuilder** - Fluent builder for pipeline configuration
+- Hook ordering by priority
+- Exception handling at stage and hook levels
+- Support for stage skipping and pipeline exit
+
+#### Execution Flow
+
+```
+1. For each stage in pipeline:
+   
+   a. Update context.State.CurrentStage
+   
+   b. Execute pre-stage hooks:
+      - Call all hooks at stage.PreHookPoint
+      - Execute in priority order (lower numbers first)
+      - Check for skip/exit requests
+   
+   c. If skip requested:
+      - Continue to next stage
+   
+   d. Execute stage:
+      - Call stage.ExecuteAsync(context)
+      - Catch and record any exceptions
+      - Convert to StageResult
+   
+   e. Execute post-stage hooks:
+      - Call all hooks at stage.PostHookPoint
+      - Pass stage result to hooks
+      - Allow hooks to override result
+      - Check for exit requests
+   
+   f. Check exit conditions:
+      - Hook requested exit
+      - Stage requested exit
+      - Context flags exit
+      - If exiting, return with partial content
+   
+   g. Check for errors:
+      - If stage failed, return error result
+   
+   h. Handle redirects:
+      - If context.Pending.RedirectToStage set
+      - Jump to named stage (if found)
+   
+   i. Continue to next stage
+
+2. All stages complete:
+   - Extract final content from context
+   - Return success result
+```
+
+#### Exception Handling Strategy
+
+**Stage Exceptions:**
+```csharp
+try
+{
+    stageResult = await stage.ExecuteAsync(context);
+}
+catch (Exception ex)
+{
+    context.State.LastError = ex;
+    stageResult = StageResult.Error($"Stage {stage.Name} failed: {ex.Message}");
+}
+```
+- Stages exceptions are caught and converted to error results
+- Pipeline can decide to continue or exit based on result
+- Error is recorded in context for hooks to inspect
+
+**Hook Exceptions:**
+```csharp
+try
+{
+    var result = await handler.HandleAsync(context, hookData);
+    // Process result...
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Hook {handler.Name} threw exception: {ex.Message}");
+    context.State.LastError = ex;
+    // Continue to next hook - don't fail pipeline
+}
+```
+- Hook exceptions are caught and logged
+- Pipeline continues executing (fail-soft)
+- Could be made configurable (fail-fast vs. continue-on-error)
+
+**Cancellation:**
+```csharp
+catch (OperationCanceledException) when (context.CancellationTokenSource.Token.IsCancellationRequested)
+{
+    context.State.IsInterrupted = true;
+    return CreateInterruptedResult(context);
+}
+```
+- Cancellation (interrupts) handled gracefully
+- Returns partial content if available
+- Sets IsInterrupted flag for logging/analysis
+
+#### Hook Aggregation
+
+When multiple hooks are registered at the same point:
+
+1. **Execute in priority order** (lower numbers first)
+2. **Aggregate results**:
+   - Any hook can request skip → stage is skipped
+   - Any hook can request exit → pipeline exits immediately
+   - Last hook's override wins (for stage result overrides)
+3. **Continue-on-error**:
+   - Hook failures don't fail pipeline
+   - Logged but execution continues
+   - Could be made configurable
+
+#### Builder Pattern
+
+For clean pipeline construction:
+
+```csharp
+var pipeline = new ChatPipelineBuilder()
+    .WithStage(new AIStreamingStage(chatClient))
+    .WithStage(new FunctionDetectionStage())
+    .WithStage(new FunctionExecutionStage(factory))
+    .WithStage(new MessagePersistenceStage())
+    .WithHook(HookPoint.PreAIStreaming, new InterruptionHook(interruptManager))
+    .WithHook(HookPoint.PostAIStreaming, new ContentModerationHook())
+    .WithCancellation(cancellationTokenSource)
+    .WithInterruptSupport(interruptManager)
+    .WithExceptionHandling(exceptionHandler)
+    .Build();
+```
+
+#### Key Design Decisions
+
+**1. Fail-Soft for Hooks**
+- Hooks are extensions, not core functionality
+- A failing hook shouldn't crash the conversation
+- Logged for visibility but execution continues
+- Critical hooks should handle their own errors
+
+**2. Priority-Based Ordering**
+- Simple numeric priority (default 100)
+- Lower numbers execute first
+- Allows control over hook execution order
+- No complex dependency graphs needed
+
+**3. Hook Result Aggregation**
+- Any hook can veto (skip/exit)
+- Last override wins (could be "first wins" instead)
+- Keeps aggregation logic simple
+- Can be extended with more sophisticated rules
+
+**4. Stage Isolation**
+- Stages don't know about each other
+- Only communicate through context
+- Makes stages independently testable
+- Enables stage reuse in different pipelines
+
+**5. Context as Communication**
+- All state flows through context
+- No hidden state or side channels
+- Makes flow explicit and debuggable
+- Enables snapshot/rollback
+
+---
+
+**Next:** Section 2.4 - Example Stages
+
+---
+
 ---
 
 ## Implementation Tasks
