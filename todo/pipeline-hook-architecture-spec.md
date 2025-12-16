@@ -2335,6 +2335,540 @@ private IChatPipeline CreateDebugPipeline()
 
 ---
 
+### Section 2.7: Testing Examples
+
+The pipeline architecture makes testing dramatically easier by isolating concerns.
+
+#### Testing Stages
+
+**Example: Testing AIStreamingStage**
+
+```csharp
+[Fact]
+public async Task AIStreamingStage_AccumulatesStreamingContent()
+{
+    // Arrange
+    var mockChatClient = new MockChatClient();
+    mockChatClient.SetupStreamingResponse("Hello", " ", "world", "!");
+    
+    var stage = new AIStreamingStage(mockChatClient);
+    var context = new ChatContext();
+    context.Messages.Add(new ChatMessage(ChatRole.User, "Hi"));
+    
+    // Act
+    var result = await stage.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.Equal("Hello world!", context.Pending.StreamingContent.ToString());
+    Assert.NotNull(context.Pending.PendingAssistantMessage);
+    Assert.Equal("Hello world!", context.Pending.PendingAssistantMessage.Text);
+}
+
+[Fact]
+public async Task AIStreamingStage_HandlesInterruptGracefully()
+{
+    // Arrange
+    var mockChatClient = new MockChatClient();
+    mockChatClient.SetupStreamingResponse("Hello", " ", "world");
+    mockChatClient.SetupCancellationAfter(2); // Cancel after 2 updates
+    
+    var stage = new AIStreamingStage(mockChatClient);
+    var context = new ChatContext();
+    context.Messages.Add(new ChatMessage(ChatRole.User, "Hi"));
+    
+    // Act & Assert
+    await Assert.ThrowsAsync<OperationCanceledException>(
+        async () => await stage.ExecuteAsync(context));
+    
+    // Verify partial content was captured
+    Assert.Equal("Hello world", context.Pending.StreamingContent.ToString());
+}
+```
+
+**Example: Testing FunctionDetectionStage**
+
+```csharp
+[Fact]
+public async Task FunctionDetectionStage_DetectsFunctionCalls()
+{
+    // Arrange
+    var stage = new FunctionDetectionStage();
+    var context = new ChatContext();
+    
+    // Add streaming updates with function calls
+    context.Pending.StreamingUpdates.Add(new ChatResponseUpdate
+    {
+        Contents = new[]
+        {
+            new FunctionCallContent("call-1", "GetWeather", "{\"city\":\"Seattle\"}")
+        }
+    });
+    
+    // Act
+    var result = await stage.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.Single(context.Pending.PendingToolCalls);
+    Assert.Equal("GetWeather", context.Pending.PendingToolCalls[0].Name);
+    Assert.Equal("call-1", context.Pending.PendingToolCalls[0].CallId);
+}
+
+[Fact]
+public async Task FunctionDetectionStage_HandlesNoFunctionCalls()
+{
+    // Arrange
+    var stage = new FunctionDetectionStage();
+    var context = new ChatContext();
+    
+    // Add streaming updates with just text
+    context.Pending.StreamingUpdates.Add(new ChatResponseUpdate
+    {
+        Text = "Just a regular response"
+    });
+    
+    // Act
+    var result = await stage.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.Empty(context.Pending.PendingToolCalls);
+}
+```
+
+#### Testing Hooks
+
+**Example: Testing InterruptionHook**
+
+```csharp
+[Fact]
+public async Task InterruptionHook_DetectsInterruptAndExitsPipeline()
+{
+    // Arrange
+    var mockInterruptManager = new MockInterruptManager();
+    mockInterruptManager.SetInterruptRequested(true);
+    
+    var hook = new InterruptionHook(mockInterruptManager);
+    var context = new ChatContext();
+    var hookData = new HookData { HookPoint = HookPoint.PreAIStreaming };
+    
+    // Act
+    var result = await hook.HandleAsync(context, hookData);
+    
+    // Assert
+    Assert.True(result.ShouldExitPipeline);
+    Assert.True(context.State.IsInterrupted);
+    Assert.True(context.CancellationTokenSource.IsCancellationRequested);
+}
+
+[Fact]
+public async Task InterruptionHook_AllowsContinuationWhenNoInterrupt()
+{
+    // Arrange
+    var mockInterruptManager = new MockInterruptManager();
+    mockInterruptManager.SetInterruptRequested(false);
+    
+    var hook = new InterruptionHook(mockInterruptManager);
+    var context = new ChatContext();
+    var hookData = new HookData { HookPoint = HookPoint.PreAIStreaming };
+    
+    // Act
+    var result = await hook.HandleAsync(context, hookData);
+    
+    // Assert
+    Assert.False(result.ShouldExitPipeline);
+    Assert.False(context.State.IsInterrupted);
+}
+```
+
+**Example: Testing FunctionApprovalHook**
+
+```csharp
+[Fact]
+public async Task FunctionApprovalHook_ApprovesFunctionWhenUserAccepts()
+{
+    // Arrange
+    var mockUI = new MockFunctionApprovalUI();
+    mockUI.SetupApprovalResponse(FunctionCallDecision.Approved);
+    
+    var hook = new FunctionApprovalHook(mockUI);
+    var context = new ChatContext();
+    context.Pending.PendingToolCalls.Add(new FunctionCall
+    {
+        CallId = "call-1",
+        Name = "GetWeather",
+        Arguments = "{}"
+    });
+    
+    var hookData = new HookData { HookPoint = HookPoint.PreToolCall };
+    
+    // Act
+    var result = await hook.HandleAsync(context, hookData);
+    
+    // Assert
+    Assert.False(result.ShouldSkipStage); // Don't skip execution
+    Assert.Single(context.Pending.PendingToolCalls); // Call still pending
+    Assert.Empty(context.Pending.PendingToolResults); // No denial result
+}
+
+[Fact]
+public async Task FunctionApprovalHook_DeniesFunctionWhenUserRejects()
+{
+    // Arrange
+    var mockUI = new MockFunctionApprovalUI();
+    mockUI.SetupApprovalResponse(FunctionCallDecision.Denied);
+    
+    var hook = new FunctionApprovalHook(mockUI);
+    var context = new ChatContext();
+    context.Pending.PendingToolCalls.Add(new FunctionCall
+    {
+        CallId = "call-1",
+        Name = "DeleteFiles",
+        Arguments = "{}"
+    });
+    
+    var hookData = new HookData { HookPoint = HookPoint.PreToolCall };
+    
+    // Act
+    var result = await hook.HandleAsync(context, hookData);
+    
+    // Assert
+    Assert.True(result.ShouldSkipStage); // Skip execution stage
+    Assert.Empty(context.Pending.PendingToolCalls); // Call removed
+    Assert.Single(context.Pending.PendingToolResults); // Denial result added
+    Assert.False(context.Pending.PendingToolResults[0].Success);
+}
+
+[Fact]
+public async Task FunctionApprovalHook_RemembersSessionApproval()
+{
+    // Arrange
+    var mockUI = new MockFunctionApprovalUI();
+    mockUI.SetupApprovalResponse(FunctionCallDecision.ApprovedForSession);
+    
+    var hook = new FunctionApprovalHook(mockUI);
+    var context = new ChatContext();
+    
+    // First call - prompt user
+    context.Pending.PendingToolCalls.Add(new FunctionCall
+    {
+        CallId = "call-1",
+        Name = "GetWeather",
+        Arguments = "{}"
+    });
+    
+    var hookData = new HookData { HookPoint = HookPoint.PreToolCall };
+    await hook.HandleAsync(context, hookData);
+    
+    // Assert UI was called once
+    Assert.Equal(1, mockUI.PromptCount);
+    
+    // Second call - should auto-approve
+    context.Pending.PendingToolCalls.Add(new FunctionCall
+    {
+        CallId = "call-2",
+        Name = "GetWeather",
+        Arguments = "{\"city\":\"Portland\"}"
+    });
+    
+    await hook.HandleAsync(context, hookData);
+    
+    // Assert UI was NOT called again
+    Assert.Equal(1, mockUI.PromptCount);
+    Assert.Equal(2, context.Pending.PendingToolCalls.Count);
+}
+```
+
+#### Testing Pipeline Integration
+
+**Example: Testing Full Pipeline Execution**
+
+```csharp
+[Fact]
+public async Task ChatPipeline_ExecutesAllStagesInOrder()
+{
+    // Arrange
+    var mockChatClient = new MockChatClient();
+    mockChatClient.SetupStreamingResponse("The weather is sunny.");
+    
+    var pipeline = new ChatPipelineBuilder()
+        .WithStage(new AIStreamingStage(mockChatClient))
+        .WithStage(new FunctionDetectionStage())
+        .WithStage(new MessagePersistenceStage())
+        .WithStage(new LoopDecisionStage())
+        .Build();
+    
+    var context = new ChatContext();
+    context.Messages.Add(new ChatMessage(ChatRole.User, "What's the weather?"));
+    
+    // Act
+    var result = await pipeline.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.Equal("The weather is sunny.", result.Content);
+    Assert.Equal(2, context.Messages.Count); // User + Assistant
+    Assert.Equal(1, context.State.LoopIteration);
+}
+
+[Fact]
+public async Task ChatPipeline_HandlesInterruptDuringStreaming()
+{
+    // Arrange
+    var mockChatClient = new MockChatClient();
+    mockChatClient.SetupStreamingResponse("Hello", " ", "world");
+    mockChatClient.SetupCancellationAfter(2);
+    
+    var mockInterruptManager = new MockInterruptManager();
+    mockInterruptManager.SetInterruptAfter(TimeSpan.FromMilliseconds(10));
+    
+    var pipeline = new ChatPipelineBuilder()
+        .WithStage(new AIStreamingStage(mockChatClient))
+        .WithStage(new MessagePersistenceStage())
+        .WithHook(HookPoint.PreAIStreaming, new InterruptionHook(mockInterruptManager))
+        .Build();
+    
+    var context = new ChatContext();
+    context.Messages.Add(new ChatMessage(ChatRole.User, "Hi"));
+    
+    // Act
+    var result = await pipeline.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.True(context.State.IsInterrupted);
+    Assert.Equal("Hello world", result.Content); // Partial content
+}
+
+[Fact]
+public async Task ChatPipeline_ExecutesFunctionCallLoop()
+{
+    // Arrange
+    var mockChatClient = new MockChatClient();
+    
+    // First response: Function call
+    mockChatClient.SetupStreamingResponseSequence(new[]
+    {
+        new MockStreamingResponse
+        {
+            Text = "I'll check the weather for you.",
+            FunctionCalls = new[]
+            {
+                new FunctionCallContent("call-1", "GetWeather", "{\"city\":\"Seattle\"}")
+            }
+        },
+        // Second response: After function execution
+        new MockStreamingResponse
+        {
+            Text = "The weather in Seattle is sunny and 72°F."
+        }
+    });
+    
+    var mockFunctionFactory = new MockFunctionFactory();
+    mockFunctionFactory.SetupFunction("GetWeather", 
+        args => Task.FromResult<object?>("sunny, 72°F"));
+    
+    var pipeline = new ChatPipelineBuilder()
+        .WithStage(new AIStreamingStage(mockChatClient))
+        .WithStage(new FunctionDetectionStage())
+        .WithStage(new FunctionExecutionStage(mockFunctionFactory))
+        .WithStage(new MessagePersistenceStage())
+        .WithStage(new LoopDecisionStage())
+        .Build();
+    
+    var context = new ChatContext();
+    context.Messages.Add(new ChatMessage(ChatRole.User, "What's the weather in Seattle?"));
+    
+    // Act
+    var result = await pipeline.ExecuteAsync(context);
+    
+    // Assert
+    Assert.True(result.Success);
+    Assert.Contains("sunny", result.Content);
+    Assert.Equal(2, context.State.LoopIteration); // Two loops: initial + after function
+    Assert.Equal(4, context.Messages.Count); // User, Assistant, Tool, Assistant
+}
+```
+
+#### Testing Hook Composition
+
+**Example: Testing Multiple Hooks at Same Point**
+
+```csharp
+[Fact]
+public async Task Pipeline_ExecutesHooksInPriorityOrder()
+{
+    // Arrange
+    var executionOrder = new List<string>();
+    
+    var hook1 = new MockHook("Hook1", priority: 10, 
+        onExecute: () => executionOrder.Add("Hook1"));
+    var hook2 = new MockHook("Hook2", priority: 5, 
+        onExecute: () => executionOrder.Add("Hook2"));
+    var hook3 = new MockHook("Hook3", priority: 20, 
+        onExecute: () => executionOrder.Add("Hook3"));
+    
+    var pipeline = new ChatPipelineBuilder()
+        .WithStage(new AIStreamingStage(new MockChatClient()))
+        .WithHook(HookPoint.PreAIStreaming, hook1)
+        .WithHook(HookPoint.PreAIStreaming, hook2)
+        .WithHook(HookPoint.PreAIStreaming, hook3)
+        .Build();
+    
+    var context = new ChatContext();
+    
+    // Act
+    await pipeline.ExecuteAsync(context);
+    
+    // Assert - Lower priority executes first
+    Assert.Equal(new[] { "Hook2", "Hook1", "Hook3" }, executionOrder);
+}
+
+[Fact]
+public async Task Pipeline_AllowsHookToSkipStage()
+{
+    // Arrange
+    var skipHook = new MockHook("Skip", priority: 1,
+        onExecute: () => { },
+        shouldSkipStage: true);
+    
+    var mockStage = new MockStage("TestStage");
+    
+    var pipeline = new ChatPipelineBuilder()
+        .WithStage(mockStage)
+        .WithHook(mockStage.PreHookPoint, skipHook)
+        .Build();
+    
+    var context = new ChatContext();
+    
+    // Act
+    await pipeline.ExecuteAsync(context);
+    
+    // Assert
+    Assert.False(mockStage.WasExecuted); // Stage was skipped
+}
+```
+
+#### Comparison: Testing Old vs New
+
+**OLD (Monolithic method):**
+```csharp
+[Fact]
+public async Task CompleteChatStreamingAsync_ComplexScenario()
+{
+    // Arrange - need to set up entire object graph
+    var chatCommand = new ChatCommand(/* 10+ dependencies */);
+    var mockChat = new Mock<FunctionCallingChat>(/* complex setup */);
+    // Mock interrupt manager somehow?
+    // Mock display buffer somehow?
+    // Mock function approval UI somehow?
+    
+    // Act - can only test through public API
+    var result = await chatCommand.CompleteChatStreamingAsync(/* many parameters */);
+    
+    // Assert - can only verify end result, not intermediate steps
+    Assert.NotEmpty(result);
+    // Hard to verify interrupt handling
+    // Hard to verify function approval logic
+    // Hard to verify display buffer management
+}
+```
+
+**Problems:**
+- Must set up entire ChatCommand with all dependencies
+- Can't test interrupt/approval/buffer logic in isolation
+- Can't easily test error paths
+- Can't verify intermediate states
+- Slow tests (real HTTP clients, etc.)
+
+**NEW (Pipeline architecture):**
+```csharp
+[Fact]
+public async Task InterruptionLogic_Isolated()
+{
+    // Test just the interrupt hook
+    var hook = new InterruptionHook(mockInterruptManager);
+    var result = await hook.HandleAsync(context, hookData);
+    Assert.True(result.ShouldExitPipeline);
+}
+
+[Fact]
+public async Task FunctionApprovalLogic_Isolated()
+{
+    // Test just the approval hook
+    var hook = new FunctionApprovalHook(mockUI);
+    var result = await hook.HandleAsync(context, hookData);
+    Assert.Equal(1, context.Pending.PendingToolCalls.Count);
+}
+
+[Fact]
+public async Task DisplayBufferLogic_Isolated()
+{
+    // Test just the display buffer hook
+    var hook = new DisplayBufferHook();
+    await hook.HandleAsync(context, hookData);
+    Assert.Equal(expectedBuffer, context.Properties["DisplayBuffer"]);
+}
+```
+
+**Benefits:**
+- Test each concern independently
+- Fast tests (no real dependencies)
+- Easy to test error paths
+- Easy to verify intermediate states
+- Easy to test edge cases
+
+#### Mock Helpers
+
+**Example: MockChatClient for Testing**
+
+```csharp
+public class MockChatClient : IChatClient
+{
+    private Queue<string> _streamingResponses = new();
+    private int _updateCount;
+    private int _cancelAfter = -1;
+    
+    public void SetupStreamingResponse(params string[] updates)
+    {
+        _streamingResponses = new Queue<string>(updates);
+    }
+    
+    public void SetupCancellationAfter(int updateCount)
+    {
+        _cancelAfter = updateCount;
+    }
+    
+    public async IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(
+        IEnumerable<ChatMessage> messages,
+        ChatOptions? options = null,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        while (_streamingResponses.Count > 0)
+        {
+            _updateCount++;
+            
+            if (_cancelAfter > 0 && _updateCount >= _cancelAfter)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+            
+            var update = _streamingResponses.Dequeue();
+            yield return new ChatResponseUpdate { Text = update };
+            
+            await Task.Delay(1); // Simulate streaming delay
+        }
+    }
+}
+```
+
+---
+
+**End of Part 2: Implementation Examples**
+
+---
+
 ---
 
 ## Implementation Tasks
