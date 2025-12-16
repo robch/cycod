@@ -40,6 +40,69 @@ class GitHubSearchHelpers
             query, repos, language, owner, minStars, fileExtension, maxResults);
     }
 
+    public static async Task<List<string>> SearchCodeForRepositoriesAsync(
+        string query,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
+    {
+        // Search code and extract unique repository names
+        // This is used for repo pre-filtering via --repo-file-contains
+        
+        var args = new List<string>();
+        
+        args.Add("search");
+        args.Add("code");
+        args.Add($"\"{query}\"");
+        args.Add("--limit");
+        args.Add(maxResults.ToString());
+        
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            args.Add("--extension");
+            args.Add(fileExtension.TrimStart('.'));
+        }
+        
+        if (!string.IsNullOrEmpty(language))
+        {
+            args.Add("--language");
+            args.Add(language);
+        }
+        
+        if (!string.IsNullOrEmpty(owner))
+        {
+            args.Add("--owner");
+            args.Add(owner);
+        }
+        
+        args.Add("--json");
+        args.Add("repository");
+        
+        var ghCommand = $"gh {string.Join(" ", args)}";
+        
+        try
+        {
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                    ? result.StandardError 
+                    : "Unknown error executing gh command";
+                throw new Exception($"GitHub code search failed: {errorMsg}");
+            }
+            
+            return ParseCodeSearchForRepositories(result.StandardOutput, maxResults);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error searching GitHub code for repositories: {ex.Message}");
+            throw;
+        }
+    }
+
     public static async Task<RepoInfo?> GetRepositoryMetadataAsync(string repoPattern)
     {
         // Fetch single repo metadata using gh api
@@ -149,13 +212,6 @@ class GitHubSearchHelpers
     {
         // Query is already built - just add qualifiers
         
-        // Add repo qualifiers if specified
-        if (repos.Any())
-        {
-            var repoQualifiers = string.Join(" ", repos.Select(r => $"repo:{r}"));
-            query = $"{query} {repoQualifiers}";
-        }
-        
         // Add owner qualifier if specified
         if (!string.IsNullOrEmpty(owner))
         {
@@ -187,6 +243,16 @@ class GitHubSearchHelpers
         args.Add("search");
         args.Add("repos");
         args.Add($"\"{query}\"");
+        
+        // Add repo qualifiers as separate arguments (not inside quoted query)
+        if (repos.Any())
+        {
+            foreach (var repo in repos)
+            {
+                args.Add($"repo:{repo}");
+            }
+        }
+        
         args.Add("--limit");
         args.Add(maxResults.ToString());
         
@@ -239,13 +305,6 @@ class GitHubSearchHelpers
     {
         // Query is already built - just add qualifiers
         
-        // Add repo qualifiers if specified
-        if (repos.Any())
-        {
-            var repoQualifiers = string.Join(" ", repos.Select(r => $"repo:{r}"));
-            query = $"{query} {repoQualifiers}";
-        }
-        
         // Add owner qualifier if specified
         if (!string.IsNullOrEmpty(owner))
         {
@@ -263,6 +322,16 @@ class GitHubSearchHelpers
         args.Add("search");
         args.Add("code");
         args.Add($"\"{query}\"");
+        
+        // Add repo qualifiers as separate arguments (not inside quoted query)
+        if (repos.Any())
+        {
+            foreach (var repo in repos)
+            {
+                args.Add($"repo:{repo}");
+            }
+        }
+        
         args.Add("--limit");
         args.Add(maxResults.ToString());
         
@@ -485,6 +554,78 @@ class GitHubSearchHelpers
         }
         
         return repos;
+    }
+
+    private static List<string> ParseCodeSearchForRepositories(string jsonOutput, int maxResults)
+    {
+        var seenRepos = new HashSet<string>();
+        var repoNames = new List<string>();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(jsonOutput);
+            var root = document.RootElement;
+            
+            foreach (var result in root.EnumerateArray())
+            {
+                if (result.TryGetProperty("repository", out var repoElement))
+                {
+                    // Try to get full name (owner/repo format)
+                    string? fullName = null;
+                    
+                    if (repoElement.TryGetProperty("nameWithOwner", out var nameWithOwnerElement))
+                    {
+                        fullName = nameWithOwnerElement.GetString();
+                    }
+                    else if (repoElement.TryGetProperty("full_name", out var fullNameElement))
+                    {
+                        fullName = fullNameElement.GetString();
+                    }
+                    else
+                    {
+                        // Construct from owner + name
+                        string? owner = null;
+                        string? name = null;
+                        
+                        if (repoElement.TryGetProperty("owner", out var ownerElement))
+                        {
+                            if (ownerElement.TryGetProperty("login", out var loginElement))
+                            {
+                                owner = loginElement.GetString();
+                            }
+                        }
+                        
+                        if (repoElement.TryGetProperty("name", out var nameElement))
+                        {
+                            name = nameElement.GetString();
+                        }
+                        
+                        if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(name))
+                        {
+                            fullName = $"{owner}/{name}";
+                        }
+                    }
+                    
+                    if (!string.IsNullOrEmpty(fullName) && !seenRepos.Contains(fullName))
+                    {
+                        repoNames.Add(fullName);
+                        seenRepos.Add(fullName);
+                        
+                        if (repoNames.Count >= maxResults)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error parsing code search results for repositories: {ex.Message}");
+            throw;
+        }
+        
+        return repoNames;
     }
 
     // TODO: This will be used for CodeCommand in Phase 1.3

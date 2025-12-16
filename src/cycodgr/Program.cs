@@ -72,7 +72,36 @@ class Program
     {
         try
         {
-            // Determine what type of search based on flags
+            // Stage 1: Pre-filter repos using --repo-file-contains if specified
+            if (!string.IsNullOrEmpty(command.RepoFileContains))
+            {
+                var extInfo = !string.IsNullOrEmpty(command.RepoFileContainsExtension) 
+                    ? $" in .{command.RepoFileContainsExtension} files"
+                    : "";
+                ConsoleHelpers.WriteLine($"## Pre-filtering repositories containing files{extInfo} with '{command.RepoFileContains}'", ConsoleColor.Cyan, overrideQuiet: true);
+                
+                var preFilteredRepos = await CycoGr.Helpers.GitHubSearchHelpers.SearchCodeForRepositoriesAsync(
+                    command.RepoFileContains,
+                    command.Language,
+                    command.Owner,
+                    command.MinStars,
+                    command.RepoFileContainsExtension,  // Pass extension for filtering
+                    command.MaxResults * 2); // Get more repos initially since we'll filter further
+                
+                if (preFilteredRepos.Count == 0)
+                {
+                    ConsoleHelpers.WriteLine("No repositories found matching the pre-filter criteria", ConsoleColor.Yellow, overrideQuiet: true);
+                    return;
+                }
+                
+                ConsoleHelpers.WriteLine($"Found {preFilteredRepos.Count} repositories matching pre-filter", ConsoleColor.Green, overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                
+                // Add to repos list (will be used by subsequent searches)
+                command.Repos.AddRange(preFilteredRepos);
+            }
+            
+            // Stage 2: Determine what type of search based on flags
             var hasFileContains = !string.IsNullOrEmpty(command.FileContains);
             var hasRepoContains = !string.IsNullOrEmpty(command.RepoContains);
             var hasContains = !string.IsNullOrEmpty(command.Contains);
@@ -171,10 +200,13 @@ class Program
         ConsoleHelpers.WriteLine($"## GitHub unified search for '{query}'", ConsoleColor.Cyan, overrideQuiet: true);
         ConsoleHelpers.WriteLine(overrideQuiet: true);
 
+        // Combine RepoPatterns (positional args) with Repos (--repo, @file, pre-filtered)
+        var allRepos = command.RepoPatterns.Concat(command.Repos).Distinct().ToList();
+
         // Search both repos and code (N of each per spec recommendation)
         var repoTask = CycoGr.Helpers.GitHubSearchHelpers.SearchRepositoriesAsync(
             query,
-            command.RepoPatterns,
+            allRepos,
             command.Language,
             command.Owner,
             command.MinStars,
@@ -186,7 +218,7 @@ class Program
 
         var codeTask = CycoGr.Helpers.GitHubSearchHelpers.SearchCodeAsync(
             query,
-            command.RepoPatterns,
+            allRepos,
             command.Language,
             command.Owner,
             command.MinStars,
@@ -237,10 +269,13 @@ class Program
         ConsoleHelpers.WriteLine($"## GitHub repository search for '{query}'", ConsoleColor.Cyan, overrideQuiet: true);
         ConsoleHelpers.WriteLine(overrideQuiet: true);
 
+        // Combine RepoPatterns (positional args) with Repos (--repo, @file, pre-filtered)
+        var allRepos = command.RepoPatterns.Concat(command.Repos).Distinct().ToList();
+
         // Search GitHub using new helper signature
         var repos = await CycoGr.Helpers.GitHubSearchHelpers.SearchRepositoriesAsync(
             query,
-            command.RepoPatterns,
+            allRepos,
             command.Language,
             command.Owner,
             command.MinStars,
@@ -311,9 +346,12 @@ class Program
         ConsoleHelpers.WriteLine(overrideQuiet: true);
 
         // Search GitHub code using new helper signature
+        // Combine RepoPatterns (positional args) with Repos (--repo, @file, pre-filtered)
+        var allRepos = command.RepoPatterns.Concat(command.Repos).Distinct().ToList();
+        
         var codeMatches = await CycoGr.Helpers.GitHubSearchHelpers.SearchCodeAsync(
             query,
-            command.RepoPatterns,
+            allRepos,
             command.Language,
             command.Owner,
             command.MinStars,
@@ -328,6 +366,14 @@ class Program
 
         // Apply exclude filters (filter by repo URL)
         codeMatches = ApplyExcludeFilters(codeMatches, command.Exclude, m => m.Repository.Url);
+
+        // Apply file paths filter if specified
+        if (command.FilePaths.Any())
+        {
+            codeMatches = codeMatches
+                .Where(m => command.FilePaths.Any(fp => m.Path == fp || m.Path.EndsWith(fp) || m.Path.Contains(fp)))
+                .ToList();
+        }
 
         if (codeMatches.Count == 0)
         {
@@ -435,11 +481,13 @@ class Program
             
             if (data is List<CycoGr.Models.RepoInfo> repos)
             {
-                urlsContent = FormatAsUrls(repos);
+                // Contextual: save clone URLs for repo search
+                urlsContent = FormatAsRepoCloneUrls(repos);
             }
             else if (data is List<CycoGr.Models.CodeMatch> matches)
             {
-                urlsContent = FormatCodeAsUrls(matches);
+                // Contextual: save file URLs for code search
+                urlsContent = FormatCodeAsFileUrls(matches);
             }
             else
             {
@@ -448,6 +496,104 @@ class Program
             
             FileHelpers.WriteAllText(fileName, urlsContent);
             savedFiles.Add(fileName);
+        }
+
+        if (!string.IsNullOrEmpty(command.SaveRepos))
+        {
+            var fileName = FileHelpers.GetFileNameFromTemplate("repos.txt", command.SaveRepos)!;
+            string reposContent;
+            
+            if (data is List<CycoGr.Models.RepoInfo> repos)
+            {
+                reposContent = FormatAsRepoList(repos);
+            }
+            else if (data is List<CycoGr.Models.CodeMatch> matches)
+            {
+                reposContent = FormatCodeAsRepoList(matches);
+            }
+            else
+            {
+                return;
+            }
+            
+            FileHelpers.WriteAllText(fileName, reposContent);
+            savedFiles.Add(fileName);
+        }
+
+        if (!string.IsNullOrEmpty(command.SaveFilePaths))
+        {
+            if (data is List<CycoGr.Models.CodeMatch> matches)
+            {
+                // Group by repo and save each repo's paths separately
+                var repoGroups = matches.GroupBy(m => m.Repository.FullName ?? $"{m.Repository.Owner}/{m.Repository.Name}");
+                
+                foreach (var repoGroup in repoGroups)
+                {
+                    var repoName = repoGroup.Key.Replace('/', '-');
+                    var template = command.SaveFilePaths.Replace("{repo}", repoName);
+                    var fileName = FileHelpers.GetFileNameFromTemplate("files-{repo}.txt", template)!;
+                    
+                    var paths = repoGroup
+                        .Select(m => m.Path)
+                        .Distinct()
+                        .OrderBy(p => p);
+                    
+                    // Use \r\n for Windows compatibility with File.ReadAllLines
+                    var content = string.Join("\r\n", paths) + "\r\n";
+                    // Write without BOM to avoid issues with @ file loading
+                    File.WriteAllText(fileName, content, new System.Text.UTF8Encoding(false));
+                    savedFiles.Add(fileName);
+                }
+            }
+        }
+
+        if (!string.IsNullOrEmpty(command.SaveRepoUrls))
+        {
+            var fileName = FileHelpers.GetFileNameFromTemplate("repo-urls.txt", command.SaveRepoUrls)!;
+            string urlsContent;
+            
+            if (data is List<CycoGr.Models.RepoInfo> repos)
+            {
+                urlsContent = FormatAsRepoCloneUrls(repos);
+            }
+            else if (data is List<CycoGr.Models.CodeMatch> matches)
+            {
+                urlsContent = FormatCodeAsRepoCloneUrls(matches);
+            }
+            else
+            {
+                urlsContent = string.Empty;
+            }
+            
+            if (!string.IsNullOrEmpty(urlsContent))
+            {
+                FileHelpers.WriteAllText(fileName, urlsContent);
+                savedFiles.Add(fileName);
+            }
+        }
+
+        if (!string.IsNullOrEmpty(command.SaveFileUrls))
+        {
+            if (data is List<CycoGr.Models.CodeMatch> matches)
+            {
+                // Group by repo for file URLs
+                var repoGroups = matches.GroupBy(m => m.Repository.FullName ?? $"{m.Repository.Owner}/{m.Repository.Name}");
+                
+                foreach (var repoGroup in repoGroups)
+                {
+                    var repoName = repoGroup.Key.Replace('/', '-');
+                    var template = command.SaveFileUrls.Replace("{repo}", repoName);
+                    var fileName = FileHelpers.GetFileNameFromTemplate("file-urls-{repo}.txt", template)!;
+                    
+                    var urls = repoGroup
+                        .Select(m => $"https://github.com/{repoGroup.Key}/blob/main/{m.Path}")
+                        .Distinct()
+                        .OrderBy(u => u);
+                    
+                    FileHelpers.WriteAllText(fileName, string.Join(Environment.NewLine, urls));
+                    savedFiles.Add(fileName);
+                }
+            }
         }
 
         if (savedFiles.Any())
@@ -940,6 +1086,49 @@ class Program
         }
 
         return output.ToString().TrimEnd();
+    }
+
+    private static string FormatAsRepoList(List<CycoGr.Models.RepoInfo> repos)
+    {
+        // Format: owner/name (one per line, for @repos.txt loading)
+        return string.Join(Environment.NewLine, repos.Select(r => r.FullName ?? $"{r.Owner}/{r.Name}"));
+    }
+
+    private static string FormatCodeAsRepoList(List<CycoGr.Models.CodeMatch> matches)
+    {
+        // Format: owner/name (one per line, for @repos.txt loading)
+        var uniqueRepos = matches
+            .Select(m => m.Repository.FullName ?? $"{m.Repository.Owner}/{m.Repository.Name}")
+            .Distinct()
+            .OrderBy(r => r);
+        return string.Join(Environment.NewLine, uniqueRepos);
+    }
+
+    private static string FormatAsRepoCloneUrls(List<CycoGr.Models.RepoInfo> repos)
+    {
+        // Format: clone URLs (one per line)
+        return string.Join(Environment.NewLine, 
+            repos.Select(r => $"https://github.com/{r.FullName ?? $"{r.Owner}/{r.Name}"}.git"));
+    }
+
+    private static string FormatCodeAsRepoCloneUrls(List<CycoGr.Models.CodeMatch> matches)
+    {
+        // Format: clone URLs (one per line)
+        var uniqueRepos = matches
+            .Select(m => m.Repository.FullName ?? $"{m.Repository.Owner}/{m.Repository.Name}")
+            .Distinct()
+            .OrderBy(r => r);
+        return string.Join(Environment.NewLine, uniqueRepos.Select(r => $"https://github.com/{r}.git"));
+    }
+
+    private static string FormatCodeAsFileUrls(List<CycoGr.Models.CodeMatch> matches)
+    {
+        // Format: GitHub blob URLs (one per line, clickable)
+        var urls = matches
+            .Select(m => $"https://github.com/{m.Repository.FullName ?? $"{m.Repository.Owner}/{m.Repository.Name}"}/blob/main/{m.Path}")
+            .Distinct()
+            .OrderBy(u => u);
+        return string.Join(Environment.NewLine, urls);
     }
 
     private static string FormatCodeAsJson(List<CycoGr.Models.CodeMatch> matches)
