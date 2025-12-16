@@ -1081,6 +1081,170 @@ public class HookData
 
 ---
 
+### Section 2.2: ChatContext Object Model
+
+The `ChatContext` is the central "god object" that flows through the pipeline. It provides the complete "mucking around" API that hooks use to manipulate conversation state.
+
+#### Full Implementation
+
+See: [examples/ChatContext.cs](examples/ChatContext.cs)
+
+The implementation includes:
+- **ChatContext** - Main context class with Messages, Pending, State, Properties
+- **PendingData** - Staging area for data between stages
+- **ChatState** - Execution state and flow control
+- **Supporting types** - ChatInstruction, FunctionCall, FunctionResult, Snapshots
+
+#### Key Capabilities
+
+**1. Message Array Manipulation**
+```csharp
+// Add messages
+context.Messages.Add(new ChatMessage(ChatRole.User, "Hello"));
+
+// Remove messages (conversation pruning)
+context.Messages.RemoveAt(context.Messages.Count - 1);
+
+// Modify messages
+context.Messages[0].Contents = newContent;
+
+// Reorder messages (conversation restructuring)
+var systemMsg = context.Messages.First(m => m.Role == ChatRole.System);
+context.Messages.Remove(systemMsg);
+context.Messages.Insert(0, systemMsg);
+```
+
+**2. Pending Data Hijacking**
+```csharp
+// Intercept content before it becomes a message
+if (context.Pending.StreamingContent.ToString().Contains("ERROR"))
+{
+    context.Pending.StreamingContent.Clear();
+    context.Pending.StreamingContent.Append("I encountered an issue...");
+}
+
+// Modify tool calls before execution
+foreach (var toolCall in context.Pending.PendingToolCalls)
+{
+    if (toolCall.Name == "dangerous_operation")
+    {
+        toolCall.Arguments = SanitizeArguments(toolCall.Arguments);
+    }
+}
+
+// Transform tool results before persistence
+context.Pending.PendingToolResults[0].Content = FilterSensitiveData(result.Content);
+```
+
+**3. Flow Control**
+```csharp
+// Skip upcoming stages
+context.Pending.ShouldSkipNextStage = true;
+
+// Exit the loop early
+context.Pending.ShouldExitLoop = true;
+context.State.ShouldExitLoop = true;
+
+// Redirect to different stage
+context.Pending.RedirectToStage = "ErrorRecoveryStage";
+
+// Request interrupt
+context.State.IsInterrupted = true;
+context.CancellationTokenSource.Cancel();
+```
+
+**4. Cross-Hook State Management**
+```csharp
+// Store state for later hooks
+context.Properties["ConversationAnalysis"] = new AnalysisResults();
+
+// Retrieve state from earlier hooks
+if (context.Properties.TryGetValue("ConversationAnalysis", out var analysis))
+{
+    var results = (AnalysisResults)analysis;
+    // Use results...
+}
+
+// Track complex state across stages
+var tracker = context.Properties.GetOrAdd("StateTracker", () => new StateTracker());
+tracker.RecordEvent("tool_called", toolName);
+```
+
+**5. Instruction Queue**
+```csharp
+// Queue system prompt injection
+context.Instructions.Add(new ChatInstruction
+{
+    Type = InstructionType.SystemPrompt,
+    Content = "Please be more concise in your responses."
+});
+
+// Queue model parameter changes
+context.Instructions.Add(new ChatInstruction
+{
+    Type = InstructionType.ModelParameter,
+    Parameters = { ["temperature"] = 0.7 }
+});
+```
+
+**6. Snapshot & Rollback**
+```csharp
+// Create snapshot before risky operation
+var snapshot = context.Snapshot();
+
+try
+{
+    // Do something risky
+    await TryExperimentalFeature(context);
+}
+catch
+{
+    // Rollback to snapshot
+    context.RestoreSnapshot(snapshot);
+}
+```
+
+**7. Conversation Forking**
+```csharp
+// Fork conversation for parallel exploration
+var experimentalBranch = context.Clone();
+experimentalBranch.Properties["Branch"] = "experimental";
+
+// Process both branches
+var mainTask = ProcessMainBranch(context);
+var experimentalTask = ProcessExperimentalBranch(experimentalBranch);
+
+await Task.WhenAll(mainTask, experimentalTask);
+```
+
+#### Design Rationale
+
+**Why a "God Object"?**
+- Hooks need full visibility into conversation state
+- Avoids parameter explosion (passing 10+ objects to every hook)
+- Enables unforeseen "whacko things" without API changes
+- Makes hook signatures consistent and simple
+
+**Why Mutable?**
+- Hooks need to modify state (that's the whole point)
+- Immutability would require complex copy-on-write patterns
+- Snapshots provide rollback when needed
+- Clone() provides forking when needed
+
+**Why Properties Dictionary?**
+- Enables arbitrary cross-hook communication
+- No need to extend context for every new hook type
+- Type-safe wrappers can be added as extensions
+- Flexible for future requirements
+
+---
+
+**Next:** Section 2.3 - Pipeline Infrastructure
+
+---
+
+---
+
 ## Implementation Tasks
 
 ### Task 1: Define Core Interfaces
