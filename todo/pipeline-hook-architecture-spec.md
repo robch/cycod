@@ -1673,6 +1673,304 @@ This replaces the old 85-line monolithic method with 5 focused stages of ~20-25 
 
 ---
 
+### Section 2.5: Example Hooks
+
+Hooks are the clean replacements for the messy code added in the interrupt PR and other places. They're focused, testable, and composable.
+
+#### Full Implementation
+
+See: [examples/PipelineHooks.cs](examples/PipelineHooks.cs)
+
+The implementation includes:
+- **InterruptionHook** - Replaces SimpleInterruptManager integration (was 30+ lines of complex code)
+- **FunctionApprovalHook** - Replaces HandleFunctionCallApproval (was 65-line infinite loop)
+- **DisplayBufferHook** - Replaces display buffer management (was scattered across multiple methods)
+- **ConversationAnalysisHook** - Example of "whacko thing" that analyzes and modifies conversation
+- **ConversationForkingHook** - Example of advanced "whacko thing" that creates parallel branches
+
+#### Hook Pattern
+
+All hooks follow this pattern:
+
+```csharp
+public class ExampleHook : IHookHandler
+{
+    // 1. Identity
+    public string Name => "Example";
+    public int Priority => 100; // Lower = runs first
+    
+    // 2. Dependencies (injected via constructor)
+    private readonly IDependency _dependency;
+    
+    public ExampleHook(IDependency dependency)
+    {
+        _dependency = dependency;
+    }
+    
+    // 3. Handle logic (check hook point, modify context)
+    public async Task<HookResult> HandleAsync(ChatContext context, HookData data)
+    {
+        // a. Check if this is the hook point we care about
+        if (data.HookPoint != HookPoint.PostUserInput)
+        {
+            return HookResult.Continue();
+        }
+        
+        // b. Do the work
+        var result = await _dependency.ProcessAsync(context);
+        
+        // c. Modify context
+        context.Messages.Add(newMessage);
+        context.Properties["ExampleData"] = result;
+        
+        // d. Return appropriate result
+        return HookResult.Continue();
+    }
+}
+```
+
+#### InterruptionHook - Replaces Interrupt PR Complexity
+
+**What it replaces:**
+```
+OLD (scattered across ChatCommand):
+- SimpleInterruptManager creation (3 lines)
+- Task.WhenAny racing logic (5 lines)
+- Cancellation token management (4 lines)
+- Exception handling (15 lines)
+- Cleanup in finally block (5 lines)
+Total: ~32 lines of complex, coupled code
+```
+
+**NEW (clean hook):**
+```csharp
+// Just register the hook
+pipeline.AddHook(HookPoint.PreAIStreaming, new InterruptionHook(interruptManager));
+
+// Hook handles:
+// - Starting/stopping monitoring
+// - Setting cancellation token
+// - Requesting pipeline exit
+// - Cleanup
+Total: 1 line to use, ~60 lines of focused hook code
+```
+
+**How it works:**
+1. Starts monitoring on PreAIStreaming hook
+2. Runs background task waiting for double-ESC
+3. When interrupt detected, sets cancellation token
+4. Stages check token and throw OperationCanceledException
+5. Pipeline catches and exits gracefully
+6. Stops monitoring on PostLoopIteration
+
+**Responsiveness maintained:**
+- Same 10ms polling as interrupt PR
+- Same CancellationToken pattern
+- No degradation
+
+#### FunctionApprovalHook - Replaces 65-Line Method
+
+**What it replaces:**
+```
+OLD (ChatCommand.HandleFunctionCallApproval):
+- 65-line method with infinite loop
+- UI code mixed with approval logic
+- 7+ nested conditionals
+- Repeated display code
+- Hard to test
+```
+
+**NEW (clean hook):**
+```csharp
+pipeline.AddHook(HookPoint.PreToolCall, new FunctionApprovalHook(approvalUI));
+
+// Hook handles:
+// - Checking auto-approve
+// - Prompting user with UI
+// - Tracking session approvals
+// - Handling denials
+// - Handling ESC ESC during approval
+Total: 1 line to use, ~100 lines of focused hook code
+```
+
+**Key improvements:**
+- UI separated into IFunctionApprovalUI interface
+- Business logic (approval tracking) in hook
+- No infinite loops
+- Clean conditional structure
+- Easy to test (mock UI)
+- ESC ESC handling integrated cleanly
+
+**How approval works:**
+```
+1. Hook checks each pending tool call
+2. If auto-approve or already approved: continue
+3. Else: Call approvalUI.PromptForApprovalAsync()
+4. Based on decision:
+   - Approved: Keep in pending list
+   - ApprovedForSession: Remember + keep in pending
+   - Denied: Remove from pending, add denial result
+   - UserWantsControl: Set interrupt flag, exit pipeline
+5. If all denied: Return SkipStage (skip execution)
+```
+
+#### DisplayBufferHook - Replaces Scattered Logic
+
+**What it replaces:**
+```
+OLD (scattered across ChatCommand and FunctionCallingChat):
+- _displayBuffer field on ChatCommand
+- Display buffer initialization
+- Buffer trimming logic in multiple places
+- Complex substring calculations
+- Unclear ownership
+Total: ~20 lines scattered across 3 methods
+```
+
+**NEW (clean hook):**
+```csharp
+pipeline.AddHook(HookPoint.PreAIStreaming, new DisplayBufferHook());
+pipeline.AddHook(HookPoint.PostAIStreaming, new DisplayBufferHook());
+pipeline.AddHook(HookPoint.PostLoopIteration, new DisplayBufferHook());
+
+// Hook handles:
+// - Tracking display buffer in context.Properties
+// - Trimming on interrupt
+// - Clearing after successful iteration
+Total: 3 registrations, ~50 lines of focused hook code
+```
+
+**How it works:**
+- PreAIStreaming: Clear display buffer
+- PostAIStreaming: Save streamed content as display buffer
+- PostAIStreaming (if interrupted): Trim to display buffer length
+- PostLoopIteration: Clear buffer if not interrupted
+
+#### ConversationAnalysisHook - Example "Whacko Thing"
+
+**Capability demonstration:**
+```csharp
+public async Task<HookResult> HandleAsync(ChatContext context, HookData data)
+{
+    // Analyze conversation
+    var analysis = await _analyzer.AnalyzeAsync(context.Messages);
+    
+    // Modify messages based on analysis
+    if (analysis.MessageCount > 20)
+    {
+        // Inject system prompt for conciseness
+        context.Instructions.Add(new ChatInstruction
+        {
+            Type = InstructionType.SystemPrompt,
+            Content = "Please be more concise."
+        });
+    }
+    
+    // Rewrite conversation for better context
+    if (analysis.HasRepetitivePatterns)
+    {
+        var summary = await _analyzer.SummarizeRecentContext(context.Messages);
+        context.Messages.Insert(0, new ChatMessage(ChatRole.System, summary));
+    }
+    
+    return HookResult.Continue();
+}
+```
+
+**What this enables:**
+- Automatic conversation summarization
+- Dynamic system prompt injection
+- Pattern-based conversation modifications
+- Cross-message analysis
+- All without changing pipeline code
+
+#### ConversationForkingHook - Advanced "Whacko Thing"
+
+**Capability demonstration:**
+```csharp
+// Fork conversation for parallel exploration
+var experimentalBranch = context.Clone();
+experimentalBranch.Properties["Branch"] = "experimental";
+
+// Process in parallel with different pipeline
+_ = Task.Run(async () =>
+{
+    var experimentalPipeline = CreateExperimentalPipeline();
+    var result = await experimentalPipeline.ExecuteAsync(experimentalBranch);
+    context.Properties["ExperimentalResult"] = result;
+});
+```
+
+**What this enables:**
+- Parallel conversation exploration
+- A/B testing of AI responses
+- Experimental feature testing
+- Multi-agent conversations
+- All without modifying core pipeline
+
+#### Hook Composition
+
+Multiple hooks work together cleanly:
+
+```csharp
+var pipeline = new ChatPipelineBuilder()
+    .WithStage(new AIStreamingStage(chatClient))
+    .WithStage(new FunctionExecutionStage(factory))
+    .WithStage(new MessagePersistenceStage())
+    
+    // Core functionality hooks
+    .WithHook(HookPoint.PreAIStreaming, new InterruptionHook(interruptManager))
+    .WithHook(HookPoint.PreToolCall, new FunctionApprovalHook(approvalUI))
+    .WithHook(HookPoint.PostAIStreaming, new DisplayBufferHook())
+    
+    // Analysis and modification hooks
+    .WithHook(HookPoint.PostUserInput, new ConversationAnalysisHook(analyzer))
+    .WithHook(HookPoint.PostAIStreaming, new ContentModerationHook())
+    
+    // Advanced hooks
+    .WithHook(HookPoint.PostMessageAdd, new ConversationForkingHook())
+    .WithHook(HookPoint.PostToolCall, new ToolResultCachingHook())
+    
+    .Build();
+```
+
+**Execution:**
+1. Hooks run in priority order at each point
+2. Each hook can observe/modify context
+3. Each hook can control flow (skip/exit)
+4. Hooks don't know about each other
+5. Clean, composable, testable
+
+#### Comparison: Old vs New
+
+**Interrupt Handling:**
+- OLD: 80-line CompleteChatStreamingAsync with nested try/catch
+- NEW: 60-line InterruptionHook + 1-line registration
+
+**Function Approval:**
+- OLD: 65-line HandleFunctionCallApproval with infinite loop
+- NEW: 100-line FunctionApprovalHook + 1-line registration + UI interface
+
+**Display Buffer:**
+- OLD: Scattered across 3 methods, unclear ownership
+- NEW: 50-line DisplayBufferHook + 3 registrations
+
+**Totals:**
+- OLD: ~165 lines of complex, coupled code
+- NEW: ~210 lines of focused hook code (30% more code, but 10x cleaner)
+
+**But the real win:**
+- NEW: Unlimited extensibility via hooks
+- NEW: Each concern testable independently
+- NEW: No changes to core pipeline for new features
+- NEW: Clean separation of concerns
+
+---
+
+**Next:** Section 2.6 - Integration Examples
+
+---
+
 ---
 
 ## Implementation Tasks
