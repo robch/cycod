@@ -255,6 +255,12 @@ public class CycoGrCommandLineOptions : CommandLineOptions
             var linesStr = i + 1 < args.Count() ? args.ElementAt(++i) : null;
             command.LinesBeforeAndAfter = ValidateNonNegativeNumber(arg, linesStr);
         }
+        else if (arg == "--line-contains" && command is CycoGr.CommandLineCommands.SearchCommand searchCmd3)
+        {
+            var patterns = GetInputOptionArgs(i + 1, args, required: 1);
+            searchCmd3.LineContainsPatterns.AddRange(patterns);
+            i += patterns.Count();
+        }
         else if (arg == "--extension" || arg == "--in-files")
         {
             var ext = i + 1 < args.Count() ? args.ElementAt(++i) : null;

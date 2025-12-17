@@ -23,6 +23,7 @@ public class SearchCommand : CycoGrCommand
         OnlyForks = false;
         Format = "detailed";
         LinesBeforeAndAfter = 5;
+        LineContainsPatterns = new List<string>();
         Clone = false;
         MaxClone = 10;
         CloneDirectory = "external";
@@ -76,6 +77,7 @@ public class SearchCommand : CycoGrCommand
 
     // Code-specific options
     public int LinesBeforeAndAfter { get; set; }
+    public List<string> LineContainsPatterns { get; set; }  // Patterns for line filtering (separate from search query)
 
     // AI instruction options
     public List<Tuple<string, string>> FileInstructionsList { get; set; }
