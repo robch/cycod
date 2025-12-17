@@ -101,8 +101,41 @@ class Program
                 command.Repos.AddRange(preFilteredRepos);
             }
             
-            // Stage 2: Determine what type of search based on flags
+            // Stage 2: Phase E - Dual behavior for --file-contains
+            // If --file-contains is specified WITHOUT repo pre-filtering, use it to find repos first
+            var hasRepoPreFiltering = !string.IsNullOrEmpty(command.RepoFileContains) || command.Repos.Any();
             var hasFileContains = !string.IsNullOrEmpty(command.FileContains);
+            
+            if (hasFileContains && !hasRepoPreFiltering)
+            {
+                // Dual behavior: Use --file-contains to pre-filter repositories
+                var extInfo = !string.IsNullOrEmpty(command.Language) 
+                    ? $" in {command.Language} files"
+                    : "";
+                ConsoleHelpers.WriteLine($"## Pre-filtering repositories containing files{extInfo} with '{command.FileContains}'", ConsoleColor.Cyan, overrideQuiet: true);
+                
+                var preFilteredRepos = await CycoGr.Helpers.GitHubSearchHelpers.SearchCodeForRepositoriesAsync(
+                    command.FileContains,
+                    command.Language,
+                    command.Owner,
+                    command.MinStars,
+                    string.Empty,  // No extension filter (already in Language)
+                    command.MaxResults * 2); // Get more repos initially
+                
+                if (preFilteredRepos.Count == 0)
+                {
+                    ConsoleHelpers.WriteLine("No repositories found matching the file content criteria", ConsoleColor.Yellow, overrideQuiet: true);
+                    return;
+                }
+                
+                ConsoleHelpers.WriteLine($"Found {preFilteredRepos.Count} repositories with matching files", ConsoleColor.Green, overrideQuiet: true);
+                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                
+                // Add to repos list for subsequent file search
+                command.Repos.AddRange(preFilteredRepos);
+            }
+            
+            // Stage 3: Determine what type of search based on flags
             var hasRepoContains = !string.IsNullOrEmpty(command.RepoContains);
             var hasContains = !string.IsNullOrEmpty(command.Contains);
             var hasRepoPatterns = command.RepoPatterns.Any();
@@ -117,7 +150,7 @@ class Program
             {
                 await HandleUnifiedSearchAsync(command);
             }
-            // Scenario 3: --file-contains only (code search)
+            // Scenario 3: --file-contains (code search, possibly with dual behavior already applied)
             else if (hasFileContains)
             {
                 await HandleCodeSearchAsync(command);
@@ -250,7 +283,7 @@ class Program
         // Output code matches (with file sections under repos)
         if (codeMatches.Count > 0)
         {
-            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, overrideQuiet: true);
+            await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, command, overrideQuiet: true);
         }
 
         // Save output if requested
@@ -382,7 +415,7 @@ class Program
         }
 
         // Output results grouped by repository
-        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, overrideQuiet: true);
+        await FormatAndOutputCodeResults(codeMatches, command.LinesBeforeAndAfter, query, command.Format, command.FileInstructionsList, command.RepoInstructionsList, command.InstructionsList, command, overrideQuiet: true);
 
         // Save output if requested
         if (!string.IsNullOrEmpty(command.SaveOutput))
@@ -605,7 +638,7 @@ class Program
         }
     }
 
-    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, List<string> repoInstructionsList, List<string> instructionsList, bool overrideQuiet = false)
+    private static async Task FormatAndOutputCodeResults(List<CycoGr.Models.CodeMatch> codeMatches, int contextLines, string query, string format, List<Tuple<string, string>> fileInstructionsList, List<string> repoInstructionsList, List<string> instructionsList, CycoGr.CommandLineCommands.SearchCommand command, bool overrideQuiet = false)
     {
         // Group by repository
         var byRepo = codeMatches.GroupBy(m => m.Repository.FullName).ToList();
@@ -660,7 +693,7 @@ class Program
             var throttledProcessor = new ThrottledProcessor(Environment.ProcessorCount);
             var fileOutputs = await throttledProcessor.ProcessAsync(
                 fileGroups,
-                async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, fileInstructionsList, overrideQuiet)
+                async fileGroup => await ProcessFileGroupAsync(fileGroup, repo, query, contextLines, fileInstructionsList, command, overrideQuiet)
             );
 
             // Combine all file outputs for this repo
@@ -711,6 +744,7 @@ class Program
         string query, 
         int contextLines,
         List<Tuple<string, string>> fileInstructionsList,
+        CycoGr.CommandLineCommands.SearchCommand command,
         bool overrideQuiet)
     {
         var firstMatch = fileGroup.First();
@@ -746,10 +780,25 @@ class Program
             foundFile.Content = await foundFile.LoadContent();
 
             // Use LineHelpers to filter and display with real line numbers
-            var includePatterns = new List<System.Text.RegularExpressions.Regex>
+            // Determine which patterns to use for line filtering
+            List<System.Text.RegularExpressions.Regex> includePatterns;
+            
+            if (command.LineContainsPatterns.Any())
             {
-                new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(query), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
-            };
+                // Use explicit --line-contains patterns if specified
+                includePatterns = command.LineContainsPatterns
+                    .Select(p => new System.Text.RegularExpressions.Regex(p, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    .ToList();
+            }
+            else
+            {
+                // Fallback to using the search query
+                includePatterns = new List<System.Text.RegularExpressions.Regex>
+                {
+                    new System.Text.RegularExpressions.Regex(System.Text.RegularExpressions.Regex.Escape(query), System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                };
+            }
+            
             var excludePatterns = new List<System.Text.RegularExpressions.Regex>();
 
             var lang = DetectLanguageFromPath(firstMatch.Path);
