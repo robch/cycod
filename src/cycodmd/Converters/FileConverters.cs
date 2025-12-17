@@ -6,6 +6,7 @@ public static class FileConverters
     {
         new DocxFileConverter(),
         new PptxFileConverter(),
+        new XlsxFileConverter(),
         new PdfFileConverter(),
         new ImageFileConverter(),
     };
