@@ -1,0 +1,851 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using System.Threading.Tasks;
+using CycoGr.Models;
+
+namespace CycoGr.Helpers;
+
+class GitHubSearchHelpers
+{
+    public static async Task<List<RepoInfo>> SearchRepositoriesAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string sortBy,
+        bool includeForks,
+        bool excludeForks,
+        bool onlyForks,
+        int maxResults)
+    {
+        return await SearchRepositoriesByKeywordsAsync(
+            query, repos, language, owner, minStars, sortBy,
+            includeForks, excludeForks, onlyForks, maxResults);
+    }
+
+    public static async Task<List<CodeMatch>> SearchCodeAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
+    {
+        return await SearchCodeForMatchesAsync(
+            query, repos, language, owner, minStars, fileExtension, maxResults);
+    }
+
+    public static async Task<List<string>> SearchCodeForRepositoriesAsync(
+        string query,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
+    {
+        // Search code and extract unique repository names
+        // This is used for repo pre-filtering via --repo-file-contains
+        
+        var args = new List<string>();
+        
+        args.Add("search");
+        args.Add("code");
+        args.Add($"\"{query}\"");
+        args.Add("--limit");
+        args.Add(maxResults.ToString());
+        
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            args.Add("--extension");
+            args.Add(fileExtension.TrimStart('.'));
+        }
+        
+        if (!string.IsNullOrEmpty(language))
+        {
+            args.Add("--language");
+            args.Add(language);
+        }
+        
+        if (!string.IsNullOrEmpty(owner))
+        {
+            args.Add("--owner");
+            args.Add(owner);
+        }
+        
+        args.Add("--json");
+        args.Add("repository");
+        
+        var ghCommand = $"gh {string.Join(" ", args)}";
+        
+        try
+        {
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                    ? result.StandardError 
+                    : "Unknown error executing gh command";
+                throw new Exception($"GitHub code search failed: {errorMsg}");
+            }
+            
+            return ParseCodeSearchForRepositories(result.StandardOutput, maxResults);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error searching GitHub code for repositories: {ex.Message}");
+            throw;
+        }
+    }
+
+    public static async Task<RepoInfo?> GetRepositoryMetadataAsync(string repoPattern)
+    {
+        // Fetch single repo metadata using gh api
+        // Pattern: owner/repo
+        if (!repoPattern.Contains('/'))
+        {
+            throw new ArgumentException($"Invalid repository pattern: {repoPattern}. Expected format: owner/repo");
+        }
+
+        try
+        {
+            var ghCommand = $"gh api repos/{repoPattern}";
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                Logger.Error($"gh api failed for {repoPattern}: {result.StandardError}");
+                return null;
+            }
+
+            var jsonDoc = JsonDocument.Parse(result.StandardOutput);
+            var root = jsonDoc.RootElement;
+
+            var fullName = root.TryGetProperty("full_name", out var fnEl) ? fnEl.GetString() : null;
+            var name = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null;
+            var owner = root.TryGetProperty("owner", out var ownerEl) && ownerEl.TryGetProperty("login", out var loginEl)
+                ? loginEl.GetString()
+                : null;
+            var htmlUrl = root.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() : null;
+            var description = root.TryGetProperty("description", out var descEl) && descEl.ValueKind != JsonValueKind.Null
+                ? descEl.GetString()
+                : null;
+            var language = root.TryGetProperty("language", out var langEl) && langEl.ValueKind != JsonValueKind.Null
+                ? langEl.GetString()
+                : null;
+            var stars = root.TryGetProperty("stargazers_count", out var starsEl) ? starsEl.GetInt32() : 0;
+            var forks = root.TryGetProperty("forks_count", out var forksEl) ? forksEl.GetInt32() : 0;
+            var isFork = root.TryGetProperty("fork", out var forkEl) && forkEl.GetBoolean();
+            
+            DateTime? updatedAt = null;
+            if (root.TryGetProperty("updated_at", out var updatedEl))
+            {
+                var updatedStr = updatedEl.GetString();
+                if (!string.IsNullOrEmpty(updatedStr) && DateTime.TryParse(updatedStr, out var parsed))
+                {
+                    updatedAt = parsed;
+                }
+            }
+
+            var topics = new List<string>();
+            if (root.TryGetProperty("topics", out var topicsEl) && topicsEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var topic in topicsEl.EnumerateArray())
+                {
+                    var topicStr = topic.GetString();
+                    if (!string.IsNullOrEmpty(topicStr))
+                    {
+                        topics.Add(topicStr);
+                    }
+                }
+            }
+
+            // Parse owner/name from pattern if not in response
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(owner))
+            {
+                var parts = repoPattern.Split('/');
+                owner ??= parts[0];
+                name ??= parts[1];
+            }
+
+            var repo = new RepoInfo
+            {
+                Name = name!,
+                Owner = owner!,
+                FullName = fullName ?? repoPattern,
+                Url = htmlUrl ?? $"https://github.com/{repoPattern}",
+                Description = description ?? "",
+                Language = language ?? "unknown",
+                Stars = stars,
+                Forks = forks,
+                IsFork = isFork,
+                UpdatedAt = updatedAt,
+                Topics = topics,
+                OpenIssues = 0  // Not querying issues for metadata lookup
+            };
+
+            return repo;
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to fetch metadata for {repoPattern}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static async Task<List<RepoInfo>> SearchRepositoriesByKeywordsAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string sortBy,
+        bool includeForks,
+        bool excludeForks,
+        bool onlyForks,
+        int maxResults)
+    {
+        // Query is already built - just add qualifiers
+        
+        // Add owner qualifier if specified
+        if (!string.IsNullOrEmpty(owner))
+        {
+            query = $"{query} user:{owner}";
+        }
+        
+        // Add fork filter
+        if (onlyForks)
+        {
+            query = $"{query} fork:only";
+        }
+        else if (excludeForks)
+        {
+            query = $"{query} fork:false";
+        }
+        else if (includeForks)
+        {
+            query = $"{query} fork:true";
+        }
+        
+        // Add stars filter if specified
+        if (minStars > 0)
+        {
+            query = $"{query} stars:>={minStars}";
+        }
+        
+        var args = new List<string>();
+        
+        args.Add("search");
+        args.Add("repos");
+        args.Add($"\"{query}\"");
+        
+        // Add repo qualifiers as separate arguments (not inside quoted query)
+        if (repos.Any())
+        {
+            foreach (var repo in repos)
+            {
+                args.Add($"repo:{repo}");
+            }
+        }
+        
+        args.Add("--limit");
+        args.Add(maxResults.ToString());
+        
+        if (!string.IsNullOrEmpty(language))
+        {
+            args.Add("--language");
+            args.Add(language);
+        }
+        
+        if (!string.IsNullOrEmpty(sortBy))
+        {
+            args.Add("--sort");
+            args.Add(sortBy);
+        }
+        
+        args.Add("--json");
+        args.Add("name,owner,url,description,stargazersCount,language,updatedAt,forksCount,openIssuesCount");
+        
+        var ghCommand = $"gh {string.Join(" ", args)}";
+        
+        try
+        {
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                    ? result.StandardError 
+                    : "Unknown error executing gh command";
+                throw new Exception($"GitHub search failed: {errorMsg}");
+            }
+            
+            return ParseRepositoryUrls(result.StandardOutput);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error searching GitHub: {ex.Message}");
+            throw;
+        }
+    }
+
+    private static async Task<List<CodeMatch>> SearchCodeForMatchesAsync(
+        string query,
+        List<string> repos,
+        string language,
+        string owner,
+        int minStars,
+        string fileExtension,
+        int maxResults)
+    {
+        // Query is already built - just add qualifiers
+        
+        // Add owner qualifier if specified
+        if (!string.IsNullOrEmpty(owner))
+        {
+            query = $"{query} user:{owner}";
+        }
+        
+        // Add stars filter if specified
+        if (minStars > 0)
+        {
+            query = $"{query} stars:>={minStars}";
+        }
+        
+        var args = new List<string>();
+        
+        args.Add("search");
+        args.Add("code");
+        args.Add($"\"{query}\"");
+        
+        // Add repo qualifiers as separate arguments (not inside quoted query)
+        if (repos.Any())
+        {
+            foreach (var repo in repos)
+            {
+                args.Add($"repo:{repo}");
+            }
+        }
+        
+        args.Add("--limit");
+        args.Add(maxResults.ToString());
+        
+        if (!string.IsNullOrEmpty(fileExtension))
+        {
+            args.Add("--extension");
+            args.Add(fileExtension.TrimStart('.'));
+        }
+        
+        if (!string.IsNullOrEmpty(language))
+        {
+            args.Add("--language");
+            args.Add(language);
+        }
+        
+        args.Add("--json");
+        args.Add("path,repository,sha,textMatches,url");
+        
+        var ghCommand = $"gh {string.Join(" ", args)}";
+        
+        try
+        {
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                    ? result.StandardError 
+                    : "Unknown error executing gh command";
+                throw new Exception($"GitHub code search failed: {errorMsg}");
+            }
+            
+            return ParseCodeSearchResults(result.StandardOutput);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error searching GitHub code: {ex.Message}");
+            throw;
+        }
+    }
+
+    private static List<CodeMatch> ParseCodeSearchResults(string jsonOutput)
+    {
+        var codeMatches = new List<CodeMatch>();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(jsonOutput);
+            var root = document.RootElement;
+            
+            foreach (var item in root.EnumerateArray())
+            {
+                var match = ParseCodeMatch(item);
+                if (match != null)
+                {
+                    codeMatches.Add(match);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error parsing GitHub code search results: {ex.Message}");
+            throw;
+        }
+        
+        return codeMatches;
+    }
+
+    private static CodeMatch? ParseCodeMatch(JsonElement element)
+    {
+        try
+        {
+            var path = element.GetProperty("path").GetString();
+            var url = element.TryGetProperty("url", out var urlElement) ? urlElement.GetString() : null;
+            var sha = element.GetProperty("sha").GetString();
+            
+            if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(sha))
+            {
+                return null;
+            }
+
+            var repoElement = element.GetProperty("repository");
+            var repo = ParseRepoInfo(repoElement);
+            if (repo == null)
+            {
+                return null;
+            }
+
+            var textMatches = new List<TextMatch>();
+            if (element.TryGetProperty("textMatches", out var textMatchesElement))
+            {
+                foreach (var tmElement in textMatchesElement.EnumerateArray())
+                {
+                    var fragment = tmElement.GetProperty("fragment").GetString();
+                    if (string.IsNullOrEmpty(fragment)) continue;
+
+                    var textMatch = new TextMatch
+                    {
+                        Fragment = fragment,
+                        Property = tmElement.TryGetProperty("property", out var propEl) ? propEl.GetString() ?? "" : "",
+                        Type = tmElement.TryGetProperty("type", out var typeEl) ? typeEl.GetString() ?? "" : ""
+                    };
+
+                    if (tmElement.TryGetProperty("matches", out var matchesElement))
+                    {
+                        foreach (var matchEl in matchesElement.EnumerateArray())
+                        {
+                            var indicesEl = matchEl.GetProperty("indices");
+                            var indices = new List<int>();
+                            foreach (var indexEl in indicesEl.EnumerateArray())
+                            {
+                                indices.Add(indexEl.GetInt32());
+                            }
+
+                            var matchText = matchEl.TryGetProperty("text", out var textEl) ? textEl.GetString() : null;
+                            if (matchText != null)
+                            {
+                                textMatch.Matches.Add(new MatchIndices
+                                {
+                                    Indices = indices.ToArray(),
+                                    Text = matchText
+                                });
+                            }
+                        }
+                    }
+
+                    textMatches.Add(textMatch);
+                }
+            }
+
+            return new CodeMatch
+            {
+                Path = path,
+                Repository = repo,
+                Sha = sha,
+                Url = url ?? "",
+                TextMatches = textMatches
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // TODO: This will be used for CodeCommand in Phase 1.3
+    /*
+    private static async Task<List<RepoInfo>> SearchCodeForRepositoriesAsync(SearchCommand command)
+    {
+        var query = string.Join(" ", command.Keywords);
+        var args = new List<string>();
+        
+        args.Add("search");
+        args.Add("code");
+        args.Add($"\"{query}\"");
+        args.Add("--limit");
+        args.Add(command.MaxResults.ToString());
+        
+        if (!string.IsNullOrEmpty(command.FileExtension))
+        {
+            args.Add("--extension");
+            args.Add(command.FileExtension.TrimStart('.'));
+        }
+        
+        if (!string.IsNullOrEmpty(command.Language))
+        {
+            args.Add("--language");
+            args.Add(command.Language);
+        }
+        
+        args.Add("--json");
+        args.Add("repository");
+        
+        var ghCommand = $"gh {string.Join(" ", args)}";
+        
+        try
+        {
+            var result = await ProcessHelpers.RunProcessAsync(ghCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+            
+            if (result.ExitCode != 0)
+            {
+                var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                    ? result.StandardError 
+                    : "Unknown error executing gh command";
+                throw new Exception($"GitHub code search failed: {errorMsg}");
+            }
+            
+            return ParseCodeSearchRepositoryUrls(result.StandardOutput, command.MaxResults);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error searching GitHub code: {ex.Message}");
+            throw;
+        }
+    }
+    */
+
+    private static List<RepoInfo> ParseRepositoryUrls(string jsonOutput)
+    {
+        var repos = new List<RepoInfo>();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(jsonOutput);
+            var root = document.RootElement;
+            
+            foreach (var item in root.EnumerateArray())
+            {
+                var repo = ParseRepoInfo(item);
+                if (repo != null)
+                {
+                    repos.Add(repo);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error parsing GitHub search results: {ex.Message}");
+            throw;
+        }
+        
+        return repos;
+    }
+
+    private static List<string> ParseCodeSearchForRepositories(string jsonOutput, int maxResults)
+    {
+        var seenRepos = new HashSet<string>();
+        var repoNames = new List<string>();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(jsonOutput);
+            var root = document.RootElement;
+            
+            foreach (var result in root.EnumerateArray())
+            {
+                if (result.TryGetProperty("repository", out var repoElement))
+                {
+                    // Try to get full name (owner/repo format)
+                    string? fullName = null;
+                    
+                    if (repoElement.TryGetProperty("nameWithOwner", out var nameWithOwnerElement))
+                    {
+                        fullName = nameWithOwnerElement.GetString();
+                    }
+                    else if (repoElement.TryGetProperty("full_name", out var fullNameElement))
+                    {
+                        fullName = fullNameElement.GetString();
+                    }
+                    else
+                    {
+                        // Construct from owner + name
+                        string? owner = null;
+                        string? name = null;
+                        
+                        if (repoElement.TryGetProperty("owner", out var ownerElement))
+                        {
+                            if (ownerElement.TryGetProperty("login", out var loginElement))
+                            {
+                                owner = loginElement.GetString();
+                            }
+                        }
+                        
+                        if (repoElement.TryGetProperty("name", out var nameElement))
+                        {
+                            name = nameElement.GetString();
+                        }
+                        
+                        if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(name))
+                        {
+                            fullName = $"{owner}/{name}";
+                        }
+                    }
+                    
+                    if (!string.IsNullOrEmpty(fullName) && !seenRepos.Contains(fullName))
+                    {
+                        repoNames.Add(fullName);
+                        seenRepos.Add(fullName);
+                        
+                        if (repoNames.Count >= maxResults)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error parsing code search results for repositories: {ex.Message}");
+            throw;
+        }
+        
+        return repoNames;
+    }
+
+    // TODO: This will be used for CodeCommand in Phase 1.3
+    /*
+    private static List<RepoInfo> ParseCodeSearchRepositoryUrls(string jsonOutput, int maxResults)
+    {
+        var seenUrls = new HashSet<string>();
+        var repos = new List<RepoInfo>();
+        
+        try
+        {
+            using var document = JsonDocument.Parse(jsonOutput);
+            var root = document.RootElement;
+            
+            foreach (var result in root.EnumerateArray())
+            {
+                if (result.TryGetProperty("repository", out var repoElement))
+                {
+                    var repo = ParseRepoInfo(repoElement);
+                    if (repo != null && !seenUrls.Contains(repo.Url))
+                    {
+                        repos.Add(repo);
+                        seenUrls.Add(repo.Url);
+                        
+                        if (repos.Count >= maxResults)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Error parsing GitHub code search results: {ex.Message}");
+            throw;
+        }
+        
+        return repos;
+    }
+    */
+
+    private static RepoInfo? ParseRepoInfo(JsonElement repoElement)
+    {
+        try
+        {
+            var url = repoElement.GetProperty("url").GetString();
+            
+            // Try to get name - might be "name" (repo search) or part of "nameWithOwner" (code search)
+            string? name = null;
+            string? owner = null;
+            
+            if (repoElement.TryGetProperty("name", out var nameElement))
+            {
+                name = nameElement.GetString();
+            }
+            else if (repoElement.TryGetProperty("nameWithOwner", out var nameWithOwnerElement))
+            {
+                var fullName = nameWithOwnerElement.GetString();
+                if (!string.IsNullOrEmpty(fullName))
+                {
+                    var parts = fullName.Split('/');
+                    if (parts.Length == 2)
+                    {
+                        owner = parts[0];
+                        name = parts[1];
+                    }
+                }
+            }
+            
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(name))
+            {
+                return null;
+            }
+
+            // Try to get owner if we didn't get it from nameWithOwner
+            if (string.IsNullOrEmpty(owner))
+            {
+                owner = repoElement.TryGetProperty("owner", out var ownerElement) && 
+                           ownerElement.TryGetProperty("login", out var loginElement)
+                    ? loginElement.GetString() ?? "unknown"
+                    : "unknown";
+            }
+
+            var stars = repoElement.TryGetProperty("stargazersCount", out var starsElement)
+                ? starsElement.GetInt32()
+                : 0;
+
+            var language = repoElement.TryGetProperty("language", out var langElement) && langElement.ValueKind != JsonValueKind.Null
+                ? langElement.GetString()
+                : null;
+
+            var description = repoElement.TryGetProperty("description", out var descElement) && descElement.ValueKind != JsonValueKind.Null
+                ? descElement.GetString()
+                : null;
+
+            DateTime? updatedAt = null;
+            if (repoElement.TryGetProperty("updatedAt", out var updatedElement))
+            {
+                var updatedStr = updatedElement.GetString();
+                if (!string.IsNullOrEmpty(updatedStr) && DateTime.TryParse(updatedStr, out var parsed))
+                {
+                    updatedAt = parsed;
+                }
+            }
+
+            var forks = repoElement.TryGetProperty("forksCount", out var forksElement)
+                ? forksElement.GetInt32()
+                : 0;
+
+            var openIssues = repoElement.TryGetProperty("openIssuesCount", out var issuesElement)
+                ? issuesElement.GetInt32()
+                : 0;
+
+            var isFork = repoElement.TryGetProperty("isFork", out var forkElement) && forkElement.GetBoolean();
+
+            return new RepoInfo
+            {
+                Url = url,
+                Name = name,
+                Owner = owner,
+                Stars = stars,
+                Language = language,
+                Description = description,
+                UpdatedAt = updatedAt,
+                Forks = forks,
+                OpenIssues = openIssues,
+                IsFork = isFork,
+                Topics = null  // GraphQL query doesn't include topics by default
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static async Task<List<string>> CloneRepositoriesAsync(
+        List<RepoInfo> repos,
+        bool asSubmodules,
+        string cloneDirectory,
+        int maxClone)
+    {
+        var clonedRepos = new List<string>();
+        var actualMaxClone = Math.Min(maxClone, repos.Count);
+        
+        // Create clone directory if it doesn't exist
+        if (!Directory.Exists(cloneDirectory))
+        {
+            Directory.CreateDirectory(cloneDirectory);
+            Logger.Info($"Created directory: {cloneDirectory}");
+        }
+        
+        for (int i = 0; i < actualMaxClone; i++)
+        {
+            var repo = repos[i];
+            var repoName = repo.Name;
+            var targetPath = Path.Combine(cloneDirectory, repoName);
+            
+            // Skip if already exists
+            if (Directory.Exists(targetPath))
+            {
+                ConsoleHelpers.WriteLine($"Skipping {repoName} (already exists)", ConsoleColor.Yellow);
+                Logger.Warning($"Repository already exists: {targetPath}");
+                clonedRepos.Add(targetPath);
+                continue;
+            }
+            
+            try
+            {
+                ConsoleHelpers.DisplayStatus($"Cloning {repoName} ({i + 1}/{actualMaxClone})...");
+                
+                if (asSubmodules)
+                {
+                    await CloneAsSubmoduleAsync(repo.Url, targetPath);
+                }
+                else
+                {
+                    await CloneRepositoryAsync(repo.Url, targetPath);
+                }
+                
+                clonedRepos.Add(targetPath);
+                ConsoleHelpers.WriteLine($"Cloned: {repoName}", ConsoleColor.Green);
+            }
+            catch (Exception ex)
+            {
+                ConsoleHelpers.WriteErrorLine($"Failed to clone {repoName}: {ex.Message}");
+                Logger.Error($"Error cloning repository {repo.Url}: {ex.Message}");
+            }
+        }
+        
+        ConsoleHelpers.DisplayStatusErase();
+        return clonedRepos;
+    }
+
+    private static async Task CloneRepositoryAsync(string url, string targetPath)
+    {
+        var gitCommand = $"git clone {url} \"{targetPath}\"";
+        var result = await ProcessHelpers.RunProcessAsync(gitCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+        
+        if (result.ExitCode != 0)
+        {
+            var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                ? result.StandardError 
+                : "Unknown error executing git clone";
+            throw new Exception($"Git clone failed: {errorMsg}");
+        }
+    }
+
+    private static async Task CloneAsSubmoduleAsync(string url, string targetPath)
+    {
+        var gitCommand = $"git submodule add {url} \"{targetPath}\"";
+        var result = await ProcessHelpers.RunProcessAsync(gitCommand, workingDirectory: null, envVars: null, input: null, timeout: null);
+        
+        if (result.ExitCode != 0)
+        {
+            var errorMsg = !string.IsNullOrEmpty(result.StandardError) 
+                ? result.StandardError 
+                : "Unknown error executing git submodule add";
+            throw new Exception($"Git submodule add failed: {errorMsg}");
+        }
+    }
+}

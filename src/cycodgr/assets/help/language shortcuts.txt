@@ -1,0 +1,70 @@
+CYCODGR LANGUAGE SHORTCUTS
+
+Convenient shortcuts for filtering by programming language.
+
+USAGE: cycodgr --repo-contains "QUERY" --LANG
+   OR: cycodgr --file-contains "QUERY" --LANG
+   OR: cycodgr --LANG-file-contains "QUERY"
+
+SHORTCUTS
+
+  Tier 1: Primary Languages
+  
+    --cs, --csharp              C# / .NET
+    --js, --javascript          JavaScript
+    --ts, --typescript          TypeScript
+    --py, --python              Python
+    --java                      Java
+    --go                        Go
+    --md, --markdown            Markdown
+
+  Tier 2: Popular Languages
+  
+    --rb, --ruby                Ruby
+    --rs, --rust                Rust
+    --php                       PHP
+    --cpp, --c++                C++
+    --swift                     Swift
+    --kt, --kotlin              Kotlin
+
+  Tier 3: Config/Markup Languages
+  
+    --yml, --yaml               YAML
+    --json                      JSON
+    --xml                       XML
+    --html                      HTML
+    --css                       CSS
+
+EXAMPLES
+
+  Search for C# repositories:
+    cycodgr --repo-contains "minimal api" --cs
+    cycodgr --repo-contains "web framework" --csharp
+
+  Search for Python code:
+    cycodgr --file-contains "async def" --py
+    cycodgr --py-file-contains "fastapi"
+
+  Search for TypeScript code:
+    cycodgr --file-contains "use client" --ts
+    cycodgr --ts-file-contains "React.FC"
+
+  Search for configuration files:
+    cycodgr --yml-file-contains "github.event"
+    cycodgr --json-file-contains "appsettings"
+
+EQUIVALENT TO
+
+  Language filter shortcuts:
+    --cs        ≡  --language csharp
+    --py        ≡  --language python
+    --js        ≡  --language javascript
+
+  Combined shortcuts:
+    --cs-file-contains "query"  ≡  --file-contains "query" --language csharp
+    --py-file-contains "query"  ≡  --file-contains "query" --language python
+
+SEE ALSO
+
+  cycodgr help options
+  cycodgr help examples

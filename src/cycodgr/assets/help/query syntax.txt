@@ -1,0 +1,69 @@
+CYCODGR QUERY SYNTAX
+
+Understanding how cycodgr searches GitHub
+
+SEARCH QUERIES
+
+  Your search queries are passed directly to GitHub's search API.
+  GitHub supports various query syntax features:
+
+BASIC SYNTAX
+
+  Multiple words (space-separated) perform AND search:
+    cycodgr --repo-contains "hello world"
+    → Finds repos containing BOTH "hello" AND "world"
+  
+  Quoted phrases perform exact phrase search:
+    cycodgr --file-contains "import React"
+    → Finds code containing the exact phrase "import React"
+
+BOOLEAN OPERATORS
+
+  GitHub search supports OR and NOT operators (must be uppercase):
+  
+  OR operator:
+    cycodgr --repo-contains "python OR ruby"
+    → Finds repos containing either "python" or "ruby"
+  
+  NOT operator:
+    cycodgr --repo-contains "python NOT django"
+    → Finds repos containing "python" but not "django"
+
+FILTERING
+
+  Combine search queries with filter flags:
+    cycodgr --repo-contains "authentication" --language csharp --owner microsoft
+    cycodgr --file-contains "error handling" --language cs
+    cycodgr --contains "rate limiting" --min-stars 100
+
+SORTING
+
+  By default, results are sorted by relevance (best-match), which considers:
+  - How well search terms match
+  - Repository activity and recency
+  - Popularity (weighted with other factors)
+  
+  For other sort orders:
+    cycodgr --repo-contains "dotnet" --sort stars          # Most popular first
+    cycodgr --repo-contains "dotnet" --sort forks          # Most forked first
+    cycodgr --repo-contains "dotnet" --sort updated        # Most recently updated first
+
+EXAMPLES
+
+  EXAMPLE 1: Search with multiple keywords
+    cycodgr --repo-contains "machine learning framework"
+    → Repos with "machine" AND "learning" AND "framework"
+  
+  EXAMPLE 2: Exact phrase search
+    cycodgr --file-contains "import React"
+    → Code containing exactly "import React"
+  
+  EXAMPLE 3: With filters
+    cycodgr --repo-contains "web api microservices" --language csharp --min-stars 100
+    → C# repos with those keywords and at least 100 stars
+
+SEE ALSO
+
+  cycodgr help
+  cycodgr help examples
+  cycodgr help options

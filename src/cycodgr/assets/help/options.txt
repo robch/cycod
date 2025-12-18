@@ -1,0 +1,143 @@
+USAGE: cycodgr [REPO_PATTERN ...] [OPTIONS]
+
+OPTIONS
+
+  SEARCH TYPE
+
+    --repo-contains QUERY          Search repository names, descriptions, and topics
+    --file-contains QUERY          Search code within files
+    --contains QUERY               Search both repositories and code (unified search)
+
+  REPOSITORY PATTERNS
+
+    REPO_PATTERN                   One or more repository patterns (owner/repo)
+                                   Example: microsoft/vscode dotnet/aspire
+    
+    @@FILE                         Load repository patterns from file (one per line)
+                                   Example: @@my-repos.txt
+
+  LANGUAGE FILTERING
+
+    --language LANG                Filter by programming language
+    --extension EXT                Alias for --language (by file extension)
+    --in-files EXT                 Alias for --extension
+                                   Example: --language csharp, --language rust
+                                            --extension cs, --extension rs
+                                            --in-files py, --in-files js
+
+  LANGUAGE SHORTCUTS
+
+    Tier 1: Primary Languages
+      --cs, --csharp               C# / .NET
+      --js, --javascript           JavaScript
+      --ts, --typescript           TypeScript
+      --py, --python               Python
+      --java                       Java
+      --go                         Go
+      --md, --markdown             Markdown
+
+    Tier 2: Popular Languages
+      --rb, --ruby                 Ruby
+      --rs, --rust                 Rust
+      --php                        PHP
+      --cpp, --c++                 C++
+      --swift                      Swift
+      --kt, --kotlin               Kotlin
+
+    Tier 3: Config/Markup
+      --yml, --yaml                YAML
+      --json                       JSON
+      --xml                        XML
+      --html                       HTML
+      --css                        CSS
+
+  LANGUAGE-SPECIFIC FILE SEARCH
+
+    --EXT-file-contains QUERY      Search for QUERY in files of specific language
+                                   Example: --cs-file-contains "AddJwtBearer"
+                                            --py-file-contains "async def"
+                                            --rs-file-contains "impl"
+
+  REPOSITORY FILTERS
+
+    --owner OWNER                  Filter by repository owner
+                                   Example: --owner microsoft, --owner dotnet
+
+    --min-stars N                  Minimum number of stars
+                                   Example: --min-stars 100, --min-stars 10000
+
+    --sort FIELD                   Sort repositories by field
+                                   Values: stars, forks, updated
+                                   Default: relevance (best match)
+
+    --include-forks                Include forked repositories
+    --exclude-forks                Exclude forked repositories (default)
+    --only-forks                   Show only forked repositories
+
+  RESULT LIMITS
+
+    --max-results N                Maximum number of results (default: 10)
+                                   Example: --max-results 20, --max-results 100
+
+  FILTERING
+
+    --exclude PATTERN              Exclude repositories matching pattern
+                                   Example: --exclude llvm/llvm-project
+
+  OUTPUT FORMAT
+
+    --format FORMAT                Output format
+                                   Values: detailed (default), table, urls, json, csv, repos, files, filenames
+                                   
+                                   detailed   - Full information with descriptions
+                                   table      - Markdown table format (repos only)
+                                   urls       - URLs only (one per line)
+                                   json       - JSON format
+                                   csv        - CSV format
+                                   repos      - Repository info only (unified search)
+                                   files      - File info only (unified search)
+                                   filenames  - File names only
+
+  OUTPUT FILES
+
+    --save-output FILE             Save output to file
+                                   Template: output-{time}.md
+                                   Example: --save-output results.md
+
+    --save-json FILE               Save results as JSON
+                                   Template: output-{time}.json
+                                   Example: --save-json results.json
+
+    --save-csv FILE                Save results as CSV
+                                   Template: output-{time}.csv
+                                   Example: --save-csv results.csv
+
+    --save-table FILE              Save results as table
+                                   Template: output-{time}.md
+                                   Example: --save-table results-table.md
+
+    --save-urls FILE               Save URLs only to file
+                                   Template: urls-{time}.txt
+                                   Example: --save-urls repo-urls.txt
+
+  CLONING (Repository Search)
+
+    --clone                        Clone repositories after search
+    --clone-dir DIR                Directory to clone into (default: external)
+    --max-clone N                  Maximum repositories to clone (default: 10)
+    --as-submodules                Clone as git submodules
+
+  CODE DISPLAY
+
+    --lines-before-and-after N     Lines of context around matches (default: 5)
+    --lines N                      Alias for --lines-before-and-after
+                                   Example: --lines-before-and-after 5
+                                            --lines 5
+
+SEE ALSO
+
+  cycodgr help
+  cycodgr help usage
+  cycodgr help examples
+  cycodgr help query syntax
+  cycodgr help language shortcuts

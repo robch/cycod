@@ -1,0 +1,4 @@
+USAGE: cycodgr help topics
+   OR: cycodgr help topics --expand
+   OR: cycodgr help find "TERMS"
+   OR: cycodgr help ama "YOUR QUESTION"

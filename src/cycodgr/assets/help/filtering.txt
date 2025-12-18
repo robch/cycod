@@ -1,0 +1,84 @@
+CYCODGR FILTERING
+
+Filter and refine search results
+
+USAGE: cycodgr [...] --FILTER [OPTIONS]
+
+FILTER OPTIONS
+
+  BY REPOSITORY CRITERIA
+
+    --owner OWNER              Filter by repository owner or organization
+                               Example: --owner microsoft
+                                        --owner dotnet
+
+    --min-stars N              Minimum star count
+                               Example: --min-stars 100
+                                        --min-stars 10000
+
+    --include-forks            Include forked repositories
+    --exclude-forks            Exclude forked repositories (default)
+    --only-forks               Show only forked repositories
+
+  BY LANGUAGE
+
+    --language LANG            Filter by programming language
+                               Example: --language csharp
+                                        --language rust
+
+    Or use language shortcuts:
+      --cs, --py, --js, --ts, --rs, etc.
+
+  EXCLUDE PATTERNS
+
+    --exclude PATTERN          Exclude repositories matching pattern
+                               Can be repository name or URL pattern
+                               Example: --exclude microsoft/terminal
+                                        --exclude "dotnet/*"
+
+  RESULT LIMITS
+
+    --max-results N            Limit number of results (default: 10)
+                               Example: --max-results 20
+                                        --max-results 100
+
+COMBINING FILTERS
+
+  Filters can be combined for precise targeting:
+
+  EXAMPLE 1: High-quality C# authentication libraries
+
+    cycodgr --repo-contains "authentication" --language csharp --min-stars 500
+
+  EXAMPLE 2: Terminal emulators in Rust, excluding Alacritty
+
+    cycodgr --repo-contains "terminal" --language rust --exclude alacritty/alacritty
+
+  EXAMPLE 3: Find parser code in specific owner's repos
+
+    cycodgr --file-contains "parser" --owner microsoft --max-results 5
+    cycodgr --file-contains "StateMachine" --owner wez --max-results 5
+
+  EXAMPLE 4: Only forked repos for finding derivatives
+
+    cycodgr --repo-contains "react framework" --only-forks --min-stars 100
+
+SORTING
+
+  Control result order with --sort:
+
+    --sort stars               Most popular first
+    --sort forks               Most forked first
+    --sort updated             Most recently updated first
+    (default: relevance - best match)
+
+  EXAMPLE: Find most popular JWT libraries
+
+    cycodgr --repo-contains "jwt" --language go --sort stars --max-results 10
+
+SEE ALSO
+
+  cycodgr help filtering examples
+  cycodgr help options
+  cycodgr help examples
+  cycodgr help query syntax
