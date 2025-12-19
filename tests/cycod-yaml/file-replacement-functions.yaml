@@ -4,9 +4,7 @@ tests:
     steps:
     - name: Run test
       bash: |
-        echo "line 1
-        line 2
-        line 3" > test-replace-content.txt
+        echo -e 'line 1\nline 2\nline 3' > test-replace-content.txt
         cycod --input "use ReplaceFileContent to replace test-replace-content.txt with 'new content', it has 3 lines" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceFileContent
@@ -23,9 +21,7 @@ tests:
     steps:
     - name: Run test
       bash: |
-        echo "line 1
-        line 2
-        line 3" > test-replace-fail.txt
+        echo -e 'line 1\nline 2\nline 3' > test-replace-fail.txt
         cycod --input "use ReplaceFileContent to replace test-replace-fail.txt with 'new', say it has 5 lines (which is wrong)" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceFileContent
