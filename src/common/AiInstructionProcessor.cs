@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-class AiInstructionProcessor
+public class AiInstructionProcessor
 {
     public const string DefaultSaveChatHistoryTemplate = "chat-history-{time}.jsonl";
 

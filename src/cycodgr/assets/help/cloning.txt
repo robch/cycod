@@ -1,0 +1,53 @@
+CYCODGR CLONING
+
+Clone repositories directly from search results
+
+USAGE: cycodgr --repo-contains "QUERY" --clone [OPTIONS]
+
+DESCRIPTION
+
+  After searching for repositories, you can automatically clone them
+  to your local machine. This is useful for:
+  
+  - Setting up development environments
+  - Analyzing multiple projects locally
+  - Creating git submodule collections
+
+OPTIONS
+
+  --clone                   Enable cloning of search results
+  --clone-dir DIR           Directory to clone into (default: external)
+  --max-clone N             Maximum repositories to clone (default: 10)
+  --as-submodules           Clone as git submodules instead of regular clones
+
+EXAMPLES
+
+  EXAMPLE 1: Clone top JWT authentication libraries
+
+    cycodgr --repo-contains "jwt authentication" --language csharp --clone
+
+  EXAMPLE 2: Clone to specific directory
+
+    cycodgr --repo-contains "terminal emulator" --clone --clone-dir ~/terminals
+
+  EXAMPLE 3: Clone as submodules for a meta-project
+
+    cycodgr --repo-contains "dotnet libraries" --clone --as-submodules
+
+  EXAMPLE 4: Limit number of clones
+
+    cycodgr --repo-contains "machine learning" --min-stars 1000 --clone --max-clone 5
+
+NOTES
+
+  - Cloning only works with repository searches (--repo-contains)
+  - Repositories are cloned in the order returned by GitHub
+  - Use --sort stars to clone the most popular repositories first
+  - Failed clones are logged but don't stop the process
+  - Existing directories are skipped
+
+SEE ALSO
+
+  cycodgr help cloning examples
+  cycodgr help options
+  cycodgr help examples

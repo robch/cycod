@@ -24,6 +24,7 @@ EXAMPLES
 
     cycodmd "**/*.md" --contains "TODO" --line-numbers
     cycodmd "**/*.md" --contains "(?i)LLM" --lines-after 10
+    cycodmd "**/*.cs" --contains "async" --line-numbers --lines 3  # Auto-highlights matches with *
 
   EXAMPLE 4: Filter files based on time attributes
 

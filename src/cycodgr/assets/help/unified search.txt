@@ -1,0 +1,89 @@
+CYCODGR UNIFIED SEARCH
+
+Search both repositories and code simultaneously
+
+USAGE: cycodgr --contains "QUERY" [OPTIONS]
+
+DESCRIPTION
+
+  The --contains flag performs a unified search that looks for your
+  query in BOTH:
+  
+  1. Repository metadata (names, descriptions, topics)
+  2. Code within files
+  
+  Results are displayed together, showing repositories first, then
+  code matches.
+
+OUTPUT STRUCTURE
+
+  Repositories that matched your query:
+    - Full metadata (stars, language, description, topics)
+    - No file listings
+  
+  Followed by repositories with code matches:
+    - Full metadata
+    - List of matching files with match counts
+    - Code snippets for each file
+
+FILTERING UNIFIED RESULTS
+
+  You can use --format to control what's shown:
+  
+  --format repos      Show only repository results
+  --format files      Show only code results  
+  --format detailed   Show both (default)
+  --format json       Combined JSON output
+  --format csv        Combined CSV output
+
+EXAMPLES
+
+  EXAMPLE 1: Find everything related to JWT
+
+    cycodgr --contains "jwt" --max-results 5
+
+  EXAMPLE 2: Find shell integration implementations
+
+    cycodgr --contains "shell integration" --language cpp --max-results 3
+
+  EXAMPLE 3: Unified search, show only repos
+
+    cycodgr --contains "authentication" --format repos
+
+  EXAMPLE 4: Unified search, show only code
+
+    cycodgr --contains "parser" --format files --max-results 10
+
+  EXAMPLE 5: Find everything about a technology in specific language
+
+    cycodgr --contains "websocket" --language rust --max-results 10
+
+WHEN TO USE UNIFIED SEARCH
+
+  Use --contains when you want:
+  - Complete overview of a technology/pattern
+  - Both libraries/projects AND usage examples
+  - Discover repos you didn't know about via code matches
+  
+  Use --repo-contains when you want:
+  - Only find projects/libraries
+  - No code implementation details needed
+  
+  Use --file-contains when you want:
+  - Only find code examples
+  - Implementation patterns across repos
+  - Specific API/function usage
+
+PERFORMANCE NOTE
+
+  Unified search makes two GitHub API calls (repos + code), so it may
+  take longer than single searches. The --max-results limit applies to
+  EACH search (N repos + N code matches).
+
+SEE ALSO
+
+  cycodgr help unified search examples
+  cycodgr help examples
+  cycodgr help options
+  cycodgr help output formats
+  cycodgr help filtering

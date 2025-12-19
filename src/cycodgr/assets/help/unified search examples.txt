@@ -1,0 +1,40 @@
+CYCODGR UNIFIED SEARCH EXAMPLES
+
+USAGE: cycodgr --contains "QUERY" [OPTIONS]
+
+EXAMPLES
+
+  EXAMPLE 1: Find everything related to JWT
+
+    cycodgr --contains "jwt" --max-results 5
+
+  EXAMPLE 2: Find shell integration implementations
+
+    cycodgr --contains "shell integration" --language cpp --max-results 3
+
+  EXAMPLE 3: Research a technology across repos and code
+
+    cycodgr --contains "websocket" --language rust --max-results 10
+
+  EXAMPLE 4: Find everything about authentication in C#
+
+    cycodgr --contains "authentication" --language csharp --min-stars 100
+
+  EXAMPLE 5: Show only repository results from unified search
+
+    cycodgr --contains "parser" --format repos --max-results 10
+
+  EXAMPLE 6: Show only code results from unified search
+
+    cycodgr --contains "parser" --format files --max-results 10
+
+  EXAMPLE 7: Save unified search results
+
+    cycodgr --contains "terminal emulator" --max-results 5 --save-output research.md
+
+SEE ALSO
+
+  cycodgr help unified search
+  cycodgr help examples
+  cycodgr help filtering
+  cycodgr help output formats

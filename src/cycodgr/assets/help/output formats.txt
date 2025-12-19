@@ -1,0 +1,89 @@
+CYCODGR OUTPUT FORMATS
+
+Control how search results are displayed
+
+USAGE: cycodgr [...] --format FORMAT
+
+FORMATS
+
+  detailed (default)
+    Full repository or code information with descriptions, metadata,
+    and formatted code blocks.
+    
+    Repository results show:
+    - Stars, language, description
+    - Topics, last updated date
+    - URL
+    
+    Code results show:
+    - Repository metadata
+    - File list with match counts
+    - Code snippets with line numbers
+    - Raw file URLs
+
+  table
+    Markdown table format for repository results.
+    Displays key information in a compact, scannable table.
+    
+    Columns: Repository | Stars | Language | Description
+    
+    Note: Only available for repository results, not code results.
+
+  urls
+    URLs only, one per line.
+    Minimal output for piping to other commands or saving to file.
+    
+    Repository results: Repository URLs
+    Code results: File URLs
+
+  json
+    Machine-readable JSON format for processing or integration.
+    Includes all available metadata and structured data.
+
+  csv
+    Comma-separated values for spreadsheet import.
+    One row per repository or code match.
+
+  repos (unified search only)
+    Show only repository results, hide code matches.
+
+  files (unified search only)
+    Show only code/file results, hide repository matches.
+
+  filenames
+    Show only file names and paths, minimal output.
+
+EXAMPLES
+
+  EXAMPLE 1: Default detailed output
+
+    cycodgr --repo-contains "jwt" --max-results 5
+
+  EXAMPLE 2: JSON output for processing
+
+    cycodgr --file-contains "parser" --format json --save-json results.json
+
+  EXAMPLE 3: CSV for spreadsheet
+
+    cycodgr --repo-contains "terminal" --format csv --save-csv repos.csv
+
+  EXAMPLE 4: Table format for quick overview
+
+    cycodgr --repo-contains "jwt" --format table
+
+  EXAMPLE 5: URLs only for piping
+
+    cycodgr --repo-contains "parser" --format urls > repo-urls.txt
+
+  EXAMPLE 6: Unified search, repos only
+
+    cycodgr --contains "authentication" --format repos
+
+  EXAMPLE 7: Unified search, code only
+
+    cycodgr --contains "authentication" --format files
+
+SEE ALSO
+
+  cycodgr help options
+  cycodgr help examples

@@ -48,6 +48,10 @@ OPTIONS
     --lines-before N               Include N lines before matching lines (default 0)
 
     --line-numbers                 Include line numbers in the output
+    
+    --highlight-matches            Mark matching lines with * prefix
+                                   (auto-enabled when using line numbers + context)
+    --no-highlight-matches         Disable automatic match highlighting
 
   AI PROCESSING
 

@@ -90,9 +90,9 @@ class Program
 
         var threadCountMax = commandLineOptions.ThreadCount;
         var parallelism = threadCountMax > 0 ? threadCountMax : Environment.ProcessorCount;
+        var processor = new ThrottledProcessor(parallelism);
 
         var allTasks = new List<Task<string>>();
-        var throttler = new SemaphoreSlim(parallelism);
 
         foreach (var command in commandLineOptions.Commands)
         {
@@ -101,11 +101,11 @@ class Program
 
             var tasksThisCommand = command switch
             {
-                FindFilesCommand findFilesCommand => await HandleFindFileCommand(commandLineOptions, findFilesCommand, throttler, delayOutputToApplyInstructions),
-                WebSearchCommand webSearchCommand => await HandleWebSearchCommandAsync(commandLineOptions, webSearchCommand, throttler, delayOutputToApplyInstructions),
-                WebGetCommand webGetCommand => HandleWebGetCommand(commandLineOptions, webGetCommand, throttler, delayOutputToApplyInstructions),
-                RunCommand runCommand => HandleRunCommand(commandLineOptions, runCommand, throttler, delayOutputToApplyInstructions),
-                VersionCommand versionCommand => HandleVersionCommand(commandLineOptions, versionCommand, throttler, delayOutputToApplyInstructions),
+                FindFilesCommand findFilesCommand => await HandleFindFileCommand(commandLineOptions, findFilesCommand, processor, delayOutputToApplyInstructions),
+                WebSearchCommand webSearchCommand => await HandleWebSearchCommandAsync(commandLineOptions, webSearchCommand, processor, delayOutputToApplyInstructions),
+                WebGetCommand webGetCommand => HandleWebGetCommand(commandLineOptions, webGetCommand, processor, delayOutputToApplyInstructions),
+                RunCommand runCommand => HandleRunCommand(commandLineOptions, runCommand, processor, delayOutputToApplyInstructions),
+                VersionCommand versionCommand => HandleVersionCommand(commandLineOptions, versionCommand, processor, delayOutputToApplyInstructions),
                 _ => new List<Task<string>>()
             };
 
@@ -160,7 +160,7 @@ class Program
         if (printMessage) ConsoleHelpers.WriteLine($"  {ex.Message}\n\n");
     }
 
-    private static async Task<List<Task<string>>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static async Task<List<Task<string>>> HandleFindFileCommand(CommandLineOptions commandLineOptions, FindFilesCommand findFilesCommand, ThrottledProcessor processor, bool delayOutputToApplyInstructions)
     {
         // Log the search operation being initiated
         Logger.Info($"Finding files matching glob pattern(s): '{string.Join("', '", findFilesCommand.Globs)}'");
@@ -210,46 +210,62 @@ class Program
             findFilesCommand.IncludeLineContainsPatternList.Count > 0)
         {
             return await HandleReplacementMode(
-                findFilesCommand, files, throttler, delayOutputToApplyInstructions);
+                findFilesCommand, files, processor, delayOutputToApplyInstructions);
         }
 
-        var tasks = new List<Task<string>>();
-        foreach (var file in files)
+        // Decide whether to use throttling based on whether AI instructions are present
+        var needsThrottling = findFilesCommand.FileInstructionsList.Any();
+        
+        // Derive actual highlight matches value from tri-state:
+        // - If explicitly set (true/false), use that value
+        // - If null (not specified), auto-enable when we have line numbers AND context lines
+        var actualHighlightMatches = findFilesCommand.HighlightMatches ?? 
+            (findFilesCommand.IncludeLineNumbers && 
+             (findFilesCommand.IncludeLineCountBefore > 0 || findFilesCommand.IncludeLineCountAfter > 0));
+        
+        // Define the file processor function (used in both throttled and unthrottled paths)
+        Func<string, Task<string>> getCheckSaveFileContent = async file =>
         {
             var onlyOneFile = files.Count == 1 && commandLineOptions.Commands.Count == 1;
             var skipMarkdownWrapping = onlyOneFile && FileConverters.CanConvert(file);
             var wrapInMarkdown = !skipMarkdownWrapping;
 
-            var getCheckSaveTask = GetCheckSaveFileContentAsync(
+            return await GetCheckSaveFileContentAsync(
                 file,
-                throttler,
                 wrapInMarkdown,
                 findFilesCommand.IncludeLineContainsPatternList,
                 findFilesCommand.IncludeLineCountBefore,
                 findFilesCommand.IncludeLineCountAfter,
                 findFilesCommand.IncludeLineNumbers,
                 findFilesCommand.RemoveAllLineContainsPatternList,
-                findFilesCommand.HighlightMatches,
+                actualHighlightMatches,
                 findFilesCommand.FileInstructionsList,
                 findFilesCommand.UseBuiltInFunctions,
                 findFilesCommand.SaveChatHistory,
                 findFilesCommand.SaveFileOutput);
+        };
 
-            var taskToAdd = delayOutputToApplyInstructions
-                ? getCheckSaveTask
-                : getCheckSaveTask.ContinueWith(t =>
-                {
-                    ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
-                    return t.Result;
-                });
+        // Choose processing path: throttled if AI instructions present, unthrottled otherwise
+        var tasks = needsThrottling
+            ? await processor.StartTasksAsync(files, getCheckSaveFileContent)
+            : files.Select(getCheckSaveFileContent).ToList();
 
-            tasks.Add(taskToAdd);
+        // Handle output based on whether we're delaying for final instructions
+        if (!delayOutputToApplyInstructions)
+        {
+            var outputTasks = tasks.Select(task => task.ContinueWith(t =>
+            {
+                ConsoleHelpers.WriteLineIfNotEmpty(t.Result);
+                return t.Result;
+            })).ToList();
+            
+            return outputTasks;
         }
 
         return tasks;
     }
 
-    private static async Task<List<Task<string>>> HandleWebSearchCommandAsync(CommandLineOptions commandLineOptions, WebSearchCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static async Task<List<Task<string>>> HandleWebSearchCommandAsync(CommandLineOptions commandLineOptions, WebSearchCommand command, ThrottledProcessor processor, bool delayOutputToApplyInstructions)
     {
         var provider = command.SearchProvider;
         var query = string.Join(" ", command.Terms);
@@ -308,7 +324,7 @@ class Program
         return tasks;
     }
 
-    private static List<Task<string>> HandleWebGetCommand(CommandLineOptions commandLineOptions, WebGetCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static List<Task<string>> HandleWebGetCommand(CommandLineOptions commandLineOptions, WebGetCommand command, ThrottledProcessor processor, bool delayOutputToApplyInstructions)
     {
         var urls = command.Urls;
         var stripHtml = command.StripHtml;
@@ -347,7 +363,7 @@ class Program
         return tasks;
     }
 
-    private static List<Task<string>> HandleRunCommand(CommandLineOptions commandLineOptions, RunCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static List<Task<string>> HandleRunCommand(CommandLineOptions commandLineOptions, RunCommand command, ThrottledProcessor processor, bool delayOutputToApplyInstructions)
     {
         var tasks = new List<Task<string>>();
         var getCheckSaveTask = GetCheckSaveRunCommandContentAsync(command);
@@ -364,7 +380,7 @@ class Program
         return tasks;
     }
 
-    private static List<Task<string>> HandleVersionCommand(CommandLineOptions commandLineOptions, VersionCommand command, SemaphoreSlim throttler, bool delayOutputToApplyInstructions)
+    private static List<Task<string>> HandleVersionCommand(CommandLineOptions commandLineOptions, VersionCommand command, ThrottledProcessor processor, bool delayOutputToApplyInstructions)
     {
 		// TODO: Do we really need this?
         // Make sure ProgramInfo is initialized before accessing VersionInfo
@@ -453,9 +469,9 @@ class Program
         }
     }
 
-    private static Task<string> GetCheckSaveFileContentAsync(string fileName, SemaphoreSlim throttler, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
+    private static Task<string> GetCheckSaveFileContentAsync(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
     {
-        var getCheckSaveFileContent = new Func<string>(() =>
+        return Task.Run(() => 
             GetCheckSaveFileContent(
                 fileName,
                 wrapInMarkdown,
@@ -469,24 +485,6 @@ class Program
                 useBuiltInFunctions,
                 saveChatHistory,
                 saveFileOutput));
-
-        if (!fileInstructionsList.Any())
-        {
-            var content = getCheckSaveFileContent();
-            return Task.FromResult(content);
-        }
-
-        return Task.Run(async () => {
-            await throttler.WaitAsync();
-            try
-            {
-                return getCheckSaveFileContent();
-            }
-            finally
-            {
-                throttler.Release();
-            }
-        });
     }
 
     private static string GetCheckSaveFileContent(string fileName, bool wrapInMarkdown, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, bool highlightMatches, List<Tuple<string, string>> fileInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? saveFileOutput)
@@ -586,7 +584,7 @@ class Program
             var filterContent = includeLineContainsPatternList.Any() || removeAllLineContainsPatternList.Any();
             if (filterContent)
             {
-                content = GetContentFilteredAndFormatted(
+                content = LineHelpers.FilterAndExpandContext(
                     content,
                     includeLineContainsPatternList,
                     includeLineCountBefore,
@@ -604,7 +602,7 @@ class Program
             }
             else if (includeLineNumbers)
             {
-                content = GetContentFormattedWithLineNumbers(content);
+                content = LineHelpers.AddLineNumbers(content);
                 wrapInMarkdown = true;
             }
 
@@ -633,95 +631,6 @@ class Program
         {
             return $"## {fileName} - Error reading file: {ex.Message}\n\n{ex.StackTrace}";
         }
-    }
-
-    private static string GetContentFormattedWithLineNumbers(string content)
-    {
-        var lines = content.Split('\n');
-        return string.Join('\n', lines.Select((line, index) => $"{index + 1}: {line}"));
-    }
-
-    private static string? GetContentFilteredAndFormatted(string content, List<Regex> includeLineContainsPatternList, int includeLineCountBefore, int includeLineCountAfter, bool includeLineNumbers, List<Regex> removeAllLineContainsPatternList, string backticks, bool highlightMatches = false)
-    {
-        // Find the matching lines/indices (line numbers are 1-based, indices are 0-based)
-        var allLines = content.Split('\n');
-        var matchedLineIndices = allLines.Select((line, index) => new { line, index })
-            .Where(x => LineHelpers.IsLineMatch(x.line, includeLineContainsPatternList, removeAllLineContainsPatternList))
-            .Select(x => x.index)
-            .ToList();
-        if (matchedLineIndices.Count == 0) return null;
-
-        // Expand the range of lines, based on before and after counts
-        var linesToInclude = new HashSet<int>(matchedLineIndices);
-        foreach (var index in matchedLineIndices)
-        {
-            for (int b = 1; b <= includeLineCountBefore; b++)
-            {
-                var idxBefore = index - b;
-                if (idxBefore >= 0)
-                {
-                    // Only add context lines that wouldn't be removed
-                    var contextLine = allLines[idxBefore];
-                    var shouldRemoveContextLine = removeAllLineContainsPatternList.Any(regex => regex.IsMatch(contextLine));
-                    if (!shouldRemoveContextLine)
-                    {
-                        linesToInclude.Add(idxBefore);
-                    }
-                }
-            }
-
-            for (int a = 1; a <= includeLineCountAfter; a++)
-            {
-                var idxAfter = index + a;
-                if (idxAfter < allLines.Length)
-                {
-                    // Only add context lines that wouldn't be removed  
-                    var contextLine = allLines[idxAfter];
-                    var shouldRemoveContextLine = removeAllLineContainsPatternList.Any(regex => regex.IsMatch(contextLine));
-                    if (!shouldRemoveContextLine)
-                    {
-                        linesToInclude.Add(idxAfter);
-                    }
-                }
-            }
-        }
-        var expandedLineIndices = linesToInclude.OrderBy(i => i).ToList();
-
-        var checkForLineNumberBreak = (includeLineCountBefore + includeLineCountAfter) > 0;
-        int? previousLineIndex = null;
-
-        // Loop through the lines to include and accumulate the output
-        var output = new List<string>();
-        foreach (var index in expandedLineIndices)
-        {
-            var addSeparatorForLineNumberBreak = checkForLineNumberBreak && previousLineIndex != null && index > previousLineIndex + 1;
-            if (addSeparatorForLineNumberBreak)
-            {
-                output.Add($"{backticks}\n\n{backticks}");
-            }
-
-            var line = allLines[index];
-            var isMatchingLine = matchedLineIndices.Contains(index); // Track if this line was an actual match
-
-            if (includeLineNumbers)
-            {
-                var lineNumber = index + 1;
-                // Add * prefix for matching lines when highlighting is enabled
-                var prefix = highlightMatches && isMatchingLine ? "*" : " ";
-                
-                output.Add($"{prefix} {lineNumber}: {line}");
-            }
-            else
-            {
-                // Add * prefix for matching lines when highlighting is enabled (no line numbers)
-                var prefix = highlightMatches && isMatchingLine ? "* " : "";
-                output.Add($"{prefix}{line}");
-            }
-
-            previousLineIndex = index;
-        }
-
-        return string.Join("\n", output);
     }
 
     private static async Task<string> GetCheckSaveWebPageContentAsync(string url, bool stripHtml, string? saveToFolder, BrowserType browserType, bool interactive, List<Tuple<string, string>> pageInstructionsList, bool useBuiltInFunctions, string? saveChatHistory, string? savePageOutput)
@@ -797,23 +706,16 @@ class Program
     private static async Task<List<Task<string>>> HandleReplacementMode(
         FindFilesCommand findFilesCommand, 
         List<string> files, 
-        SemaphoreSlim throttler, 
+        ThrottledProcessor processor, 
         bool delayOutputToApplyInstructions)
     {
         var searchPatterns = findFilesCommand.IncludeLineContainsPatternList;
         var replacementText = findFilesCommand.ReplaceWithText!;
         var executeMode = findFilesCommand.ExecuteMode;
         
-        var tasks = new List<Task<string>>();
+        var results = await processor.ProcessAsync(files, async file =>
+            await ProcessFileForReplacement(file, searchPatterns, replacementText, executeMode));
         
-        foreach (var file in files)
-        {
-            var task = ProcessFileForReplacement(
-                file, searchPatterns, replacementText, executeMode, throttler);
-            tasks.Add(task);
-        }
-        
-        var results = await Task.WhenAll(tasks);
         var allResults = string.Join(Environment.NewLine, results.Where(r => !string.IsNullOrEmpty(r)));
         
         if (!delayOutputToApplyInstructions)
@@ -831,43 +733,39 @@ class Program
         string filePath, 
         List<Regex> searchPatterns, 
         string replacementText, 
-        bool executeMode, 
-        SemaphoreSlim throttler)
+        bool executeMode)
     {
-        await throttler.WaitAsync();
-        try
+        if (!File.Exists(filePath))
+            return string.Empty;
+            
+        var content = await File.ReadAllTextAsync(filePath);
+        var lines = content.Split('\n');
+        
+        var matchingLines = new List<(int lineNumber, string originalLine, string newLine)>();
+        
+        for (int i = 0; i < lines.Length; i++)
         {
-            if (!File.Exists(filePath))
-                return string.Empty;
-                
-            var content = await File.ReadAllTextAsync(filePath);
-            var lines = content.Split('\n');
+            var line = lines[i];
+            var hasMatch = searchPatterns.Any(pattern => pattern.IsMatch(line));
             
-            var matchingLines = new List<(int lineNumber, string originalLine, string newLine)>();
-            
-            for (int i = 0; i < lines.Length; i++)
+            if (hasMatch)
             {
-                var line = lines[i];
-                var hasMatch = searchPatterns.Any(pattern => pattern.IsMatch(line));
-                
-                if (hasMatch)
+                var newLine = line;
+                foreach (var pattern in searchPatterns)
                 {
-                    var newLine = line;
-                    foreach (var pattern in searchPatterns)
-                    {
-                        newLine = pattern.Replace(newLine, replacementText);
-                    }
-                    
-                    if (newLine != line)
-                    {
-                        matchingLines.Add((i + 1, line, newLine));
-                    }
+                    newLine = pattern.Replace(newLine, replacementText);
+                }
+                
+                if (newLine != line)
+                {
+                    matchingLines.Add((i + 1, line, newLine));
                 }
             }
-            
+        }
+        
         if (matchingLines.Count == 0)
             return string.Empty;
-                
+            
         // If execute mode, actually perform the replacement
         if (executeMode)
         {
@@ -879,14 +777,9 @@ class Program
             
             await File.WriteAllTextAsync(filePath, newContent);
         }
-            
-            // Return diff format
-            return FormatReplacementDiff(filePath, matchingLines, executeMode);
-        }
-        finally
-        {
-            throttler.Release();
-        }
+        
+        // Return diff format
+        return FormatReplacementDiff(filePath, matchingLines, executeMode);
     }
     
     /// <summary>

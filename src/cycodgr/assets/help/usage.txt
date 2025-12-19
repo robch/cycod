@@ -1,0 +1,55 @@
+Welcome to CYCODGR, the AI-Powered GitHub Search Tool!
+
+Using CYCODGR, you can:
+
+  - Search GitHub repositories
+  - Search code within repositories  
+  - Get repository metadata
+  - Use unified search (repos + code together)
+  - Apply filters by language, stars, owner, etc.
+
+USAGE: cycodgr [REPO_PATTERN ...] [OPTIONS]
+   OR: cycodgr --repo-contains "QUERY" [OPTIONS]
+   OR: cycodgr --file-contains "QUERY" [OPTIONS]
+   OR: cycodgr --contains "QUERY" [OPTIONS]
+
+EXAMPLES
+
+  EXAMPLE 1: Get repository information
+
+    cycodgr microsoft/vscode
+    cycodgr microsoft/vscode dotnet/aspire
+
+  EXAMPLE 2: Search for repositories
+
+    cycodgr --repo-contains "jwt authentication" --max-results 10
+    cycodgr --repo-contains "terminal emulator" --language rust --min-stars 1000
+
+  EXAMPLE 3: Search for code
+
+    cycodgr --file-contains "CreatePseudoConsole" --language cpp --max-results 10
+    cycodgr microsoft/terminal --file-contains "OSC 133"
+
+  EXAMPLE 4: Search both repos and code
+
+    cycodgr --contains "jwt" --max-results 5
+
+  EXAMPLE 5: Use language-specific shortcuts
+
+    cycodgr --cs-file-contains "AddJwtBearer" --max-results 5
+    cycodgr --py-file-contains "import jwt" --max-results 5
+
+  EXAMPLE 6: Load repo lists from files
+
+    cycodgr @@my-repos.txt --file-contains "TODO"
+
+SEE ALSO
+
+  cycodgr help
+  cycodgr help examples
+  cycodgr help options
+  cycodgr help language shortcuts
+  cycodgr help filtering
+  cycodgr help output formats
+  cycodgr help unified search
+  cycodgr help cloning
