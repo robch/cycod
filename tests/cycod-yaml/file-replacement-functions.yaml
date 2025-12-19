@@ -7,7 +7,7 @@ tests:
         echo "line 1
         line 2
         line 3" > test-replace-content.txt
-        cycod --input "use ReplaceFileContent to replace test-replace-content.txt with 'new content', it has 3 lines" --auto-approve *
+        cycod --input "use ReplaceFileContent to replace test-replace-content.txt with 'new content', it has 3 lines" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceFileContent
         path.*test-replace-content\.txt
@@ -26,7 +26,7 @@ tests:
         echo "line 1
         line 2
         line 3" > test-replace-fail.txt
-        cycod --input "use ReplaceFileContent to replace test-replace-fail.txt with 'new', say it has 5 lines (which is wrong)" --auto-approve *
+        cycod --input "use ReplaceFileContent to replace test-replace-fail.txt with 'new', say it has 5 lines (which is wrong)" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceFileContent
         oldContentLineCount.*5
@@ -38,7 +38,7 @@ tests:
 
   - name: ReplaceFileContent on non-existent file fails
     run: |
-      cycod --input "use ReplaceFileContent to replace nonexistent-file.txt with 'content', say it has 1 line" --auto-approve *
+      cycod --input "use ReplaceFileContent to replace nonexistent-file.txt with 'content', say it has 1 line" --auto-approve '*'
     expect-regex: |
       assistant-function: ReplaceFileContent
       File.*does not exist.*Use CreateFile
@@ -50,7 +50,7 @@ tests:
     - name: Run test
       run: |
         echo "original content" > test-undo-replace.txt
-        cycod --input "First use ReplaceFileContent to replace test-undo-replace.txt with 'new content', it has 1 line. Then use UndoEdit to revert it." --auto-approve *
+        cycod --input "First use ReplaceFileContent to replace test-undo-replace.txt with 'new content', it has 1 line. Then use UndoEdit to revert it." --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceFileContent
         Replaced content
@@ -67,7 +67,7 @@ tests:
     - name: Run test
       run: |
         echo "foo bar baz" > test-multi-replace.txt
-        cycod --input "use ReplaceMultipleInFile on test-multi-replace.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'" --auto-approve *
+        cycod --input "use ReplaceMultipleInFile on test-multi-replace.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         path.*test-multi-replace\.txt
@@ -84,7 +84,7 @@ tests:
     - name: Run test
       run: |
         echo "foo bar" > test-multi-fail.txt
-        cycod --input "use ReplaceMultipleInFile on test-multi-fail.txt to replace 'foo' with 'FOO' and 'baz' with 'BAZ' (baz doesn't exist)" --auto-approve *
+        cycod --input "use ReplaceMultipleInFile on test-multi-fail.txt to replace 'foo' with 'FOO' and 'baz' with 'BAZ' (baz doesn't exist)" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         No occurrences.*found|not found
@@ -99,7 +99,7 @@ tests:
     - name: Run test
       run: |
         echo "foo bar baz" > test-array-length.txt
-        cycod --input "use ReplaceMultipleInFile on test-array-length.txt with oldStrings=['foo','bar'] but newStrings=['FOO'] (mismatched lengths)" --auto-approve *
+        cycod --input "use ReplaceMultipleInFile on test-array-length.txt with oldStrings=['foo','bar'] but newStrings=['FOO'] (mismatched lengths)" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         array length.*must match
@@ -113,7 +113,7 @@ tests:
     - name: Run test
       run: |
         echo "alpha beta gamma delta" > test-string-array.txt
-        cycod --input "use ReplaceMultipleInFile on test-string-array.txt to replace ['alpha', 'beta', 'gamma'] with ['ALPHA', 'BETA', 'GAMMA']" --auto-approve *
+        cycod --input "use ReplaceMultipleInFile on test-string-array.txt to replace ['alpha', 'beta', 'gamma'] with ['ALPHA', 'BETA', 'GAMMA']" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         replaced 3 occurrences
@@ -127,7 +127,7 @@ tests:
     - name: Run test
       run: |
         echo "foo bar baz" > test-multi-undo.txt
-        cycod --input "First use ReplaceMultipleInFile on test-multi-undo.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'. Then use UndoEdit to revert." --auto-approve *
+        cycod --input "First use ReplaceMultipleInFile on test-multi-undo.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'. Then use UndoEdit to revert." --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         replaced 2 occurrences
@@ -143,7 +143,7 @@ tests:
     - name: Run test
       run: |
         echo "test test test" > test-unique.txt
-        cycod --input "use ReplaceMultipleInFile on test-unique.txt to replace 'test' with 'TEST' (but 'test' appears multiple times, so should fail)" --auto-approve *
+        cycod --input "use ReplaceMultipleInFile on test-unique.txt to replace 'test' with 'TEST' (but 'test' appears multiple times, so should fail)" --auto-approve '*'
       expect-regex: |
         assistant-function: ReplaceMultipleInFile
         Multiple matches found.*must be unique
