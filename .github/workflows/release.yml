@@ -150,21 +150,31 @@ jobs:
           - Individual tool packages:
             - cycod-win-x64-${{ env.VERSION }}.zip
             - cycod-linux-x64-${{ env.VERSION }}.zip
+            - cycod-linux-arm64-${{ env.VERSION }}.zip
             - cycod-osx-x64-${{ env.VERSION }}.zip
+            - cycod-osx-arm64-${{ env.VERSION }}.zip
             - cycodt-win-x64-${{ env.VERSION }}.zip
             - cycodt-linux-x64-${{ env.VERSION }}.zip
+            - cycodt-linux-arm64-${{ env.VERSION }}.zip
             - cycodt-osx-x64-${{ env.VERSION }}.zip
+            - cycodt-osx-arm64-${{ env.VERSION }}.zip
             - cycodmd-win-x64-${{ env.VERSION }}.zip
             - cycodmd-linux-x64-${{ env.VERSION }}.zip
+            - cycodmd-linux-arm64-${{ env.VERSION }}.zip
             - cycodmd-osx-x64-${{ env.VERSION }}.zip
+            - cycodmd-osx-arm64-${{ env.VERSION }}.zip
             - cycodgr-win-x64-${{ env.VERSION }}.zip
             - cycodgr-linux-x64-${{ env.VERSION }}.zip
+            - cycodgr-linux-arm64-${{ env.VERSION }}.zip
             - cycodgr-osx-x64-${{ env.VERSION }}.zip
+            - cycodgr-osx-arm64-${{ env.VERSION }}.zip
 
           - Platform packages (all tools):
             - cycodev-tools-win-x64-${{ env.VERSION }}.zip
             - cycodev-tools-linux-x64-${{ env.VERSION }}.zip
+            - cycodev-tools-linux-arm64-${{ env.VERSION }}.zip
             - cycodev-tools-osx-x64-${{ env.VERSION }}.zip
+            - cycodev-tools-osx-arm64-${{ env.VERSION }}.zip
     
     - name: Publish to NuGet
       if: ${{ env.NUGET_API_KEY != '' }}
