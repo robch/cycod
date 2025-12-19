@@ -9,6 +9,8 @@ This document outlines key patterns and principles for writing clean, maintainab
 - Each change should build on previous improvements
 - Explore alternatives and weigh trade-offs at each step
 - Don't expect to get it right on the first attempt
+- **Push through initial complexity** - resistance often means you're learning, not that you should quit
+- **Work incrementally through hard problems** - break them down rather than avoiding them
 
 ### Meaningful Naming
 - Spend time finding precise, descriptive variable names
@@ -88,5 +90,12 @@ This document outlines key patterns and principles for writing clean, maintainab
    - View code as a series of data transformations
    - Name variables to indicate their stage in the transformation pipeline
    - Make each transformation clear and focused
+
+5. **Work through complexity systematically**
+   - When facing difficult implementations, resist the urge to abandon or postpone
+   - Break complex problems into smaller, concrete steps
+   - Build incrementally: get something basic working first, then refine
+   - Use "messy but working" as a stepping stone to "clean and working"
+   - Remember: initial resistance often means you're learning, not that you should quit
 
 These principles apply at all scales, from small functions to large systems. Even in seemingly simple functions, thoughtful design leads to code that's not just functional, but elegant, maintainable, and efficient.

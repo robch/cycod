@@ -99,7 +99,7 @@ public static class ChatClientFactory
     public static IChatClient? CreateGeminiChatClient(out ChatOptions? options)
     {
         var apiKey = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_API_KEY") ?? throw new EnvVarSettingException("GOOGLE_GEMINI_API_KEY is not set.");
-        var modelId = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_MODEL_ID") ?? "gemini-2.5-flash-preview-04-17";
+        var modelId = EnvironmentHelpers.FindEnvVar("GOOGLE_GEMINI_MODEL_ID") ?? "gemini-2.5-pro";
 
         var clientOptions = new GeminiClientOptions { ApiKey = apiKey, ApiVersion = GeminiApiVersions.V1Beta };
         var client = new GeminiChatClient(clientOptions);
@@ -344,9 +344,9 @@ public static class ChatClientFactory
                 - COPILOT_EDITOR_VERSION (optional)
                 - COPILOT_MODEL_NAME (optional)
 
-                To use Google Gemini, please set:
-                - GOOGLE_GEMINI_API_KEY
-                - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-flash-preview-04-17)
+                    To use Google Gemini, please set:
+                    - GOOGLE_GEMINI_API_KEY
+                    - GOOGLE_GEMINI_MODEL_ID (optional, default: gemini-2.5-pro)
 
                 To use Grok, please set:
                 - GROK_API_KEY

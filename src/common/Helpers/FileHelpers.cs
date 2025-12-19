@@ -569,6 +569,7 @@ public class FileHelpers
             ".sql" => "sql",
             ".swift" => "swift",
             ".ts" => "typescript",
+            ".xlsx" => "markdown",
             ".xml" => "xml",
             ".yaml" => "yaml",
             ".yml" => "yaml",
