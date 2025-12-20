@@ -2,13 +2,20 @@
 
 > A standalone tool for analyzing and summarizing cycod chat history files
 
-## Status: Planning / Early Development
+## Status: Phase 0 & 1 Complete ✅
 
-This tool is in early planning stages. 
+**Phase 0 (Infrastructure):** Complete - Project setup, CI/CD, build integration  
+**Phase 1 (Core Reading):** Complete - List command with filtering and performance optimization
 
-**⚠️ IMPORTANT:** Before starting implementation, read [docs/adding-new-cli-tool.md](docs/adding-new-cli-tool.md) which documents the infrastructure setup based on how `cycodgr` was added.
+### Try it now:
+```bash
+cd src/cycodj
+dotnet run -- list
+dotnet run -- list --last 50
+dotnet run -- list --date 2025-12-20
+```
 
-See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan.
+See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan and [docs/SUMMARY.md](docs/SUMMARY.md) for current status.
 
 ---
 
@@ -16,6 +23,7 @@ See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project 
 - Worktree: `C:/src/cycod-chat-journal`
 - Branch: `robch/2512-dec20-chat-journal`
 - Based on: `robch/2512-dec19-system-prompt-and-tools`
+- Next: Phase 2 (Branch Detection)
 
 ---
 

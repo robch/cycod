@@ -8,7 +8,7 @@ Created a new worktree and branch for **cycodj** - a standalone tool to analyze 
 - **Worktree**: `C:/src/cycod-chat-journal`
 - **Branch**: `robch/2512-dec20-chat-journal`
 - **Base**: `robch/2512-dec19-system-prompt-and-tools`
-- **Status**: Planning phase complete, ready for implementation
+- **Status**: Phase 0 & 1 COMPLETE ✅ - Ready for Phase 2
 
 ### Commits
 ```
@@ -116,7 +116,7 @@ cycodj branches --conversation conversation-1754437373970
 
 ## Implementation Roadmap
 
-### Phase 0: Project Infrastructure (FIRST!)
+### Phase 0: Project Infrastructure ✅ COMPLETE
 **READ FIRST:** [adding-new-cli-tool.md](adding-new-cli-tool.md)
 
 This documents the exact steps used to add `cycodgr` to the project:
@@ -127,13 +127,21 @@ This documents the exact steps used to add `cycodgr` to the project:
 - Naming conventions
 - Testing checklist
 
-### Phase 1: Core Reading (MVP)
-- Create project with CommandLineParser
-- Read JSONL files from history directory
-- Parse timestamps from filenames
-- Basic `list` command
+### Phase 1: Core Reading (MVP) ✅ COMPLETE
+- ✅ Create project with CommandLineParser
+- ✅ Read JSONL files from history directory
+- ✅ Parse timestamps from filenames
+- ✅ Parse metadata (title) from files
+- ✅ Basic `list` command with filtering and defaults
+- ✅ Performance optimization (default 20 limit)
 
-### Phase 2: Branch Detection
+**Deliverables:**
+- Models: ChatMessage, ToolCall, Conversation, ConversationMetadata
+- Helpers: JsonlReader, HistoryFileHelpers, TimestampHelpers
+- Commands: ListCommand (fully functional)
+- Performance: <2s for default list (tested with 8063 files)
+
+### Phase 2: Branch Detection (NEXT)
 - Extract tool_call_id sequences
 - Implement branch detection algorithm
 - Build conversation tree structure
