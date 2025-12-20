@@ -97,4 +97,69 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         return false;
     }
+
+    private bool TryParseShowCommandOptions(ShowCommand command, string[] args, ref int i, string arg)
+    {
+        // First positional argument is the conversation ID
+        if (!arg.StartsWith("-") && string.IsNullOrEmpty(command.ConversationId))
+        {
+            command.ConversationId = arg;
+            return true;
+        }
+        
+        if (arg == "--show-tool-calls")
+        {
+            command.ShowToolCalls = true;
+            return true;
+        }
+        else if (arg == "--show-tool-output")
+        {
+            command.ShowToolOutput = true;
+            return true;
+        }
+        else if (arg == "--max-content-length")
+        {
+            var length = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(length) || !int.TryParse(length, out var n))
+            {
+                throw new CommandLineException($"Missing or invalid length for {arg}");
+            }
+            command.MaxContentLength = n;
+            return true;
+        }
+        
+        return false;
+    }
+
+    private bool TryParseJournalCommandOptions(JournalCommand command, string[] args, ref int i, string arg)
+    {
+        if (arg == "--date" || arg == "-d")
+        {
+            var date = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(date))
+            {
+                throw new CommandLineException($"Missing date value for {arg}");
+            }
+            command.Date = date;
+            return true;
+        }
+        else if (arg == "--last-days")
+        {
+            var days = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(days) || !int.TryParse(days, out var n))
+            {
+                throw new CommandLineException($"Missing or invalid days for {arg}");
+            }
+            command.LastDays = n;
+            return true;
+        }
+        else if (arg == "--detailed")
+        {
+            command.Detailed = true;
+            return true;
+        }
+        
+        return false;
+    }
+
 }

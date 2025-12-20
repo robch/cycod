@@ -257,8 +257,8 @@ public class ContentSummarizer
 - [x] Extract conversation titles (from metadata or content)
 
 ### Phase 4: Commands & Output
-- [ ] Implement show command
-- [ ] Implement journal command with date filtering
+- [x] Implement show command
+- [x] Implement journal command with date filtering
 - [x] Implement branches command (completed in Phase 2 for testing)
 - [x] Add output formatting (colors, indentation) (completed in Phase 2)
 

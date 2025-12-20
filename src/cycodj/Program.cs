@@ -68,6 +68,14 @@ class Program
             {
                 return await listCommand.ExecuteAsync();
             }
+            else if (command is CycoDj.CommandLineCommands.ShowCommand showCommand)
+            {
+                return await showCommand.ExecuteAsync();
+            }
+            else if (command is CycoDj.CommandLineCommands.JournalCommand journalCommand)
+            {
+                return await journalCommand.ExecuteAsync();
+            }
             else if (command is CycoDj.CommandLineCommands.BranchesCommand branchesCommand)
             {
                 return await branchesCommand.ExecuteAsync();

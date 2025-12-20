@@ -268,6 +268,15 @@ public class ContentSummarizer
     }
 
     /// <summary>
+    /// Alias for Summarize - generates a brief summary of a conversation.
+    /// </summary>
+    public static string SummarizeConversation(Conversation conv, int maxLength = 200)
+    {
+        return Summarize(conv, maxLength);
+    }
+
+
+    /// <summary>
     /// Generates a detailed summary with user actions and assistant responses.
     /// </summary>
     public static string SummarizeDetailed(Conversation conv, int maxUserMessages = 5, int maxAssistantResponses = 5, int maxActions = 10)
