@@ -126,6 +126,7 @@ cycod_build_dotnet() {
     echo "Building $PROJECT..."
     dotnet build "$PROJECT" \
       -c "$CONFIGURATION" \
+      --framework net9.0 \
       --no-restore \
       -p:Version="$VERSION" \
       -p:AssemblyVersion="$NUMERIC_VERSION" \
@@ -171,27 +172,8 @@ cycod_pack_dotnet() {
   for TOOL in "${TOOLS[@]}"; do
     echo "→ Packing $TOOL"
     
-    # First publish for each platform
-    for RID in "${RIDS[@]}"; do
-      echo "  Publishing for $RID..."
-      dotnet publish "src/$TOOL/$TOOL.csproj" \
-        -c "$CONFIGURATION" \
-        -r "$RID" \
-        -p:Version="$VERSION" \
-        -p:AssemblyVersion="$NUMERIC_VERSION" \
-        -p:FileVersion="$NUMERIC_VERSION" \
-        -p:InformationalVersion="$VERSION"
-        
-      if [ $? -ne 0 ]; then
-        echo "Error: Failed to publish $TOOL for $RID"
-        return 1
-      fi
-    done
-    
-    # Then create the NuGet package
     dotnet pack "src/$TOOL/$TOOL.csproj" \
       -c "$CONFIGURATION" \
-      --no-build \
       -p:Version="$VERSION" \
       -p:AssemblyVersion="$NUMERIC_VERSION" \
       -p:FileVersion="$NUMERIC_VERSION" \
@@ -305,6 +287,7 @@ cycod_publish_self_contained() {
       # Run the publish command with self-contained and single-file parameters
       dotnet publish "src/$TOOL/$TOOL.csproj" \
         -c "$CONFIGURATION" \
+        --framework net9.0 \
         -r "$RID" \
         --self-contained \
         -p:PublishSingleFile=true \
