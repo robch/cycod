@@ -4,7 +4,11 @@
 
 ## Status: Planning / Early Development
 
-This tool is in early planning stages. See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan.
+This tool is in early planning stages. 
+
+**⚠️ IMPORTANT:** Before starting implementation, read [docs/adding-new-cli-tool.md](docs/adding-new-cli-tool.md) which documents the infrastructure setup based on how `cycodgr` was added.
+
+See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan.
 
 ---
 
