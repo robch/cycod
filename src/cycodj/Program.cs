@@ -80,6 +80,11 @@ class Program
             {
                 return await branchesCommand.ExecuteAsync();
             }
+            else if (command is CycoDj.CommandLineCommands.SearchCommand searchCommand)
+            {
+                await searchCommand.ExecuteAsync();
+                return 0;
+            }
         }
 
         return 0;
