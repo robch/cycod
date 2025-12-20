@@ -263,7 +263,7 @@ public class ContentSummarizer
 - [x] Add output formatting (colors, indentation) (completed in Phase 2)
 
 ### Phase 5: Advanced Features (Future)
-- [ ] Search across conversations
+- [x] Search across conversations
 - [ ] Export to markdown
 - [ ] Statistics (messages per day, tool usage, etc)
 - [ ] Interactive mode (TUI)
