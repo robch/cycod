@@ -1,0 +1,25 @@
+LIST COMMAND - List chat history conversations
+
+USAGE:
+  cycodj list [options]
+
+OPTIONS:
+  --date <date>     Filter conversations by date (YYYY-MM-DD, or "today")
+  --last <n>        Show only the last N conversations
+
+EXAMPLES:
+  cycodj list
+    List all conversations
+
+  cycodj list --date 2024-12-20
+    List conversations from December 20, 2024
+
+  cycodj list --date today
+    List today's conversations
+
+  cycodj list --last 10
+    Show the 10 most recent conversations
+
+DESCRIPTION:
+  The list command displays conversations from your chat history directory
+  (~/.cycod/history/). Each conversation is shown with its timestamp and ID.

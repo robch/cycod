@@ -1,0 +1,19 @@
+HELP - cycodj Chat History Journal Tool
+
+DESCRIPTION:
+  cycodj analyzes and journals your cycod chat history files stored in
+  ~/.cycod/history/ directory.
+
+MAIN COMMANDS:
+  list      - List conversations
+  help      - Show this help
+  version   - Show version information
+
+COMMON OPTIONS:
+  --debug          Enable debug output
+  --verbose        Enable verbose output
+  --quiet          Suppress output
+  --log <file>     Log to specified file
+
+For detailed help on each command, use:
+  cycodj help <command>

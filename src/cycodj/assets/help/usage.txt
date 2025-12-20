@@ -1,0 +1,16 @@
+USAGE: cycodj [command] [options]
+
+COMMANDS:
+  list              List conversations from chat history
+  help              Display help information
+  version           Display version information
+
+For more help on a specific command:
+  cycodj help <command>
+
+EXAMPLES:
+  cycodj list
+  cycodj list --date 2024-12-20
+  cycodj list --last 10
+  cycodj help
+  cycodj version
