@@ -238,11 +238,11 @@ public class ContentSummarizer
 
 ### Phase 1: Core Reading & Parsing
 - [x] Create project structure
-- [ ] Implement JsonlReader to parse chat-history files
-- [ ] Create ChatMessage and Conversation models
-- [ ] Read all files from history directory
-- [ ] Parse timestamps from filenames
-- [ ] Basic list command
+- [x] Implement JsonlReader to parse chat-history files
+- [x] Create ChatMessage and Conversation models
+- [x] Read all files from history directory
+- [x] Parse timestamps from filenames
+- [x] Basic list command
 
 ### Phase 2: Branch Detection
 - [ ] Implement tool_call_id extraction
