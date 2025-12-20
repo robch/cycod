@@ -264,8 +264,8 @@ public class ContentSummarizer
 
 ### Phase 5: Advanced Features (Future)
 - [x] Search across conversations
-- [ ] Export to markdown
-- [ ] Statistics (messages per day, tool usage, etc)
+- [x] Export to markdown
+- [x] Statistics (messages per day, tool usage, etc)
 - [ ] Interactive mode (TUI)
 - [ ] Conversation merging/cleanup tools
 
