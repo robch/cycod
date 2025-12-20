@@ -251,10 +251,10 @@ public class ContentSummarizer
 - [x] Test with real branched conversations
 
 ### Phase 3: Content Analysis
-- [ ] Filter user vs assistant vs tool messages
-- [ ] Implement content summarization
-- [ ] Detect and handle large tool outputs
-- [ ] Extract conversation titles (from metadata or content)
+- [x] Filter user vs assistant vs tool messages
+- [x] Implement content summarization
+- [x] Detect and handle large tool outputs
+- [x] Extract conversation titles (from metadata or content)
 
 ### Phase 4: Commands & Output
 - [ ] Implement show command
