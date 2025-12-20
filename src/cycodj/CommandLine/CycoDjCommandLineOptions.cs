@@ -24,7 +24,8 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         // For single-word commands, just return the command name
         var firstWord = name.Split(' ')[0].ToLowerInvariant();
         if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || 
-            firstWord == "branches" || firstWord == "search" || firstWord == "export" || firstWord == "stats")
+            firstWord == "branches" || firstWord == "search" || firstWord == "export" || 
+            firstWord == "stats" || firstWord == "cleanup")
         {
             return firstWord;
         }
@@ -44,6 +45,7 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         if (lowerCommandName.StartsWith("search")) return new SearchCommand();
         if (lowerCommandName.StartsWith("export")) return new ExportCommand();
         if (lowerCommandName.StartsWith("stats")) return new StatsCommand();
+        if (lowerCommandName.StartsWith("cleanup")) return new CleanupCommand();
         
         return base.NewCommandFromName(commandName);
     }
@@ -77,6 +79,10 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         else if (command is StatsCommand statsCommand)
         {
             return TryParseStatsCommandOptions(statsCommand, args, ref i, arg);
+        }
+        else if (command is CleanupCommand cleanupCommand)
+        {
+            return TryParseCleanupCommandOptions(cleanupCommand, args, ref i, arg);
         }
         
         return false;
@@ -362,5 +368,24 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         return false;
     }
+
+    private bool TryParseCleanupCommandOptions(CleanupCommand command, string[] args, ref int i, string arg)
+    {
+        if (arg == "--find-duplicates") { command.FindDuplicates = true; return true; }
+        else if (arg == "--remove-duplicates") { command.RemoveDuplicates = true; command.FindDuplicates = true; return true; }
+        else if (arg == "--find-empty") { command.FindEmpty = true; return true; }
+        else if (arg == "--remove-empty") { command.RemoveEmpty = true; command.FindEmpty = true; return true; }
+        else if (arg == "--older-than-days") 
+        { 
+            var days = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(days) || !int.TryParse(days, out var n))
+                throw new CommandLineException($"Missing or invalid days for {arg}");
+            command.OlderThanDays = n;
+            return true;
+        }
+        else if (arg == "--execute") { command.DryRun = false; return true; }
+        return false;
+    }
+
 
 }

@@ -93,6 +93,10 @@ class Program
             {
                 return await statsCommand.ExecuteAsync();
             }
+            else if (command is CycoDj.CommandLineCommands.CleanupCommand cleanupCommand)
+            {
+                return await cleanupCommand.ExecuteAsync();
+            }
         }
 
         return 0;
