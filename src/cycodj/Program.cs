@@ -61,6 +61,10 @@ class Program
             {
                 return await listCommand.ExecuteAsync();
             }
+            else if (command is CycoDj.CommandLineCommands.BranchesCommand branchesCommand)
+            {
+                return await branchesCommand.ExecuteAsync();
+            }
         }
 
         return 0;
