@@ -30,6 +30,12 @@ public class CycoDmdCliWrapper
     /// </summary>
     private const string TimeoutErrorSuffix = "timed out";
     
+    /// <summary>
+    /// Error message pattern when FileLogger fails in subprocess.
+    /// This can contaminate title generation output when cycodmd subprocess encounters logging issues.
+    /// </summary>
+    private const string FileLoggerWarningPattern = "WARNING: FileLogger failed";
+    
     #endregion
     /// <summary>
     /// Truncates command output according to line and total character limits.
@@ -655,6 +661,14 @@ public class CycoDmdCliWrapper
                 rawOutput.Contains(ExceptionErrorPattern) ||
                 (rawOutput.Contains(TimeoutErrorPattern) && rawOutput.Contains(TimeoutErrorSuffix)))
             {
+                return null;
+            }
+            
+            // Check if output is contaminated with FileLogger warnings from subprocess
+            // TODO: Improve subprocess logging to prevent this contamination in the first place
+            if (rawOutput.Contains(FileLoggerWarningPattern))
+            {
+                Logger.Warning("Title generation output contaminated with FileLogger warning - returning null");
                 return null;
             }
             
