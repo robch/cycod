@@ -89,6 +89,10 @@ class Program
             {
                 return await exportCommand.ExecuteAsync();
             }
+            else if (command is CycoDj.CommandLineCommands.StatsCommand statsCommand)
+            {
+                return await statsCommand.ExecuteAsync();
+            }
         }
 
         return 0;

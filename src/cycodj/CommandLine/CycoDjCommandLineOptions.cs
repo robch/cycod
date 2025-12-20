@@ -24,7 +24,7 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         // For single-word commands, just return the command name
         var firstWord = name.Split(' ')[0].ToLowerInvariant();
         if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || 
-            firstWord == "branches" || firstWord == "search" || firstWord == "export")
+            firstWord == "branches" || firstWord == "search" || firstWord == "export" || firstWord == "stats")
         {
             return firstWord;
         }
@@ -43,6 +43,7 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         if (lowerCommandName.StartsWith("branches")) return new BranchesCommand();
         if (lowerCommandName.StartsWith("search")) return new SearchCommand();
         if (lowerCommandName.StartsWith("export")) return new ExportCommand();
+        if (lowerCommandName.StartsWith("stats")) return new StatsCommand();
         
         return base.NewCommandFromName(commandName);
     }
@@ -72,6 +73,10 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         else if (command is ExportCommand exportCommand)
         {
             return TryParseExportCommandOptions(exportCommand, args, ref i, arg);
+        }
+        else if (command is StatsCommand statsCommand)
+        {
+            return TryParseStatsCommandOptions(statsCommand, args, ref i, arg);
         }
         
         return false;
@@ -322,5 +327,40 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return false;
     }
 
+    private bool TryParseStatsCommandOptions(StatsCommand command, string[] args, ref int i, string arg)
+    {
+        if (arg == "--date" || arg == "-d")
+        {
+            var date = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(date))
+            {
+                throw new CommandLineException($"Missing date value for {arg}");
+            }
+            command.Date = date;
+            return true;
+        }
+        else if (arg == "--last")
+        {
+            var count = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            {
+                throw new CommandLineException($"Missing or invalid count for {arg}");
+            }
+            command.Last = n;
+            return true;
+        }
+        else if (arg == "--show-tools")
+        {
+            command.ShowTools = true;
+            return true;
+        }
+        else if (arg == "--no-dates")
+        {
+            command.ShowDates = false;
+            return true;
+        }
+        
+        return false;
+    }
 
 }
