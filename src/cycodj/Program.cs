@@ -9,6 +9,13 @@ class Program
     {
         CycoDjProgramInfo _programInfo = new();
 
+        // Hidden test command for smoke testing (check before parsing)
+        if (args.Length > 0 && args[0] == "--test")
+        {
+            CycoDj.Tests.ContentSummarizerSmokeTest.RunTests();
+            return 0;
+        }
+
         LoggingInitializer.InitializeMemoryLogger();
         LoggingInitializer.LogStartupDetails(args);
         Logger.Info($"Starting {ProgramInfo.Name}, version {VersionInfo.GetVersion()}");

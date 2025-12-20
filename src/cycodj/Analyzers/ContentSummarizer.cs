@@ -16,8 +16,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<string> GetUserMessages(Conversation conv, bool excludeLarge = true, int maxLength = 10000)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<string>();
+
         var userMessages = conv.Messages
-            .Where(m => m.Role == "user")
+            .Where(m => m?.Role == "user" && m.Content != null)
             .Select(m => m.Content)
             .ToList();
 
@@ -36,8 +39,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<ChatMessage> GetUserMessagesRaw(Conversation conv, bool excludeLarge = true, int maxLength = 10000)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<ChatMessage>();
+
         var userMessages = conv.Messages
-            .Where(m => m.Role == "user")
+            .Where(m => m?.Role == "user" && m.Content != null)
             .ToList();
 
         if (excludeLarge)
@@ -55,9 +61,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<string> GetAssistantResponses(Conversation conv, bool abbreviate = true, int maxLength = 500)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<string>();
+
         var assistantMessages = conv.Messages
-            .Where(m => m.Role == "assistant")
-            .Where(m => !string.IsNullOrWhiteSpace(m.Content)) // Only messages with actual text
+            .Where(m => m?.Role == "assistant" && !string.IsNullOrWhiteSpace(m.Content))
             .Select(m => m.Content)
             .ToList();
 
@@ -76,8 +84,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<ChatMessage> GetAssistantMessagesRaw(Conversation conv, bool excludeWithToolCallsOnly = false)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<ChatMessage>();
+
         var assistantMessages = conv.Messages
-            .Where(m => m.Role == "assistant")
+            .Where(m => m?.Role == "assistant")
             .ToList();
 
         if (excludeWithToolCallsOnly)
@@ -96,8 +107,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<ChatMessage> GetToolMessages(Conversation conv)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<ChatMessage>();
+
         return conv.Messages
-            .Where(m => m.Role == "tool")
+            .Where(m => m?.Role == "tool")
             .ToList();
     }
 
@@ -106,8 +120,11 @@ public class ContentSummarizer
     /// </summary>
     public static List<ChatMessage> GetSystemMessages(Conversation conv)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<ChatMessage>();
+
         return conv.Messages
-            .Where(m => m.Role == "system")
+            .Where(m => m?.Role == "system")
             .ToList();
     }
 
@@ -116,8 +133,12 @@ public class ContentSummarizer
     /// </summary>
     public static List<ChatMessage> FilterByRole(Conversation conv, string role)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (string.IsNullOrEmpty(role)) throw new ArgumentNullException(nameof(role));
+        if (conv.Messages == null) return new List<ChatMessage>();
+
         return conv.Messages
-            .Where(m => m.Role.Equals(role, StringComparison.OrdinalIgnoreCase))
+            .Where(m => m != null && m.Role.Equals(role, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
 
@@ -126,16 +147,20 @@ public class ContentSummarizer
     /// </summary>
     public static List<(string toolName, string toolCallId)> GetToolCallsInvoked(Conversation conv)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<(string, string)>();
+
         var toolCalls = new List<(string, string)>();
 
-        foreach (var msg in conv.Messages.Where(m => m.Role == "assistant"))
+        foreach (var msg in conv.Messages.Where(m => m?.Role == "assistant"))
         {
             if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
             {
                 foreach (var toolCall in msg.ToolCalls)
                 {
+                    if (toolCall == null) continue;
                     var toolName = toolCall.Function?.Name ?? "unknown";
-                    toolCalls.Add((toolName, toolCall.Id));
+                    toolCalls.Add((toolName, toolCall.Id ?? "unknown"));
                 }
             }
         }
@@ -148,6 +173,9 @@ public class ContentSummarizer
     /// </summary>
     public static List<string> GetActionSummary(Conversation conv, int maxToolOutputLength = 100)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<string>();
+
         var actions = new List<string>();
         var toolCalls = GetToolCallsInvoked(conv);
         
@@ -155,10 +183,10 @@ public class ContentSummarizer
         {
             // Find the corresponding tool result
             var toolResult = conv.Messages
-                .Where(m => m.Role == "tool" && m.ToolCallId == toolCallId)
+                .Where(m => m?.Role == "tool" && m.ToolCallId == toolCallId)
                 .FirstOrDefault();
 
-            if (toolResult != null)
+            if (toolResult != null && toolResult.Content != null)
             {
                 var result = toolResult.Content.Length > maxToolOutputLength 
                     ? toolResult.Content.Substring(0, maxToolOutputLength) + "..." 
@@ -182,8 +210,9 @@ public class ContentSummarizer
     /// </summary>
     public static bool IsLargeToolOutput(ChatMessage msg, int threshold = 1000)
     {
-        if (msg.Role != "tool")
-            return false;
+        if (msg == null) return false;
+        if (msg.Role != "tool") return false;
+        if (msg.Content == null) return false;
 
         return msg.Content.Length > threshold;
     }
@@ -193,8 +222,9 @@ public class ContentSummarizer
     /// </summary>
     public static string AbbreviateToolOutput(ChatMessage msg, int maxLines = 5)
     {
-        if (msg.Role != "tool")
-            return msg.Content;
+        if (msg == null) return string.Empty;
+        if (msg.Content == null) return string.Empty;
+        if (msg.Role != "tool") return msg.Content;
 
         var lines = msg.Content.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         
@@ -202,7 +232,7 @@ public class ContentSummarizer
             return msg.Content;
 
         var abbreviated = new StringBuilder();
-        for (int i = 0; i < maxLines; i++)
+        for (int i = 0; i < maxLines && i < lines.Length; i++)
         {
             abbreviated.AppendLine(lines[i]);
         }
@@ -216,6 +246,8 @@ public class ContentSummarizer
     /// </summary>
     public static string Summarize(Conversation conv, int maxLength = 200)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        
         var userMessages = GetUserMessages(conv, excludeLarge: true, maxLength: 500);
         
         if (userMessages.Count == 0)
@@ -240,6 +272,8 @@ public class ContentSummarizer
     /// </summary>
     public static string SummarizeDetailed(Conversation conv, int maxUserMessages = 5, int maxAssistantResponses = 5, int maxActions = 10)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        
         var summary = new StringBuilder();
         
         var userMessages = GetUserMessages(conv, excludeLarge: true, maxLength: 500);
@@ -249,9 +283,9 @@ public class ContentSummarizer
 
         summary.AppendLine($"Conversation: {conv.GetDisplayTitle()}");
         summary.AppendLine($"Started: {conv.Timestamp:yyyy-MM-dd HH:mm:ss}");
-        summary.AppendLine($"Messages: {conv.Messages.Count} total ({userMessages.Count} user, {assistantResponses.Count} assistant, {toolMessages.Count} tool)");
+        summary.AppendLine($"Messages: {(conv.Messages?.Count ?? 0)} total ({userMessages.Count} user, {assistantResponses.Count} assistant, {toolMessages.Count} tool)");
         
-        if (conv.BranchIds.Count > 0)
+        if (conv.BranchIds != null && conv.BranchIds.Count > 0)
         {
             summary.AppendLine($"Branches: {conv.BranchIds.Count}");
         }
@@ -316,6 +350,8 @@ public class ContentSummarizer
     /// </summary>
     public static string ExtractTitle(Conversation conv)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        
         // First, check metadata
         if (!string.IsNullOrEmpty(conv.Metadata?.Title))
         {
@@ -339,8 +375,8 @@ public class ContentSummarizer
             return firstLine;
         }
 
-        // Fall back to ID
-        return conv.Id;
+        // Fall back to ID (ensure never null)
+        return conv.Id ?? "(Untitled)";
     }
 
     /// <summary>
@@ -348,10 +384,13 @@ public class ContentSummarizer
     /// </summary>
     public static (int user, int assistant, int tool, int system) GetMessageCounts(Conversation conv)
     {
-        var userCount = conv.Messages.Count(m => m.Role == "user");
-        var assistantCount = conv.Messages.Count(m => m.Role == "assistant");
-        var toolCount = conv.Messages.Count(m => m.Role == "tool");
-        var systemCount = conv.Messages.Count(m => m.Role == "system");
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return (0, 0, 0, 0);
+
+        var userCount = conv.Messages.Count(m => m?.Role == "user");
+        var assistantCount = conv.Messages.Count(m => m?.Role == "assistant");
+        var toolCount = conv.Messages.Count(m => m?.Role == "tool");
+        var systemCount = conv.Messages.Count(m => m?.Role == "system");
 
         return (userCount, assistantCount, toolCount, systemCount);
     }
@@ -361,8 +400,9 @@ public class ContentSummarizer
     /// </summary>
     public static bool IsPossiblyPipedContent(ChatMessage msg, int lengthThreshold = 5000)
     {
-        if (msg.Role != "user")
-            return false;
+        if (msg == null) return false;
+        if (msg.Role != "user") return false;
+        if (msg.Content == null) return false;
 
         // Heuristics:
         // 1. Very long content
@@ -370,10 +410,11 @@ public class ContentSummarizer
             return true;
 
         // 2. Contains structured data patterns (JSON, XML, etc.)
-        if (msg.Content.TrimStart().StartsWith("{") || msg.Content.TrimStart().StartsWith("["))
+        var trimmed = msg.Content.TrimStart();
+        if (trimmed.StartsWith("{") || trimmed.StartsWith("["))
             return true;
 
-        if (msg.Content.TrimStart().StartsWith("<") && msg.Content.Contains("</"))
+        if (trimmed.StartsWith("<") && msg.Content.Contains("</"))
             return true;
 
         // 3. Contains many code markers
@@ -388,14 +429,18 @@ public class ContentSummarizer
     /// </summary>
     public static Dictionary<string, int> GetToolCallStatistics(Conversation conv)
     {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new Dictionary<string, int>();
+        
         var stats = new Dictionary<string, int>();
         
-        foreach (var msg in conv.Messages.Where(m => m.Role == "assistant"))
+        foreach (var msg in conv.Messages.Where(m => m?.Role == "assistant"))
         {
             if (msg.ToolCalls != null)
             {
                 foreach (var toolCall in msg.ToolCalls)
                 {
+                    if (toolCall == null) continue;
                     var toolName = toolCall.Function?.Name ?? "unknown";
                     if (!stats.ContainsKey(toolName))
                     {
