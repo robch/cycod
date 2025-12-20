@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Import shared version settings -->
+  <Import Project="../../BuildCommon.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <AssemblyName>cycodgr</AssemblyName>
+  
+    <OutputType>Exe</OutputType>
+    
+    <!-- Cross-platform support -->
+    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
+    
+    <!-- NuGet Package Properties -->
+    <PackageId>CycoDgr</PackageId>
+    <Authors>Rob Chambers</Authors>
+    <Description>GitHub repository and code search CLI tool - dig for repos and code on GitHub</Description>
+    <PackageTags>cli;github;search;code-search;repository-search;git;gh</PackageTags>
+    <PackageProjectUrl>https://github.com/robch/cycod-cycodgh-github-search</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- .NET Tool Configuration -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>cycodgr</ToolCommandName>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\common\common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\help\**">
+      <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="assets\prompts\**">
+      <Link>prompts\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

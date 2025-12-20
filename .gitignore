@@ -26,3 +26,10 @@ tests/cycodt-yaml/inception-layer-1/test-results-simple.trx
 tests/cycodt-yaml/inception-layer-1/test-results-simple?.trx
 *.log
 .vscode/settings.json
+
+obj/
+# Test cloned repos
+temp/external/
+temp/test-repos/
+src/cycodgr/bin/
+src/cycodgr/obj/

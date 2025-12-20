@@ -1,0 +1,39 @@
+CYCODGR FILTERING EXAMPLES
+
+USAGE: cycodgr [...] --FILTER [OPTIONS]
+
+EXAMPLES
+
+  EXAMPLE 1: High-quality C# authentication libraries
+
+    cycodgr --repo-contains "authentication" --language csharp --min-stars 500
+
+  EXAMPLE 2: Terminal emulators in Rust, excluding Alacritty
+
+    cycodgr --repo-contains "terminal" --language rust --exclude alacritty/alacritty
+
+  EXAMPLE 3: Most popular Go web frameworks
+
+    cycodgr --repo-contains "web framework" --language go --sort stars --max-results 10
+
+  EXAMPLE 4: Find parser implementations in specific repos
+
+    cycodgr microsoft/terminal --file-contains "StateMachine"
+
+  EXAMPLE 5: Only forked repos to find derivatives
+
+    cycodgr --repo-contains "react framework" --only-forks --min-stars 100
+
+  EXAMPLE 6: Recently updated Python ML projects
+
+    cycodgr --repo-contains "machine learning" --language python --sort updated --max-results 10
+
+  EXAMPLE 7: Exclude multiple patterns
+
+    cycodgr --repo-contains "terminal" --exclude microsoft/terminal --exclude gnome/vte
+
+SEE ALSO
+
+  cycodgr help filtering
+  cycodgr help examples
+  cycodgr help query syntax

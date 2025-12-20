@@ -1,0 +1,31 @@
+CYCODGR CLONING EXAMPLES
+
+USAGE: cycodgr --repo-contains "QUERY" --clone [OPTIONS]
+
+EXAMPLES
+
+  EXAMPLE 1: Clone top JWT authentication libraries
+
+    cycodgr --repo-contains "jwt authentication" --language csharp --clone --max-results 5
+
+  EXAMPLE 2: Clone terminal emulators for research
+
+    cycodgr --repo-contains "terminal emulator" --language rust --clone --clone-dir ~/terminals
+
+  EXAMPLE 3: Clone as submodules for a meta-project
+
+    cycodgr --repo-contains "dotnet libraries" --owner microsoft --clone --as-submodules
+
+  EXAMPLE 4: Clone top machine learning frameworks
+
+    cycodgr --repo-contains "machine learning" --language python --min-stars 10000 --clone --max-clone 3
+
+  EXAMPLE 5: Clone most recently updated projects
+
+    cycodgr --repo-contains "web framework" --language go --sort updated --clone --max-clone 5
+
+SEE ALSO
+
+  cycodgr help cloning
+  cycodgr help examples
+  cycodgr help filtering

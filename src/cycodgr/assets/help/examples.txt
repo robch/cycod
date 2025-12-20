@@ -1,0 +1,60 @@
+USAGE: cycodgr [REPO_PATTERN ...] [OPTIONS]
+
+EXAMPLES
+
+  EXAMPLE 1: Get repository information
+
+    cycodgr microsoft/vscode
+    cycodgr microsoft/vscode dotnet/aspire gnome/vte
+
+  EXAMPLE 2: Search for repositories by keywords
+
+    cycodgr --repo-contains "jwt authentication" --max-results 10
+    cycodgr --repo-contains "terminal emulator" --language rust --min-stars 1000
+    cycodgr --repo-contains "machine learning" --language python --sort stars
+
+  EXAMPLE 3: Search for code
+
+    cycodgr --file-contains "CreatePseudoConsole" --language cpp --max-results 10
+    cycodgr --file-contains "AddJwtBearer" --language csharp --max-results 5
+    cycodgr --file-contains "OSC 133" --max-results 10
+
+  EXAMPLE 4: Search within specific repositories
+
+    cycodgr microsoft/terminal --file-contains "StateMachine"
+    cycodgr wez/wezterm alacritty/alacritty --file-contains "vte"
+    cycodgr @@my-repos.txt --file-contains "TODO"
+
+  EXAMPLE 5: Use unified search (repos + code)
+
+    cycodgr --contains "jwt" --max-results 5
+    cycodgr --contains "shell integration" --language cpp --max-results 3
+
+  EXAMPLE 6: Use language-specific shortcuts
+
+    cycodgr --cs-file-contains "async Task" --max-results 5
+    cycodgr --py-file-contains "import asyncio" --max-results 5
+    cycodgr --rs-file-contains "async fn" --max-results 5
+    cycodgr --ts-file-contains "interface" --max-results 5
+
+  EXAMPLE 7: Filter by repository criteria
+
+    cycodgr --repo-contains "web framework" --language go --min-stars 10000
+    cycodgr --repo-contains "testing" --owner microsoft --max-results 20
+    cycodgr --repo-contains "compiler" --exclude llvm/llvm-project
+
+  EXAMPLE 8: Save results to files
+
+    cycodgr --repo-contains "dotnet libraries" --save-output results.md
+    cycodgr --file-contains "parser" --save-output code-results.md
+
+SEE ALSO
+
+  cycodgr help
+  cycodgr help usage
+  cycodgr help options
+  cycodgr help language shortcuts
+  cycodgr help filtering
+  cycodgr help unified search
+  cycodgr help cloning
+  cycodgr help output formats

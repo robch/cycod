@@ -19,7 +19,7 @@ class FindFilesCommand : CycoDmdCommand
         IncludeLineCountBefore = 0;
         IncludeLineCountAfter = 0;
         IncludeLineNumbers = false;
-        HighlightMatches = false;
+        HighlightMatches = null;
         FilesOnly = false;
         ReplaceWithText = null;
         ExecuteMode = false;
@@ -54,7 +54,7 @@ class FindFilesCommand : CycoDmdCommand
             IncludeLineCountBefore == 0 &&
             IncludeLineCountAfter == 0 &&
             IncludeLineNumbers == false &&
-            HighlightMatches == false &&
+            HighlightMatches == null &&
             FilesOnly == false &&
             string.IsNullOrEmpty(ReplaceWithText) &&
             ExecuteMode == false &&
@@ -99,7 +99,7 @@ class FindFilesCommand : CycoDmdCommand
     public int IncludeLineCountBefore;
     public int IncludeLineCountAfter;
     public bool IncludeLineNumbers;
-    public bool HighlightMatches;
+    public bool? HighlightMatches;
     public bool FilesOnly;
     public string? ReplaceWithText;
     public bool ExecuteMode;
