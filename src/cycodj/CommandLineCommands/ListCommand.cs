@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CycoDj.Analyzers;
 using CycoDj.CommandLine;
 using CycoDj.Helpers;
 
@@ -10,6 +11,7 @@ public class ListCommand : CycoDjCommand
 {
     public string? Date { get; set; }
     public int Last { get; set; } = 0;
+    public bool ShowBranches { get; set; } = false;
 
     public override async Task<int> ExecuteAsync()
     {
@@ -72,6 +74,9 @@ public class ListCommand : CycoDjCommand
             return 1;
         }
         
+        // Detect branches
+        BranchDetector.DetectBranches(conversations);
+        
         // Display conversations
         foreach (var conv in conversations)
         {
@@ -80,8 +85,11 @@ public class ListCommand : CycoDjCommand
             var assistantCount = conv.Messages.Count(m => m.Role == "assistant");
             var toolCount = conv.Messages.Count(m => m.Role == "tool");
             
+            // Show indent if this is a branch
+            var indent = conv.ParentId != null ? "  ↳ " : "";
+            
             // Show timestamp
-            ConsoleHelpers.Write($"{timestamp}", ConsoleColor.White);
+            ConsoleHelpers.Write($"{indent}{timestamp}", ConsoleColor.White);
             ConsoleHelpers.Write($" - ", ConsoleColor.Gray);
             
             // Show title if available, otherwise show ID
@@ -96,12 +104,29 @@ public class ListCommand : CycoDjCommand
                 ConsoleHelpers.WriteLine($"{conv.Id}", ConsoleColor.Cyan);
             }
             
-            ConsoleHelpers.Write($"  Messages: ", ConsoleColor.Gray);
+            ConsoleHelpers.Write($"{indent}  Messages: ", ConsoleColor.Gray);
             ConsoleHelpers.Write($"{userCount} user", ConsoleColor.Green);
             ConsoleHelpers.Write($", ", ConsoleColor.Gray);
             ConsoleHelpers.Write($"{assistantCount} assistant", ConsoleColor.Blue);
             ConsoleHelpers.Write($", ", ConsoleColor.Gray);
             ConsoleHelpers.WriteLine($"{toolCount} tool", ConsoleColor.DarkGray);
+            
+            // Show branch info if ShowBranches is enabled
+            if (ShowBranches)
+            {
+                if (conv.ParentId != null)
+                {
+                    ConsoleHelpers.WriteLine($"{indent}  Branch of: {conv.ParentId}", ConsoleColor.Yellow);
+                }
+                if (conv.BranchIds.Count > 0)
+                {
+                    ConsoleHelpers.WriteLine($"{indent}  Branches: {conv.BranchIds.Count}", ConsoleColor.Yellow);
+                }
+                if (conv.ToolCallIds.Count > 0)
+                {
+                    ConsoleHelpers.WriteLine($"{indent}  Tool calls: {conv.ToolCallIds.Count}", ConsoleColor.DarkGray);
+                }
+            }
             
             // Show first user message as preview if available
             var firstUserMsg = conv.Messages.FirstOrDefault(m => m.Role == "user");
@@ -111,13 +136,20 @@ public class ListCommand : CycoDjCommand
                     ? firstUserMsg.Content.Substring(0, 80) + "..." 
                     : firstUserMsg.Content;
                 preview = preview.Replace("\n", " ").Replace("\r", "");
-                ConsoleHelpers.WriteLine($"  > {preview}", ConsoleColor.DarkGray);
+                ConsoleHelpers.WriteLine($"{indent}  > {preview}", ConsoleColor.DarkGray);
             }
             
             ConsoleHelpers.WriteLine();
         }
         
         ConsoleHelpers.WriteLine($"Total: {conversations.Count} conversation(s)", ConsoleColor.Green);
+        
+        // Show branch statistics
+        var branchedConvs = conversations.Count(c => c.ParentId != null);
+        if (branchedConvs > 0)
+        {
+            ConsoleHelpers.WriteLine($"Branches: {branchedConvs} conversation(s) are branches of others", ConsoleColor.Yellow);
+        }
         
         return await Task.FromResult(0);
     }

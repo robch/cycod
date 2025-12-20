@@ -245,10 +245,10 @@ public class ContentSummarizer
 - [x] Basic list command
 
 ### Phase 2: Branch Detection
-- [ ] Implement tool_call_id extraction
-- [ ] Build BranchDetector algorithm
-- [ ] Create ConversationTree structure
-- [ ] Test with real branched conversations
+- [x] Implement tool_call_id extraction
+- [x] Build BranchDetector algorithm
+- [x] Create ConversationTree structure
+- [x] Test with real branched conversations
 
 ### Phase 3: Content Analysis
 - [ ] Filter user vs assistant vs tool messages
