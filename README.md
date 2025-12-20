@@ -1,4 +1,21 @@
-# CycoD - AI-powered CLI
+# cycodj - Chat Journal Tool
+
+> A standalone tool for analyzing and summarizing cycod chat history files
+
+## Status: Planning / Early Development
+
+This tool is in early planning stages. See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan.
+
+---
+
+**Branch Info:**
+- Worktree: `C:/src/cycod-chat-journal`
+- Branch: `robch/2512-dec20-chat-journal`
+- Based on: `robch/2512-dec19-system-prompt-and-tools`
+
+---
+
+# Original CycoD README (for reference)
 
 CycoD is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. Built in C#, it leverages AI chat models from multiple providers with function calling capabilities to create a powerful tool for AI-assisted command-line operations.
 
