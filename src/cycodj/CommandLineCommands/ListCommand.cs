@@ -43,12 +43,24 @@ public class ListCommand : CycoDjCommand
             }
         }
         
-        // Limit to last N if specified
-        if (Last > 0 && files.Count > Last)
+        // Apply sensible default limit if not specified and no date filter
+        var effectiveLimit = Last;
+        if (effectiveLimit == 0 && string.IsNullOrEmpty(Date))
         {
-            files = files.Take(Last).ToList();
-            ConsoleHelpers.WriteLine($"Showing last {Last} conversations", ConsoleColor.Gray);
+            effectiveLimit = 20; // Default to last 20 conversations
+            ConsoleHelpers.WriteLine($"Showing last {effectiveLimit} conversations (use --last N to change, or --date to filter)", ConsoleColor.Gray);
             ConsoleHelpers.WriteLine();
+        }
+        
+        // Limit to last N if specified or defaulted
+        if (effectiveLimit > 0 && files.Count > effectiveLimit)
+        {
+            files = files.Take(effectiveLimit).ToList();
+            if (Last > 0)
+            {
+                ConsoleHelpers.WriteLine($"Showing last {effectiveLimit} conversations", ConsoleColor.Gray);
+                ConsoleHelpers.WriteLine();
+            }
         }
         
         // Read and display conversations

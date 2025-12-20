@@ -5,21 +5,29 @@ USAGE:
 
 OPTIONS:
   --date <date>     Filter conversations by date (YYYY-MM-DD, or "today")
-  --last <n>        Show only the last N conversations
+  --last <n>        Show only the last N conversations (default: 20 if no --date)
 
 EXAMPLES:
   cycodj list
-    List all conversations
+    List last 20 conversations (default)
 
-  cycodj list --date 2024-12-20
-    List conversations from December 20, 2024
+  cycodj list --last 50
+    Show the 50 most recent conversations
+
+  cycodj list --date 2025-12-20
+    List all conversations from December 20, 2025
 
   cycodj list --date today
     List today's conversations
 
-  cycodj list --last 10
-    Show the 10 most recent conversations
+  cycodj list --date 2025-12-20 --last 5
+    Show 5 most recent conversations from a specific date
 
 DESCRIPTION:
   The list command displays conversations from your chat history directory
-  (~/.cycod/history/). Each conversation is shown with its timestamp and ID.
+  (~/.cycod/history/). Each conversation is shown with its timestamp, title
+  (if available), message counts by role, and a preview of the first user
+  message.
+  
+  By default, shows the last 20 conversations to avoid loading thousands of
+  files. Use --last to change this limit, or --date to filter by specific date.
