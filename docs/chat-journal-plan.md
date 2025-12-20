@@ -259,8 +259,8 @@ public class ContentSummarizer
 ### Phase 4: Commands & Output
 - [ ] Implement show command
 - [ ] Implement journal command with date filtering
-- [ ] Implement branches command
-- [ ] Add output formatting (colors, indentation)
+- [x] Implement branches command (completed in Phase 2 for testing)
+- [x] Add output formatting (colors, indentation) (completed in Phase 2)
 
 ### Phase 5: Advanced Features (Future)
 - [ ] Search across conversations

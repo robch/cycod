@@ -6,6 +6,7 @@ DESCRIPTION:
 
 MAIN COMMANDS:
   list      - List conversations
+  branches  - Show conversation branching tree
   help      - Show this help
   version   - Show version information
 

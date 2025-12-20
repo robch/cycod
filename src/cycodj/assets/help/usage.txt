@@ -2,6 +2,7 @@ USAGE: cycodj [command] [options]
 
 COMMANDS:
   list              List conversations from chat history
+  branches          Show conversation branching tree
   help              Display help information
   version           Display version information
 
@@ -12,5 +13,8 @@ EXAMPLES:
   cycodj list
   cycodj list --date 2024-12-20
   cycodj list --last 10
+  cycodj branches
+  cycodj branches --date 2024-12-20
+  cycodj branches --verbose
   cycodj help
   cycodj version
