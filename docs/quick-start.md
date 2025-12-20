@@ -1,21 +1,89 @@
 # Quick Start Implementation Guide
 
-## Phase 1: Get Something Working (Day 1)
+## Important: Follow Existing Patterns!
+
+Before implementing, **READ**: [adding-new-cli-tool.md](adding-new-cli-tool.md) - This shows the exact steps used to add `cycodgr` to the project, including all the infrastructure changes needed.
+
+## Phase 1: Set Up Project Infrastructure (Day 1)
 
 ### Goal
-Read JSONL files and list conversations. No fancy features yet.
+Create the project with all necessary infrastructure (solution, CI/CD, build scripts).
 
 ### Tasks
-1. **Create the project**
+
+1. **Create the project structure**
    ```bash
    cd src
-   dotnet new console -n cycodj
-   dotnet sln add cycodj/cycodj.csproj
+   mkdir cycodj
    cd cycodj
-   dotnet add package CommandLineParser
    ```
 
-2. **Create basic Program.cs**
+2. **Create cycodj.csproj** (see [adding-new-cli-tool.md](adding-new-cli-tool.md) for template)
+   ```xml
+   <Project Sdk="Microsoft.NET.Sdk">
+     <Import Project="../../BuildCommon.targets" />
+     
+     <PropertyGroup>
+       <TargetFramework>net9.0</TargetFramework>
+       <OutputType>Exe</OutputType>
+       <AssemblyName>cycodj</AssemblyName>
+       
+       <!-- NuGet Package Properties -->
+       <PackageId>CycoDj</PackageId>
+       <PackAsTool>true</PackAsTool>
+       <ToolCommandName>cycodj</ToolCommandName>
+       <Description>Chat history journal and analysis tool</Description>
+       <PackageTags>cli;chat-history;journal;analysis</PackageTags>
+       <!-- ... other properties ... -->
+     </PropertyGroup>
+     
+     <ItemGroup>
+       <ProjectReference Include="..\common\common.csproj" />
+     </ItemGroup>
+   </Project>
+   ```
+
+3. **Create CycoDjProgramInfo.cs**
+   ```csharp
+   public class CycoDjProgramInfo : ProgramInfo
+   {
+       public CycoDjProgramInfo() : base(
+           () => "cycodj",
+           () => "Chat History Journal and Analysis Tool",
+           () => ".cycod",
+           () => typeof(CycoDjProgramInfo).Assembly)
+       {
+       }
+   }
+   ```
+
+4. **Create basic Program.cs** (use template from [adding-new-cli-tool.md](adding-new-cli-tool.md))
+
+5. **Add to cycod.sln**
+   ```bash
+   cd ../..
+   dotnet sln add src/cycodj/cycodj.csproj
+   ```
+
+6. **Test it builds**
+   ```bash
+   dotnet build src/cycodj/cycodj.csproj
+   ```
+
+7. **Update CI/CD workflows** (see [adding-new-cli-tool.md](adding-new-cli-tool.md) for exact changes needed):
+   - `.github/workflows/ci.yml` - Add cycodj to PATH, which checks, artifacts
+   - `.github/workflows/release.yml` - Add cycodj to release builds
+
+8. **Update build scripts**:
+   - `scripts/_functions.sh` - Add "cycodj" to TOOLS arrays
+
+### Checkpoint
+You should now be able to:
+- Build the solution successfully
+- Run `dotnet build` without errors
+- See cycodj in the solution
+
+## Phase 2: Basic Command Structure (Day 1-2)
    ```csharp
    using CommandLine;
    

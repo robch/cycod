@@ -225,6 +225,17 @@ public class ContentSummarizer
 
 ## Implementation Phases
 
+**Prerequisites:** Before starting implementation, review [adding-new-cli-tool.md](adding-new-cli-tool.md) which documents the exact infrastructure changes needed based on how `cycodgr` was added to the project.
+
+### Phase 0: Project Setup (Foundation)
+- [ ] Create project structure following cycod patterns
+- [ ] Set up cycodj.csproj with proper PackageId and tool settings
+- [ ] Add to solution file (cycod.sln)
+- [ ] Update CI/CD workflows (.github/workflows/*.yml)
+- [ ] Update build scripts (scripts/_functions.sh)
+- [ ] Create CycoDjProgramInfo class
+- [ ] Test project builds and integrates with CI
+
 ### Phase 1: Core Reading & Parsing
 - [x] Create project structure
 - [ ] Implement JsonlReader to parse chat-history files

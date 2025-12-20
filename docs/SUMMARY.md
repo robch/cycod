@@ -116,6 +116,17 @@ cycodj branches --conversation conversation-1754437373970
 
 ## Implementation Roadmap
 
+### Phase 0: Project Infrastructure (FIRST!)
+**READ FIRST:** [adding-new-cli-tool.md](adding-new-cli-tool.md)
+
+This documents the exact steps used to add `cycodgr` to the project:
+- Project file (.csproj) configuration
+- Solution file changes
+- CI/CD workflow updates
+- Build script modifications
+- Naming conventions
+- Testing checklist
+
 ### Phase 1: Core Reading (MVP)
 - Create project with CommandLineParser
 - Read JSONL files from history directory

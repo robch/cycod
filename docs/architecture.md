@@ -2,7 +2,9 @@
 
 ## Overview
 
-cycodj is a standalone .NET console application for analyzing cycod chat history files. It follows the same architectural patterns as other cycod tools (cycodmd, cycodt).
+cycodj is a standalone .NET console application for analyzing cycod chat history files. It follows the same architectural patterns as other cycod tools (cycodmd, cycodt, cycodgr).
+
+**IMPORTANT:** See [adding-new-cli-tool.md](adding-new-cli-tool.md) for infrastructure requirements (solution file, CI/CD, build scripts) based on how `cycodgr` was added.
 
 ## Technology Stack
 
