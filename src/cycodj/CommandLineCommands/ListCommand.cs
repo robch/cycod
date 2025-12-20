@@ -68,9 +68,21 @@ public class ListCommand : CycoDjCommand
             var assistantCount = conv.Messages.Count(m => m.Role == "assistant");
             var toolCount = conv.Messages.Count(m => m.Role == "tool");
             
+            // Show timestamp
             ConsoleHelpers.Write($"{timestamp}", ConsoleColor.White);
             ConsoleHelpers.Write($" - ", ConsoleColor.Gray);
-            ConsoleHelpers.WriteLine($"{conv.Id}", ConsoleColor.Cyan);
+            
+            // Show title if available, otherwise show ID
+            if (!string.IsNullOrEmpty(conv.Metadata?.Title))
+            {
+                ConsoleHelpers.Write($"{conv.Metadata.Title}", ConsoleColor.Cyan);
+                ConsoleHelpers.Write($" ", ConsoleColor.Gray);
+                ConsoleHelpers.WriteLine($"({conv.Id})", ConsoleColor.DarkGray);
+            }
+            else
+            {
+                ConsoleHelpers.WriteLine($"{conv.Id}", ConsoleColor.Cyan);
+            }
             
             ConsoleHelpers.Write($"  Messages: ", ConsoleColor.Gray);
             ConsoleHelpers.Write($"{userCount} user", ConsoleColor.Green);
