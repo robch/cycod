@@ -12,9 +12,29 @@ namespace CycoDj.Analyzers;
 public class ContentSummarizer
 {
     /// <summary>
-    /// Extracts user messages from a conversation.
+    /// Extracts user message content as strings.
     /// </summary>
-    public static List<ChatMessage> GetUserMessages(Conversation conv, bool excludeLarge = true, int maxLength = 10000)
+    public static List<string> GetUserMessages(Conversation conv, bool excludeLarge = true, int maxLength = 10000)
+    {
+        var userMessages = conv.Messages
+            .Where(m => m.Role == "user")
+            .Select(m => m.Content)
+            .ToList();
+
+        if (excludeLarge)
+        {
+            userMessages = userMessages
+                .Where(c => c.Length <= maxLength)
+                .ToList();
+        }
+
+        return userMessages;
+    }
+
+    /// <summary>
+    /// Extracts user messages as ChatMessage objects (for accessing full message data).
+    /// </summary>
+    public static List<ChatMessage> GetUserMessagesRaw(Conversation conv, bool excludeLarge = true, int maxLength = 10000)
     {
         var userMessages = conv.Messages
             .Where(m => m.Role == "user")
@@ -31,19 +51,40 @@ public class ContentSummarizer
     }
 
     /// <summary>
-    /// Extracts assistant text responses (not tool outputs) from a conversation.
+    /// Extracts assistant text responses as strings (not tool outputs).
     /// </summary>
-    public static List<ChatMessage> GetAssistantResponses(Conversation conv, bool excludeWithToolCalls = false)
+    public static List<string> GetAssistantResponses(Conversation conv, bool abbreviate = true, int maxLength = 500)
+    {
+        var assistantMessages = conv.Messages
+            .Where(m => m.Role == "assistant")
+            .Where(m => !string.IsNullOrWhiteSpace(m.Content)) // Only messages with actual text
+            .Select(m => m.Content)
+            .ToList();
+
+        if (abbreviate)
+        {
+            assistantMessages = assistantMessages
+                .Select(c => c.Length > maxLength ? c.Substring(0, maxLength) + "..." : c)
+                .ToList();
+        }
+
+        return assistantMessages;
+    }
+
+    /// <summary>
+    /// Extracts assistant messages as ChatMessage objects (for accessing tool calls, etc).
+    /// </summary>
+    public static List<ChatMessage> GetAssistantMessagesRaw(Conversation conv, bool excludeWithToolCallsOnly = false)
     {
         var assistantMessages = conv.Messages
             .Where(m => m.Role == "assistant")
             .ToList();
 
-        if (excludeWithToolCalls)
+        if (excludeWithToolCallsOnly)
         {
             // Exclude messages that only have tool calls and no text content
             assistantMessages = assistantMessages
-                .Where(m => !string.IsNullOrWhiteSpace(m.Content) || m.ToolCalls == null || m.ToolCalls.Count == 0)
+                .Where(m => !string.IsNullOrWhiteSpace(m.Content))
                 .ToList();
         }
 
@@ -81,6 +122,62 @@ public class ContentSummarizer
     }
 
     /// <summary>
+    /// Extracts tool call information from assistant messages.
+    /// </summary>
+    public static List<(string toolName, string toolCallId)> GetToolCallsInvoked(Conversation conv)
+    {
+        var toolCalls = new List<(string, string)>();
+
+        foreach (var msg in conv.Messages.Where(m => m.Role == "assistant"))
+        {
+            if (msg.ToolCalls != null && msg.ToolCalls.Count > 0)
+            {
+                foreach (var toolCall in msg.ToolCalls)
+                {
+                    var toolName = toolCall.Function?.Name ?? "unknown";
+                    toolCalls.Add((toolName, toolCall.Id));
+                }
+            }
+        }
+
+        return toolCalls;
+    }
+
+    /// <summary>
+    /// Gets a summary of actions taken (tool calls and their results).
+    /// </summary>
+    public static List<string> GetActionSummary(Conversation conv, int maxToolOutputLength = 100)
+    {
+        var actions = new List<string>();
+        var toolCalls = GetToolCallsInvoked(conv);
+        
+        foreach (var (toolName, toolCallId) in toolCalls)
+        {
+            // Find the corresponding tool result
+            var toolResult = conv.Messages
+                .Where(m => m.Role == "tool" && m.ToolCallId == toolCallId)
+                .FirstOrDefault();
+
+            if (toolResult != null)
+            {
+                var result = toolResult.Content.Length > maxToolOutputLength 
+                    ? toolResult.Content.Substring(0, maxToolOutputLength) + "..." 
+                    : toolResult.Content;
+                
+                // Extract just the first line or main result
+                var firstLine = result.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? result;
+                actions.Add($"{toolName}: {firstLine}");
+            }
+            else
+            {
+                actions.Add($"{toolName}: (no result)");
+            }
+        }
+
+        return actions;
+    }
+
+    /// <summary>
     /// Checks if a tool message output is large and should be abbreviated.
     /// </summary>
     public static bool IsLargeToolOutput(ChatMessage msg, int threshold = 1000)
@@ -115,9 +212,9 @@ public class ContentSummarizer
     }
 
     /// <summary>
-    /// Generates a summary of a conversation.
+    /// Generates a brief summary of a conversation (as specified in architecture).
     /// </summary>
-    public static string SummarizeConversation(Conversation conv, int maxLength = 200)
+    public static string Summarize(Conversation conv, int maxLength = 200)
     {
         var userMessages = GetUserMessages(conv, excludeLarge: true, maxLength: 500);
         
@@ -127,7 +224,7 @@ public class ContentSummarizer
         }
 
         // Take the first user message as the primary topic
-        var firstUserMsg = userMessages.First().Content;
+        var firstUserMsg = userMessages.First();
         
         // Truncate if needed
         if (firstUserMsg.Length > maxLength)
@@ -141,17 +238,18 @@ public class ContentSummarizer
     /// <summary>
     /// Generates a detailed summary with user actions and assistant responses.
     /// </summary>
-    public static string SummarizeConversationDetailed(Conversation conv, int maxUserMessages = 5, int maxAssistantLines = 10)
+    public static string SummarizeDetailed(Conversation conv, int maxUserMessages = 5, int maxAssistantResponses = 5, int maxActions = 10)
     {
         var summary = new StringBuilder();
         
         var userMessages = GetUserMessages(conv, excludeLarge: true, maxLength: 500);
-        var assistantMessages = GetAssistantResponses(conv, excludeWithToolCalls: false);
+        var assistantResponses = GetAssistantResponses(conv, abbreviate: true, maxLength: 200);
+        var actions = GetActionSummary(conv, maxToolOutputLength: 100);
         var toolMessages = GetToolMessages(conv);
 
         summary.AppendLine($"Conversation: {conv.GetDisplayTitle()}");
         summary.AppendLine($"Started: {conv.Timestamp:yyyy-MM-dd HH:mm:ss}");
-        summary.AppendLine($"Messages: {conv.Messages.Count} total ({userMessages.Count} user, {assistantMessages.Count} assistant, {toolMessages.Count} tool)");
+        summary.AppendLine($"Messages: {conv.Messages.Count} total ({userMessages.Count} user, {assistantResponses.Count} assistant, {toolMessages.Count} tool)");
         
         if (conv.BranchIds.Count > 0)
         {
@@ -167,9 +265,7 @@ public class ContentSummarizer
             var messagesToShow = userMessages.Take(maxUserMessages);
             foreach (var msg in messagesToShow)
             {
-                var content = msg.Content.Length > 100 
-                    ? msg.Content.Substring(0, 100) + "..." 
-                    : msg.Content;
+                var content = msg.Length > 100 ? msg.Substring(0, 100) + "..." : msg;
                 summary.AppendLine($"  > {content}");
             }
             
@@ -180,35 +276,35 @@ public class ContentSummarizer
             summary.AppendLine();
         }
 
-        // Assistant summary
-        if (assistantMessages.Count > 0)
+        // Actions taken (tool calls with results)
+        if (actions.Count > 0)
         {
-            summary.AppendLine("Assistant (summary):");
-            
-            // Collect assistant text (not tool calls)
-            var assistantTexts = assistantMessages
-                .Where(m => !string.IsNullOrWhiteSpace(m.Content))
-                .Select(m => m.Content.Trim())
-                .Where(c => !string.IsNullOrEmpty(c))
-                .ToList();
-
-            if (assistantTexts.Any())
+            summary.AppendLine("Actions:");
+            var actionsToShow = actions.Take(maxActions);
+            foreach (var action in actionsToShow)
             {
-                var combinedText = string.Join(" ", assistantTexts);
-                var lines = combinedText.Split(new[] { '\n', '\r', '.' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(l => l.Trim())
-                    .Where(l => !string.IsNullOrEmpty(l) && l.Length > 10) // Filter out very short fragments
-                    .Take(maxAssistantLines);
-
-                foreach (var line in lines)
-                {
-                    var displayLine = line.Length > 80 ? line.Substring(0, 80) + "..." : line;
-                    summary.AppendLine($"  - {displayLine}");
-                }
+                summary.AppendLine($"  - {action}");
             }
-            else
+            
+            if (actions.Count > maxActions)
             {
-                summary.AppendLine("  - (Tool calls only, no text responses)");
+                summary.AppendLine($"  ... and {actions.Count - maxActions} more");
+            }
+            summary.AppendLine();
+        }
+
+        // Assistant responses (text only)
+        if (assistantResponses.Count > 0)
+        {
+            summary.AppendLine("Assistant responses:");
+            var responsesToShow = assistantResponses
+                .Where(r => !string.IsNullOrWhiteSpace(r) && r.Length > 10) // Filter very short responses
+                .Take(maxAssistantResponses);
+
+            foreach (var response in responsesToShow)
+            {
+                var displayResponse = response.Length > 80 ? response.Substring(0, 80) + "..." : response;
+                summary.AppendLine($"  - {displayResponse}");
             }
         }
 
@@ -230,7 +326,7 @@ public class ContentSummarizer
         var userMessages = GetUserMessages(conv, excludeLarge: true, maxLength: 500);
         if (userMessages.Count > 0)
         {
-            var firstMsg = userMessages.First().Content;
+            var firstMsg = userMessages.First();
             
             // Take first line or first 50 characters
             var firstLine = firstMsg.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? firstMsg;
@@ -285,5 +381,31 @@ public class ContentSummarizer
             return true;
 
         return false;
+    }
+
+    /// <summary>
+    /// Gets a count of tool calls by tool name.
+    /// </summary>
+    public static Dictionary<string, int> GetToolCallStatistics(Conversation conv)
+    {
+        var stats = new Dictionary<string, int>();
+        
+        foreach (var msg in conv.Messages.Where(m => m.Role == "assistant"))
+        {
+            if (msg.ToolCalls != null)
+            {
+                foreach (var toolCall in msg.ToolCalls)
+                {
+                    var toolName = toolCall.Function?.Name ?? "unknown";
+                    if (!stats.ContainsKey(toolName))
+                    {
+                        stats[toolName] = 0;
+                    }
+                    stats[toolName]++;
+                }
+            }
+        }
+
+        return stats;
     }
 }

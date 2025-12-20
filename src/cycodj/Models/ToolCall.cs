@@ -12,5 +12,5 @@ public class ToolCall
     public string Type { get; set; } = "";
     
     [JsonPropertyName("function")]
-    public JsonElement? Function { get; set; }
+    public ToolFunction? Function { get; set; }
 }
