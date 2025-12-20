@@ -1,0 +1,81 @@
+JOURNAL COMMAND - Generate daily journal summaries
+
+USAGE:
+  cycodj journal [options]
+
+OPTIONS:
+  --date <date>, -d <date>  Specific date to journal (YYYY-MM-DD or "today")
+  --last-days <n>           Number of days to include (default: 1)
+  --detailed                Show detailed summaries with assistant responses
+
+EXAMPLES:
+  cycodj journal
+    Generate journal for today (default)
+
+  cycodj journal --date 2024-12-20
+    Journal for a specific date
+
+  cycodj journal --date today
+    Journal for today (same as default)
+
+  cycodj journal --last-days 7
+    Generate journal for the last 7 days
+
+  cycodj journal --last-days 7 --detailed
+    Show detailed journal with assistant response summaries
+
+DESCRIPTION:
+  The journal command creates a readable daily summary of your chat interactions,
+  organized chronologically with grouping by time periods.
+  
+  For each day, conversations are grouped into:
+  - Morning (before 12:00 PM)
+  - Afternoon (12:00 PM - 5:00 PM)
+  - Evening (5:00 PM and after)
+  
+  Each conversation entry shows:
+  - Time of conversation
+  - Conversation title (if available) or ID
+  - Preview of your first question/message
+  - Message count
+  - Branch indicator (↳) if conversation was branched from another
+  
+  In --detailed mode, assistant response summaries are also included.
+
+OUTPUT FORMAT:
+  The journal displays:
+  
+  ═══════════════════════════════════════
+  ## Journal for [Date]
+  ═══════════════════════════════════════
+  
+  ### Morning (N conversations)
+  
+  10:15 AM - Installing Git CLI
+    > install git cli
+    (5 messages)
+  
+    ↳ 10:18 AM - Trying alternative approach
+      > use chocolatey instead
+      (3 messages)
+  
+  Day Summary: N conversations, N interactions, N branches
+  
+  ─────────────────────────────────────────
+  Total: N conversations (N branches)
+
+BRANCH INDICATORS:
+  Conversations that branch from earlier conversations are shown indented
+  with a ↳ symbol, making it easy to see when you tried different approaches
+  to the same problem.
+
+FILTERING:
+  Use --date to focus on specific days, or --last-days to see recent activity.
+  Combine with --detailed for more context about what was accomplished.
+
+USE CASES:
+  - Review what you worked on today
+  - Create weekly summaries (--last-days 7)
+  - Find specific conversations by date
+  - Track when you branched conversations to try different approaches
+  - Generate reports of AI assistant usage

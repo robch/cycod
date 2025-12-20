@@ -6,6 +6,8 @@ DESCRIPTION:
 
 MAIN COMMANDS:
   list      - List conversations
+  show      - Display detailed conversation information
+  journal   - Generate daily journal summaries
   branches  - Show conversation branching tree
   help      - Show this help
   version   - Show version information

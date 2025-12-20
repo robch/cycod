@@ -17,14 +17,31 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return new ListCommand();
     }
 
+    override protected string PeekCommandName(string[] args, int i)
+    {
+        var name = base.PeekCommandName(args, i);
+        
+        // For single-word commands, just return the command name
+        var firstWord = name.Split(' ')[0].ToLowerInvariant();
+        if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || firstWord == "branches")
+        {
+            return firstWord;
+        }
+        
+        return name;
+    }
+
+
     override protected Command? NewCommandFromName(string commandName)
     {
-        return commandName.ToLowerInvariant() switch
-        {
-            "list" => new ListCommand(),
-            "branches" => new BranchesCommand(),
-            _ => base.NewCommandFromName(commandName)
-        };
+        var lowerCommandName = commandName.ToLowerInvariant();
+        
+        if (lowerCommandName.StartsWith("list")) return new ListCommand();
+        if (lowerCommandName.StartsWith("show")) return new ShowCommand();
+        if (lowerCommandName.StartsWith("journal")) return new JournalCommand();
+        if (lowerCommandName.StartsWith("branches")) return new BranchesCommand();
+        
+        return base.NewCommandFromName(commandName);
     }
 
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
@@ -32,6 +49,14 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         if (command is ListCommand listCommand)
         {
             return TryParseListCommandOptions(listCommand, args, ref i, arg);
+        }
+        else if (command is ShowCommand showCommand)
+        {
+            return TryParseShowCommandOptions(showCommand, args, ref i, arg);
+        }
+        else if (command is JournalCommand journalCommand)
+        {
+            return TryParseJournalCommandOptions(journalCommand, args, ref i, arg);
         }
         else if (command is BranchesCommand branchesCommand)
         {

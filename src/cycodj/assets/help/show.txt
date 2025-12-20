@@ -1,0 +1,58 @@
+SHOW COMMAND - Display detailed conversation information
+
+USAGE:
+  cycodj show <conversation-id> [options]
+
+ARGUMENTS:
+  <conversation-id>  The conversation ID (timestamp) or filename to display
+                     Examples: 1754437373970, chat-history-1754437373970
+
+OPTIONS:
+  --show-tool-calls       Display details of tool calls made by the assistant
+  --show-tool-output      Show full tool output without truncation
+  --max-content-length <n> Maximum characters to display per message (default: 500)
+
+EXAMPLES:
+  cycodj show 1754437373970
+    Display conversation with ID 1754437373970
+
+  cycodj show chat-history-1754437373970
+    Display conversation by full filename
+
+  cycodj show 1754437373970 --show-tool-calls
+    Show conversation with tool call details
+
+  cycodj show 1754437373970 --show-tool-output
+    Show conversation without truncating large tool outputs
+
+  cycodj show 1754437373970 --max-content-length 1000
+    Display up to 1000 characters per message
+
+DESCRIPTION:
+  The show command displays detailed information about a specific conversation,
+  including:
+  
+  - Conversation metadata (timestamp, file path, title)
+  - Message counts by role (user, assistant, tool, system)
+  - Branch relationships (parent conversation, child branches)
+  - All messages with role-based color coding:
+    * User messages (green)
+    * Assistant messages (blue)
+    * Tool output (gray)
+    * System messages (magenta)
+  
+  Large tool outputs are truncated by default for readability. Use
+  --show-tool-output to see the complete output.
+  
+  System messages (prompts) are hidden by default. Use --verbose to display them.
+
+BRANCH INFORMATION:
+  If the conversation is a branch of another conversation, the show command
+  displays the parent conversation ID.
+  
+  If other conversations branch from this one, those child branches are listed.
+
+FINDING CONVERSATION IDS:
+  Use the 'list' command to find conversation IDs:
+    cycodj list
+    cycodj list --date today
