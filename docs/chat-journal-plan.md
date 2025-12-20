@@ -266,8 +266,8 @@ public class ContentSummarizer
 - [x] Search across conversations
 - [x] Export to markdown
 - [x] Statistics (messages per day, tool usage, etc)
-- [ ] Interactive mode (TUI)
-- [ ] Conversation merging/cleanup tools
+- [ ] Interactive mode (TUI) - Requires TUI library (Terminal.Gui/Spectre.Console) - Future enhancement
+- [x] Conversation merging/cleanup tools
 
 ## Questions to Resolve
 
