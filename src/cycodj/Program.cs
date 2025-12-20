@@ -85,6 +85,10 @@ class Program
                 await searchCommand.ExecuteAsync();
                 return 0;
             }
+            else if (command is CycoDj.CommandLineCommands.ExportCommand exportCommand)
+            {
+                return await exportCommand.ExecuteAsync();
+            }
         }
 
         return 0;

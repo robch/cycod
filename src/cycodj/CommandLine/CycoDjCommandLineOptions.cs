@@ -23,7 +23,8 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         // For single-word commands, just return the command name
         var firstWord = name.Split(' ')[0].ToLowerInvariant();
-        if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || firstWord == "branches" || firstWord == "search")
+        if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || 
+            firstWord == "branches" || firstWord == "search" || firstWord == "export")
         {
             return firstWord;
         }
@@ -41,6 +42,7 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         if (lowerCommandName.StartsWith("journal")) return new JournalCommand();
         if (lowerCommandName.StartsWith("branches")) return new BranchesCommand();
         if (lowerCommandName.StartsWith("search")) return new SearchCommand();
+        if (lowerCommandName.StartsWith("export")) return new ExportCommand();
         
         return base.NewCommandFromName(commandName);
     }
@@ -66,6 +68,10 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         else if (command is SearchCommand searchCommand)
         {
             return TryParseSearchCommandOptions(searchCommand, args, ref i, arg);
+        }
+        else if (command is ExportCommand exportCommand)
+        {
+            return TryParseExportCommandOptions(exportCommand, args, ref i, arg);
         }
         
         return false;
@@ -254,5 +260,67 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         return false;
     }
+
+    private bool TryParseExportCommandOptions(ExportCommand command, string[] args, ref int i, string arg)
+    {
+        if (arg == "--output" || arg == "-o")
+        {
+            var outputFile = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(outputFile))
+            {
+                throw new CommandLineException($"Missing output file for {arg}");
+            }
+            command.OutputFile = outputFile;
+            return true;
+        }
+        else if (arg == "--date" || arg == "-d")
+        {
+            var date = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(date))
+            {
+                throw new CommandLineException($"Missing date value for {arg}");
+            }
+            command.Date = date;
+            return true;
+        }
+        else if (arg == "--last")
+        {
+            var count = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            {
+                throw new CommandLineException($"Missing or invalid count for {arg}");
+            }
+            command.Last = n;
+            return true;
+        }
+        else if (arg == "--conversation" || arg == "-c")
+        {
+            var id = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new CommandLineException($"Missing conversation ID for {arg}");
+            }
+            command.ConversationId = id;
+            return true;
+        }
+        else if (arg == "--include-tool-output")
+        {
+            command.IncludeToolOutput = true;
+            return true;
+        }
+        else if (arg == "--no-branches")
+        {
+            command.IncludeBranches = false;
+            return true;
+        }
+        else if (arg == "--overwrite")
+        {
+            command.Overwrite = true;
+            return true;
+        }
+        
+        return false;
+    }
+
 
 }
