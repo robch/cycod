@@ -1,25 +1,25 @@
 # Complete --instructions Support for All cycodj Commands
 
 ## Status
-Partial implementation - infrastructure in place, but only journal command fully refactored.
+Mostly complete - only 3 commands remaining (branches, search, stats).
 
 ## What's Done
 ✅ Added `--instructions`, `--use-built-in-functions`, and `--save-chat-history` properties to base `CycoDjCommand` class  
 ✅ Added helper method `ApplyInstructionsIfProvided()` to base class  
 ✅ Added global parsing for these options in `CycoDjCommandLineOptions`  
-✅ `journal` command fully supports --instructions
+✅ **JournalCommand** - fully supports --instructions  
+✅ **ExportCommand** - fully supports --instructions  
+✅ **ListCommand** - fully supports --instructions  
+✅ **ShowCommand** - fully supports --instructions  
 
-## What's Needed
-Each command needs to be refactored to generate output to string first, then apply instructions:
+## What's Remaining
+Only 3 commands need refactoring:
 
-### Commands to Update:
-1. **ListCommand** - refactor `ExecuteAsync()` to use `GenerateListOutput()` pattern
-2. **ShowCommand** - refactor to generate string output  
-3. **BranchesCommand** - refactor to generate string output
-4. **SearchCommand** - refactor to generate string output
-5. **StatsCommand** - refactor to generate string output
-6. **ExportCommand** - already generates markdown, just needs to call `ApplyInstructionsIfProvided()`
-7. **CleanupCommand** - probably doesn't need --instructions
+1. **BranchesCommand** - refactor to generate string output
+2. **SearchCommand** - refactor to generate string output
+3. **StatsCommand** - refactor to generate string output
+
+(CleanupCommand doesn't need --instructions support)
 
 ### Pattern to Follow (from JournalCommand):
 ```csharp
