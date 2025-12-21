@@ -18,14 +18,27 @@ namespace CycoDj.CommandLineCommands
 
         public override async System.Threading.Tasks.Task<int> ExecuteAsync()
         {
+            var output = GenerateSearchOutput();
+            
+            // Apply instructions if provided
+            var finalOutput = ApplyInstructionsIfProvided(output);
+            ConsoleHelpers.WriteLine(finalOutput);
+            
+            return await System.Threading.Tasks.Task.FromResult(0);
+        }
+        
+        private string GenerateSearchOutput()
+        {
+            var sb = new System.Text.StringBuilder();
+            
             if (string.IsNullOrWhiteSpace(Query))
             {
-                ConsoleHelpers.WriteErrorLine("Search query is required.");
-                return 1;
+                sb.AppendLine("ERROR: Search query is required.");
+                return sb.ToString();
             }
 
-            ConsoleHelpers.WriteLine($"## Searching conversations for: \"{Query}\"", ConsoleColor.Cyan, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine($"## Searching conversations for: \"{Query}\"");
+            sb.AppendLine();
 
             // Find and parse conversations
             var historyDir = CycoDj.Helpers.HistoryFileHelpers.GetHistoryDirectory();
@@ -44,8 +57,8 @@ namespace CycoDj.CommandLineCommands
                 }
                 else
                 {
-                    ConsoleHelpers.WriteErrorLine($"Invalid date format: {Date}");
-                    return 1;
+                    sb.AppendLine($"ERROR: Invalid date format: {Date}");
+                    return sb.ToString();
                 }
             }
 
@@ -60,8 +73,8 @@ namespace CycoDj.CommandLineCommands
 
             if (!files.Any())
             {
-                ConsoleHelpers.WriteLine("No conversations found matching the criteria.", ConsoleColor.Yellow, overrideQuiet: true);
-                return 0;
+                sb.AppendLine("No conversations found matching the criteria.");
+                return sb.ToString();
             }
 
             // Parse conversations and search
@@ -90,23 +103,22 @@ namespace CycoDj.CommandLineCommands
             // Display results
             if (!matches.Any())
             {
-                ConsoleHelpers.WriteLine("No matches found.", ConsoleColor.Yellow, overrideQuiet: true);
-                return 0;
+                sb.AppendLine("No matches found.");
+                return sb.ToString();
             }
 
-            ConsoleHelpers.WriteLine($"Found {matches.Count} conversation(s) with matches:", ConsoleColor.Green, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine($"Found {matches.Count} conversation(s) with matches:");
+            sb.AppendLine();
 
             foreach (var (conversation, searchMatches) in matches)
             {
-                DisplayConversationMatches(conversation, searchMatches);
+                AppendConversationMatches(sb, conversation, searchMatches);
             }
 
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"Total: {matches.Sum(m => m.searchMatches.Count)} match(es) in {matches.Count} conversation(s)", 
-                ConsoleColor.Green, overrideQuiet: true);
+            sb.AppendLine();
+            sb.AppendLine($"Total: {matches.Sum(m => m.searchMatches.Count)} match(es) in {matches.Count} conversation(s)");
             
-            return 0;
+            return sb.ToString();
         }
 
         private List<SearchMatch> SearchConversation(Models.Conversation conversation)
@@ -185,29 +197,20 @@ namespace CycoDj.CommandLineCommands
             return matches;
         }
 
-        private void DisplayConversationMatches(Models.Conversation conversation, List<SearchMatch> matches)
+        private void AppendConversationMatches(System.Text.StringBuilder sb, Models.Conversation conversation, List<SearchMatch> matches)
         {
             var title = conversation.Metadata?.Title ?? $"conversation-{conversation.Id}";
             var timestamp = conversation.Timestamp.ToString("yyyy-MM-dd HH:mm:ss");
 
-            ConsoleHelpers.WriteLine($"### {timestamp} - {title}", ConsoleColor.White, overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"    File: {conversation.FilePath}", ConsoleColor.DarkGray, overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"    Matches: {matches.Count}", ConsoleColor.DarkGray, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine($"### {timestamp} - {title}");
+            sb.AppendLine($"    File: {conversation.FilePath}");
+            sb.AppendLine($"    Matches: {matches.Count}");
+            sb.AppendLine();
 
             foreach (var match in matches)
             {
                 var role = match.Message.Role;
-                var roleColor = role switch
-                {
-                    "user" => ConsoleColor.Green,
-                    "assistant" => ConsoleColor.Cyan,
-                    "tool" => ConsoleColor.Gray,
-                    _ => ConsoleColor.White
-                };
-
-                ConsoleHelpers.Write($"  [{role}] ", roleColor, overrideQuiet: true);
-                ConsoleHelpers.WriteLine($"Message #{match.MessageIndex + 1}", overrideQuiet: true);
+                sb.AppendLine($"  [{role}] Message #{match.MessageIndex + 1}");
 
                 // Show matched lines with context
                 var allLines = match.Message.Content.Split(new[] { '\r', '\n' }, StringSplitOptions.None);
@@ -222,30 +225,11 @@ namespace CycoDj.CommandLineCommands
                     {
                         var prefix = isMatch ? "  > " : "    ";
                         var line = allLines[i];
-
-                        if (isMatch && !UseRegex)
-                        {
-                            // Highlight the match
-                            var matchInfo = match.MatchedLines.FirstOrDefault(m => m.lineNumber == i);
-                            if (matchInfo != default)
-                            {
-                                var before = line.Substring(0, matchInfo.matchStart);
-                                var matched = line.Substring(matchInfo.matchStart, matchInfo.matchLength);
-                                var after = line.Substring(matchInfo.matchStart + matchInfo.matchLength);
-
-                                ConsoleHelpers.Write(prefix + before, overrideQuiet: true);
-                                ConsoleHelpers.Write(matched, ConsoleColor.Yellow, overrideQuiet: true);
-                                ConsoleHelpers.WriteLine(after, overrideQuiet: true);
-                                continue;
-                            }
-                        }
-
-                        var color = isMatch ? ConsoleColor.White : ConsoleColor.DarkGray;
-                        ConsoleHelpers.WriteLine(prefix + line, color, overrideQuiet: true);
+                        sb.AppendLine(prefix + line);
                     }
                 }
 
-                ConsoleHelpers.WriteLine(overrideQuiet: true);
+                sb.AppendLine();
             }
         }
 

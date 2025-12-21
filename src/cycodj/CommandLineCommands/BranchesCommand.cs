@@ -15,13 +15,26 @@ public class BranchesCommand : CycoDjCommand
 
     public override async Task<int> ExecuteAsync()
     {
+        var output = GenerateBranchesOutput();
+        
+        // Apply instructions if provided
+        var finalOutput = ApplyInstructionsIfProvided(output);
+        ConsoleHelpers.WriteLine(finalOutput);
+        
+        return await Task.FromResult(0);
+    }
+    
+    private string GenerateBranchesOutput()
+    {
+        var sb = new System.Text.StringBuilder();
+        
         // Find all history files
         var files = HistoryFileHelpers.FindAllHistoryFiles();
         
         if (files.Count == 0)
         {
-            ConsoleHelpers.WriteWarning("No chat history files found");
-            return 1;
+            sb.AppendLine("WARNING: No chat history files found");
+            return sb.ToString();
         }
         
         // Filter by date if specified
@@ -33,8 +46,8 @@ public class BranchesCommand : CycoDjCommand
             }
             else
             {
-                ConsoleHelpers.WriteErrorLine($"Invalid date format: {Date}");
-                return 1;
+                sb.AppendLine($"ERROR: Invalid date format: {Date}");
+                return sb.ToString();
             }
         }
         
@@ -43,8 +56,8 @@ public class BranchesCommand : CycoDjCommand
         
         if (conversations.Count == 0)
         {
-            ConsoleHelpers.WriteWarning("No conversations could be read");
-            return 1;
+            sb.AppendLine("WARNING: No conversations could be read");
+            return sb.ToString();
         }
         
         // Build conversation tree
@@ -53,41 +66,41 @@ public class BranchesCommand : CycoDjCommand
         // If specific conversation requested, show just that branch
         if (!string.IsNullOrEmpty(Conversation))
         {
-            ShowSingleConversationBranches(tree);
-            return 0;
+            AppendSingleConversationBranches(sb, tree);
+            return sb.ToString();
         }
         
         // Show full tree
-        ConsoleHelpers.WriteLine("## Conversation Tree", ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine("## Conversation Tree");
+        sb.AppendLine();
         
         if (tree.Roots.Count == 0)
         {
-            ConsoleHelpers.WriteWarning("No root conversations found (all conversations appear to be orphaned branches)");
-            return 0;
+            sb.AppendLine("WARNING: No root conversations found (all conversations appear to be orphaned branches)");
+            return sb.ToString();
         }
         
         // Display each root and its descendants
         foreach (var root in tree.Roots.OrderBy(r => r.Timestamp))
         {
-            DisplayConversationTree(root, tree, 0);
+            AppendConversationTree(sb, root, tree, 0);
         }
         
         // Show statistics
-        ConsoleHelpers.WriteLine();
-        ConsoleHelpers.WriteLine($"Total conversations: {tree.TotalConversations}", ConsoleColor.Green);
-        ConsoleHelpers.WriteLine($"Root conversations: {tree.RootCount}", ConsoleColor.Green);
+        sb.AppendLine();
+        sb.AppendLine($"Total conversations: {tree.TotalConversations}");
+        sb.AppendLine($"Root conversations: {tree.RootCount}");
         
         var branchedCount = tree.AllConversations.Count(c => c.ParentId != null);
         if (branchedCount > 0)
         {
-            ConsoleHelpers.WriteLine($"Branched conversations: {branchedCount}", ConsoleColor.Yellow);
+            sb.AppendLine($"Branched conversations: {branchedCount}");
         }
         
-        return await Task.FromResult(0);
+        return sb.ToString();
     }
 
-    private void DisplayConversationTree(Models.Conversation conv, Models.ConversationTree tree, int depth)
+    private void AppendConversationTree(System.Text.StringBuilder sb, Models.Conversation conv, Models.ConversationTree tree, int depth)
     {
         var indent = new string(' ', depth * 2);
         var branch = depth > 0 ? "├─ " : "📁 ";
@@ -96,13 +109,9 @@ public class BranchesCommand : CycoDjCommand
         var timestamp = TimestampHelpers.FormatTimestamp(conv.Timestamp, "datetime");
         
         // Show conversation
-        ConsoleHelpers.Write($"{indent}{branch}", ConsoleColor.Gray);
-        ConsoleHelpers.Write($"{timestamp}", ConsoleColor.White);
-        ConsoleHelpers.Write($" - ", ConsoleColor.Gray);
-        
         var title = conv.GetDisplayTitle();
         var displayTitle = title.Length > 60 ? title.Substring(0, 60) + "..." : title;
-        ConsoleHelpers.WriteLine($"{displayTitle}", ConsoleColor.Cyan);
+        sb.AppendLine($"{indent}{branch}{timestamp} - {displayTitle}");
         
         // Show verbose info if requested
         if (Verbose)
@@ -110,14 +119,14 @@ public class BranchesCommand : CycoDjCommand
             var userCount = conv.Messages.Count(m => m.Role == "user");
             var assistantCount = conv.Messages.Count(m => m.Role == "assistant");
             
-            ConsoleHelpers.WriteLine($"{indent}   Messages: {userCount} user, {assistantCount} assistant", ConsoleColor.DarkGray);
-            ConsoleHelpers.WriteLine($"{indent}   Tool calls: {conv.ToolCallIds.Count}", ConsoleColor.DarkGray);
+            sb.AppendLine($"{indent}   Messages: {userCount} user, {assistantCount} assistant");
+            sb.AppendLine($"{indent}   Tool calls: {conv.ToolCallIds.Count}");
             
             if (conv.ParentId != null && tree.ConversationLookup.TryGetValue(conv.ParentId, out var parent))
             {
                 var commonLength = GetCommonPrefixLength(parent.ToolCallIds, conv.ToolCallIds);
                 var divergeAt = commonLength < parent.ToolCallIds.Count ? commonLength : parent.ToolCallIds.Count;
-                ConsoleHelpers.WriteLine($"{indent}   Branched at tool call #{divergeAt}", ConsoleColor.Yellow);
+                sb.AppendLine($"{indent}   Branched at tool call #{divergeAt}");
             }
         }
         
@@ -132,12 +141,12 @@ public class BranchesCommand : CycoDjCommand
         {
             if (tree.ConversationLookup.TryGetValue(branchId, out var childBranch))
             {
-                DisplayConversationTree(childBranch, tree, depth + 1);
+                AppendConversationTree(sb, childBranch, tree, depth + 1);
             }
         }
     }
 
-    private void ShowSingleConversationBranches(Models.ConversationTree tree)
+    private void AppendSingleConversationBranches(System.Text.StringBuilder sb, Models.ConversationTree tree)
     {
         // Find the conversation
         var conv = tree.AllConversations.FirstOrDefault(c => 
@@ -145,47 +154,47 @@ public class BranchesCommand : CycoDjCommand
         
         if (conv == null)
         {
-            ConsoleHelpers.WriteErrorLine($"Conversation not found: {Conversation}");
+            sb.AppendLine($"ERROR: Conversation not found: {Conversation}");
             return;
         }
         
-        ConsoleHelpers.WriteLine($"## Branches for: {conv.GetDisplayTitle()}", ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine($"## Branches for: {conv.GetDisplayTitle()}");
+        sb.AppendLine();
         
         // Show parent chain
         if (conv.ParentId != null)
         {
-            ConsoleHelpers.WriteLine("Parent chain:", ConsoleColor.Yellow);
-            ShowParentChain(conv, tree);
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine("Parent chain:");
+            AppendParentChain(sb, conv, tree);
+            sb.AppendLine();
         }
         
         // Show this conversation
         var timestamp = TimestampHelpers.FormatTimestamp(conv.Timestamp, "datetime");
-        ConsoleHelpers.WriteLine($"📍 {timestamp} - {conv.GetDisplayTitle()}", ConsoleColor.White);
-        ConsoleHelpers.WriteLine($"   Tool calls: {conv.ToolCallIds.Count}", ConsoleColor.Gray);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine($"📍 {timestamp} - {conv.GetDisplayTitle()}");
+        sb.AppendLine($"   Tool calls: {conv.ToolCallIds.Count}");
+        sb.AppendLine();
         
         // Show children
         if (conv.BranchIds.Count > 0)
         {
-            ConsoleHelpers.WriteLine($"Branches ({conv.BranchIds.Count}):", ConsoleColor.Yellow);
+            sb.AppendLine($"Branches ({conv.BranchIds.Count}):");
             foreach (var branchId in conv.BranchIds)
             {
                 if (tree.ConversationLookup.TryGetValue(branchId, out var branch))
                 {
                     var branchTimestamp = TimestampHelpers.FormatTimestamp(branch.Timestamp, "datetime");
-                    ConsoleHelpers.WriteLine($"  ├─ {branchTimestamp} - {branch.GetDisplayTitle()}", ConsoleColor.Cyan);
+                    sb.AppendLine($"  ├─ {branchTimestamp} - {branch.GetDisplayTitle()}");
                 }
             }
         }
         else
         {
-            ConsoleHelpers.WriteLine("No branches from this conversation", ConsoleColor.Gray);
+            sb.AppendLine("No branches from this conversation");
         }
     }
 
-    private void ShowParentChain(Models.Conversation conv, Models.ConversationTree tree)
+    private void AppendParentChain(System.Text.StringBuilder sb, Models.Conversation conv, Models.ConversationTree tree)
     {
         var chain = new System.Collections.Generic.List<Models.Conversation>();
         var current = conv;
@@ -200,7 +209,7 @@ public class BranchesCommand : CycoDjCommand
         {
             var indent = new string(' ', i * 2);
             var timestamp = TimestampHelpers.FormatTimestamp(chain[i].Timestamp, "datetime");
-            ConsoleHelpers.WriteLine($"{indent}↑ {timestamp} - {chain[i].GetDisplayTitle()}", ConsoleColor.DarkGray);
+            sb.AppendLine($"{indent}↑ {timestamp} - {chain[i].GetDisplayTitle()}");
         }
     }
 

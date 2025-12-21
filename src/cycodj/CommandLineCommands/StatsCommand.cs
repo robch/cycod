@@ -14,8 +14,21 @@ namespace CycoDj.CommandLineCommands
 
         public override async Task<int> ExecuteAsync()
         {
-            ConsoleHelpers.WriteLine("## Chat History Statistics", ConsoleColor.Cyan, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            var output = GenerateStatsOutput();
+            
+            // Apply instructions if provided
+            var finalOutput = ApplyInstructionsIfProvided(output);
+            ConsoleHelpers.WriteLine(finalOutput);
+            
+            return await Task.FromResult(0);
+        }
+        
+        private string GenerateStatsOutput()
+        {
+            var sb = new System.Text.StringBuilder();
+            
+            sb.AppendLine("## Chat History Statistics");
+            sb.AppendLine();
 
             // Find and parse conversations
             var historyDir = CycoDj.Helpers.HistoryFileHelpers.GetHistoryDirectory();
@@ -34,8 +47,8 @@ namespace CycoDj.CommandLineCommands
                 }
                 else
                 {
-                    ConsoleHelpers.WriteErrorLine($"Invalid date format: {Date}");
-                    return 1;
+                    sb.AppendLine($"ERROR: Invalid date format: {Date}");
+                    return sb.ToString();
                 }
             }
 
@@ -49,8 +62,8 @@ namespace CycoDj.CommandLineCommands
 
             if (!files.Any())
             {
-                ConsoleHelpers.WriteLine("No conversations found.", ConsoleColor.Yellow, overrideQuiet: true);
-                return 0;
+                sb.AppendLine("No conversations found.");
+                return sb.ToString();
             }
 
             // Parse conversations
@@ -72,27 +85,27 @@ namespace CycoDj.CommandLineCommands
             }
 
             // Calculate statistics
-            DisplayOverallStats(conversations);
+            AppendOverallStats(sb, conversations);
             
             if (ShowDates)
             {
-                ConsoleHelpers.WriteLine(overrideQuiet: true);
-                DisplayDateStats(conversations);
+                sb.AppendLine();
+                AppendDateStats(sb, conversations);
             }
 
             if (ShowTools)
             {
-                ConsoleHelpers.WriteLine(overrideQuiet: true);
-                DisplayToolUsageStats(conversations);
+                sb.AppendLine();
+                AppendToolUsageStats(sb, conversations);
             }
 
-            return 0;
+            return sb.ToString();
         }
 
-        private void DisplayOverallStats(List<Models.Conversation> conversations)
+        private void AppendOverallStats(System.Text.StringBuilder sb, List<Models.Conversation> conversations)
         {
-            ConsoleHelpers.WriteLine("### Overall Statistics", ConsoleColor.White, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine("### Overall Statistics");
+            sb.AppendLine();
 
             var totalConversations = conversations.Count;
             var totalMessages = conversations.Sum(c => c.Messages.Count);
@@ -103,31 +116,27 @@ namespace CycoDj.CommandLineCommands
             var avgMessagesPerConv = totalMessages / (double)totalConversations;
             var avgUserPerConv = totalUserMessages / (double)totalConversations;
 
-            ConsoleHelpers.WriteLine($"**Conversations:** {totalConversations:#,##0}", overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"**Total Messages:** {totalMessages:#,##0}", overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  - User: {totalUserMessages:#,##0} ({totalUserMessages * 100.0 / totalMessages:F1}%)", 
-                ConsoleColor.Green, overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  - Assistant: {totalAssistantMessages:#,##0} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)", 
-                ConsoleColor.Cyan, overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  - Tool: {totalToolMessages:#,##0} ({totalToolMessages * 100.0 / totalMessages:F1}%)", 
-                ConsoleColor.Gray, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"**Average per conversation:**", overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  - Messages: {avgMessagesPerConv:F1}", overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  - User messages: {avgUserPerConv:F1}", overrideQuiet: true);
+            sb.AppendLine($"**Conversations:** {totalConversations:#,##0}");
+            sb.AppendLine($"**Total Messages:** {totalMessages:#,##0}");
+            sb.AppendLine($"  - User: {totalUserMessages:#,##0} ({totalUserMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  - Assistant: {totalAssistantMessages:#,##0} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  - Tool: {totalToolMessages:#,##0} ({totalToolMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"**Average per conversation:**");
+            sb.AppendLine($"  - Messages: {avgMessagesPerConv:F1}");
+            sb.AppendLine($"  - User messages: {avgUserPerConv:F1}");
 
             // Find longest conversation
             var longest = conversations.OrderByDescending(c => c.Messages.Count).First();
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"**Longest conversation:** {longest.Messages.Count} messages", overrideQuiet: true);
-            ConsoleHelpers.WriteLine($"  {longest.Timestamp:yyyy-MM-dd HH:mm:ss} - {longest.Metadata?.Title ?? longest.Id}", 
-                ConsoleColor.DarkGray, overrideQuiet: true);
+            sb.AppendLine();
+            sb.AppendLine($"**Longest conversation:** {longest.Messages.Count} messages");
+            sb.AppendLine($"  {longest.Timestamp:yyyy-MM-dd HH:mm:ss} - {longest.Metadata?.Title ?? longest.Id}");
         }
 
-        private void DisplayDateStats(List<Models.Conversation> conversations)
+        private void AppendDateStats(System.Text.StringBuilder sb, List<Models.Conversation> conversations)
         {
-            ConsoleHelpers.WriteLine("### Activity by Date", ConsoleColor.White, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine("### Activity by Date");
+            sb.AppendLine();
 
             var byDate = conversations
                 .GroupBy(c => c.Timestamp.Date)
@@ -135,9 +144,8 @@ namespace CycoDj.CommandLineCommands
                 .Take(10)
                 .ToList();
 
-            ConsoleHelpers.WriteLine($"{"Date",-12} {"Convs",6} {"Msgs",7} {"User",6} {"Asst",6} {"Tool",6}", 
-                ConsoleColor.DarkGray, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(new string('-', 50), ConsoleColor.DarkGray, overrideQuiet: true);
+            sb.AppendLine($"{"Date",-12} {"Convs",6} {"Msgs",7} {"User",6} {"Asst",6} {"Tool",6}");
+            sb.AppendLine(new string('-', 50));
 
             foreach (var group in byDate)
             {
@@ -148,26 +156,14 @@ namespace CycoDj.CommandLineCommands
                 var toolCount = group.Sum(c => c.Messages.Count(m => m.Role == "tool"));
 
                 var dateStr = group.Key.ToString("yyyy-MM-dd");
-                var isToday = group.Key == DateTime.Today;
-
-                if (isToday)
-                {
-                    ConsoleHelpers.Write($"{dateStr,-12} ", ConsoleColor.Yellow, overrideQuiet: true);
-                }
-                else
-                {
-                    ConsoleHelpers.Write($"{dateStr,-12} ", overrideQuiet: true);
-                }
-
-                ConsoleHelpers.WriteLine($"{convCount,6} {msgCount,7} {userCount,6} {asstCount,6} {toolCount,6}", 
-                    overrideQuiet: true);
+                sb.AppendLine($"{dateStr,-12} {convCount,6} {msgCount,7} {userCount,6} {asstCount,6} {toolCount,6}");
             }
         }
 
-        private void DisplayToolUsageStats(List<Models.Conversation> conversations)
+        private void AppendToolUsageStats(System.Text.StringBuilder sb, List<Models.Conversation> conversations)
         {
-            ConsoleHelpers.WriteLine("### Tool Usage Statistics", ConsoleColor.White, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine("### Tool Usage Statistics");
+            sb.AppendLine();
 
             // Collect all tool calls
             var toolCalls = new Dictionary<string, int>();
@@ -188,23 +184,21 @@ namespace CycoDj.CommandLineCommands
 
             if (!toolCalls.Any())
             {
-                ConsoleHelpers.WriteLine("No tool usage found.", ConsoleColor.DarkGray, overrideQuiet: true);
+                sb.AppendLine("No tool usage found.");
                 return;
             }
 
             var totalToolCalls = toolCalls.Values.Sum();
-            ConsoleHelpers.WriteLine($"**Total tool calls:** {totalToolCalls:#,##0}", overrideQuiet: true);
-            ConsoleHelpers.WriteLine(overrideQuiet: true);
+            sb.AppendLine($"**Total tool calls:** {totalToolCalls:#,##0}");
+            sb.AppendLine();
 
-            ConsoleHelpers.WriteLine($"{"Tool Name",-40} {"Count",8} {"%",6}", 
-                ConsoleColor.DarkGray, overrideQuiet: true);
-            ConsoleHelpers.WriteLine(new string('-', 56), ConsoleColor.DarkGray, overrideQuiet: true);
+            sb.AppendLine($"{"Tool Name",-40} {"Count",8} {"%",6}");
+            sb.AppendLine(new string('-', 56));
 
             foreach (var tool in toolCalls.OrderByDescending(kv => kv.Value).Take(20))
             {
                 var percentage = tool.Value * 100.0 / totalToolCalls;
-                ConsoleHelpers.WriteLine($"{tool.Key,-40} {tool.Value,8:#,##0} {percentage,5:F1}%", 
-                    overrideQuiet: true);
+                sb.AppendLine($"{tool.Key,-40} {tool.Value,8:#,##0} {percentage,5:F1}%");
             }
         }
     }
