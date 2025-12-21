@@ -462,4 +462,61 @@ public class ContentSummarizer
 
         return stats;
     }
+
+    /// <summary>
+    /// Extracts file paths from file-related tool calls.
+    /// </summary>
+    public static List<string> GetFilesModified(Conversation conv)
+    {
+        if (conv == null) throw new ArgumentNullException(nameof(conv));
+        if (conv.Messages == null) return new List<string>();
+        
+        var files = new HashSet<string>();
+        
+        // File modification tools to look for
+        var fileModifyingTools = new[] { 
+            "ReplaceOneInFile", "ReplaceAllInFiles", "CreateFile", 
+            "Insert", "UndoEdit" 
+        };
+        
+        foreach (var msg in conv.Messages.Where(m => m?.Role == "assistant"))
+        {
+            if (msg.ToolCalls != null)
+            {
+                foreach (var toolCall in msg.ToolCalls)
+                {
+                    if (toolCall == null) continue;
+                    var toolName = toolCall.Function?.Name;
+                    
+                    if (toolName != null && fileModifyingTools.Contains(toolName))
+                    {
+                        // Try to extract path from arguments
+                        var args = toolCall.Function?.Arguments?.ToString();
+                        if (!string.IsNullOrEmpty(args))
+                        {
+                            // Look for "path" field in JSON
+                            var pathMatch = System.Text.RegularExpressions.Regex.Match(
+                                args, 
+                                @"""path""\s*:\s*""([^""]+)""");
+                            
+                            if (pathMatch.Success)
+                            {
+                                files.Add(pathMatch.Groups[1].Value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return files.OrderBy(f => f).ToList();
+    }
+
+    /// <summary>
+    /// Checks if a conversation involved file modifications.
+    /// </summary>
+    public static bool HasFileModifications(Conversation conv)
+    {
+        return GetFilesModified(conv).Count > 0;
+    }
 }

@@ -128,15 +128,29 @@ public class ListCommand : CycoDjCommand
                 }
             }
             
-            // Show first user message as preview if available
-            var firstUserMsg = conv.Messages.FirstOrDefault(m => m.Role == "user");
-            if (firstUserMsg != null && !string.IsNullOrWhiteSpace(firstUserMsg.Content))
+            // Show preview - brief overview with just one message
+            var userMessages = conv.Messages.Where(m => m.Role == "user" && !string.IsNullOrWhiteSpace(m.Content)).ToList();
+            
+            if (userMessages.Any())
             {
-                var preview = firstUserMsg.Content.Length > 80 
-                    ? firstUserMsg.Content.Substring(0, 80) + "..." 
-                    : firstUserMsg.Content;
+                // For branches, show last message (what's new)
+                // For non-branches, show first message
+                var messageToShow = conv.ParentId != null 
+                    ? userMessages.Last() 
+                    : userMessages.First();
+                
+                var preview = messageToShow.Content.Length > 80 
+                    ? messageToShow.Content.Substring(0, 80) + "..." 
+                    : messageToShow.Content;
                 preview = preview.Replace("\n", " ").Replace("\r", "");
+                
                 ConsoleHelpers.WriteLine($"{indent}  > {preview}", ConsoleColor.DarkGray);
+                
+                // Show indicator if there are more messages
+                if (userMessages.Count > 1)
+                {
+                    ConsoleHelpers.WriteLine($"{indent}    ... and {userMessages.Count - 1} more", ConsoleColor.DarkGray);
+                }
             }
             
             ConsoleHelpers.WriteLine();

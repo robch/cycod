@@ -9,6 +9,10 @@ src/cycodmd/bin/
 src/cycodmd/obj/
 src/cycodt/obj/
 src/cycodt/bin/
+src/cycodgr/bin/
+src/cycodgr/obj/
+src/cycodj/bin/
+src/cycodj/obj/
 src/mcp/**/obj/
 src/mcp/**/bin/
 
@@ -31,5 +35,3 @@ obj/
 # Test cloned repos
 temp/external/
 temp/test-repos/
-src/cycodgr/bin/
-src/cycodgr/obj/

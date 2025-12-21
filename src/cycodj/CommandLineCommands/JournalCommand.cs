@@ -176,49 +176,79 @@ public class JournalCommand : CycoDjCommand
                 ConsoleHelpers.WriteLine(conv.Id, ConsoleColor.DarkCyan);
             }
             
-            // User messages summary
-            var userMessages = conv.Messages.Where(m => m.Role == "user").ToList();
+            // User messages summary - journal shows more context than list
+            var userMessages = conv.Messages.Where(m => m.Role == "user" && !string.IsNullOrWhiteSpace(m.Content)).ToList();
             if (userMessages.Count > 0)
             {
-                var firstMsg = userMessages.First().Content;
-                if (!string.IsNullOrWhiteSpace(firstMsg))
+                // For branches, show last messages to see what's different
+                // For non-branches, show first messages
+                // Show 3 messages to give good narrative context
+                var messagesToShow = new List<string>();
+                
+                if (conv.ParentId != null)
                 {
-                    var preview = firstMsg.Length > 100 
-                        ? firstMsg.Substring(0, 100) + "..." 
-                        : firstMsg;
-                    preview = preview.Replace("\n", " ").Replace("\r", "");
-                    ConsoleHelpers.WriteLine($"{indent}  > {preview}", ConsoleColor.Green);
+                    // Branch: show last 3 messages
+                    var lastMessages = userMessages.Skip(Math.Max(0, userMessages.Count - 3)).Take(3);
+                    
+                    foreach (var msg in lastMessages)
+                    {
+                        var preview = msg.Content.Length > 100 
+                            ? msg.Content.Substring(0, 100) + "..." 
+                            : msg.Content;
+                        preview = preview.Replace("\n", " ").Replace("\r", "");
+                        messagesToShow.Add(preview);
+                    }
+                }
+                else
+                {
+                    // Non-branch: show first 3 messages
+                    var firstMessages = userMessages.Take(3);
+                    
+                    foreach (var msg in firstMessages)
+                    {
+                        var preview = msg.Content.Length > 100 
+                            ? msg.Content.Substring(0, 100) + "..." 
+                            : msg.Content;
+                        preview = preview.Replace("\n", " ").Replace("\r", "");
+                        messagesToShow.Add(preview);
+                    }
                 }
                 
-                // Show additional user messages in detailed mode
-                if (detailed && userMessages.Count > 1)
+                // Display messages
+                for (int i = 0; i < messagesToShow.Count; i++)
                 {
-                    for (int i = 1; i < userMessages.Count && i < 3; i++)
-                    {
-                        var msg = userMessages[i].Content;
-                        if (!string.IsNullOrWhiteSpace(msg))
-                        {
-                            var preview = msg.Length > 80 
-                                ? msg.Substring(0, 80) + "..." 
-                                : msg;
-                            preview = preview.Replace("\n", " ").Replace("\r", "");
-                            ConsoleHelpers.WriteLine($"{indent}  > {preview}", ConsoleColor.DarkGreen);
-                        }
-                    }
-                    if (userMessages.Count > 3)
-                    {
-                        ConsoleHelpers.WriteLine($"{indent}  ... and {userMessages.Count - 3} more messages", ConsoleColor.DarkGray);
-                    }
+                    var color = i == 0 ? ConsoleColor.Green : ConsoleColor.DarkGreen;
+                    ConsoleHelpers.WriteLine($"{indent}  > {messagesToShow[i]}", color);
+                }
+                
+                // Show count of remaining messages
+                var shownCount = messagesToShow.Count;
+                if (userMessages.Count > shownCount)
+                {
+                    ConsoleHelpers.WriteLine($"{indent}  ... and {userMessages.Count - shownCount} more", ConsoleColor.DarkGray);
                 }
             }
             
-            // Assistant summary
+            // Detailed mode: show tool usage and file operations
             if (detailed)
             {
-                var summary = ContentSummarizer.SummarizeConversation(conv, maxLength: 150);
-                if (!string.IsNullOrWhiteSpace(summary))
+                // Tool usage statistics
+                var toolStats = ContentSummarizer.GetToolCallStatistics(conv);
+                if (toolStats.Count > 0)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}  Summary: {summary}", ConsoleColor.Blue);
+                    var topTools = toolStats.OrderByDescending(kvp => kvp.Value).Take(5);
+                    var toolSummary = string.Join(", ", topTools.Select(kvp => $"{kvp.Key} ({kvp.Value}x)"));
+                    ConsoleHelpers.WriteLine($"{indent}  Tools: {toolSummary}", ConsoleColor.DarkCyan);
+                }
+                
+                // Files modified
+                var files = ContentSummarizer.GetFilesModified(conv);
+                if (files.Count > 0)
+                {
+                    var fileList = files.Count <= 3 
+                        ? string.Join(", ", files) 
+                        : string.Join(", ", files.Take(3)) + $" +{files.Count - 3} more";
+                    ConsoleHelpers.WriteLine($"{indent}  Files: {fileList}", ConsoleColor.DarkYellow);
                 }
             }
             
