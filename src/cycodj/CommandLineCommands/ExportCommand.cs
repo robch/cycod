@@ -104,6 +104,9 @@ namespace CycoDj.CommandLineCommands
 
             // Generate markdown
             var markdown = GenerateMarkdown(conversations);
+            
+            // Apply instructions if provided
+            markdown = ApplyInstructionsIfProvided(markdown);
 
             // Write to file
             try

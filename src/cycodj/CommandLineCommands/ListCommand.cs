@@ -15,18 +15,31 @@ public class ListCommand : CycoDjCommand
 
     public override async Task<int> ExecuteAsync()
     {
-        ConsoleHelpers.WriteLine("## Chat History Conversations", ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        var output = GenerateListOutput();
+        
+        // Apply instructions if provided
+        var finalOutput = ApplyInstructionsIfProvided(output);
+        ConsoleHelpers.WriteLine(finalOutput);
+        
+        return await Task.FromResult(0);
+    }
+    
+    private string GenerateListOutput()
+    {
+        var sb = new System.Text.StringBuilder();
+        
+        sb.AppendLine("## Chat History Conversations");
+        sb.AppendLine();
         
         // Find all history files
         var files = HistoryFileHelpers.FindAllHistoryFiles();
         
         if (files.Count == 0)
         {
-            ConsoleHelpers.WriteWarning("No chat history files found");
+            sb.AppendLine("WARNING: No chat history files found");
             var historyDir = HistoryFileHelpers.GetHistoryDirectory();
-            ConsoleHelpers.WriteLine($"Expected location: {historyDir}", ConsoleColor.Gray);
-            return 1;
+            sb.AppendLine($"Expected location: {historyDir}");
+            return sb.ToString();
         }
         
         // Filter by date if specified
@@ -35,13 +48,13 @@ public class ListCommand : CycoDjCommand
             if (DateTime.TryParse(Date, out var dateFilter))
             {
                 files = HistoryFileHelpers.FilterByDate(files, dateFilter);
-                ConsoleHelpers.WriteLine($"Filtered by date: {dateFilter:yyyy-MM-dd} ({files.Count} files)", ConsoleColor.Gray);
-                ConsoleHelpers.WriteLine();
+                sb.AppendLine($"Filtered by date: {dateFilter:yyyy-MM-dd} ({files.Count} files)");
+                sb.AppendLine();
             }
             else
             {
-                ConsoleHelpers.WriteErrorLine($"Invalid date format: {Date}");
-                return 1;
+                sb.AppendLine($"ERROR: Invalid date format: {Date}");
+                return sb.ToString();
             }
         }
         
@@ -50,8 +63,8 @@ public class ListCommand : CycoDjCommand
         if (effectiveLimit == 0 && string.IsNullOrEmpty(Date))
         {
             effectiveLimit = 20; // Default to last 20 conversations
-            ConsoleHelpers.WriteLine($"Showing last {effectiveLimit} conversations (use --last N to change, or --date to filter)", ConsoleColor.Gray);
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine($"Showing last {effectiveLimit} conversations (use --last N to change, or --date to filter)");
+            sb.AppendLine();
         }
         
         // Limit to last N if specified or defaulted
@@ -60,8 +73,8 @@ public class ListCommand : CycoDjCommand
             files = files.Take(effectiveLimit).ToList();
             if (Last > 0)
             {
-                ConsoleHelpers.WriteLine($"Showing last {effectiveLimit} conversations", ConsoleColor.Gray);
-                ConsoleHelpers.WriteLine();
+                sb.AppendLine($"Showing last {effectiveLimit} conversations");
+                sb.AppendLine();
             }
         }
         
@@ -70,8 +83,8 @@ public class ListCommand : CycoDjCommand
         
         if (conversations.Count == 0)
         {
-            ConsoleHelpers.WriteWarning("No conversations could be read");
-            return 1;
+            sb.AppendLine("WARNING: No conversations could be read");
+            return sb.ToString();
         }
         
         // Detect branches
@@ -88,43 +101,35 @@ public class ListCommand : CycoDjCommand
             // Show indent if this is a branch
             var indent = conv.ParentId != null ? "  ↳ " : "";
             
-            // Show timestamp
-            ConsoleHelpers.Write($"{indent}{timestamp}", ConsoleColor.White);
-            ConsoleHelpers.Write($" - ", ConsoleColor.Gray);
+            // Show timestamp and title
+            sb.Append($"{indent}{timestamp} - ");
             
-            // Show title if available, otherwise show ID
             if (!string.IsNullOrEmpty(conv.Metadata?.Title))
             {
-                ConsoleHelpers.Write($"{conv.Metadata.Title}", ConsoleColor.Cyan);
-                ConsoleHelpers.Write($" ", ConsoleColor.Gray);
-                ConsoleHelpers.WriteLine($"({conv.Id})", ConsoleColor.DarkGray);
+                sb.Append($"{conv.Metadata.Title} ");
+                sb.AppendLine($"({conv.Id})");
             }
             else
             {
-                ConsoleHelpers.WriteLine($"{conv.Id}", ConsoleColor.Cyan);
+                sb.AppendLine($"{conv.Id}");
             }
             
-            ConsoleHelpers.Write($"{indent}  Messages: ", ConsoleColor.Gray);
-            ConsoleHelpers.Write($"{userCount} user", ConsoleColor.Green);
-            ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-            ConsoleHelpers.Write($"{assistantCount} assistant", ConsoleColor.Blue);
-            ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-            ConsoleHelpers.WriteLine($"{toolCount} tool", ConsoleColor.DarkGray);
+            sb.AppendLine($"{indent}  Messages: {userCount} user, {assistantCount} assistant, {toolCount} tool");
             
             // Show branch info if ShowBranches is enabled
             if (ShowBranches)
             {
                 if (conv.ParentId != null)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}  Branch of: {conv.ParentId}", ConsoleColor.Yellow);
+                    sb.AppendLine($"{indent}  Branch of: {conv.ParentId}");
                 }
                 if (conv.BranchIds.Count > 0)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}  Branches: {conv.BranchIds.Count}", ConsoleColor.Yellow);
+                    sb.AppendLine($"{indent}  Branches: {conv.BranchIds.Count}");
                 }
                 if (conv.ToolCallIds.Count > 0)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}  Tool calls: {conv.ToolCallIds.Count}", ConsoleColor.DarkGray);
+                    sb.AppendLine($"{indent}  Tool calls: {conv.ToolCallIds.Count}");
                 }
             }
             
@@ -144,27 +149,27 @@ public class ListCommand : CycoDjCommand
                     : messageToShow.Content;
                 preview = preview.Replace("\n", " ").Replace("\r", "");
                 
-                ConsoleHelpers.WriteLine($"{indent}  > {preview}", ConsoleColor.DarkGray);
+                sb.AppendLine($"{indent}  > {preview}");
                 
                 // Show indicator if there are more messages
                 if (userMessages.Count > 1)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}    ... and {userMessages.Count - 1} more", ConsoleColor.DarkGray);
+                    sb.AppendLine($"{indent}    ... and {userMessages.Count - 1} more");
                 }
             }
             
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine();
         }
         
-        ConsoleHelpers.WriteLine($"Total: {conversations.Count} conversation(s)", ConsoleColor.Green);
+        sb.AppendLine($"Total: {conversations.Count} conversation(s)");
         
         // Show branch statistics
         var branchedConvs = conversations.Count(c => c.ParentId != null);
         if (branchedConvs > 0)
         {
-            ConsoleHelpers.WriteLine($"Branches: {branchedConvs} conversation(s) are branches of others", ConsoleColor.Yellow);
+            sb.AppendLine($"Branches: {branchedConvs} conversation(s) are branches of others");
         }
         
-        return await Task.FromResult(0);
+        return sb.ToString();
     }
 }

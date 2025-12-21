@@ -16,11 +16,24 @@ public class ShowCommand : CycoDjCommand
 
     public override async Task<int> ExecuteAsync()
     {
+        var output = GenerateShowOutput();
+        
+        // Apply instructions if provided
+        var finalOutput = ApplyInstructionsIfProvided(output);
+        ConsoleHelpers.WriteLine(finalOutput);
+        
+        return await Task.FromResult(0);
+    }
+    
+    private string GenerateShowOutput()
+    {
+        var sb = new System.Text.StringBuilder();
+        
         if (string.IsNullOrEmpty(ConversationId))
         {
-            ConsoleHelpers.WriteErrorLine("Conversation ID is required");
-            ConsoleHelpers.WriteLine("Usage: cycodj show <conversation-id>", ConsoleColor.Gray);
-            return 1;
+            sb.AppendLine("ERROR: Conversation ID is required");
+            sb.AppendLine("Usage: cycodj show <conversation-id>");
+            return sb.ToString();
         }
 
         // Find the conversation file
@@ -31,17 +44,17 @@ public class ShowCommand : CycoDjCommand
 
         if (matchingFile == null)
         {
-            ConsoleHelpers.WriteErrorLine($"Conversation not found: {ConversationId}");
-            ConsoleHelpers.WriteLine($"Searched {files.Count} chat history files", ConsoleColor.Gray);
-            return 1;
+            sb.AppendLine($"ERROR: Conversation not found: {ConversationId}");
+            sb.AppendLine($"Searched {files.Count} chat history files");
+            return sb.ToString();
         }
 
         // Read the conversation
         var conversation = JsonlReader.ReadConversation(matchingFile);
         if (conversation == null)
         {
-            ConsoleHelpers.WriteErrorLine($"Failed to read conversation from: {matchingFile}");
-            return 1;
+            sb.AppendLine($"ERROR: Failed to read conversation from: {matchingFile}");
+            return sb.ToString();
         }
 
         // Load all conversations for branch detection
@@ -52,75 +65,61 @@ public class ShowCommand : CycoDjCommand
         var conv = allConversations.FirstOrDefault(c => c.Id == conversation.Id) ?? conversation;
 
         // Display header
-        ConsoleHelpers.WriteLine("═".PadRight(80, '═'), ConsoleColor.Cyan);
+        sb.AppendLine("═".PadRight(80, '═'));
         
         if (!string.IsNullOrEmpty(conv.Metadata?.Title))
         {
-            ConsoleHelpers.WriteLine($"## {conv.Metadata.Title}", ConsoleColor.Cyan);
+            sb.AppendLine($"## {conv.Metadata.Title}");
         }
         else
         {
-            ConsoleHelpers.WriteLine($"## Conversation: {conv.Id}", ConsoleColor.Cyan);
+            sb.AppendLine($"## Conversation: {conv.Id}");
         }
         
-        ConsoleHelpers.WriteLine("═".PadRight(80, '═'), ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine("═".PadRight(80, '═'));
+        sb.AppendLine();
 
         // Display metadata
         var timestamp = TimestampHelpers.FormatTimestamp(conv.Timestamp, "datetime");
-        ConsoleHelpers.Write("Timestamp: ", ConsoleColor.Gray);
-        ConsoleHelpers.WriteLine(timestamp, ConsoleColor.White);
-        
-        ConsoleHelpers.Write("File: ", ConsoleColor.Gray);
-        ConsoleHelpers.WriteLine(conv.FilePath, ConsoleColor.DarkGray);
-        
-        ConsoleHelpers.Write("Messages: ", ConsoleColor.Gray);
-        ConsoleHelpers.WriteLine($"{conv.Messages.Count} total", ConsoleColor.White);
+        sb.AppendLine($"Timestamp: {timestamp}");
+        sb.AppendLine($"File: {conv.FilePath}");
+        sb.AppendLine($"Messages: {conv.Messages.Count} total");
         
         var userCount = conv.Messages.Count(m => m.Role == "user");
         var assistantCount = conv.Messages.Count(m => m.Role == "assistant");
         var toolCount = conv.Messages.Count(m => m.Role == "tool");
         var systemCount = conv.Messages.Count(m => m.Role == "system");
         
-        ConsoleHelpers.Write("  - ", ConsoleColor.Gray);
-        ConsoleHelpers.Write($"{userCount} user", ConsoleColor.Green);
-        ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-        ConsoleHelpers.Write($"{assistantCount} assistant", ConsoleColor.Blue);
-        ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-        ConsoleHelpers.Write($"{toolCount} tool", ConsoleColor.DarkGray);
+        sb.Append($"  - {userCount} user, {assistantCount} assistant, {toolCount} tool");
         if (systemCount > 0)
         {
-            ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-            ConsoleHelpers.Write($"{systemCount} system", ConsoleColor.DarkMagenta);
+            sb.Append($", {systemCount} system");
         }
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine();
         
         // Branch information
         if (conv.ParentId != null)
         {
-            ConsoleHelpers.Write("Branch of: ", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine(conv.ParentId, ConsoleColor.White);
+            sb.AppendLine($"Branch of: {conv.ParentId}");
         }
         
         if (conv.BranchIds.Count > 0)
         {
-            ConsoleHelpers.Write("Branches: ", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine($"{conv.BranchIds.Count} conversation(s) branch from this", ConsoleColor.White);
+            sb.AppendLine($"Branches: {conv.BranchIds.Count} conversation(s) branch from this");
             foreach (var branchId in conv.BranchIds)
             {
-                ConsoleHelpers.WriteLine($"  - {branchId}", ConsoleColor.DarkGray);
+                sb.AppendLine($"  - {branchId}");
             }
         }
         
         if (conv.ToolCallIds.Count > 0)
         {
-            ConsoleHelpers.Write("Tool Calls: ", ConsoleColor.Gray);
-            ConsoleHelpers.WriteLine($"{conv.ToolCallIds.Count}", ConsoleColor.White);
+            sb.AppendLine($"Tool Calls: {conv.ToolCallIds.Count}");
         }
         
-        ConsoleHelpers.WriteLine();
-        ConsoleHelpers.WriteLine("─".PadRight(80, '─'), ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine();
+        sb.AppendLine("─".PadRight(80, '─'));
+        sb.AppendLine();
 
         // Display messages
         var messageNumber = 0;
@@ -131,23 +130,13 @@ public class ShowCommand : CycoDjCommand
             // Skip system messages unless verbose
             if (msg.Role == "system" && !ConsoleHelpers.IsVerbose())
             {
-                ConsoleHelpers.WriteLine($"[{messageNumber}] {msg.Role} (system prompt - use --verbose to show)", ConsoleColor.DarkMagenta);
-                ConsoleHelpers.WriteLine();
+                sb.AppendLine($"[{messageNumber}] {msg.Role} (system prompt - use --verbose to show)");
+                sb.AppendLine();
                 continue;
             }
             
             // Message header
-            var roleColor = msg.Role switch
-            {
-                "user" => ConsoleColor.Green,
-                "assistant" => ConsoleColor.Blue,
-                "tool" => ConsoleColor.DarkGray,
-                "system" => ConsoleColor.DarkMagenta,
-                _ => ConsoleColor.White
-            };
-            
-            ConsoleHelpers.Write($"[{messageNumber}] ", ConsoleColor.DarkGray);
-            ConsoleHelpers.WriteLine(msg.Role.ToUpper(), roleColor);
+            sb.AppendLine($"[{messageNumber}] {msg.Role.ToUpper()}");
             
             // Message content
             var content = msg.Content ?? string.Empty;
@@ -156,8 +145,8 @@ public class ShowCommand : CycoDjCommand
             if (msg.Role == "tool" && !ShowToolOutput && content.Length > MaxContentLength)
             {
                 var truncated = content.Substring(0, MaxContentLength);
-                ConsoleHelpers.WriteLine(truncated, ConsoleColor.Gray);
-                ConsoleHelpers.WriteLine($"... (truncated {content.Length - MaxContentLength} chars, use --show-tool-output to see all)", ConsoleColor.DarkGray);
+                sb.AppendLine(truncated);
+                sb.AppendLine($"... (truncated {content.Length - MaxContentLength} chars, use --show-tool-output to see all)");
             }
             else
             {
@@ -165,37 +154,37 @@ public class ShowCommand : CycoDjCommand
                 if (content.Length > MaxContentLength * 3)
                 {
                     var truncated = content.Substring(0, MaxContentLength * 3);
-                    ConsoleHelpers.WriteLine(truncated, roleColor);
-                    ConsoleHelpers.WriteLine($"... (truncated {content.Length - MaxContentLength * 3} chars)", ConsoleColor.DarkGray);
+                    sb.AppendLine(truncated);
+                    sb.AppendLine($"... (truncated {content.Length - MaxContentLength * 3} chars)");
                 }
                 else
                 {
-                    ConsoleHelpers.WriteLine(content, roleColor);
+                    sb.AppendLine(content);
                 }
             }
             
             // Show tool calls if enabled
             if (ShowToolCalls && msg.ToolCalls != null && msg.ToolCalls.Count > 0)
             {
-                ConsoleHelpers.WriteLine($"Tool Calls: {msg.ToolCalls.Count}", ConsoleColor.Yellow);
+                sb.AppendLine($"Tool Calls: {msg.ToolCalls.Count}");
                 foreach (var toolCall in msg.ToolCalls)
                 {
-                    ConsoleHelpers.WriteLine($"  - {toolCall.Id}: {toolCall.Function?.Name ?? "unknown"}", ConsoleColor.DarkYellow);
+                    sb.AppendLine($"  - {toolCall.Id}: {toolCall.Function?.Name ?? "unknown"}");
                 }
             }
             
             // Show tool call ID for tool responses
             if (msg.Role == "tool" && !string.IsNullOrEmpty(msg.ToolCallId))
             {
-                ConsoleHelpers.WriteLine($"(responding to: {msg.ToolCallId})", ConsoleColor.DarkGray);
+                sb.AppendLine($"(responding to: {msg.ToolCallId})");
             }
             
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine();
         }
         
-        ConsoleHelpers.WriteLine("─".PadRight(80, '─'), ConsoleColor.DarkGray);
-        ConsoleHelpers.WriteLine($"End of conversation: {conv.Id}", ConsoleColor.Gray);
-
-        return await Task.FromResult(0);
+        sb.AppendLine("─".PadRight(80, '─'));
+        sb.AppendLine($"End of conversation: {conv.Id}");
+        
+        return sb.ToString();
     }
 }
