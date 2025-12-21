@@ -205,6 +205,31 @@ public class CycoDjCommandLineOptions : CommandLineOptions
             command.Detailed = true;
             return true;
         }
+        else if (arg == "--instructions")
+        {
+            var instructions = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new CommandLineException($"Missing instructions value for {arg}");
+            }
+            command.Instructions = instructions;
+            return true;
+        }
+        else if (arg == "--use-built-in-functions")
+        {
+            command.UseBuiltInFunctions = true;
+            return true;
+        }
+        else if (arg == "--save-chat-history")
+        {
+            var savePath = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(savePath))
+            {
+                throw new CommandLineException($"Missing path value for {arg}");
+            }
+            command.SaveChatHistory = savePath;
+            return true;
+        }
         
         return false;
     }

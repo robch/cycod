@@ -14,6 +14,9 @@ public class JournalCommand : CycoDjCommand
     public string? Date { get; set; }
     public int LastDays { get; set; } = 1;
     public bool Detailed { get; set; } = false;
+    public string? Instructions { get; set; }
+    public bool UseBuiltInFunctions { get; set; } = false;
+    public string? SaveChatHistory { get; set; }
 
     public override async Task<int> ExecuteAsync()
     {
@@ -71,6 +74,32 @@ public class JournalCommand : CycoDjCommand
         // Detect branches
         BranchDetector.DetectBranches(conversations);
         
+        // Generate journal output
+        var journalOutput = GenerateJournalOutput(conversations, startDate, endDate);
+        
+        // Apply instructions if provided
+        if (!string.IsNullOrEmpty(Instructions))
+        {
+            var instructedOutput = AiInstructionProcessor.ApplyInstructions(
+                Instructions, 
+                journalOutput, 
+                UseBuiltInFunctions, 
+                SaveChatHistory);
+            
+            ConsoleHelpers.WriteLine(instructedOutput);
+        }
+        else
+        {
+            ConsoleHelpers.WriteLine(journalOutput);
+        }
+        
+        return await Task.FromResult(0);
+    }
+    
+    private string GenerateJournalOutput(List<Conversation> conversations, DateTime startDate, DateTime endDate)
+    {
+        var sb = new System.Text.StringBuilder();
+        
         // Group by date
         var conversationsByDate = conversations
             .GroupBy(c => c.Timestamp.Date)
@@ -78,17 +107,17 @@ public class JournalCommand : CycoDjCommand
             .ToList();
         
         // Display journal
-        ConsoleHelpers.WriteLine("═".PadRight(80, '═'), ConsoleColor.Cyan);
+        sb.AppendLine("═".PadRight(80, '═'));
         if (startDate.Date == endDate.Date.AddDays(-1))
         {
-            ConsoleHelpers.WriteLine($"## Journal for {startDate:dddd, MMMM d, yyyy}", ConsoleColor.Cyan);
+            sb.AppendLine($"## Journal for {startDate:dddd, MMMM d, yyyy}");
         }
         else
         {
-            ConsoleHelpers.WriteLine($"## Journal: {startDate:MMM d} - {endDate.AddDays(-1):MMM d, yyyy}", ConsoleColor.Cyan);
+            sb.AppendLine($"## Journal: {startDate:MMM d} - {endDate.AddDays(-1):MMM d, yyyy}");
         }
-        ConsoleHelpers.WriteLine("═".PadRight(80, '═'), ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine("═".PadRight(80, '═'));
+        sb.AppendLine();
         
         foreach (var dateGroup in conversationsByDate)
         {
@@ -96,8 +125,8 @@ public class JournalCommand : CycoDjCommand
             var dayConvs = dateGroup.OrderBy(c => c.Timestamp).ToList();
             
             // Day header
-            ConsoleHelpers.WriteLine($"### {date:dddd, MMMM d, yyyy}", ConsoleColor.Yellow);
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine($"### {date:dddd, MMMM d, yyyy}");
+            sb.AppendLine();
             
             // Group conversations by time period (morning, afternoon, evening)
             var morning = dayConvs.Where(c => c.Timestamp.Hour < 12).ToList();
@@ -106,17 +135,17 @@ public class JournalCommand : CycoDjCommand
             
             if (morning.Count > 0)
             {
-                DisplayTimePeriod("Morning", morning, Detailed);
+                AppendTimePeriod(sb, "Morning", morning, Detailed);
             }
             
             if (afternoon.Count > 0)
             {
-                DisplayTimePeriod("Afternoon", afternoon, Detailed);
+                AppendTimePeriod(sb, "Afternoon", afternoon, Detailed);
             }
             
             if (evening.Count > 0)
             {
-                DisplayTimePeriod("Evening", evening, Detailed);
+                AppendTimePeriod(sb, "Evening", evening, Detailed);
             }
             
             // Day summary
@@ -124,39 +153,34 @@ public class JournalCommand : CycoDjCommand
             var totalUserMessages = dayConvs.Sum(c => c.Messages.Count(m => m.Role == "user"));
             var branchCount = dayConvs.Count(c => c.ParentId != null);
             
-            ConsoleHelpers.Write($"  Day Summary: ", ConsoleColor.Gray);
-            ConsoleHelpers.Write($"{dayConvs.Count} conversations", ConsoleColor.White);
-            ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-            ConsoleHelpers.Write($"{totalUserMessages} interactions", ConsoleColor.Green);
+            sb.Append($"  Day Summary: {dayConvs.Count} conversations, {totalUserMessages} interactions");
             if (branchCount > 0)
             {
-                ConsoleHelpers.Write($", ", ConsoleColor.Gray);
-                ConsoleHelpers.Write($"{branchCount} branches", ConsoleColor.Yellow);
+                sb.Append($", {branchCount} branches");
             }
-            ConsoleHelpers.WriteLine();
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine();
+            sb.AppendLine();
         }
         
         // Overall summary
         var totalConversations = conversations.Count;
         var totalBranches = conversations.Count(c => c.ParentId != null);
         
-        ConsoleHelpers.WriteLine("─".PadRight(80, '─'), ConsoleColor.DarkGray);
-        ConsoleHelpers.Write($"Total: ", ConsoleColor.Gray);
-        ConsoleHelpers.Write($"{totalConversations} conversations", ConsoleColor.White);
+        sb.AppendLine("─".PadRight(80, '─'));
+        sb.Append($"Total: {totalConversations} conversations");
         if (totalBranches > 0)
         {
-            ConsoleHelpers.Write($" ({totalBranches} branches)", ConsoleColor.Yellow);
+            sb.Append($" ({totalBranches} branches)");
         }
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine();
         
-        return await Task.FromResult(0);
+        return sb.ToString();
     }
     
-    private void DisplayTimePeriod(string period, List<Conversation> conversations, bool detailed)
+    private void AppendTimePeriod(System.Text.StringBuilder sb, string period, List<Conversation> conversations, bool detailed)
     {
-        ConsoleHelpers.WriteLine($"#### {period} ({conversations.Count} conversations)", ConsoleColor.Cyan);
-        ConsoleHelpers.WriteLine();
+        sb.AppendLine($"####  {period} ({conversations.Count} conversations)");
+        sb.AppendLine();
         
         foreach (var conv in conversations)
         {
@@ -164,16 +188,15 @@ public class JournalCommand : CycoDjCommand
             var indent = conv.ParentId != null ? "  ↳ " : "";
             
             // Time and title/ID
-            ConsoleHelpers.Write($"{indent}{time}", ConsoleColor.White);
-            ConsoleHelpers.Write(" - ", ConsoleColor.Gray);
+            sb.Append($"{indent}{time} - ");
             
             if (!string.IsNullOrEmpty(conv.Metadata?.Title))
             {
-                ConsoleHelpers.WriteLine(conv.Metadata.Title, ConsoleColor.Cyan);
+                sb.AppendLine(conv.Metadata.Title);
             }
             else
             {
-                ConsoleHelpers.WriteLine(conv.Id, ConsoleColor.DarkCyan);
+                sb.AppendLine(conv.Id);
             }
             
             // User messages summary - journal shows more context than list
@@ -215,17 +238,16 @@ public class JournalCommand : CycoDjCommand
                 }
                 
                 // Display messages
-                for (int i = 0; i < messagesToShow.Count; i++)
+                foreach (var message in messagesToShow)
                 {
-                    var color = i == 0 ? ConsoleColor.Green : ConsoleColor.DarkGreen;
-                    ConsoleHelpers.WriteLine($"{indent}  > {messagesToShow[i]}", color);
+                    sb.AppendLine($"{indent}  > {message}");
                 }
                 
                 // Show count of remaining messages
                 var shownCount = messagesToShow.Count;
                 if (userMessages.Count > shownCount)
                 {
-                    ConsoleHelpers.WriteLine($"{indent}  ... and {userMessages.Count - shownCount} more", ConsoleColor.DarkGray);
+                    sb.AppendLine($"{indent}  ... and {userMessages.Count - shownCount} more");
                 }
             }
             
@@ -238,7 +260,7 @@ public class JournalCommand : CycoDjCommand
                 {
                     var topTools = toolStats.OrderByDescending(kvp => kvp.Value).Take(5);
                     var toolSummary = string.Join(", ", topTools.Select(kvp => $"{kvp.Key} ({kvp.Value}x)"));
-                    ConsoleHelpers.WriteLine($"{indent}  Tools: {toolSummary}", ConsoleColor.DarkCyan);
+                    sb.AppendLine($"{indent}  Tools: {toolSummary}");
                 }
                 
                 // Files modified
@@ -248,15 +270,16 @@ public class JournalCommand : CycoDjCommand
                     var fileList = files.Count <= 3 
                         ? string.Join(", ", files) 
                         : string.Join(", ", files.Take(3)) + $" +{files.Count - 3} more";
-                    ConsoleHelpers.WriteLine($"{indent}  Files: {fileList}", ConsoleColor.DarkYellow);
+                    sb.AppendLine($"{indent}  Files: {fileList}");
                 }
             }
             
             // Message count
             var msgCount = conv.Messages.Count(m => m.Role == "user" || m.Role == "assistant");
-            ConsoleHelpers.WriteLine($"{indent}  ({msgCount} messages)", ConsoleColor.DarkGray);
+            sb.AppendLine($"{indent}  ({msgCount} messages)");
             
-            ConsoleHelpers.WriteLine();
+            sb.AppendLine();
         }
     }
+    
 }
