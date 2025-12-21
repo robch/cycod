@@ -14,9 +14,6 @@ public class JournalCommand : CycoDjCommand
     public string? Date { get; set; }
     public int LastDays { get; set; } = 1;
     public bool Detailed { get; set; } = false;
-    public string? Instructions { get; set; }
-    public bool UseBuiltInFunctions { get; set; } = false;
-    public string? SaveChatHistory { get; set; }
 
     public override async Task<int> ExecuteAsync()
     {
@@ -78,20 +75,8 @@ public class JournalCommand : CycoDjCommand
         var journalOutput = GenerateJournalOutput(conversations, startDate, endDate);
         
         // Apply instructions if provided
-        if (!string.IsNullOrEmpty(Instructions))
-        {
-            var instructedOutput = AiInstructionProcessor.ApplyInstructions(
-                Instructions, 
-                journalOutput, 
-                UseBuiltInFunctions, 
-                SaveChatHistory);
-            
-            ConsoleHelpers.WriteLine(instructedOutput);
-        }
-        else
-        {
-            ConsoleHelpers.WriteLine(journalOutput);
-        }
+        var finalOutput = ApplyInstructionsIfProvided(journalOutput);
+        ConsoleHelpers.WriteLine(finalOutput);
         
         return await Task.FromResult(0);
     }

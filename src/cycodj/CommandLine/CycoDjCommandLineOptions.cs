@@ -50,8 +50,48 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return base.NewCommandFromName(commandName);
     }
 
+    /// <summary>
+    /// Try to parse common instruction-related options for all cycodj commands
+    /// </summary>
+    private bool TryParseCommonInstructionOptions(CycoDjCommand command, string[] args, ref int i, string arg)
+    {
+        if (arg == "--instructions")
+        {
+            var instructions = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(instructions))
+            {
+                throw new CommandLineException($"Missing instructions value for {arg}");
+            }
+            command.Instructions = instructions;
+            return true;
+        }
+        else if (arg == "--use-built-in-functions")
+        {
+            command.UseBuiltInFunctions = true;
+            return true;
+        }
+        else if (arg == "--save-chat-history")
+        {
+            var savePath = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(savePath))
+            {
+                throw new CommandLineException($"Missing path value for {arg}");
+            }
+            command.SaveChatHistory = savePath;
+            return true;
+        }
+        
+        return false;
+    }
+
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
     {
+        // Try common instruction options first for all cycodj commands
+        if (command is CycoDjCommand cycodjCommand && TryParseCommonInstructionOptions(cycodjCommand, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (command is ListCommand listCommand)
         {
             return TryParseListCommandOptions(listCommand, args, ref i, arg);
@@ -203,31 +243,6 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         else if (arg == "--detailed")
         {
             command.Detailed = true;
-            return true;
-        }
-        else if (arg == "--instructions")
-        {
-            var instructions = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(instructions))
-            {
-                throw new CommandLineException($"Missing instructions value for {arg}");
-            }
-            command.Instructions = instructions;
-            return true;
-        }
-        else if (arg == "--use-built-in-functions")
-        {
-            command.UseBuiltInFunctions = true;
-            return true;
-        }
-        else if (arg == "--save-chat-history")
-        {
-            var savePath = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(savePath))
-            {
-                throw new CommandLineException($"Missing path value for {arg}");
-            }
-            command.SaveChatHistory = savePath;
             return true;
         }
         

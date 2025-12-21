@@ -1,6 +1,45 @@
-# Add --instructions Support to cycodj
+# ✅ IMPLEMENTED - Add --instructions Support to cycodj
 
-## Context
+**Status:** Completed and pushed to robch/2512-dec20-chat-journal
+
+## Implementation Summary
+
+Successfully added --instructions support to `cycodj journal` command following the pattern from cycodmd and cycodgr.
+
+### What Was Implemented
+
+1. **Command Line Options** - Added three new options to JournalCommand:
+   - `--instructions <text>` - AI instructions for processing journal output
+   - `--use-built-in-functions` - Enable built-in AI functions
+   - `--save-chat-history <path>` - Save the AI processing chat history
+
+2. **Prompt Templates** - Created embedded prompt files:
+   - `src/cycodj/assets/prompts/system.md` - System prompt for chat history analysis
+   - `src/cycodj/assets/prompts/user.md` - User prompt template
+
+3. **Refactored Output Generation** - Modified JournalCommand to:
+   - Generate journal output to string first (GenerateJournalOutput method)
+   - Optionally process through AI with AiInstructionProcessor
+   - Maintain backward compatibility (works without --instructions)
+
+4. **Leveraged Common Library** - Uses existing AiInstructionProcessor from common library
+
+### Examples That Now Work
+
+```bash
+# List conversation titles as bullets
+cycodj journal --instructions "List all conversation titles as a bulleted list"
+
+# Summarize accomplishments
+cycodj journal --detailed --instructions "Summarize what I accomplished today in 3-5 bullet points"
+
+# Focus on specific aspects
+cycodj journal --instructions "Show only conversations where files were modified"
+cycodj journal --instructions "Create a status report for stakeholders"
+cycodj journal --instructions "List all TODO items mentioned"
+```
+
+## Original Context
 Following the pattern established in `cycodmd` and `cycodgr`, add `--instructions` support to `cycodj` for AI-powered customization of journal output.
 
 ## Use Cases
