@@ -4,7 +4,6 @@ using System.Drawing.Imaging;
 #endif
 using System.Runtime.InteropServices;
 
-
 /// <summary>
 /// Helper class for capturing screenshots on Windows and macOS.
 /// Provides platform-aware screenshot functionality with graceful degradation on unsupported platforms.
