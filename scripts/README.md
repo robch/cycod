@@ -22,14 +22,33 @@ Sets up the development environment to prioritize debug builds over globally ins
 ./scripts/setup-debug-path.sh --help
 ```
 
-### What it does
+## cycodpath.cmd
 
-- Adds debug binary paths to the front of PATH:
+Windows equivalent of setup-debug-path.sh. Sets up PATH for current session to prioritize debug builds.
+
+### Usage
+
+```cmd
+REM Setup PATH for current session
+scripts\cycodpath.cmd
+```
+
+### What they do
+
+- Add debug binary paths to the front of PATH:
   - `src/cycod/bin/Debug/net9.0`
   - `src/cycodmd/bin/Debug/net9.0`
   - `src/cycodt/bin/Debug/net9.0`
-- When you run `cycod`, `cycodmd`, or `cycodt`, it will use debug versions if built
+  - `src/cycodgr/bin/Debug/net9.0`
+  - `src/mcp/geolocation/bin/Debug/net9.0`
+  - `src/mcp/mxlookup/bin/Debug/net9.0`
+  - `src/mcp/osm/bin/Debug/net9.0`
+  - `src/mcp/weather/bin/Debug/net9.0`
+  - `src/mcp/whois/bin/Debug/net9.0`
+- When you run any cycod tool, it will use debug versions if built
 - Falls back to global dotnet tool versions if debug versions don't exist
+- **setup-debug-path.sh** can persist changes to ~/.bashrc for permanent setup
+- **cycodpath.cmd** sets up PATH for current Windows session only
 - Automatically runs in codespaces via `postCreateCommand` in devcontainer.json
 
 ### Integration with .bashrc
