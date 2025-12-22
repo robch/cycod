@@ -68,8 +68,8 @@ public class ScreenshotHelperFunctions
         {
             var result = ScreenshotHelper.TakeScreenshotOfWindowWithTitle(title);
             
-            // If result starts with '/', it's a file path - load and return as DataContent
-            if (result.StartsWith('/') || result.StartsWith(Path.GetTempPath()))
+            // If result is an existing file path, load and return as DataContent
+            if (!string.IsNullOrEmpty(result) && File.Exists(result))
             {
                 var imageBytes = File.ReadAllBytes(result);
                 var mediaType = ImageResolver.GetMediaTypeFromFileExtension(result);
