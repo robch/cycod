@@ -1,0 +1,150 @@
+tests:
+  # ReplaceFileContent tests
+  - name: ReplaceFileContent with correct line count succeeds
+    steps:
+    - name: Run test
+      bash: |
+        printf 'line 1\nline 2\nline 3' > test-replace-content.txt
+        cycod --input "use ReplaceFileContent to replace test-replace-content.txt with 'new content', it has 3 lines" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceFileContent
+        path.*test-replace-content\.txt
+        newContent.*new content
+        oldContentLineCount.*3
+        Replaced content.*3 lines.*1 lines
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-replace-content.txt
+    optional: needsAI
+
+  - name: ReplaceFileContent with wrong line count fails
+    steps:
+    - name: Run test
+      bash: |
+        printf 'line 1\nline 2\nline 3' > test-replace-fail.txt
+        cycod --input "use ReplaceFileContent to replace test-replace-fail.txt with 'new', say it has 5 lines (which is wrong)" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceFileContent
+        oldContentLineCount.*5
+        Line count mismatch.*you specified 5 but file has 3 lines
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-replace-fail.txt
+    optional: needsAI
+
+  - name: ReplaceFileContent on non-existent file fails
+    bash: |
+      cycod --input "use ReplaceFileContent to replace nonexistent-file.txt with 'content', say it has 1 line" --auto-approve '*'
+    expect-regex: |
+      assistant-function: ReplaceFileContent
+      File.*does not exist.*Use CreateFile
+    timeout: 30000
+    optional: needsAI
+
+  - name: ReplaceFileContent can be undone
+    steps:
+    - name: Run test
+      bash: |
+        echo "original content" > test-undo-replace.txt
+        cycod --input "First use ReplaceFileContent to replace test-undo-replace.txt with 'new content', it has 1 line. Then use UndoEdit to revert it." --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceFileContent
+        Replaced content
+        assistant-function: UndoEdit
+        Reverted last edit
+      timeout: 45000
+    - name: Cleanup
+      bash: rm -f test-undo-replace.txt
+    optional: needsAI
+
+  # ReplaceMultipleInFile tests
+  - name: ReplaceMultipleInFile replaces multiple patterns atomically
+    steps:
+    - name: Run test
+      bash: |
+        echo "foo bar baz" > test-multi-replace.txt
+        cycod --input "use ReplaceMultipleInFile on test-multi-replace.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        path.*test-multi-replace\.txt
+        oldStrings.*foo.*bar
+        newStrings.*FOO.*BAR
+        replaced 2 occurrences
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-multi-replace.txt
+    optional: needsAI
+
+  - name: ReplaceMultipleInFile fails if pattern not found
+    steps:
+    - name: Run test
+      bash: |
+        echo "foo bar" > test-multi-fail.txt
+        cycod --input "use ReplaceMultipleInFile on test-multi-fail.txt to replace 'foo' with 'FOO' and 'baz' with 'BAZ' (baz doesn't exist)" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        No occurrences.*found|not found
+        No changes made
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-multi-fail.txt
+    optional: needsAI
+
+  - name: ReplaceMultipleInFile fails if array lengths don't match
+    steps:
+    - name: Run test
+      bash: |
+        echo "foo bar baz" > test-array-length.txt
+        cycod --input "use ReplaceMultipleInFile on test-array-length.txt with oldStrings=['foo','bar'] but newStrings=['FOO'] (mismatched lengths)" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        array length.*must match
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-array-length.txt
+    optional: needsAI
+
+  - name: ReplaceMultipleInFile handles string arrays correctly
+    steps:
+    - name: Run test
+      bash: |
+        echo "alpha beta gamma delta" > test-string-array.txt
+        cycod --input "use ReplaceMultipleInFile on test-string-array.txt to replace ['alpha', 'beta', 'gamma'] with ['ALPHA', 'BETA', 'GAMMA']" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        replaced 3 occurrences
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-string-array.txt
+    optional: needsAI
+
+  - name: ReplaceMultipleInFile can be undone
+    steps:
+    - name: Run test
+      bash: |
+        echo "foo bar baz" > test-multi-undo.txt
+        cycod --input "First use ReplaceMultipleInFile on test-multi-undo.txt to replace 'foo' with 'FOO' and 'bar' with 'BAR'. Then use UndoEdit to revert." --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        replaced 2 occurrences
+        assistant-function: UndoEdit
+        Reverted last edit
+      timeout: 45000
+    - name: Cleanup
+      bash: rm -f test-multi-undo.txt
+    optional: needsAI
+
+  - name: ReplaceMultipleInFile validates uniqueness of patterns
+    steps:
+    - name: Run test
+      bash: |
+        echo "test test test" > test-unique.txt
+        cycod --input "use ReplaceMultipleInFile on test-unique.txt to replace 'test' with 'TEST' (but 'test' appears multiple times, so should fail)" --auto-approve '*'
+      expect-regex: |
+        assistant-function: ReplaceMultipleInFile
+        Multiple matches found.*must be unique
+        No changes made
+      timeout: 30000
+    - name: Cleanup
+      bash: rm -f test-unique.txt
+    optional: needsAI

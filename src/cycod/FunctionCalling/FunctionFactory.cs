@@ -318,7 +318,8 @@ public class FunctionFactory
             var collection = Array.CreateInstance(elementType, array.Length);
             for (int i = 0; i < array.Length; i++)
             {
-                var parsed = ParseParameterValue(array[i].GetRawText(), elementType);
+                var elementValue = array[i].ValueKind == JsonValueKind.String ? array[i].GetString()! : array[i].GetRawText();
+                var parsed = ParseParameterValue(elementValue, elementType);
                 if (parsed != null) collection.SetValue(parsed, i);
             }
             return collection;
@@ -329,7 +330,8 @@ public class FunctionFactory
             var list = collection as IList;
             foreach (var item in array)
             {
-                var parsed = ParseParameterValue(item.GetRawText(), elementType);
+                var elementValue = item.ValueKind == JsonValueKind.String ? item.GetString()! : item.GetRawText();
+                var parsed = ParseParameterValue(elementValue, elementType);
                 if (parsed != null) list!.Add(parsed);
             }
             return collection!;
@@ -349,7 +351,8 @@ public class FunctionFactory
 
         foreach (var item in array)
         {
-            var parsed = ParseParameterValue(item.GetRawText(), elementType);
+            var elementValue = item.ValueKind == JsonValueKind.String ? item.GetString()! : item.GetRawText();
+            var parsed = ParseParameterValue(elementValue, elementType);
             if (parsed != null) list!.Add(parsed);
         }
 
