@@ -49,8 +49,27 @@ public class ListCommand : CycoDjCommand
             return sb.ToString();
         }
         
-        // Filter by date if specified
-        if (!string.IsNullOrEmpty(Date))
+        // Filter by time range if After/Before are set (from --today, --yesterday, --last <timespec>, etc.)
+        if (After.HasValue || Before.HasValue)
+        {
+            files = HistoryFileHelpers.FilterByDateRange(files, After, Before);
+            
+            if (After.HasValue && Before.HasValue)
+            {
+                sb.AppendLine($"Filtered by time range: {After:yyyy-MM-dd HH:mm} to {Before:yyyy-MM-dd HH:mm} ({files.Count} files)");
+            }
+            else if (After.HasValue)
+            {
+                sb.AppendLine($"Filtered: after {After:yyyy-MM-dd HH:mm} ({files.Count} files)");
+            }
+            else if (Before.HasValue)
+            {
+                sb.AppendLine($"Filtered: before {Before:yyyy-MM-dd HH:mm} ({files.Count} files)");
+            }
+            sb.AppendLine();
+        }
+        // Filter by date if specified (backward compatibility)
+        else if (!string.IsNullOrEmpty(Date))
         {
             if (DateTime.TryParse(Date, out var dateFilter))
             {
@@ -65,9 +84,9 @@ public class ListCommand : CycoDjCommand
             }
         }
         
-        // Apply sensible default limit if not specified and no date filter
+        // Apply sensible default limit if not specified and no filters
         var effectiveLimit = Last;
-        if (effectiveLimit == 0 && string.IsNullOrEmpty(Date))
+        if (effectiveLimit == 0 && !After.HasValue && !Before.HasValue && string.IsNullOrEmpty(Date))
         {
             effectiveLimit = 20; // Default to last 20 conversations
             sb.AppendLine($"Showing last {effectiveLimit} conversations (use --last N to change, or --date to filter)");

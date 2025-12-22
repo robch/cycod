@@ -25,6 +25,15 @@ Output: [100,000 character limit reached]
 - **Unusable for long periods:** Can't analyze a month or year
 - **Terminal overload:** Huge outputs freeze/crash terminal
 
+**Interesting discovery:** Different commands naturally have different detail levels!
+- `list` shows minimal preview (1 message)
+- `journal` shows summary preview (3 messages)
+- `show` shows full detail (all messages)
+- `stats` shows just numbers
+- `branches` shows structure only
+
+**But there's no way to control this across commands!**
+
 **Real-world frustration:**
 Wanted to analyze Dec 14-22 (9 days):
 - Journal output hit my 100K char limit
@@ -166,6 +175,17 @@ Run with --page or --summary for better large-range analysis
 
 ## Detail Level Examples
 
+**Note:** Commands already have implicit detail levels - we just need to formalize and make them controllable!
+
+### Current Natural Detail Levels:
+- `list` = minimal (1 message preview, basic counts)
+- `journal` = summary (3 message previews, time grouping)
+- `show` = full (all messages, all details)
+- `stats` = compressed (just numbers)
+- `branches` = structural (tree only, no content)
+
+### Proposed `--detail` Flag (works across all commands):
+
 ### `--detail minimal`
 ```
 Dec 21: 240 convs, CDR project (77%), 6,858 messages
@@ -181,14 +201,19 @@ December 21, 2025
   Main project: CDR documentation (186 convs)
 ```
 
-### `--detail normal` (default for <= 7 days)
+### `--detail normal` (current default for most commands)
 ```
-[Current journal output with full conversation lists]
+[Current journal/list output with conversation previews]
 ```
 
 ### `--detail verbose` (opt-in)
 ```
-[Current output + branch details + first messages]
+[Current output + branch details + more message context]
+```
+
+### `--detail full` (opt-in, like current `show`)
+```
+[Everything: all messages, all tool calls, all metadata]
 ```
 
 ---

@@ -34,8 +34,13 @@ namespace CycoDj.CommandLineCommands
             var historyDir = CycoDj.Helpers.HistoryFileHelpers.GetHistoryDirectory();
             var files = CycoDj.Helpers.HistoryFileHelpers.FindAllHistoryFiles();
 
-            // Filter by date if specified
-            if (!string.IsNullOrWhiteSpace(Date))
+            // Filter by time range if After/Before are set
+            if (After.HasValue || Before.HasValue)
+            {
+                files = CycoDj.Helpers.HistoryFileHelpers.FilterByDateRange(files, After, Before);
+            }
+            // Filter by date if specified (backward compat)
+            else if (!string.IsNullOrWhiteSpace(Date))
             {
                 if (Date.ToLowerInvariant() == "today")
                 {
@@ -52,7 +57,7 @@ namespace CycoDj.CommandLineCommands
                 }
             }
 
-            // Limit number of files if --last specified
+            // Limit number of files if --last specified (as count)
             if (Last.HasValue && Last.Value > 0)
             {
                 files = files.OrderByDescending(f => CycoDj.Helpers.TimestampHelpers.ParseTimestamp(f))

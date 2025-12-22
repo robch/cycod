@@ -128,8 +128,77 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return false;
     }
 
+    /// <summary>
+    /// Try to parse common time filtering options (--today, --yesterday, --last, --after, --before, --date-range)
+    /// Returns true if option was handled
+    /// </summary>
+    private bool TryParseTimeOptions(CycoDjCommand command, string[] args, ref int i, string arg)
+    {
+        // --today shortcut (calendar day)
+        if (arg == "--today")
+        {
+            command.After = DateTime.Today;
+            command.Before = DateTime.Now;
+            return true;
+        }
+        
+        // --yesterday shortcut (calendar day)
+        else if (arg == "--yesterday")
+        {
+            command.After = DateTime.Today.AddDays(-1);
+            command.Before = DateTime.Today.AddTicks(-1);
+            return true;
+        }
+        
+        // --after <timespec>
+        else if (arg == "--after" || arg == "--time-after")
+        {
+            var timeSpec = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(timeSpec))
+            {
+                throw new CommandLineException($"Missing timespec value for {arg}");
+            }
+            command.After = TimeSpecHelpers.ParseSingleTimeSpec(arg, timeSpec, isAfter: true);
+            return true;
+        }
+        
+        // --before <timespec>
+        else if (arg == "--before" || arg == "--time-before")
+        {
+            var timeSpec = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(timeSpec))
+            {
+                throw new CommandLineException($"Missing timespec value for {arg}");
+            }
+            command.Before = TimeSpecHelpers.ParseSingleTimeSpec(arg, timeSpec, isAfter: false);
+            return true;
+        }
+        
+        // --date-range <range> or --time-range <range>
+        else if (arg == "--date-range" || arg == "--time-range")
+        {
+            var timeSpec = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(timeSpec))
+            {
+                throw new CommandLineException($"Missing timespec range for {arg}");
+            }
+            var (after, before) = TimeSpecHelpers.ParseTimeSpecRange(arg, timeSpec);
+            command.After = after;
+            command.Before = before;
+            return true;
+        }
+        
+        return false;
+    }
+
     private bool TryParseListCommandOptions(ListCommand command, string[] args, ref int i, string arg)
     {
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--date" || arg == "-d")
         {
             var date = i + 1 < args.Length ? args[++i] : null;
@@ -142,12 +211,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         }
         else if (arg == "--last")
         {
-            var count = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
             {
-                throw new CommandLineException($"Missing or invalid count for {arg}");
+                throw new CommandLineException($"Missing value for {arg}");
             }
-            command.Last = n;
+            
+            ParseLastValue(command, arg, value);
             return true;
         }
         
@@ -156,6 +226,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseBranchesCommandOptions(BranchesCommand command, string[] args, ref int i, string arg)
     {
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--date" || arg == "-d")
         {
             var date = i + 1 < args.Length ? args[++i] : null;
@@ -220,6 +296,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseJournalCommandOptions(JournalCommand command, string[] args, ref int i, string arg)
     {
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--date" || arg == "-d")
         {
             var date = i + 1 < args.Length ? args[++i] : null;
@@ -228,6 +310,47 @@ public class CycoDjCommandLineOptions : CommandLineOptions
                 throw new CommandLineException($"Missing date value for {arg}");
             }
             command.Date = date;
+            return true;
+        }
+        else if (arg == "--last")
+        {
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new CommandLineException($"Missing value for {arg}");
+            }
+            
+            // Smart detection: TIMESPEC vs day count
+            if (IsTimeSpec(value))
+            {
+                // Parse as TIMESPEC with "ago" handling
+                try
+                {
+                    // For --last context, relative times should go BACKWARD (ago)
+                    var timeSpec = value;
+                    if (System.Text.RegularExpressions.Regex.IsMatch(value, @"^\d+[dhms]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                    {
+                        timeSpec = "-" + value + ".."; // Make it a range from N ago to now
+                    }
+                    
+                    var (after, before) = TimeSpecHelpers.ParseTimeSpecRange(arg, timeSpec);
+                    command.After = after;
+                    command.Before = before;
+                }
+                catch (Exception ex)
+                {
+                    throw new CommandLineException($"Invalid time specification for --last: {value}\n{ex.Message}");
+                }
+            }
+            else
+            {
+                // Parse as day count (for backward compat with --last-days)
+                if (!int.TryParse(value, out var days))
+                {
+                    throw new CommandLineException($"Invalid number for --last: {value}");
+                }
+                command.LastDays = days;
+            }
             return true;
         }
         else if (arg == "--last-days")
@@ -258,6 +381,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
             return true;
         }
         
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--date" || arg == "-d")
         {
             var date = i + 1 < args.Length ? args[++i] : null;
@@ -270,12 +399,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         }
         else if (arg == "--last")
         {
-            var count = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
             {
-                throw new CommandLineException($"Missing or invalid count for {arg}");
+                throw new CommandLineException($"Missing value for {arg}");
             }
-            command.Last = n;
+            
+            ParseLastValue(command, arg, value);
             return true;
         }
         else if (arg == "--case-sensitive" || arg == "-c")
@@ -314,6 +444,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseExportCommandOptions(ExportCommand command, string[] args, ref int i, string arg)
     {
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--output" || arg == "-o")
         {
             var outputFile = i + 1 < args.Length ? args[++i] : null;
@@ -336,12 +472,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         }
         else if (arg == "--last")
         {
-            var count = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
             {
-                throw new CommandLineException($"Missing or invalid count for {arg}");
+                throw new CommandLineException($"Missing value for {arg}");
             }
-            command.Last = n;
+            
+            ParseLastValue(command, arg, value);
             return true;
         }
         else if (arg == "--conversation" || arg == "-c")
@@ -375,6 +512,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseStatsCommandOptions(StatsCommand command, string[] args, ref int i, string arg)
     {
+        // Try common time options first
+        if (TryParseTimeOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--date" || arg == "-d")
         {
             var date = i + 1 < args.Length ? args[++i] : null;
@@ -387,12 +530,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         }
         else if (arg == "--last")
         {
-            var count = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(count) || !int.TryParse(count, out var n))
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
             {
-                throw new CommandLineException($"Missing or invalid count for {arg}");
+                throw new CommandLineException($"Missing value for {arg}");
             }
-            command.Last = n;
+            
+            ParseLastValue(command, arg, value);
             return true;
         }
         else if (arg == "--show-tools")
@@ -427,5 +571,72 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return false;
     }
 
+    /// <summary>
+    /// Parse a value for --last: either TIMESPEC or conversation count
+    /// For TIMESPEC like "7d", automatically makes it negative (7 days ago) and creates range
+    /// </summary>
+    private void ParseLastValue(CycoDjCommand command, string arg, string value)
+    {
+        // Smart detection: TIMESPEC vs conversation count
+        if (IsTimeSpec(value))
+        {
+            // Parse as TIMESPEC
+            try
+            {
+                // For --last context, relative times should go BACKWARD (ago)
+                // If value is like "7d", convert to "-7d.." (7 days ago to now)
+                var timeSpec = value;
+                if (System.Text.RegularExpressions.Regex.IsMatch(value, @"^\d+[dhms]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                {
+                    timeSpec = "-" + value + ".."; // Make it a range from N ago to now
+                }
+                
+                var (after, before) = TimeSpecHelpers.ParseTimeSpecRange(arg, timeSpec);
+                command.After = after;
+                command.Before = before;
+            }
+            catch (Exception ex)
+            {
+                throw new CommandLineException($"Invalid time specification for --last: {value}\n{ex.Message}");
+            }
+        }
+        else
+        {
+            // Parse as conversation count (for ListCommand, SearchCommand, etc.)
+            if (!int.TryParse(value, out var count))
+            {
+                throw new CommandLineException($"Invalid number for --last: {value}");
+            }
+            
+            // Set Last property if it exists on the command
+            var lastProp = command.GetType().GetProperty("Last");
+            if (lastProp != null)
+            {
+                lastProp.SetValue(command, count);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Determines if a value is a TIMESPEC (vs. a plain number for conversation count)
+    /// </summary>
+    private static bool IsTimeSpec(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return false;
+        
+        // Has range syntax?
+        if (value.Contains("..")) return true;
+        
+        // Is keyword?
+        if (value.Equals("today", StringComparison.OrdinalIgnoreCase)) return true;
+        if (value.Equals("yesterday", StringComparison.OrdinalIgnoreCase)) return true;
+        
+        // Has time units (d, h, m, s)?
+        if (System.Text.RegularExpressions.Regex.IsMatch(value, @"[dhms]", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) 
+            return true;
+        
+        // Pure number = conversation count
+        return false;
+    }
 
 }

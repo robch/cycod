@@ -43,9 +43,28 @@ namespace CycoDj.CommandLineCommands
             // Find and parse conversations
             var historyDir = CycoDj.Helpers.HistoryFileHelpers.GetHistoryDirectory();
             var files = CycoDj.Helpers.HistoryFileHelpers.FindAllHistoryFiles();
-
-            // Filter by date if specified
-            if (!string.IsNullOrWhiteSpace(Date))
+            
+            // Filter by time range if After/Before are set
+            if (After.HasValue || Before.HasValue)
+            {
+                files = CycoDj.Helpers.HistoryFileHelpers.FilterByDateRange(files, After, Before);
+                
+                if (After.HasValue && Before.HasValue)
+                {
+                    sb.AppendLine($"Filtered by time range: {After:yyyy-MM-dd HH:mm} to {Before:yyyy-MM-dd HH:mm}");
+                }
+                else if (After.HasValue)
+                {
+                    sb.AppendLine($"Filtered: after {After:yyyy-MM-dd HH:mm}");
+                }
+                else if (Before.HasValue)
+                {
+                    sb.AppendLine($"Filtered: before {Before:yyyy-MM-dd HH:mm}");
+                }
+                sb.AppendLine();
+            }
+            // Filter by date if specified (backward compat)
+            else if (!string.IsNullOrWhiteSpace(Date))
             {
                 if (Date.ToLowerInvariant() == "today")
                 {
@@ -62,7 +81,7 @@ namespace CycoDj.CommandLineCommands
                 }
             }
 
-            // Limit number of files if --last specified
+            // Limit number of files if --last specified (as count)
             if (Last.HasValue && Last.Value > 0)
             {
                 files = files.OrderByDescending(f => CycoDj.Helpers.TimestampHelpers.ParseTimestamp(f))

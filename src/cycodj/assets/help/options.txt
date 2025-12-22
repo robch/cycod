@@ -1,16 +1,77 @@
 OPTIONS - Common options available across cycodj commands
 
-FILTERING OPTIONS
+TIME FILTERING OPTIONS
+
+  --today
+    Shortcut for today's conversations (midnight to now)
+    Example: cycodj list --today
+
+  --yesterday
+    Shortcut for yesterday's conversations (full day)
+    Example: cycodj list --yesterday
+
+  --last <value>
+    Smart filtering by count OR time period
+    
+    Conversation count (pure number):
+      --last 20            Last 20 conversations
+      --last 50            Last 50 conversations
+    
+    Time period (TIMESPEC format):
+      --last 7d            Last 7 days
+      --last 30d           Last 30 days
+      --last 4h            Last 4 hours
+      --last yesterday     Yesterday
+      --last today         Today
+    
+    TIMESPEC is automatically detected!
+
+  --after <timespec>
+    Show conversations after specified time
+    Example: --after 7d, --after "2025-01-01", --after yesterday
+
+  --before <timespec>
+    Show conversations before specified time
+    Example: --before yesterday, --before "2025-12-20"
+
+  --date-range <from>..<to>
+    Show conversations in date range
+    Examples:
+      --date-range "7d..today"              Last 7 days
+      --date-range "2025-01-01..2025-12-31" Full year
+      --date-range "3d.."                   Last 3 days to now
+      --date-range "..yesterday"            Everything up to yesterday
 
   --date <date>, -d <date>
-    Filter conversations by date
+    (Legacy) Filter conversations by specific date
     Accepts: YYYY-MM-DD format or "today"
     Example: --date 2025-12-20, --date today
+    Note: Use --last or --date-range for more flexibility
 
-  --last <n>
-    Limit to the last N conversations
-    Default: 20 (when no --date specified for list command)
-    Example: --last 50, --last 10
+TIMESPEC FORMATS
+
+  Absolute dates:
+    "2023-09-01"
+    "September 1, 2023"
+    "2025-12-20"
+
+  Relative times (ago):
+    7d     = 7 days ago
+    4h     = 4 hours ago
+    30m    = 30 minutes ago
+    2d4h   = 2 days 4 hours ago
+
+  Keywords:
+    today
+    yesterday
+
+  Ranges:
+    "2023-01-01..2023-12-31"   Absolute range
+    "7d..today"                 Last 7 days to today
+    "3d.."                      Last 3 days to now
+    "..yesterday"               Everything up to yesterday
+
+OTHER FILTERING OPTIONS
 
   --conversation <id>, -c <id>
     Target a specific conversation by ID or filename
@@ -128,6 +189,38 @@ ENVIRONMENT VARIABLES
   CYCOD_QUIET
     Set to "1" or "true" to enable quiet mode
     Equivalent to --quiet flag
+
+TIME FILTERING EXAMPLES
+
+  Shortcuts (most common):
+    cycodj list --today                    # Today's conversations
+    cycodj list --yesterday                # Yesterday's conversations
+    cycodj journal --today                 # Today's journal
+
+  Smart --last with count:
+    cycodj list --last 20                  # Last 20 conversations
+    cycodj stats --last 50                 # Stats for last 50
+
+  Smart --last with time:
+    cycodj list --last 7d                  # Last 7 days
+    cycodj list --last 30d                 # Last 30 days
+    cycodj journal --last 7d               # Week journal
+    cycodj search "bug" --last 2d          # Search last 2 days
+
+  Date ranges:
+    cycodj journal --date-range "7d..today"            # Last week
+    cycodj export -o year.md --date-range "2023-01-01..2023-12-31"
+    cycodj list --date-range "3d.."                    # Last 3 days to now
+
+  Explicit boundaries:
+    cycodj list --after 7d                  # After 7 days ago
+    cycodj list --before yesterday          # Before yesterday
+    cycodj stats --after "2025-01-01" --before "2025-12-31"
+
+  Combined with other options:
+    cycodj search "TODO" --last 7d --context 3
+    cycodj export --yesterday --output yesterday.md --overwrite
+    cycodj branches --last 30d --verbose
 
 USING OPTIONS WITH AI INSTRUCTIONS
 

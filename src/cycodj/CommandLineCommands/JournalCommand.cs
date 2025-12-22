@@ -20,7 +20,20 @@ public class JournalCommand : CycoDjCommand
         // Determine date range
         DateTime startDate, endDate;
         
-        if (!string.IsNullOrEmpty(Date))
+        // Priority 1: Use After/Before if set (from --today, --yesterday, --last <timespec>, etc.)
+        if (After.HasValue || Before.HasValue)
+        {
+            startDate = After ?? DateTime.MinValue;
+            endDate = Before ?? DateTime.MaxValue;
+        }
+        // Priority 2: Use LastDays if set (from --last-days, backward compat)
+        else if (LastDays > 0)
+        {
+            endDate = DateTime.Today.AddDays(1);
+            startDate = DateTime.Today.AddDays(-LastDays + 1);
+        }
+        // Priority 3: Parse old --date string if present (backward compat)
+        else if (!string.IsNullOrEmpty(Date))
         {
             if (Date.Equals("today", StringComparison.OrdinalIgnoreCase))
             {
@@ -41,9 +54,9 @@ public class JournalCommand : CycoDjCommand
         }
         else
         {
-            // Default: last N days
+            // Default: today only
+            startDate = DateTime.Today;
             endDate = DateTime.Today.AddDays(1);
-            startDate = DateTime.Today.AddDays(-LastDays + 1);
         }
         
         // Find and filter files

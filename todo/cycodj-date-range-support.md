@@ -38,30 +38,58 @@ Today I wanted to analyze Dec 14-22 (9 days). I had to:
 ## The Cure 💊
 
 **What I Want:**
-Express date ranges naturally, like I think about them:
+Express date ranges naturally, like I think about them.
+
+**Note:** cycodmd already has an excellent TIMESPEC system we should adopt for consistency!
 
 ```bash
-# The week pattern
-cycodj journal --from 2025-12-14 --to 2025-12-22
-cycodj export -o week.md --from 2025-12-14 --to 2025-12-22
-cycodj stats --from 2025-12-14 --to 2025-12-22
+# Range syntax (like cycodmd)
+cycodj journal --date-range "2025-12-14..2025-12-22"
+cycodj journal --date-range "7d..today"        # From 7 days ago to today
+cycodj journal --date-range "3d.."             # From 3 days ago to now
+cycodj journal --date-range "..yesterday"      # Up to yesterday
 
-# The "last N days" pattern  
-cycodj journal --last-days 7
+# Or explicit from/to (more obvious?)
+cycodj journal --from 2025-12-14 --to 2025-12-22
+cycodj journal --from 7d --to today
+cycodj export -o week.md --from 7d --to today
+
+# Relative times (like cycodmd)
+cycodj journal --date 7d              # Conversations from 7 days ago
+cycodj stats --date "3d"              # Stats for 3 days ago
+cycodj list --after 2d                # After 2 days ago
+cycodj search "bug" --before yesterday
+
+# Keywords (like cycodmd)
+cycodj journal --date today
+cycodj journal --date yesterday
+cycodj list --after yesterday
+
+# The "last N days" pattern (existing --last-days)
+cycodj journal --last-days 7          # Already works!
 cycodj stats --last-days 30
 cycodj export -o month.md --last-days 30
 
-# The "this period" pattern
-cycodj journal --week          # This week (Mon-Sun)
-cycodj journal --month         # This month
-cycodj journal --yesterday     # Just yesterday
+# Consistency: All commands should support same date options
+--date <timespec>           # On/in this date/period
+--after <timespec>          # After this time
+--before <timespec>         # Before this time  
+--date-range <from>..<to>   # Between two times
+--last-days <n>             # Last N days
 ```
+
+**TIMESPEC Format (from cycodmd):**
+- Absolute: "2023-09-01", "September 1, 2023"
+- Relative: "3d" (days), "4h" (hours), "5m" (minutes)
+- Combined: "2d4h3m"
+- Keywords: "today", "yesterday"
+- Ranges: "2023-01-01..2023-12-31", "3d..", "..yesterday"
 
 **Why This Helps:**
 - **One command** instead of 7-9 commands
-- **Clear intent:** "I want last week" → `--last-days 7`
+- **Clear intent:** "I want last week" → `--last-days 7` or `--date-range "7d..today"`
 - **No mental math:** Tool figures out date range
-- **Consistent:** Works across all commands
+- **Consistent with cycodmd:** Same TIMESPEC format across all cycod tools
 - **Natural language:** Matches how I think about time
 
 ---
@@ -98,17 +126,21 @@ cycodj journal --yesterday     # Just yesterday
 
 **This is solved when:**
 
-1. ✅ All commands accept `--from DATE --to DATE`
-2. ✅ All commands accept `--last-days N` (not just journal)
-3. ✅ Date ranges work consistently across `list`, `show`, `search`, `branches`, `journal`, `export`, `stats`, `cleanup`
-4. ✅ I can express "last week" in one command
-5. ✅ The tool handles date ranges internally (I don't have to loop)
-6. ✅ Output clearly shows what date range was used
+1. ✅ All commands accept TIMESPEC format (like cycodmd)
+2. ✅ Support: `--date <timespec>`, `--after <timespec>`, `--before <timespec>`
+3. ✅ Support: `--date-range <from>..<to>` for ranges
+4. ✅ Support: `--last-days N` consistently (not just journal)
+5. ✅ Relative times work: "7d", "yesterday", "3d.."
+6. ✅ Date ranges work consistently across `list`, `show`, `search`, `branches`, `journal`, `export`, `stats`, `cleanup`
+7. ✅ I can express "last week" in one command
+8. ✅ The tool handles date ranges internally (I don't have to loop)
+9. ✅ Output clearly shows what date range was used
 
 **Bonus points if:**
-- Shortcuts like `--week`, `--month`, `--yesterday` work
-- Can do relative dates like `--from 7d` (7 days ago)
-- Error messages are helpful ("date range too large, try smaller range")
+- Shortcuts like `--week`, `--month` work (might be overkill with "7d" syntax)
+- Can do relative ranges like `--from 7d --to 1d` (last week except today/yesterday)
+- Error messages reference cycodmd's date system for help
+- Consistent behavior across all cycod tools (cycod, cycodmd, cycodgr, cycodj)
 
 ---
 

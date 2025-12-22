@@ -48,15 +48,15 @@ public static class HistoryFileHelpers
     /// <summary>
     /// Filters files by date range
     /// </summary>
-    public static List<string> FilterByDateRange(List<string> files, DateTime? start, DateTime? end)
+    public static List<string> FilterByDateRange(List<string> files, DateTime? after, DateTime? before)
     {
         return files.Where(f =>
         {
             var timestamp = TimestampHelpers.ParseTimestamp(f);
             if (timestamp == DateTime.MinValue) return false;
             
-            if (start.HasValue && timestamp < start.Value) return false;
-            if (end.HasValue && timestamp > end.Value) return false;
+            if (after.HasValue && timestamp < after.Value) return false;
+            if (before.HasValue && timestamp > before.Value) return false;
             
             return true;
         }).ToList();

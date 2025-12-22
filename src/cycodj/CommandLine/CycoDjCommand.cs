@@ -9,6 +9,10 @@ public abstract class CycoDjCommand : Command
     public bool UseBuiltInFunctions { get; set; } = false;
     public string? SaveChatHistory { get; set; }
     
+    // Common properties for time filtering
+    public DateTime? After { get; set; }
+    public DateTime? Before { get; set; }
+    
     public override bool IsEmpty()
     {
         return false;

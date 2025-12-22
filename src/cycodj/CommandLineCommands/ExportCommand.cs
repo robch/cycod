@@ -45,7 +45,20 @@ namespace CycoDj.CommandLineCommands
             {
                 files = files.Where(f => Path.GetFileNameWithoutExtension(f).Contains(ConversationId)).ToList();
             }
-            // Filter by date if specified
+            
+            // Filter by time range if After/Before are set
+            if (After.HasValue || Before.HasValue)
+            {
+                files = CycoDj.Helpers.HistoryFileHelpers.FilterByDateRange(files, After, Before);
+                
+                var rangeDesc = After.HasValue && Before.HasValue 
+                    ? $"{After:yyyy-MM-dd} to {Before:yyyy-MM-dd}"
+                    : After.HasValue 
+                        ? $"after {After:yyyy-MM-dd}"
+                        : $"before {Before:yyyy-MM-dd}";
+                ConsoleHelpers.WriteLine($"Filtering conversations: {rangeDesc}", ConsoleColor.Gray, overrideQuiet: true);
+            }
+            // Filter by date if specified (backward compat)
             else if (!string.IsNullOrWhiteSpace(Date))
             {
                 if (Date.ToLowerInvariant() == "today")
