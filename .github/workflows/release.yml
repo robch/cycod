@@ -68,7 +68,7 @@ jobs:
         ./scripts/build.sh ${{ env.VERSION }} Release
     
     - name: Test
-      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test --configuration Release --framework net9.0 --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Run cycodt tests
       run: |
