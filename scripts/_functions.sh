@@ -52,7 +52,7 @@ cycod_version_calculate() {
   fi
   
   # Try to extract a YYYYMMDD date pattern from the version
-  DATE_PART=$(echo "$VERSION" | grep -oE '20[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])')
+  DATE_PART=$(echo "$VERSION" | grep -oE '20[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])' || true)
   DAY_OF_YEAR=0
   
   if [ -n "$DATE_PART" ]; then
@@ -64,7 +64,14 @@ cycod_version_calculate() {
     DAY=${DATE_PART:6:2}
     
     # Convert to day of year
-    DAY_OF_YEAR=$(date -d "$YEAR-$MONTH-$DAY" +%j | sed 's/^0*//')
+    # Use different date command syntax for macOS vs Linux
+    if date --version >/dev/null 2>&1; then
+      # GNU date (Linux)
+      DAY_OF_YEAR=$(date -d "$YEAR-$MONTH-$DAY" +%j | sed 's/^0*//')
+    else
+      # BSD date (macOS)
+      DAY_OF_YEAR=$(date -j -f "%Y-%m-%d" "$YEAR-$MONTH-$DAY" +%j | sed 's/^0*//')
+    fi
     echo "Using date from version: $YEAR-$MONTH-$DAY (day of year: $DAY_OF_YEAR)"
   else
     echo "No date found in version, using today's date as fallback"
@@ -164,7 +171,7 @@ cycod_pack_dotnet() {
   local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
   
   # List of runtimes to publish for
-  local RIDS=("win-x64" "linux-x64" "osx-x64")
+  local RIDS=("win-x64" "linux-x64" "linux-arm64" "osx-x64" "osx-arm64")
   
   echo "Packing projects with Version=$VERSION, NumericVersion=$NUMERIC_VERSION"
   
@@ -265,7 +272,7 @@ cycod_publish_self_contained() {
   local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
   
   # List of runtimes to publish for
-  local RIDS=("win-x64" "linux-x64" "osx-x64")
+  local RIDS=("win-x64" "linux-x64" "linux-arm64" "osx-x64" "osx-arm64")
   
   # First, restore dependencies
   dotnet restore
@@ -334,7 +341,7 @@ cycod_publish_self_contained() {
       
       # Create individual ZIP for platform+tool
       local TOOL_PLATFORM_ZIP="$TOOL-$RID-$VERSION.zip"
-      local TOOL_PLATFORM_ZIP_PATH=$(realpath "$OUTPUT_DIR/$TOOL_PLATFORM_ZIP")
+      local TOOL_PLATFORM_ZIP_PATH="$(cd "$OUTPUT_DIR" && pwd)/$TOOL_PLATFORM_ZIP"
       echo "  Creating ZIP for $TOOL-$RID: $TOOL_PLATFORM_ZIP"
       
       # Navigate to the directory and zip its contents
@@ -345,7 +352,7 @@ cycod_publish_self_contained() {
     
     # Create platform-specific aggregate ZIP file with all tools
     local PLATFORM_ZIP="cycodev-tools-$RID-$VERSION.zip"
-    local PLATFORM_ZIP_PATH=$(realpath "$OUTPUT_DIR/$PLATFORM_ZIP")
+    local PLATFORM_ZIP_PATH="$(cd "$OUTPUT_DIR" && pwd)/$PLATFORM_ZIP"
     echo "Creating platform aggregate ZIP: $PLATFORM_ZIP"
     
     # Navigate to the directory and zip its contents
