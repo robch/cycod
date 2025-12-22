@@ -1,20 +1,92 @@
+Welcome to CYCODJ, the Chat History Journal and Analysis Tool!
+
+Using CYCODJ, you can:
+
+  - List and browse your chat conversations
+  - Search across conversation content
+  - Display detailed conversation information
+  - Visualize conversation branching trees
+  - Generate daily journal summaries
+  - Export conversations to markdown
+  - View usage statistics
+  - Clean up duplicate or empty conversations
+
 USAGE: cycodj [command] [options]
+   OR: cycodj list [options]
+   OR: cycodj show <conversation-id> [options]
+   OR: cycodj search <query> [options]
+   OR: cycodj branches [options]
+   OR: cycodj journal [options]
+   OR: cycodj export --output <file> [options]
+   OR: cycodj stats [options]
+   OR: cycodj cleanup [options]
 
-COMMANDS:
-  list              List conversations from chat history
-  branches          Show conversation branching tree
-  help              Display help information
-  version           Display version information
+COMMANDS
 
-For more help on a specific command:
-  cycodj help <command>
+  cycodj [...]            (aka: cycodj list)
+  cycodj list [...]       (see: cycodj help list)
+  cycodj show [...]       (see: cycodj help show)
+  cycodj search [...]     (see: cycodj help search)
+  cycodj branches [...]   (see: cycodj help branches)
+  cycodj journal [...]    (see: cycodj help journal)
+  cycodj export [...]     (see: cycodj help export)
+  cycodj stats [...]      (see: cycodj help stats)
+  cycodj cleanup [...]    (see: cycodj help cleanup)
 
-EXAMPLES:
-  cycodj list
-  cycodj list --date 2024-12-20
-  cycodj list --last 10
-  cycodj branches
-  cycodj branches --date 2024-12-20
-  cycodj branches --verbose
+EXAMPLES
+
+  EXAMPLE 1: List recent conversations
+
+    cycodj list
+    cycodj list --last 50
+    cycodj list --date 2025-12-20
+
+  EXAMPLE 2: Search for specific content
+
+    cycodj search "authentication"
+    cycodj search --regex "JWT|OAuth" --user-only
+    cycodj search "TODO" --date today
+
+  EXAMPLE 3: Show conversation details
+
+    cycodj show 1754437373970
+    cycodj show chat-history-1754437373970 --show-tool-calls
+
+  EXAMPLE 4: Visualize conversation branches
+
+    cycodj branches
+    cycodj branches --date today --verbose
+
+  EXAMPLE 5: Generate daily journals
+
+    cycodj journal
+    cycodj journal --date 2025-12-20 --detailed
+    cycodj journal --last-days 7
+
+  EXAMPLE 6: Export to markdown
+
+    cycodj export --output report.md --date today
+    cycodj export -o archive.md --last 50 --include-tool-output
+
+  EXAMPLE 7: View statistics
+
+    cycodj stats
+    cycodj stats --date today --show-tools
+
+  EXAMPLE 8: Clean up conversation history
+
+    cycodj cleanup --find-duplicates
+    cycodj cleanup --remove-empty --execute
+
+SEE ALSO
+
   cycodj help
-  cycodj version
+  cycodj help examples
+  cycodj help list
+  cycodj help search
+  cycodj help show
+  cycodj help branches
+  cycodj help journal
+  cycodj help export
+  cycodj help stats
+  cycodj help cleanup

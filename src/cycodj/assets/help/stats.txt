@@ -1,0 +1,103 @@
+STATS COMMAND - View chat history statistics
+
+USAGE:
+  cycodj stats [options]
+
+OPTIONS:
+  --date <date>         Filter by date (YYYY-MM-DD or "today")
+  --last <n>            Limit to last N conversations
+  --show-tools          Display tool usage statistics
+  --no-dates            Don't show per-date breakdown
+
+COMMON OPTIONS:
+  --instructions <text>       Apply AI processing to statistics
+  --use-built-in-functions    Enable AI to use tools
+  --save-chat-history <file>  Save AI processing chat to file
+
+EXAMPLES:
+  cycodj stats
+    Show statistics for all conversations
+
+  cycodj stats --date today
+    Statistics for today's conversations only
+
+  cycodj stats --last 100
+    Statistics for last 100 conversations
+
+  cycodj stats --show-tools
+    Include detailed tool usage statistics
+
+  cycodj stats --date 2025-12-20 --show-tools
+    Daily statistics with tool breakdown
+
+  cycodj stats --last 50 --no-dates
+    Summary stats without per-date breakdown
+
+  cycodj stats --instructions "identify usage trends"
+    Generate statistics with AI analysis
+
+DESCRIPTION:
+  The stats command provides comprehensive statistics about your chat
+  conversations. It analyzes message counts, conversation patterns,
+  branching behavior, and tool usage.
+
+STATISTICS DISPLAYED:
+
+  Overall Summary:
+  - Total number of conversations
+  - Total messages (by role: user, assistant, tool)
+  - Average messages per conversation
+  - Branch statistics (how many conversations are branches)
+
+  Per-Date Breakdown (when --no-dates not specified):
+  - Conversations per day
+  - Messages per day
+  - Branch activity per day
+
+  Tool Usage (when --show-tools enabled):
+  - Most frequently used tools
+  - Tool call counts
+  - Tool usage by conversation
+  - Tool usage trends over time
+
+FILTERING:
+  Use --date to analyze a specific date:
+    cycodj stats --date 2025-12-20
+    cycodj stats --date today
+
+  Use --last to limit analysis scope:
+    cycodj stats --last 30
+
+  Combine filters for focused analysis:
+    cycodj stats --date 2025-12-20 --show-tools
+
+OUTPUT OPTIONS:
+  Default view includes per-date breakdown
+  Use --no-dates for summary-only view
+  Use --show-tools for detailed tool statistics
+
+AI ANALYSIS:
+  Apply AI processing to interpret statistics:
+    cycodj stats --instructions "identify productivity patterns"
+    cycodj stats --instructions "suggest areas for improvement"
+    cycodj stats --show-tools --instructions "analyze tool effectiveness"
+
+USE CASES:
+  - Track conversation volume over time
+  - Identify peak usage periods
+  - Analyze conversation branching patterns
+  - Monitor tool usage patterns
+  - Generate usage reports
+  - Understand AI assistant interaction patterns
+
+INTERPRETING RESULTS:
+  High branch counts indicate iterative problem-solving
+  Tool usage patterns reveal automation effectiveness
+  Message counts show interaction complexity
+  Date breakdowns help identify usage trends
+
+SEE ALSO
+
+  cycodj help list
+  cycodj help branches
+  cycodj help examples

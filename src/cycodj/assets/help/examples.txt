@@ -1,0 +1,165 @@
+EXAMPLES - Common usage patterns for cycodj
+
+LISTING CONVERSATIONS
+
+  EXAMPLE 1: List recent conversations (default behavior)
+
+    cycodj
+    cycodj list
+    cycodj list --last 20
+
+  EXAMPLE 2: List more or fewer conversations
+
+    cycodj list --last 5
+    cycodj list --last 100
+
+  EXAMPLE 3: List conversations from a specific date
+
+    cycodj list --date 2025-12-20
+    cycodj list --date today
+    cycodj list --date 2025-12-20 --last 10
+
+SEARCHING CONVERSATIONS
+
+  EXAMPLE 4: Basic text search
+
+    cycodj search "authentication"
+    cycodj search "how do I"
+    cycodj search "TODO"
+
+  EXAMPLE 5: Advanced search with filters
+
+    cycodj search "JWT" --user-only
+    cycodj search "error" --assistant-only
+    cycodj search "implementation" --date today
+
+  EXAMPLE 6: Regular expression search
+
+    cycodj search --regex "JWT|OAuth|SAML"
+    cycodj search --regex "TODO|FIXME|HACK" --case-sensitive
+
+  EXAMPLE 7: Search with context
+
+    cycodj search "bug" --context 5
+    cycodj search "performance" -C 10 --date 2025-12-20
+
+VIEWING CONVERSATION DETAILS
+
+  EXAMPLE 8: Show a specific conversation
+
+    cycodj show 1754437373970
+    cycodj show chat-history-1754437373970
+
+  EXAMPLE 9: Show conversation with tool details
+
+    cycodj show 1754437373970 --show-tool-calls
+    cycodj show 1754437373970 --show-tool-output
+    cycodj show 1754437373970 --max-content-length 2000
+
+VISUALIZING CONVERSATION BRANCHES
+
+  EXAMPLE 10: Show conversation tree
+
+    cycodj branches
+    cycodj branches --date today
+
+  EXAMPLE 11: Show branches with details
+
+    cycodj branches --verbose
+    cycodj branches --conversation 1754437373970
+
+GENERATING JOURNALS
+
+  EXAMPLE 12: Daily journal
+
+    cycodj journal
+    cycodj journal --date today
+    cycodj journal --date 2025-12-20
+
+  EXAMPLE 13: Multi-day journal
+
+    cycodj journal --last-days 7
+    cycodj journal --last-days 30 --detailed
+
+EXPORTING TO MARKDOWN
+
+  EXAMPLE 14: Export today's conversations
+
+    cycodj export --output today.md --date today
+    cycodj export -o today.md --date today --overwrite
+
+  EXAMPLE 15: Export with filters
+
+    cycodj export -o recent.md --last 20
+    cycodj export -o december.md --date 2025-12-20
+
+  EXAMPLE 16: Export specific conversation
+
+    cycodj export -o conv.md --conversation 1754437373970
+    cycodj export -o conv.md -c 1754437373970 --include-tool-output
+
+  EXAMPLE 17: Export without branches
+
+    cycodj export -o flat.md --last 10 --no-branches
+
+VIEWING STATISTICS
+
+  EXAMPLE 18: Basic statistics
+
+    cycodj stats
+    cycodj stats --date today
+
+  EXAMPLE 19: Detailed statistics
+
+    cycodj stats --show-tools
+    cycodj stats --last 100 --show-tools
+
+  EXAMPLE 20: Date range statistics
+
+    cycodj stats --date 2025-12-20 --no-dates
+
+CLEANING UP HISTORY
+
+  EXAMPLE 21: Find issues (dry run)
+
+    cycodj cleanup --find-duplicates
+    cycodj cleanup --find-empty
+
+  EXAMPLE 22: Remove duplicates and empty files
+
+    cycodj cleanup --remove-duplicates --execute
+    cycodj cleanup --remove-empty --execute
+
+  EXAMPLE 23: Clean up old conversations
+
+    cycodj cleanup --older-than-days 90 --remove-empty --execute
+
+COMBINING WITH AI PROCESSING
+
+  EXAMPLE 24: Apply AI instructions to output
+
+    cycodj list --instructions "summarize the main topics"
+    cycodj search "performance" --instructions "categorize by issue type"
+    cycodj journal --instructions "highlight key accomplishments"
+
+  EXAMPLE 25: Use built-in functions with AI
+
+    cycodj stats --instructions "create a visualization plan" --use-built-in-functions
+    cycodj export -o report.md --last 30 --instructions "organize by project"
+
+  EXAMPLE 26: Save chat history of AI processing
+
+    cycodj list --instructions "summarize" --save-chat-history analysis.jsonl
+    cycodj search "TODO" --instructions "prioritize" --save-chat-history todos.jsonl
+
+SEE ALSO
+
+  cycodj help
+  cycodj help list
+  cycodj help search
+  cycodj help show
+  cycodj help branches
+  cycodj help journal
+  cycodj help export
+  cycodj help stats
+  cycodj help cleanup

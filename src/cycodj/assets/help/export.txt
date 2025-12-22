@@ -1,0 +1,102 @@
+EXPORT COMMAND - Export conversations to markdown
+
+USAGE:
+  cycodj export --output <file> [options]
+
+REQUIRED:
+  --output <file>, -o <file>  Output markdown file path
+
+OPTIONS:
+  --date <date>               Filter by date (YYYY-MM-DD or "today")
+  --last <n>                  Limit to last N conversations
+  --conversation <id>, -c <id> Export specific conversation
+  --include-tool-output       Include full tool output in export
+  --no-branches               Don't include branch relationships
+  --overwrite                 Overwrite existing output file
+
+COMMON OPTIONS:
+  --instructions <text>       Apply AI processing to exported content
+  --use-built-in-functions    Enable AI to use tools
+  --save-chat-history <file>  Save AI processing chat to file
+
+EXAMPLES:
+  cycodj export --output today.md --date today
+    Export today's conversations to markdown
+
+  cycodj export -o recent.md --last 20
+    Export last 20 conversations
+
+  cycodj export -o conv.md --conversation 1754437373970
+    Export a specific conversation
+
+  cycodj export -o december.md --date 2025-12-20 --overwrite
+    Export conversations from a date, overwriting existing file
+
+  cycodj export -o detailed.md --last 10 --include-tool-output
+    Export with full tool outputs (not truncated)
+
+  cycodj export -o flat.md --last 30 --no-branches
+    Export without branch relationship indicators
+
+  cycodj export -o summary.md --last 50 --instructions "create executive summary"
+    Export and apply AI summarization
+
+DESCRIPTION:
+  The export command creates a well-formatted markdown document from your
+  chat conversations. The output includes:
+
+  - Table of contents with links to each conversation
+  - Conversation metadata (timestamp, ID, file path)
+  - Branch relationships (if enabled)
+  - Message counts by role
+  - All messages formatted by role:
+    * User messages as blockquotes
+    * Assistant messages as normal text
+    * Tool output in code blocks
+  - Tool call information
+
+  The markdown is structured for easy reading and navigation, with anchors
+  linking the table of contents to each conversation.
+
+FILTERING:
+  Use --date to export conversations from a specific date
+  Use --last to limit the number of conversations exported
+  Use --conversation to export a single conversation by ID
+
+CONTENT OPTIONS:
+  By default, tool output is included in the export
+  Use --include-tool-output to show full tool outputs without truncation
+  Use --no-branches to exclude branch relationship information
+
+FILE HANDLING:
+  The command will fail if the output file already exists
+  Use --overwrite to replace an existing file
+  Output file can be absolute or relative path
+
+AI PROCESSING:
+  Apply AI instructions to transform the exported content:
+    --instructions "create a summary with key insights"
+    --instructions "organize by project and topic"
+    --instructions "extract all TODO items into a task list"
+
+FINDING CONVERSATION IDS:
+  Use 'cycodj list' to find conversation IDs:
+    cycodj list --date today
+    cycodj list --last 50
+
+OUTPUT FORMAT:
+  The generated markdown includes:
+  - Front matter with export metadata
+  - Table of contents
+  - Sectioned conversations with:
+    * Conversation header with metadata
+    * Formatted messages by role
+    * Tool call details
+    * Branch indicators (↳) for child conversations
+
+SEE ALSO
+
+  cycodj help list
+  cycodj help show
+  cycodj help search
+  cycodj help examples

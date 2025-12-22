@@ -13,6 +13,13 @@ public class ListCommand : CycoDjCommand
     public int Last { get; set; } = 0;
     public bool ShowBranches { get; set; } = false;
 
+    public override string GetHelpTopic()
+    {
+        // When list is the default command and --help is used without explicit "list",
+        // show the main usage help instead of list-specific help
+        return "usage";
+    }
+
     public override async Task<int> ExecuteAsync()
     {
         var output = GenerateListOutput();
