@@ -10,8 +10,6 @@ MAIN COMMANDS:
   show       - Display detailed conversation information
   search     - Search across conversation content
   branches   - Visualize conversation branching tree
-  journal    - Generate daily journal summaries
-  export     - Export conversations to markdown
   stats      - View usage statistics and patterns
   cleanup    - Clean up duplicate or empty conversations
   help       - Show help information
@@ -38,10 +36,10 @@ COMMON WORKFLOWS:
     cycodj branches --verbose        # Show detailed branch info
 
   Generate Reports:
-    cycodj journal                   # Daily journal
-    cycodj journal --last-days 7     # Weekly journal
-    cycodj stats                     # Usage statistics
-    cycodj export -o report.md       # Export to markdown
+    cycodj list --stats              # List with statistics
+    cycodj stats                     # Usage statistics  
+    cycodj stats --show-tools        # Tool usage breakdown
+    cycodj list --save-output report.md  # Save to file
 
   Maintain History:
     cycodj cleanup --find-duplicates # Find duplicates
@@ -49,7 +47,11 @@ COMMON WORKFLOWS:
 
 COMMON OPTIONS:
   --date <date>        Filter by date (YYYY-MM-DD or "today")
-  --last <n>           Limit to last N conversations
+  --last <n|timespec>  Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>   Number of messages to show per conversation
+  --stats              Add statistics summary to output
+  --branches           Show branch indicators (↳) on list/search
+  --save-output <file> Save output to file instead of console
   --verbose, -v        Show detailed output
   --debug              Enable debug output
   --quiet              Suppress non-essential output
@@ -71,21 +73,21 @@ DETAILED COMMAND HELP:
   cycodj help show             # Show command details
   cycodj help search           # Search command details
   cycodj help branches         # Branches command details
-  cycodj help journal          # Journal command details
-  cycodj help export           # Export command details
   cycodj help stats            # Stats command details
   cycodj help cleanup          # Cleanup command details
 
 KEY FEATURES:
   - Browse conversation history with rich previews
+  - Control message display count (--messages N or --messages all)
   - Search across all messages with regex support
   - Visualize conversation branching (when you tried different approaches)
-  - Generate daily journals of your AI interactions
-  - Export to markdown for documentation
+  - Show branch indicators inline with lists (--branches)
+  - Add statistics to any output (--stats)
+  - Save any output to markdown files (--save-output)
   - View statistics on tool usage and patterns
   - Clean up duplicates and empty files
   - Apply AI processing to any output
-  - Filter by date and conversation count
+  - Filter by date ranges and conversation count
 
 UNDERSTANDING BRANCHES:
   When you branch a conversation (continue from an earlier point), cycodj

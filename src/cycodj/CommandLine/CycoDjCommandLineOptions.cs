@@ -23,8 +23,8 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         // For single-word commands, just return the command name
         var firstWord = name.Split(' ')[0].ToLowerInvariant();
-        if (firstWord == "list" || firstWord == "show" || firstWord == "journal" || 
-            firstWord == "branches" || firstWord == "search" || firstWord == "export" || 
+        if (firstWord == "list" || firstWord == "show" || 
+            firstWord == "branches" || firstWord == "search" || 
             firstWord == "stats" || firstWord == "cleanup")
         {
             return firstWord;
@@ -40,10 +40,8 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         
         if (lowerCommandName.StartsWith("list")) return new ListCommand();
         if (lowerCommandName.StartsWith("show")) return new ShowCommand();
-        if (lowerCommandName.StartsWith("journal")) return new JournalCommand();
         if (lowerCommandName.StartsWith("branches")) return new BranchesCommand();
         if (lowerCommandName.StartsWith("search")) return new SearchCommand();
-        if (lowerCommandName.StartsWith("export")) return new ExportCommand();
         if (lowerCommandName.StartsWith("stats")) return new StatsCommand();
         if (lowerCommandName.StartsWith("cleanup")) return new CleanupCommand();
         
@@ -100,10 +98,6 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         {
             return TryParseShowCommandOptions(showCommand, args, ref i, arg);
         }
-        else if (command is JournalCommand journalCommand)
-        {
-            return TryParseJournalCommandOptions(journalCommand, args, ref i, arg);
-        }
         else if (command is BranchesCommand branchesCommand)
         {
             return TryParseBranchesCommandOptions(branchesCommand, args, ref i, arg);
@@ -111,10 +105,6 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         else if (command is SearchCommand searchCommand)
         {
             return TryParseSearchCommandOptions(searchCommand, args, ref i, arg);
-        }
-        else if (command is ExportCommand exportCommand)
-        {
-            return TryParseExportCommandOptions(exportCommand, args, ref i, arg);
         }
         else if (command is StatsCommand statsCommand)
         {
@@ -126,6 +116,97 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         }
         
         return false;
+    }
+
+    /// <summary>
+    /// Try to parse common display options (--messages, --stats, --branches)
+    /// Returns true if option was handled
+    /// </summary>
+    private bool TryParseDisplayOptions(CycoDjCommand command, string[] args, ref int i, string arg)
+    {
+        // --messages [N|all]
+        if (arg == "--messages")
+        {
+            // Check if next arg is a value (not another option)
+            if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+            {
+                var value = args[++i];
+                if (value.Equals("all", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Set to a large number (all messages)
+                    SetMessageCount(command, int.MaxValue);
+                }
+                else if (int.TryParse(value, out var count))
+                {
+                    SetMessageCount(command, count);
+                }
+                else
+                {
+                    throw new CommandLineException($"Invalid value for --messages: {value}");
+                }
+            }
+            else
+            {
+                // No value provided, set to null (use command default)
+                SetMessageCount(command, null);
+            }
+            return true;
+        }
+        
+        // --stats
+        else if (arg == "--stats")
+        {
+            SetShowStats(command, true);
+            return true;
+        }
+        
+        // --branches (for list/search commands)
+        else if (arg == "--branches")
+        {
+            SetShowBranches(command, true);
+            return true;
+        }
+        
+        // --save-output <file>
+        else if (arg == "--save-output")
+        {
+            var outputFile = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(outputFile))
+            {
+                throw new CommandLineException($"Missing file path for --save-output");
+            }
+            command.SaveOutput = outputFile;
+            return true;
+        }
+        
+        return false;
+    }
+
+    private void SetMessageCount(CycoDjCommand command, int? value)
+    {
+        var prop = command.GetType().GetProperty("MessageCount");
+        if (prop != null)
+        {
+            prop.SetValue(command, value);
+        }
+    }
+
+    private void SetShowStats(CycoDjCommand command, bool value)
+    {
+        var prop = command.GetType().GetProperty("ShowStats");
+        if (prop != null)
+        {
+            prop.SetValue(command, value);
+        }
+    }
+
+    private void SetShowBranches(CycoDjCommand command, bool value)
+    {
+        var prop = command.GetType().GetProperty("ShowBranches");
+        if (prop != null)
+        {
+            prop.SetValue(command, value);
+        }
     }
 
     /// <summary>
@@ -193,7 +274,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseListCommandOptions(ListCommand command, string[] args, ref int i, string arg)
     {
-        // Try common time options first
+        // Try common display options first
+        if (TryParseDisplayOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
+        // Try common time options
         if (TryParseTimeOptions(command, args, ref i, arg))
         {
             return true;
@@ -226,7 +313,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
 
     private bool TryParseBranchesCommandOptions(BranchesCommand command, string[] args, ref int i, string arg)
     {
-        // Try common time options first
+        // Try common display options first
+        if (TryParseDisplayOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
+        // Try common time options
         if (TryParseTimeOptions(command, args, ref i, arg))
         {
             return true;
@@ -240,6 +333,17 @@ public class CycoDjCommandLineOptions : CommandLineOptions
                 throw new CommandLineException($"Missing date value for {arg}");
             }
             command.Date = date;
+            return true;
+        }
+        else if (arg == "--last")
+        {
+            var value = i + 1 < args.Length ? args[++i] : null;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new CommandLineException($"Missing value for {arg}");
+            }
+            
+            ParseLastValue(command, arg, value);
             return true;
         }
         else if (arg == "--conversation" || arg == "-c")
@@ -270,6 +374,12 @@ public class CycoDjCommandLineOptions : CommandLineOptions
             return true;
         }
         
+        // Try common display options first
+        if (TryParseDisplayOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
         if (arg == "--show-tool-calls")
         {
             command.ShowToolCalls = true;
@@ -294,84 +404,6 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return false;
     }
 
-    private bool TryParseJournalCommandOptions(JournalCommand command, string[] args, ref int i, string arg)
-    {
-        // Try common time options first
-        if (TryParseTimeOptions(command, args, ref i, arg))
-        {
-            return true;
-        }
-        
-        if (arg == "--date" || arg == "-d")
-        {
-            var date = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(date))
-            {
-                throw new CommandLineException($"Missing date value for {arg}");
-            }
-            command.Date = date;
-            return true;
-        }
-        else if (arg == "--last")
-        {
-            var value = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new CommandLineException($"Missing value for {arg}");
-            }
-            
-            // Smart detection: TIMESPEC vs day count
-            if (IsTimeSpec(value))
-            {
-                // Parse as TIMESPEC with "ago" handling
-                try
-                {
-                    // For --last context, relative times should go BACKWARD (ago)
-                    var timeSpec = value;
-                    if (System.Text.RegularExpressions.Regex.IsMatch(value, @"^\d+[dhms]", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                    {
-                        timeSpec = "-" + value + ".."; // Make it a range from N ago to now
-                    }
-                    
-                    var (after, before) = TimeSpecHelpers.ParseTimeSpecRange(arg, timeSpec);
-                    command.After = after;
-                    command.Before = before;
-                }
-                catch (Exception ex)
-                {
-                    throw new CommandLineException($"Invalid time specification for --last: {value}\n{ex.Message}");
-                }
-            }
-            else
-            {
-                // Parse as day count (for backward compat with --last-days)
-                if (!int.TryParse(value, out var days))
-                {
-                    throw new CommandLineException($"Invalid number for --last: {value}");
-                }
-                command.LastDays = days;
-            }
-            return true;
-        }
-        else if (arg == "--last-days")
-        {
-            var days = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(days) || !int.TryParse(days, out var n))
-            {
-                throw new CommandLineException($"Missing or invalid days for {arg}");
-            }
-            command.LastDays = n;
-            return true;
-        }
-        else if (arg == "--detailed")
-        {
-            command.Detailed = true;
-            return true;
-        }
-        
-        return false;
-    }
-
     private bool TryParseSearchCommandOptions(SearchCommand command, string[] args, ref int i, string arg)
     {
         // First positional argument is the search query
@@ -381,7 +413,13 @@ public class CycoDjCommandLineOptions : CommandLineOptions
             return true;
         }
         
-        // Try common time options first
+        // Try common display options first
+        if (TryParseDisplayOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
+        // Try common time options
         if (TryParseTimeOptions(command, args, ref i, arg))
         {
             return true;
@@ -442,77 +480,15 @@ public class CycoDjCommandLineOptions : CommandLineOptions
         return false;
     }
 
-    private bool TryParseExportCommandOptions(ExportCommand command, string[] args, ref int i, string arg)
-    {
-        // Try common time options first
-        if (TryParseTimeOptions(command, args, ref i, arg))
-        {
-            return true;
-        }
-        
-        if (arg == "--output" || arg == "-o")
-        {
-            var outputFile = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(outputFile))
-            {
-                throw new CommandLineException($"Missing output file for {arg}");
-            }
-            command.OutputFile = outputFile;
-            return true;
-        }
-        else if (arg == "--date" || arg == "-d")
-        {
-            var date = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(date))
-            {
-                throw new CommandLineException($"Missing date value for {arg}");
-            }
-            command.Date = date;
-            return true;
-        }
-        else if (arg == "--last")
-        {
-            var value = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new CommandLineException($"Missing value for {arg}");
-            }
-            
-            ParseLastValue(command, arg, value);
-            return true;
-        }
-        else if (arg == "--conversation" || arg == "-c")
-        {
-            var id = i + 1 < args.Length ? args[++i] : null;
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                throw new CommandLineException($"Missing conversation ID for {arg}");
-            }
-            command.ConversationId = id;
-            return true;
-        }
-        else if (arg == "--include-tool-output")
-        {
-            command.IncludeToolOutput = true;
-            return true;
-        }
-        else if (arg == "--no-branches")
-        {
-            command.IncludeBranches = false;
-            return true;
-        }
-        else if (arg == "--overwrite")
-        {
-            command.Overwrite = true;
-            return true;
-        }
-        
-        return false;
-    }
-
     private bool TryParseStatsCommandOptions(StatsCommand command, string[] args, ref int i, string arg)
     {
-        // Try common time options first
+        // Try common display options first
+        if (TryParseDisplayOptions(command, args, ref i, arg))
+        {
+            return true;
+        }
+        
+        // Try common time options
         if (TryParseTimeOptions(command, args, ref i, arg))
         {
             return true;

@@ -4,10 +4,11 @@ USAGE:
   cycodj stats [options]
 
 OPTIONS:
-  --date <date>         Filter by date (YYYY-MM-DD or "today")
-  --last <n>            Limit to last N conversations
+  --date <date>         Filter by date (YYYY-MM-DD or "today"/"yesterday")
+  --last <n|timespec>   Limit to last N conversations or time period (e.g., "7d", "2h")
   --show-tools          Display tool usage statistics
-  --no-dates            Don't show per-date breakdown
+  --show-dates          Show per-date breakdown (enabled by default)
+  --save-output <file>  Save output to file instead of console
 
 COMMON OPTIONS:
   --instructions <text>       Apply AI processing to statistics
@@ -30,8 +31,11 @@ EXAMPLES:
   cycodj stats --date 2025-12-20 --show-tools
     Daily statistics with tool breakdown
 
-  cycodj stats --last 50 --no-dates
-    Summary stats without per-date breakdown
+  cycodj stats --last 50 --show-dates
+    Summary stats with per-date breakdown
+
+  cycodj stats --last 7d --show-tools --save-output weekly-report.md
+    Save last week's statistics with tool usage to file
 
   cycodj stats --instructions "identify usage trends"
     Generate statistics with AI analysis

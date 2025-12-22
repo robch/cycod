@@ -13,6 +13,7 @@ public class ShowCommand : CycoDjCommand
     public bool ShowToolCalls { get; set; } = false;
     public bool ShowToolOutput { get; set; } = false;
     public int MaxContentLength { get; set; } = 500;
+    public bool ShowStats { get; set; } = false;
 
     public override async Task<int> ExecuteAsync()
     {
@@ -20,6 +21,14 @@ public class ShowCommand : CycoDjCommand
         
         // Apply instructions if provided
         var finalOutput = ApplyInstructionsIfProvided(output);
+        
+        // Save to file if --save-output was provided
+        if (SaveOutputIfRequested(finalOutput))
+        {
+            return await Task.FromResult(0);
+        }
+        
+        // Otherwise print to console
         ConsoleHelpers.WriteLine(finalOutput);
         
         return await Task.FromResult(0);
@@ -184,6 +193,37 @@ public class ShowCommand : CycoDjCommand
         
         sb.AppendLine("─".PadRight(80, '─'));
         sb.AppendLine($"End of conversation: {conv.Id}");
+        
+        // Add statistics if requested
+        if (ShowStats)
+        {
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine("## Conversation Statistics");
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine();
+            
+            var totalMessages = conv.Messages.Count;
+            var totalUserMessages = conv.Messages.Count(m => m.Role == "user");
+            var totalAssistantMessages = conv.Messages.Count(m => m.Role == "assistant");
+            var totalToolMessages = conv.Messages.Count(m => m.Role == "tool");
+            var toolCalls = conv.Messages.Where(m => m.ToolCalls != null).Sum(m => m.ToolCalls!.Count);
+            
+            sb.AppendLine($"Total messages: {totalMessages}");
+            sb.AppendLine($"  User: {totalUserMessages} ({totalUserMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Assistant: {totalAssistantMessages} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Tool: {totalToolMessages} ({totalToolMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"Tool calls: {toolCalls}");
+            
+            if (!string.IsNullOrEmpty(conv.ParentId))
+            {
+                sb.AppendLine($"This is a branch (parent: {conv.ParentId})");
+            }
+            
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
+        }
         
         return sb.ToString();
     }

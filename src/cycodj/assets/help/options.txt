@@ -96,6 +96,73 @@ DISPLAY OPTIONS
     Write log output to specified file
     Useful for debugging and audit trails
 
+COMPOSABLE DISPLAY OPTIONS
+
+  These options work on multiple commands (list, search, branches, show)
+  and can be combined together:
+
+  --messages <n|all>
+    Control how many messages to show per conversation
+    
+    Numbers:
+      --messages 1           Show 1 message (minimal)
+      --messages 3           Show 3 messages (default for list/search)
+      --messages 5           Show 5 messages (more context)
+      --messages 10          Show 10 messages
+    
+    Special:
+      --messages all         Show all messages (like export)
+    
+    Defaults:
+      list:     3 messages
+      search:   3 messages
+      branches: 0 messages (structure only)
+      show:     all messages
+    
+    Examples:
+      cycodj list --messages 1
+      cycodj search "bug" --messages 10
+      cycodj branches --messages 3
+
+  --branches
+    Show branch indicators (↳) and indentation
+    Available on: list, search
+    
+    Shows which conversations are branches of others,
+    with visual indicators and indentation to show relationships
+    
+    Examples:
+      cycodj list --branches
+      cycodj search "TODO" --branches
+
+  --stats
+    Add statistics summary at end of output
+    Available on: list, search, branches, show, stats
+    
+    Appends a summary showing message counts, conversation counts,
+    branch statistics, etc. Does not replace the main output.
+    
+    Examples:
+      cycodj list --stats
+      cycodj search "error" --stats
+      cycodj branches --last 20 --stats
+
+  --save-output <file>
+    Save output to file instead of printing to console
+    Available on: list, search, branches, show, stats
+    
+    Examples:
+      cycodj list --save-output recent.md
+      cycodj stats --show-tools --save-output report.md
+      cycodj search "TODO" --save-output todos.md
+
+  COMBINING FLAGS:
+    All these options work together! Examples:
+    
+      cycodj list --last 10 --messages 5 --branches --stats
+      cycodj search "bug" --last 7d --messages 1 --branches --save-output bugs.md
+      cycodj branches --last 20 --messages 2 --stats --save-output tree.md
+
 AI PROCESSING OPTIONS
 
   These options are available on most commands to apply AI processing
@@ -130,13 +197,14 @@ AI PROCESSING OPTIONS
 COMMAND-SPECIFIC OPTIONS
 
   List Command:
-    --date, --last
+    --date, --last, --messages, --branches, --stats, --save-output
     (see: cycodj help list)
 
   Show Command:
     --show-tool-calls      Show tool call details
     --show-tool-output     Show full tool output
     --max-content-length   Set message truncation length
+    --stats, --save-output
     (see: cycodj help show)
 
   Search Command:
@@ -145,26 +213,18 @@ COMMAND-SPECIFIC OPTIONS
     --user-only, -u        Search only user messages
     --assistant-only, -a   Search only assistant messages
     --context <n>, -C <n>  Context lines around matches
+    --messages, --branches, --stats, --save-output
     (see: cycodj help search)
 
   Branches Command:
-    --date, --conversation, --verbose
+    --date, --last, --conversation, --verbose
+    --messages, --stats, --save-output
     (see: cycodj help branches)
-
-  Journal Command:
-    --date, --last-days, --detailed
-    (see: cycodj help journal)
-
-  Export Command:
-    --output, -o           Output file (required)
-    --include-tool-output  Include full tool output
-    --no-branches          Exclude branch information
-    --overwrite            Overwrite existing file
-    (see: cycodj help export)
 
   Stats Command:
     --show-tools           Show tool usage statistics
-    --no-dates             Hide per-date breakdown
+    --show-dates           Show per-date breakdown
+    --save-output          Save output to file
     (see: cycodj help stats)
 
   Cleanup Command:
@@ -195,7 +255,7 @@ TIME FILTERING EXAMPLES
   Shortcuts (most common):
     cycodj list --today                    # Today's conversations
     cycodj list --yesterday                # Yesterday's conversations
-    cycodj journal --today                 # Today's journal
+    cycodj stats --today                   # Today's stats
 
   Smart --last with count:
     cycodj list --last 20                  # Last 20 conversations
@@ -204,13 +264,13 @@ TIME FILTERING EXAMPLES
   Smart --last with time:
     cycodj list --last 7d                  # Last 7 days
     cycodj list --last 30d                 # Last 30 days
-    cycodj journal --last 7d               # Week journal
+    cycodj branches --last 7d              # Week branches
     cycodj search "bug" --last 2d          # Search last 2 days
 
   Date ranges:
-    cycodj journal --date-range "7d..today"            # Last week
-    cycodj export -o year.md --date-range "2023-01-01..2023-12-31"
-    cycodj list --date-range "3d.."                    # Last 3 days to now
+    cycodj list --date-range "7d..today"            # Last week
+    cycodj stats --date-range "2023-01-01..2023-12-31"  # Year stats
+    cycodj list --date-range "3d.."                 # Last 3 days to now
 
   Explicit boundaries:
     cycodj list --after 7d                  # After 7 days ago
@@ -218,9 +278,9 @@ TIME FILTERING EXAMPLES
     cycodj stats --after "2025-01-01" --before "2025-12-31"
 
   Combined with other options:
-    cycodj search "TODO" --last 7d --context 3
-    cycodj export --yesterday --output yesterday.md --overwrite
-    cycodj branches --last 30d --verbose
+    cycodj search "TODO" --last 7d --branches --save-output todos.md
+    cycodj list --yesterday --messages 5 --stats
+    cycodj branches --last 30d --messages 2 --stats
 
 USING OPTIONS WITH AI INSTRUCTIONS
 
@@ -257,7 +317,5 @@ SEE ALSO
   cycodj help search
   cycodj help show
   cycodj help branches
-  cycodj help journal
-  cycodj help export
   cycodj help stats
   cycodj help cleanup

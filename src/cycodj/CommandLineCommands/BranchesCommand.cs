@@ -12,6 +12,9 @@ public class BranchesCommand : CycoDjCommand
     public string? Date { get; set; }
     public string? Conversation { get; set; }
     public bool Verbose { get; set; } = false;
+    public int Last { get; set; } = 0;
+    public int? MessageCount { get; set; } = null; // null = use default (0 for branches)
+    public bool ShowStats { get; set; } = false;
 
     public override async Task<int> ExecuteAsync()
     {
@@ -19,6 +22,14 @@ public class BranchesCommand : CycoDjCommand
         
         // Apply instructions if provided
         var finalOutput = ApplyInstructionsIfProvided(output);
+        
+        // Save to file if --save-output was provided
+        if (SaveOutputIfRequested(finalOutput))
+        {
+            return await Task.FromResult(0);
+        }
+        
+        // Otherwise print to console
         ConsoleHelpers.WriteLine(finalOutput);
         
         return await Task.FromResult(0);
@@ -79,6 +90,16 @@ public class BranchesCommand : CycoDjCommand
             return sb.ToString();
         }
         
+        // Apply --last N limit if specified
+        if (Last > 0)
+        {
+            conversations = conversations
+                .OrderByDescending(c => c.Timestamp)
+                .Take(Last)
+                .OrderBy(c => c.Timestamp)
+                .ToList();
+        }
+        
         // Build conversation tree
         var tree = BranchDetector.BuildTree(conversations);
         
@@ -116,7 +137,50 @@ public class BranchesCommand : CycoDjCommand
             sb.AppendLine($"Branched conversations: {branchedCount}");
         }
         
+        // Add detailed statistics if requested
+        if (ShowStats && tree.AllConversations.Any())
+        {
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine("## Statistics Summary");
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine();
+            
+            var totalMessages = tree.AllConversations.Sum(c => c.Messages.Count);
+            var totalUserMessages = tree.AllConversations.Sum(c => c.Messages.Count(m => m.Role == "user"));
+            var totalAssistantMessages = tree.AllConversations.Sum(c => c.Messages.Count(m => m.Role == "assistant"));
+            var totalToolMessages = tree.AllConversations.Sum(c => c.Messages.Count(m => m.Role == "tool"));
+            var avgMessages = totalMessages / (double)tree.AllConversations.Count();
+            var avgDepth = tree.AllConversations.Average(c => (double)GetDepth(c, tree));
+            
+            sb.AppendLine($"Total conversations: {tree.TotalConversations}");
+            sb.AppendLine($"Root conversations: {tree.RootCount}");
+            sb.AppendLine($"Branched conversations: {branchedCount} ({branchedCount * 100.0 / tree.TotalConversations:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"Total messages: {totalMessages:N0}");
+            sb.AppendLine($"  User: {totalUserMessages:N0} ({totalUserMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Assistant: {totalAssistantMessages:N0} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Tool: {totalToolMessages:N0} ({totalToolMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"Average messages/conversation: {avgMessages:F1}");
+            sb.AppendLine($"Average branch depth: {avgDepth:F1}");
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
+        }
+        
         return sb.ToString();
+    }
+    
+    private int GetDepth(Models.Conversation conv, Models.ConversationTree tree)
+    {
+        var depth = 0;
+        var current = conv;
+        while (current.ParentId != null && tree.ConversationLookup.TryGetValue(current.ParentId, out var parent))
+        {
+            depth++;
+            current = parent;
+        }
+        return depth;
     }
 
     private void AppendConversationTree(System.Text.StringBuilder sb, Models.Conversation conv, Models.ConversationTree tree, int depth)
@@ -146,6 +210,33 @@ public class BranchesCommand : CycoDjCommand
                 var commonLength = GetCommonPrefixLength(parent.ToolCallIds, conv.ToolCallIds);
                 var divergeAt = commonLength < parent.ToolCallIds.Count ? commonLength : parent.ToolCallIds.Count;
                 sb.AppendLine($"{indent}   Branched at tool call #{divergeAt}");
+            }
+        }
+        
+        // Show messages if requested
+        var messageCount = MessageCount ?? 0; // Default to 0 for branches
+        if (messageCount > 0)
+        {
+            var userMessages = conv.Messages.Where(m => m.Role == "user" && !string.IsNullOrWhiteSpace(m.Content)).ToList();
+            
+            if (userMessages.Any())
+            {
+                // For branches, show last N messages (what's new)
+                // For roots, show first N messages
+                var messagesToShow = conv.ParentId != null 
+                    ? userMessages.TakeLast(Math.Min(messageCount, userMessages.Count))
+                    : userMessages.Take(Math.Min(messageCount, userMessages.Count));
+                
+                sb.AppendLine();
+                foreach (var msg in messagesToShow)
+                {
+                    var preview = msg.Content.Length > 150 
+                        ? msg.Content.Substring(0, 150) + "..." 
+                        : msg.Content;
+                    preview = preview.Replace("\n", " ").Replace("\r", "");
+                    
+                    sb.AppendLine($"{indent}   > {preview}");
+                }
             }
         }
         

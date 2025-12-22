@@ -15,6 +15,10 @@ namespace CycoDj.CommandLineCommands
         public bool UserOnly { get; set; }
         public bool AssistantOnly { get; set; }
         public int ContextLines { get; set; } = 2;
+        public bool ShowBranches { get; set; } = false;
+        public int? MessageCount { get; set; } = null; // null = use default (3)
+        public bool ShowStats { get; set; } = false;
+
 
         public override async System.Threading.Tasks.Task<int> ExecuteAsync()
         {
@@ -22,6 +26,14 @@ namespace CycoDj.CommandLineCommands
             
             // Apply instructions if provided
             var finalOutput = ApplyInstructionsIfProvided(output);
+            
+            // Save to file if --save-output was provided
+            if (SaveOutputIfRequested(finalOutput))
+            {
+                return await System.Threading.Tasks.Task.FromResult(0);
+            }
+            
+            // Otherwise print to console
             ConsoleHelpers.WriteLine(finalOutput);
             
             return await System.Threading.Tasks.Task.FromResult(0);
@@ -136,6 +148,39 @@ namespace CycoDj.CommandLineCommands
 
             sb.AppendLine();
             sb.AppendLine($"Total: {matches.Sum(m => m.searchMatches.Count)} match(es) in {matches.Count} conversation(s)");
+            
+            // Add statistics if requested
+            if (ShowStats)
+            {
+                var conversations = matches.Select(m => m.conversation).ToList();
+                
+                sb.AppendLine();
+                sb.AppendLine("═══════════════════════════════════════");
+                sb.AppendLine("## Statistics Summary");
+                sb.AppendLine("═══════════════════════════════════════");
+                sb.AppendLine();
+                
+                var totalMessages = conversations.Sum(c => c.Messages.Count);
+                var totalUserMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "user"));
+                var totalAssistantMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "assistant"));
+                var totalToolMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "tool"));
+                var avgMessages = totalMessages / (double)conversations.Count;
+                var branchCount = conversations.Count(c => c.ParentId != null);
+                
+                sb.AppendLine($"Total conversations searched: {files.Count}");
+                sb.AppendLine($"Conversations with matches: {conversations.Count}");
+                sb.AppendLine($"Total matches: {matches.Sum(m => m.searchMatches.Count)}");
+                sb.AppendLine();
+                sb.AppendLine($"Total messages: {totalMessages:N0}");
+                sb.AppendLine($"  User: {totalUserMessages:N0} ({totalUserMessages * 100.0 / totalMessages:F1}%)");
+                sb.AppendLine($"  Assistant: {totalAssistantMessages:N0} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)");
+                sb.AppendLine($"  Tool: {totalToolMessages:N0} ({totalToolMessages * 100.0 / totalMessages:F1}%)");
+                sb.AppendLine();
+                sb.AppendLine($"Average messages/conversation: {avgMessages:F1}");
+                sb.AppendLine($"Branched conversations: {branchCount} ({branchCount * 100.0 / conversations.Count:F1}%)");
+                sb.AppendLine();
+                sb.AppendLine("═══════════════════════════════════════");
+            }
             
             return sb.ToString();
         }

@@ -11,6 +11,8 @@ OPTIONS:
   --show-tool-calls       Display details of tool calls made by the assistant
   --show-tool-output      Show full tool output without truncation
   --max-content-length <n> Maximum characters to display per message (default: 500)
+  --stats                 Add statistics summary at end of output
+  --save-output <file>    Save output to file instead of console
 
 EXAMPLES:
   cycodj show 1754437373970
@@ -27,6 +29,12 @@ EXAMPLES:
 
   cycodj show 1754437373970 --max-content-length 1000
     Display up to 1000 characters per message
+
+  cycodj show 1754437373970 --stats
+    Show conversation with statistics summary at end
+
+  cycodj show 1754437373970 --save-output conversation.md
+    Save conversation to markdown file
 
 DESCRIPTION:
   The show command displays detailed information about a specific conversation,

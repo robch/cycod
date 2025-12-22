@@ -72,10 +72,6 @@ class Program
             {
                 return await showCommand.ExecuteAsync();
             }
-            else if (command is CycoDj.CommandLineCommands.JournalCommand journalCommand)
-            {
-                return await journalCommand.ExecuteAsync();
-            }
             else if (command is CycoDj.CommandLineCommands.BranchesCommand branchesCommand)
             {
                 return await branchesCommand.ExecuteAsync();
@@ -84,10 +80,6 @@ class Program
             {
                 await searchCommand.ExecuteAsync();
                 return 0;
-            }
-            else if (command is CycoDj.CommandLineCommands.ExportCommand exportCommand)
-            {
-                return await exportCommand.ExecuteAsync();
             }
             else if (command is CycoDj.CommandLineCommands.StatsCommand statsCommand)
             {

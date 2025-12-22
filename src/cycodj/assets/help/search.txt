@@ -7,8 +7,12 @@ ARGUMENTS:
   <query>           Text or regex pattern to search for
 
 OPTIONS:
-  --date <date>           Filter by date (YYYY-MM-DD or "today")
-  --last <n>              Limit to last N conversations
+  --date <date>           Filter by date (YYYY-MM-DD or "today"/"yesterday")
+  --last <n|timespec>     Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>      Number of messages to show per match (default: 3)
+  --branches              Show branch indicators (↳) and relationships
+  --stats                 Add statistics summary at end of output
+  --save-output <file>    Save output to file instead of console
   --case-sensitive, -c    Enable case-sensitive search
   --regex, -r             Use regular expressions
   --user-only, -u         Search only user messages
@@ -38,6 +42,15 @@ EXAMPLES:
 
   cycodj search "bug" --assistant-only --context 0
     Search assistant messages with no context lines
+
+  cycodj search "TODO" --messages 1 --branches
+    Find TODOs showing branch relationships with minimal messages
+
+  cycodj search "error" --last 7d --stats --save-output errors.md
+    Search last week's errors, show stats, and save to file
+
+  cycodj search "authentication" --messages all
+    Show all messages in conversations containing "authentication"
 
 DESCRIPTION:
   The search command finds text patterns across all conversations in your

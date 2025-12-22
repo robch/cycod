@@ -12,6 +12,8 @@ public class ListCommand : CycoDjCommand
     public string? Date { get; set; }
     public int Last { get; set; } = 0;
     public bool ShowBranches { get; set; } = false;
+    public int? MessageCount { get; set; } = null; // null = use default (3)
+    public bool ShowStats { get; set; } = false;
 
     public override string GetHelpTopic()
     {
@@ -26,6 +28,14 @@ public class ListCommand : CycoDjCommand
         
         // Apply instructions if provided
         var finalOutput = ApplyInstructionsIfProvided(output);
+        
+        // Save to file if --save-output was provided
+        if (SaveOutputIfRequested(finalOutput))
+        {
+            return await Task.FromResult(0);
+        }
+        
+        // Otherwise print to console
         ConsoleHelpers.WriteLine(finalOutput);
         
         return await Task.FromResult(0);
@@ -159,28 +169,33 @@ public class ListCommand : CycoDjCommand
                 }
             }
             
-            // Show preview - brief overview with just one message
+            // Show preview - configurable number of messages
+            var messageCount = MessageCount ?? 3; // Default to 3 messages
             var userMessages = conv.Messages.Where(m => m.Role == "user" && !string.IsNullOrWhiteSpace(m.Content)).ToList();
             
-            if (userMessages.Any())
+            if (userMessages.Any() && messageCount > 0)
             {
-                // For branches, show last message (what's new)
-                // For non-branches, show first message
-                var messageToShow = conv.ParentId != null 
-                    ? userMessages.Last() 
-                    : userMessages.First();
+                // For branches, show last N messages (what's new)
+                // For non-branches, show first N messages
+                var messagesToShow = conv.ParentId != null 
+                    ? userMessages.TakeLast(Math.Min(messageCount, userMessages.Count))
+                    : userMessages.Take(Math.Min(messageCount, userMessages.Count));
                 
-                var preview = messageToShow.Content.Length > 80 
-                    ? messageToShow.Content.Substring(0, 80) + "..." 
-                    : messageToShow.Content;
-                preview = preview.Replace("\n", " ").Replace("\r", "");
-                
-                sb.AppendLine($"{indent}  > {preview}");
+                foreach (var msg in messagesToShow)
+                {
+                    var preview = msg.Content.Length > 200 
+                        ? msg.Content.Substring(0, 200) + "..." 
+                        : msg.Content;
+                    preview = preview.Replace("\n", " ").Replace("\r", "");
+                    
+                    sb.AppendLine($"{indent}  > {preview}");
+                }
                 
                 // Show indicator if there are more messages
-                if (userMessages.Count > 1)
+                var shownCount = messagesToShow.Count();
+                if (userMessages.Count > shownCount)
                 {
-                    sb.AppendLine($"{indent}    ... and {userMessages.Count - 1} more");
+                    sb.AppendLine($"{indent}    ... and {userMessages.Count - shownCount} more");
                 }
             }
             
@@ -194,6 +209,33 @@ public class ListCommand : CycoDjCommand
         if (branchedConvs > 0)
         {
             sb.AppendLine($"Branches: {branchedConvs} conversation(s) are branches of others");
+        }
+        
+        // Add statistics if requested
+        if (ShowStats && conversations.Any())
+        {
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine("## Statistics Summary");
+            sb.AppendLine("═══════════════════════════════════════");
+            sb.AppendLine();
+            
+            var totalMessages = conversations.Sum(c => c.Messages.Count);
+            var totalUserMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "user"));
+            var totalAssistantMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "assistant"));
+            var totalToolMessages = conversations.Sum(c => c.Messages.Count(m => m.Role == "tool"));
+            var avgMessages = totalMessages / (double)conversations.Count;
+            
+            sb.AppendLine($"Total conversations: {conversations.Count}");
+            sb.AppendLine($"Total messages: {totalMessages:N0}");
+            sb.AppendLine($"  User: {totalUserMessages:N0} ({totalUserMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Assistant: {totalAssistantMessages:N0} ({totalAssistantMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine($"  Tool: {totalToolMessages:N0} ({totalToolMessages * 100.0 / totalMessages:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine($"Average messages/conversation: {avgMessages:F1}");
+            sb.AppendLine($"Branched conversations: {branchedConvs} ({branchedConvs * 100.0 / conversations.Count:F1}%)");
+            sb.AppendLine();
+            sb.AppendLine("═══════════════════════════════════════");
         }
         
         return sb.ToString();

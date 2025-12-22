@@ -13,6 +13,9 @@ public abstract class CycoDjCommand : Command
     public DateTime? After { get; set; }
     public DateTime? Before { get; set; }
     
+    // Common properties for output
+    public string? SaveOutput { get; set; }
+    
     public override bool IsEmpty()
     {
         return false;
@@ -46,5 +49,28 @@ public abstract class CycoDjCommand : Command
             output, 
             UseBuiltInFunctions, 
             SaveChatHistory);
+    }
+    
+    /// <summary>
+    /// Save output to file if --save-output was provided
+    /// Returns true if output was saved (command should not print to console)
+    /// </summary>
+    protected bool SaveOutputIfRequested(string output)
+    {
+        if (string.IsNullOrEmpty(SaveOutput))
+        {
+            return false;
+        }
+        
+        // Just use SaveOutput directly - FileHelpers.GetFileNameFromTemplate doesn't do template expansion like we thought
+        // For now, use the filename as-is
+        var fileName = SaveOutput;
+        
+        // Write output to file
+        File.WriteAllText(fileName, output);
+        
+        ConsoleHelpers.WriteLine($"Output saved to: {fileName}", ConsoleColor.Green);
+        
+        return true;
     }
 }

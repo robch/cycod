@@ -6,9 +6,8 @@ Using CYCODJ, you can:
   - Search across conversation content
   - Display detailed conversation information
   - Visualize conversation branching trees
-  - Generate daily journal summaries
-  - Export conversations to markdown
-  - View usage statistics
+  - View usage statistics and tool breakdowns
+  - Save any output to markdown files
   - Clean up duplicate or empty conversations
 
 USAGE: cycodj [command] [options]
@@ -16,8 +15,6 @@ USAGE: cycodj [command] [options]
    OR: cycodj show <conversation-id> [options]
    OR: cycodj search <query> [options]
    OR: cycodj branches [options]
-   OR: cycodj journal [options]
-   OR: cycodj export --output <file> [options]
    OR: cycodj stats [options]
    OR: cycodj cleanup [options]
 
@@ -28,8 +25,6 @@ COMMANDS
   cycodj show [...]       (see: cycodj help show)
   cycodj search [...]     (see: cycodj help search)
   cycodj branches [...]   (see: cycodj help branches)
-  cycodj journal [...]    (see: cycodj help journal)
-  cycodj export [...]     (see: cycodj help export)
   cycodj stats [...]      (see: cycodj help stats)
   cycodj cleanup [...]    (see: cycodj help cleanup)
 
@@ -57,23 +52,19 @@ EXAMPLES
     cycodj branches
     cycodj branches --date today --verbose
 
-  EXAMPLE 5: Generate daily journals
-
-    cycodj journal
-    cycodj journal --date 2025-12-20 --detailed
-    cycodj journal --last-days 7
-
-  EXAMPLE 6: Export to markdown
-
-    cycodj export --output report.md --date today
-    cycodj export -o archive.md --last 50 --include-tool-output
-
-  EXAMPLE 7: View statistics
+  EXAMPLE 5: Generate reports and save output
 
     cycodj stats
-    cycodj stats --date today --show-tools
+    cycodj stats --show-tools
+    cycodj list --last 7d --stats --save-output weekly-report.md
 
-  EXAMPLE 8: Clean up conversation history
+  EXAMPLE 6: Use composable flags
+
+    cycodj list --last 10 --messages 5 --branches --stats
+    cycodj search "bug" --last 7d --messages 1 --save-output bugs.md
+    cycodj branches --last 20 --messages 2 --stats
+
+  EXAMPLE 7: Clean up conversation history
 
     cycodj cleanup --find-duplicates
     cycodj cleanup --remove-empty --execute
@@ -86,7 +77,5 @@ SEE ALSO
   cycodj help search
   cycodj help show
   cycodj help branches
-  cycodj help journal
-  cycodj help export
   cycodj help stats
   cycodj help cleanup

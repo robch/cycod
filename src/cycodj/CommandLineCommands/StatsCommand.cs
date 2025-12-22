@@ -18,6 +18,14 @@ namespace CycoDj.CommandLineCommands
             
             // Apply instructions if provided
             var finalOutput = ApplyInstructionsIfProvided(output);
+            
+            // Save to file if --save-output was provided
+            if (SaveOutputIfRequested(finalOutput))
+            {
+                return await Task.FromResult(0);
+            }
+            
+            // Otherwise print to console
             ConsoleHelpers.WriteLine(finalOutput);
             
             return await Task.FromResult(0);
