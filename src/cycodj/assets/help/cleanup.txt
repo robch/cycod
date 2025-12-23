@@ -1,0 +1,131 @@
+CLEANUP COMMAND - Clean up conversation history
+
+USAGE:
+  cycodj cleanup [options]
+
+OPTIONS:
+  --find-duplicates         Find duplicate conversation files
+  --remove-duplicates       Remove duplicate files (requires --execute)
+  --find-empty              Find empty or invalid conversation files
+  --remove-empty            Remove empty files (requires --execute)
+  --older-than-days <n>     Only consider files older than N days
+  --execute                 Actually perform removal (default is dry-run)
+
+COMMON OPTIONS:
+  --instructions <text>       Apply AI processing to cleanup results
+  --use-built-in-functions    Enable AI to use tools
+  --save-chat-history <file>  Save AI processing chat to file
+
+EXAMPLES:
+  cycodj cleanup --find-duplicates
+    Find duplicate conversation files (dry-run)
+
+  cycodj cleanup --find-empty
+    Find empty or invalid conversation files (dry-run)
+
+  cycodj cleanup --remove-duplicates --execute
+    Remove duplicate files (actually deletes them)
+
+  cycodj cleanup --remove-empty --execute
+    Remove empty files (actually deletes them)
+
+  cycodj cleanup --find-duplicates --older-than-days 30
+    Find duplicates older than 30 days
+
+  cycodj cleanup --remove-empty --older-than-days 90 --execute
+    Remove empty files older than 90 days
+
+  cycodj cleanup --find-duplicates --find-empty
+    Find both duplicates and empty files
+
+  cycodj cleanup --remove-duplicates --remove-empty --execute
+    Remove both duplicates and empty files
+
+DESCRIPTION:
+  The cleanup command helps maintain your chat history by identifying and
+  removing problematic files. It can detect:
+
+  - Duplicate conversations (same content, different filenames)
+  - Empty conversation files (no messages)
+  - Invalid conversation files (corrupted or malformed JSON)
+
+  By default, cleanup runs in DRY-RUN mode, showing what would be removed
+  without actually deleting anything. Use --execute to perform actual
+  deletions.
+
+SAFETY FEATURES:
+  - Dry-run by default (--execute required for actual deletion)
+  - Clear indication of what will be removed
+  - File count and size summaries before removal
+  - Preserves at least one copy of duplicate conversations
+
+DUPLICATE DETECTION:
+  Duplicates are identified by:
+  - Conversation ID matching
+  - Message content matching
+  - Timestamp proximity
+
+  When duplicates are found, the cleanup command:
+  - Keeps the newest file by default
+  - Reports all duplicates found
+  - Shows space that would be saved
+
+EMPTY FILE DETECTION:
+  Empty files include:
+  - Files with no messages
+  - Files with only system messages
+  - Malformed or corrupted JSON files
+  - Files that can't be parsed
+
+AGE FILTERING:
+  Use --older-than-days to limit cleanup to old files:
+    --older-than-days 30    (files older than 30 days)
+    --older-than-days 90    (files older than 90 days)
+    --older-than-days 365   (files older than 1 year)
+
+  This is useful for:
+  - Archiving old conversations
+  - Cleaning up test data
+  - Removing stale drafts
+
+WORKFLOW:
+  1. Run cleanup with --find-* flags (dry-run)
+  2. Review the list of files to be removed
+  3. Run again with --remove-* and --execute to delete
+
+  Example workflow:
+    # Step 1: See what would be removed
+    cycodj cleanup --find-duplicates --find-empty
+
+    # Step 2: Review the output carefully
+
+    # Step 3: Actually remove the files
+    cycodj cleanup --remove-duplicates --remove-empty --execute
+
+OUTPUT:
+  Dry-run mode shows:
+  - List of files that would be removed
+  - Reason for removal (duplicate, empty, invalid)
+  - Total files and space to be freed
+
+  Execute mode shows:
+  - Files being removed
+  - Success/failure for each deletion
+  - Final summary of removed files
+
+WARNING:
+  - Deleted files cannot be recovered
+  - Always run dry-run first (default behavior)
+  - Consider backing up your history directory before cleanup:
+    ~/.cycod/history/
+
+AI PROCESSING:
+  Apply AI analysis to cleanup results:
+    cycodj cleanup --find-duplicates --instructions "recommend cleanup strategy"
+    cycodj cleanup --find-empty --instructions "analyze why files are empty"
+
+SEE ALSO
+
+  cycodj help list
+  cycodj help stats
+  cycodj help examples

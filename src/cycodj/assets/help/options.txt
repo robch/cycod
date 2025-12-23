@@ -1,0 +1,321 @@
+OPTIONS - Common options available across cycodj commands
+
+TIME FILTERING OPTIONS
+
+  --today
+    Shortcut for today's conversations (midnight to now)
+    Example: cycodj list --today
+
+  --yesterday
+    Shortcut for yesterday's conversations (full day)
+    Example: cycodj list --yesterday
+
+  --last <value>
+    Smart filtering by count OR time period
+    
+    Conversation count (pure number):
+      --last 20            Last 20 conversations
+      --last 50            Last 50 conversations
+    
+    Time period (TIMESPEC format):
+      --last 7d            Last 7 days
+      --last 30d           Last 30 days
+      --last 4h            Last 4 hours
+      --last yesterday     Yesterday
+      --last today         Today
+    
+    TIMESPEC is automatically detected!
+
+  --after <timespec>
+    Show conversations after specified time
+    Example: --after 7d, --after "2025-01-01", --after yesterday
+
+  --before <timespec>
+    Show conversations before specified time
+    Example: --before yesterday, --before "2025-12-20"
+
+  --date-range <from>..<to>
+    Show conversations in date range
+    Examples:
+      --date-range "7d..today"              Last 7 days
+      --date-range "2025-01-01..2025-12-31" Full year
+      --date-range "3d.."                   Last 3 days to now
+      --date-range "..yesterday"            Everything up to yesterday
+
+  --date <date>, -d <date>
+    (Legacy) Filter conversations by specific date
+    Accepts: YYYY-MM-DD format or "today"
+    Example: --date 2025-12-20, --date today
+    Note: Use --last or --date-range for more flexibility
+
+TIMESPEC FORMATS
+
+  Absolute dates:
+    "2023-09-01"
+    "September 1, 2023"
+    "2025-12-20"
+
+  Relative times (ago):
+    7d     = 7 days ago
+    4h     = 4 hours ago
+    30m    = 30 minutes ago
+    2d4h   = 2 days 4 hours ago
+
+  Keywords:
+    today
+    yesterday
+
+  Ranges:
+    "2023-01-01..2023-12-31"   Absolute range
+    "7d..today"                 Last 7 days to today
+    "3d.."                      Last 3 days to now
+    "..yesterday"               Everything up to yesterday
+
+OTHER FILTERING OPTIONS
+
+  --conversation <id>, -c <id>
+    Target a specific conversation by ID or filename
+    Example: --conversation 1754437373970
+    Example: --conversation chat-history-1754437373970
+
+DISPLAY OPTIONS
+
+  --verbose, -v
+    Enable verbose output with additional details
+    Shows more information about branches, tool calls, etc.
+
+  --debug
+    Enable debug output for troubleshooting
+    Shows internal processing details and errors
+
+  --quiet
+    Suppress non-essential output
+    Only shows critical information and errors
+
+  --log <file>
+    Write log output to specified file
+    Useful for debugging and audit trails
+
+COMPOSABLE DISPLAY OPTIONS
+
+  These options work on multiple commands (list, search, branches, show)
+  and can be combined together:
+
+  --messages <n|all>
+    Control how many messages to show per conversation
+    
+    Numbers:
+      --messages 1           Show 1 message (minimal)
+      --messages 3           Show 3 messages (default for list/search)
+      --messages 5           Show 5 messages (more context)
+      --messages 10          Show 10 messages
+    
+    Special:
+      --messages all         Show all messages (like export)
+    
+    Defaults:
+      list:     3 messages
+      search:   3 messages
+      branches: 0 messages (structure only)
+      show:     all messages
+    
+    Examples:
+      cycodj list --messages 1
+      cycodj search "bug" --messages 10
+      cycodj branches --messages 3
+
+  --branches
+    Show branch indicators (↳) and indentation
+    Available on: list, search
+    
+    Shows which conversations are branches of others,
+    with visual indicators and indentation to show relationships
+    
+    Examples:
+      cycodj list --branches
+      cycodj search "TODO" --branches
+
+  --stats
+    Add statistics summary at end of output
+    Available on: list, search, branches, show, stats
+    
+    Appends a summary showing message counts, conversation counts,
+    branch statistics, etc. Does not replace the main output.
+    
+    Examples:
+      cycodj list --stats
+      cycodj search "error" --stats
+      cycodj branches --last 20 --stats
+
+  --save-output <file>
+    Save output to file instead of printing to console
+    Available on: list, search, branches, show, stats
+    
+    Examples:
+      cycodj list --save-output recent.md
+      cycodj stats --show-tools --save-output report.md
+      cycodj search "TODO" --save-output todos.md
+
+  COMBINING FLAGS:
+    All these options work together! Examples:
+    
+      cycodj list --last 10 --messages 5 --branches --stats
+      cycodj search "bug" --last 7d --messages 1 --branches --save-output bugs.md
+      cycodj branches --last 20 --messages 2 --stats --save-output tree.md
+
+AI PROCESSING OPTIONS
+
+  These options are available on most commands to apply AI processing
+  to the command's output:
+
+  --instructions <text>
+    Apply AI processing with the given instructions
+    The AI receives the command output and processes it according
+    to your instructions
+    
+    Examples:
+      --instructions "summarize the main topics"
+      --instructions "identify common themes"
+      --instructions "create a report"
+      --instructions @instructions.md  (load from file)
+
+  --use-built-in-functions
+    Allow the AI to use built-in tools during processing
+    Enables file operations, shell commands, etc.
+    Use with caution - the AI can modify files
+    
+    Example:
+      --instructions "analyze and save to file" --use-built-in-functions
+
+  --save-chat-history <file>
+    Save the AI processing conversation to a JSONL file
+    Useful for tracking AI analysis and decisions
+    
+    Example:
+      --save-chat-history analysis.jsonl
+
+COMMAND-SPECIFIC OPTIONS
+
+  List Command:
+    --date, --last, --messages, --branches, --stats, --save-output
+    (see: cycodj help list)
+
+  Show Command:
+    --show-tool-calls      Show tool call details
+    --show-tool-output     Show full tool output
+    --max-content-length   Set message truncation length
+    --stats, --save-output
+    (see: cycodj help show)
+
+  Search Command:
+    --case-sensitive, -c   Case-sensitive search
+    --regex, -r            Use regular expressions
+    --user-only, -u        Search only user messages
+    --assistant-only, -a   Search only assistant messages
+    --context <n>, -C <n>  Context lines around matches
+    --messages, --branches, --stats, --save-output
+    (see: cycodj help search)
+
+  Branches Command:
+    --date, --last, --conversation, --verbose
+    --messages, --stats, --save-output
+    (see: cycodj help branches)
+
+  Stats Command:
+    --show-tools           Show tool usage statistics
+    --show-dates           Show per-date breakdown
+    --save-output          Save output to file
+    (see: cycodj help stats)
+
+  Cleanup Command:
+    --find-duplicates      Find duplicate files
+    --remove-duplicates    Remove duplicates
+    --find-empty           Find empty files
+    --remove-empty         Remove empty files
+    --older-than-days <n>  Age filter for cleanup
+    --execute              Actually perform removal
+    (see: cycodj help cleanup)
+
+ENVIRONMENT VARIABLES
+
+  CYCOD_DEBUG
+    Set to "1" or "true" to enable debug output
+    Equivalent to --debug flag
+
+  CYCOD_VERBOSE  
+    Set to "1" or "true" to enable verbose output
+    Equivalent to --verbose flag
+
+  CYCOD_QUIET
+    Set to "1" or "true" to enable quiet mode
+    Equivalent to --quiet flag
+
+TIME FILTERING EXAMPLES
+
+  Shortcuts (most common):
+    cycodj list --today                    # Today's conversations
+    cycodj list --yesterday                # Yesterday's conversations
+    cycodj stats --today                   # Today's stats
+
+  Smart --last with count:
+    cycodj list --last 20                  # Last 20 conversations
+    cycodj stats --last 50                 # Stats for last 50
+
+  Smart --last with time:
+    cycodj list --last 7d                  # Last 7 days
+    cycodj list --last 30d                 # Last 30 days
+    cycodj branches --last 7d              # Week branches
+    cycodj search "bug" --last 2d          # Search last 2 days
+
+  Date ranges:
+    cycodj list --date-range "7d..today"            # Last week
+    cycodj stats --date-range "2023-01-01..2023-12-31"  # Year stats
+    cycodj list --date-range "3d.."                 # Last 3 days to now
+
+  Explicit boundaries:
+    cycodj list --after 7d                  # After 7 days ago
+    cycodj list --before yesterday          # Before yesterday
+    cycodj stats --after "2025-01-01" --before "2025-12-31"
+
+  Combined with other options:
+    cycodj search "TODO" --last 7d --branches --save-output todos.md
+    cycodj list --yesterday --messages 5 --stats
+    cycodj branches --last 30d --messages 2 --stats
+
+USING OPTIONS WITH AI INSTRUCTIONS
+
+  You can combine filtering and AI processing:
+
+    cycodj list --date today --instructions "categorize by topic"
+    cycodj search "TODO" --instructions "prioritize" --save-chat-history todos.jsonl
+    cycodj stats --last 100 --instructions "identify trends" --use-built-in-functions
+
+  The --instructions option is powerful for:
+  - Summarizing output
+  - Categorizing results
+  - Generating reports
+  - Extracting specific information
+  - Reformatting output
+  - Creating visualizations (with --use-built-in-functions)
+
+LOADING INSTRUCTIONS FROM FILES
+
+  Prefix with @ to load instructions from a file:
+    --instructions @analyze.md
+    --instructions @/path/to/instructions.txt
+
+  This is useful for:
+  - Reusing complex instructions
+  - Sharing analysis templates
+  - Version controlling your workflows
+
+SEE ALSO
+
+  cycodj help
+  cycodj help examples
+  cycodj help list
+  cycodj help search
+  cycodj help show
+  cycodj help branches
+  cycodj help stats
+  cycodj help cleanup

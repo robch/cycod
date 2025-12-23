@@ -1,0 +1,90 @@
+SEARCH COMMAND - Search across conversation content
+
+USAGE:
+  cycodj search <query> [options]
+
+ARGUMENTS:
+  <query>           Text or regex pattern to search for
+
+OPTIONS:
+  --date <date>           Filter by date (YYYY-MM-DD or "today"/"yesterday")
+  --last <n|timespec>     Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>      Number of messages to show per match (default: 3)
+  --branches              Show branch indicators (↳) and relationships
+  --stats                 Add statistics summary at end of output
+  --save-output <file>    Save output to file instead of console
+  --case-sensitive, -c    Enable case-sensitive search
+  --regex, -r             Use regular expressions
+  --user-only, -u         Search only user messages
+  --assistant-only, -a    Search only assistant messages
+  --context <n>, -C <n>   Show N lines of context (default: 2)
+
+COMMON OPTIONS:
+  --instructions <text>   Apply AI processing to search results
+  --use-built-in-functions Enable AI to use tools
+  --save-chat-history <file> Save AI processing chat to file
+
+EXAMPLES:
+  cycodj search "authentication"
+    Search for "authentication" in all messages
+
+  cycodj search "JWT" --user-only
+    Search for "JWT" only in user messages
+
+  cycodj search --regex "TODO|FIXME|HACK"
+    Use regex to search for multiple patterns
+
+  cycodj search "error" --date today --context 5
+    Search today's conversations with 5 lines of context
+
+  cycodj search "performance" --case-sensitive --last 50
+    Case-sensitive search in last 50 conversations
+
+  cycodj search "bug" --assistant-only --context 0
+    Search assistant messages with no context lines
+
+  cycodj search "TODO" --messages 1 --branches
+    Find TODOs showing branch relationships with minimal messages
+
+  cycodj search "error" --last 7d --stats --save-output errors.md
+    Search last week's errors, show stats, and save to file
+
+  cycodj search "authentication" --messages all
+    Show all messages in conversations containing "authentication"
+
+DESCRIPTION:
+  The search command finds text patterns across all conversations in your
+  chat history. It displays matching messages with configurable context
+  lines before and after each match.
+
+  Search results show:
+  - Conversation timestamp and title
+  - File path to the conversation
+  - Number of matches in each conversation
+  - Message role (user/assistant/tool) for each match
+  - Matched lines with surrounding context
+
+  By default, search is case-insensitive and searches all message types
+  except system messages.
+
+FILTERING:
+  Use --date to limit search to specific dates
+  Use --last to limit the number of conversations searched
+  Use --user-only or --assistant-only to filter by message role
+  Use --context 0 to show only matching lines without context
+
+PATTERN MATCHING:
+  Normal search uses substring matching (case-insensitive by default)
+  Use --regex to enable regular expression patterns
+  Use --case-sensitive for exact case matching
+
+AI PROCESSING:
+  Add --instructions to apply AI analysis to search results:
+    cycodj search "TODO" --instructions "categorize by priority"
+    cycodj search "error" --instructions "identify common root causes"
+
+SEE ALSO
+
+  cycodj help list
+  cycodj help show
+  cycodj help examples

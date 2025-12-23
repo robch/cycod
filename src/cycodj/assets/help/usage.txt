@@ -1,0 +1,81 @@
+Welcome to CYCODJ, the Chat History Journal and Analysis Tool!
+
+Using CYCODJ, you can:
+
+  - List and browse your chat conversations
+  - Search across conversation content
+  - Display detailed conversation information
+  - Visualize conversation branching trees
+  - View usage statistics and tool breakdowns
+  - Save any output to markdown files
+  - Clean up duplicate or empty conversations
+
+USAGE: cycodj [command] [options]
+   OR: cycodj list [options]
+   OR: cycodj show <conversation-id> [options]
+   OR: cycodj search <query> [options]
+   OR: cycodj branches [options]
+   OR: cycodj stats [options]
+   OR: cycodj cleanup [options]
+
+COMMANDS
+
+  cycodj [...]            (aka: cycodj list)
+  cycodj list [...]       (see: cycodj help list)
+  cycodj show [...]       (see: cycodj help show)
+  cycodj search [...]     (see: cycodj help search)
+  cycodj branches [...]   (see: cycodj help branches)
+  cycodj stats [...]      (see: cycodj help stats)
+  cycodj cleanup [...]    (see: cycodj help cleanup)
+
+EXAMPLES
+
+  EXAMPLE 1: List recent conversations
+
+    cycodj list
+    cycodj list --last 50
+    cycodj list --date 2025-12-20
+
+  EXAMPLE 2: Search for specific content
+
+    cycodj search "authentication"
+    cycodj search --regex "JWT|OAuth" --user-only
+    cycodj search "TODO" --date today
+
+  EXAMPLE 3: Show conversation details
+
+    cycodj show 1754437373970
+    cycodj show chat-history-1754437373970 --show-tool-calls
+
+  EXAMPLE 4: Visualize conversation branches
+
+    cycodj branches
+    cycodj branches --date today --verbose
+
+  EXAMPLE 5: Generate reports and save output
+
+    cycodj stats
+    cycodj stats --show-tools
+    cycodj list --last 7d --stats --save-output weekly-report.md
+
+  EXAMPLE 6: Use composable flags
+
+    cycodj list --last 10 --messages 5 --branches --stats
+    cycodj search "bug" --last 7d --messages 1 --save-output bugs.md
+    cycodj branches --last 20 --messages 2 --stats
+
+  EXAMPLE 7: Clean up conversation history
+
+    cycodj cleanup --find-duplicates
+    cycodj cleanup --remove-empty --execute
+
+SEE ALSO
+
+  cycodj help
+  cycodj help examples
+  cycodj help list
+  cycodj help search
+  cycodj help show
+  cycodj help branches
+  cycodj help stats
+  cycodj help cleanup
