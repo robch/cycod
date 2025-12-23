@@ -1,6 +1,7 @@
 Using CYCOD, you can:
 
   - Chat with an AI model (interactively/programmatically)
+  - Generate AI images from text prompts
   - Provide one or more inputs to the AI model
   - Use built-in function tools to:
     - Read and write files
@@ -13,6 +14,7 @@ COMMANDS
 
   cycod [...]             (aka: cycod chat)
   cycod chat [...]        (see: cycod help chat)
+  cycod imagine [...]     (see: cycod help imagine)
 
   cycod config [...]      (see: cycod help config)
   cycod github [...]      (see: cycod help github)
@@ -25,4 +27,5 @@ SEE ALSO
 
   cycod help
   cycod help examples
+  cycod help imagine
   cycod help github login
