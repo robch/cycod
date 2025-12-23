@@ -11,8 +11,8 @@
     <OutputType>Exe</OutputType>
     
     <!-- Cross-platform support -->
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
-    
+    <!-- RuntimeIdentifiers removed - specified on command line during publish -->
+        
     <!-- NuGet Package Properties -->
     <PackageId>CycoDt</PackageId>
     <Authors>Rob Chambers</Authors>
