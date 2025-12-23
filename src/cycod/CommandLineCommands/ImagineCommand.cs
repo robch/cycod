@@ -72,7 +72,14 @@ public class ImagineCommand : CommandWithVariables
                 var options = new ImageGenerationOptions
                 {
                     Count = Count,
-                    ModelId = "dall-e-3"
+                    ModelId = "dall-e-3",
+                    AdditionalProperties = new Microsoft.Extensions.AI.AdditionalPropertiesDictionary
+                    {
+                        ["size"] = Size,
+                        ["style"] = Style,
+                        ["quality"] = Quality,
+                        ["format"] = Format
+                    }
                 };
 
                 var response = await imageGenerator.GenerateAsync(new ImageGenerationRequest(prompt), options);
@@ -302,32 +309,88 @@ public sealed class OpenAIImageGeneratorWrapper : IImageGenerator
             var prompt = request.Prompt ?? "A beautiful image";
             var count = options?.Count ?? 1;
             
-            ConsoleHelpers.WriteDebugLine($"Calling OpenAI DALL-E API with prompt: '{prompt}'");
+            // DALL-E 3 only supports n=1, so we need to handle count differently
+            if (count > 1)
+            {
+                ConsoleHelpers.WriteWarning($"DALL-E 3 only supports generating 1 image at a time. Generating {count} images sequentially...");
+            }
+            
+            // Get custom options from AdditionalProperties
+            var sizeStr = options?.AdditionalProperties?.GetValueOrDefault("size") as string ?? "1024x1024";
+            var style = options?.AdditionalProperties?.GetValueOrDefault("style") as string ?? "vivid";
+            var quality = options?.AdditionalProperties?.GetValueOrDefault("quality") as string ?? "standard";
+            var format = options?.AdditionalProperties?.GetValueOrDefault("format") as string ?? "png";
+            
+            ConsoleHelpers.WriteDebugLine($"Calling OpenAI DALL-E API with prompt: '{prompt}', size: {sizeStr}, style: {style}, quality: {quality}");
+            
+            // Parse size string to OpenAI enum
+            var imageSize = sizeStr switch
+            {
+                "256x256" => OpenAI.Images.GeneratedImageSize.W256xH256,
+                "512x512" => OpenAI.Images.GeneratedImageSize.W512xH512,
+                "1024x1024" => OpenAI.Images.GeneratedImageSize.W1024xH1024,
+                "1792x1024" => OpenAI.Images.GeneratedImageSize.W1792xH1024,
+                "1024x1792" => OpenAI.Images.GeneratedImageSize.W1024xH1792,
+                _ => OpenAI.Images.GeneratedImageSize.W1024xH1024
+            };
+            
+            // Parse style
+            var imageStyle = style.ToLower() switch
+            {
+                "natural" => OpenAI.Images.GeneratedImageStyle.Natural,
+                "vivid" => OpenAI.Images.GeneratedImageStyle.Vivid,
+                _ => OpenAI.Images.GeneratedImageStyle.Vivid
+            };
+            
+            // Parse quality
+            var imageQuality = quality.ToLower() switch
+            {
+                "hd" => OpenAI.Images.GeneratedImageQuality.High,
+                "standard" => OpenAI.Images.GeneratedImageQuality.Standard,
+                _ => OpenAI.Images.GeneratedImageQuality.Standard
+            };
+            
+            // Parse format (note: API returns URLs, actual format is handled at download)
+            var responseFormat = format.ToLower() == "b64_json" 
+                ? OpenAI.Images.GeneratedImageFormat.Bytes 
+                : OpenAI.Images.GeneratedImageFormat.Uri;
             
             // Create image generation options
             var imageOptions = new OpenAI.Images.ImageGenerationOptions()
             {
-                Size = OpenAI.Images.GeneratedImageSize.W1024xH1024,
-                ResponseFormat = OpenAI.Images.GeneratedImageFormat.Uri
+                Size = imageSize,
+                Style = imageStyle,
+                Quality = imageQuality,
+                ResponseFormat = responseFormat
             };
             
-            // Call OpenAI image generation API
-            var response = await _imageClient.GenerateImagesAsync(prompt, count, imageOptions, cancellationToken);
+            // Collect all generated images
+            var allContents = new List<AIContent>();
             
-            // Convert response to Microsoft.Extensions.AI format
-            var contents = new List<AIContent>();
-            
-            foreach (var image in response.Value)
+            // Generate images one at a time (DALL-E 3 limitation)
+            for (int i = 0; i < count; i++)
             {
-                if (!string.IsNullOrEmpty(image.ImageUri?.ToString()))
+                // Call OpenAI image generation API
+                var response = await _imageClient.GenerateImagesAsync(prompt, 1, imageOptions, cancellationToken);
+                
+                foreach (var image in response.Value)
                 {
-                    // Image URL returned - will be downloaded when saved
-                    contents.Add(new UriContent(image.ImageUri, "image/png"));
-                    ConsoleHelpers.WriteDebugLine($"Generated image URL: {image.ImageUri}");
+                    if (!string.IsNullOrEmpty(image.ImageUri?.ToString()))
+                    {
+                        // Image URL returned - will be downloaded when saved
+                        allContents.Add(new UriContent(image.ImageUri, $"image/{format}"));
+                        ConsoleHelpers.WriteDebugLine($"Generated image URL: {image.ImageUri}");
+                    }
+                    else if (image.ImageBytes != null)
+                    {
+                        // Base64 data returned
+                        allContents.Add(new DataContent(image.ImageBytes.ToArray(), $"image/{format}"));
+                        ConsoleHelpers.WriteDebugLine($"Generated image bytes: {image.ImageBytes.Length} bytes");
+                    }
                 }
             }
 
-            return new ImageGenerationResponse(contents);
+            return new ImageGenerationResponse(allContents);
         }
         catch (Exception ex)
         {
