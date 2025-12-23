@@ -67,24 +67,29 @@ public class ImagineCommand : CommandWithVariables
             int totalGenerated = 0;
             foreach (var prompt in Prompts)
             {
-                ConsoleHelpers.WriteLine($"Generating: \"{prompt}\"", ConsoleColor.DarkGray);
+                ConsoleHelpers.WriteLine($"Generating {Count} image{(Count == 1 ? "" : "s")} for: \"{prompt}\"", ConsoleColor.DarkGray);
                 
-                var options = new ImageGenerationOptions
+                // Generate and save each image immediately for consistent behavior
+                for (int imageIndex = 0; imageIndex < Count; imageIndex++)
                 {
-                    Count = Count,
-                    ModelId = "dall-e-3",
-                    AdditionalProperties = new Microsoft.Extensions.AI.AdditionalPropertiesDictionary
+                    var options = new ImageGenerationOptions
                     {
-                        ["size"] = Size,
-                        ["style"] = Style,
-                        ["quality"] = Quality,
-                        ["format"] = Format
-                    }
-                };
+                        Count = 1, // Always generate one image at a time
+                        ModelId = "dall-e-3",
+                        AdditionalProperties = new Microsoft.Extensions.AI.AdditionalPropertiesDictionary
+                        {
+                            ["size"] = Size,
+                            ["style"] = Style,
+                            ["quality"] = Quality,
+                            ["format"] = Format
+                        }
+                    };
 
-                var response = await imageGenerator.GenerateAsync(new ImageGenerationRequest(prompt), options);
-                
-                totalGenerated += await SaveGeneratedImages(response, prompt, totalGenerated);
+                    var response = await imageGenerator.GenerateAsync(new ImageGenerationRequest(prompt), options);
+                    
+                    // Save this single image immediately
+                    totalGenerated += await SaveGeneratedImages(response, prompt, totalGenerated);
+                }
             }
 
             ConsoleHelpers.WriteLine($"\nSuccessfully generated {totalGenerated} image{(totalGenerated == 1 ? "" : "s")}!", ConsoleColor.Green);
@@ -177,7 +182,7 @@ public class ImagineCommand : CommandWithVariables
         {
             GenerateImagesAsyncCallback = (request, options, ct) =>
             {
-                // Create a more realistic mock PNG image
+                // Always generate one image (consistent with new approach)
                 var mockImageBytes = CreateMockImageData(request.Prompt ?? "unknown");
                 var content = new DataContent(mockImageBytes, "image/png") { Name = "generated_image.png" };
                 var response = new ImageGenerationResponse([content]);
@@ -309,10 +314,10 @@ public sealed class OpenAIImageGeneratorWrapper : IImageGenerator
             var prompt = request.Prompt ?? "A beautiful image";
             var count = options?.Count ?? 1;
             
-            // DALL-E 3 only supports n=1, so we need to handle count differently
-            if (count > 1)
+            // Since we now always generate one image at a time, warn if count != 1
+            if (count != 1)
             {
-                ConsoleHelpers.WriteWarning($"DALL-E 3 only supports generating 1 image at a time. Generating {count} images sequentially...");
+                ConsoleHelpers.WriteWarning($"OpenAI wrapper called with count={count}, but will only generate 1 image. Use command-level Count handling instead.");
             }
             
             // Get custom options from AdditionalProperties
@@ -364,29 +369,23 @@ public sealed class OpenAIImageGeneratorWrapper : IImageGenerator
                 ResponseFormat = responseFormat
             };
             
-            // Collect all generated images
+            // Generate single image
+            var response = await _imageClient.GenerateImagesAsync(prompt, 1, imageOptions, cancellationToken);
             var allContents = new List<AIContent>();
             
-            // Generate images one at a time (DALL-E 3 limitation)
-            for (int i = 0; i < count; i++)
+            foreach (var image in response.Value)
             {
-                // Call OpenAI image generation API
-                var response = await _imageClient.GenerateImagesAsync(prompt, 1, imageOptions, cancellationToken);
-                
-                foreach (var image in response.Value)
+                if (!string.IsNullOrEmpty(image.ImageUri?.ToString()))
                 {
-                    if (!string.IsNullOrEmpty(image.ImageUri?.ToString()))
-                    {
-                        // Image URL returned - will be downloaded when saved
-                        allContents.Add(new UriContent(image.ImageUri, $"image/{format}"));
-                        ConsoleHelpers.WriteDebugLine($"Generated image URL: {image.ImageUri}");
-                    }
-                    else if (image.ImageBytes != null)
-                    {
-                        // Base64 data returned
-                        allContents.Add(new DataContent(image.ImageBytes.ToArray(), $"image/{format}"));
-                        ConsoleHelpers.WriteDebugLine($"Generated image bytes: {image.ImageBytes.Length} bytes");
-                    }
+                    // Image URL returned - will be downloaded when saved
+                    allContents.Add(new UriContent(image.ImageUri, $"image/{format}"));
+                    ConsoleHelpers.WriteDebugLine($"Generated image URL: {image.ImageUri}");
+                }
+                else if (image.ImageBytes != null)
+                {
+                    // Base64 data returned
+                    allContents.Add(new DataContent(image.ImageBytes.ToArray(), $"image/{format}"));
+                    ConsoleHelpers.WriteDebugLine($"Generated image bytes: {image.ImageBytes.Length} bytes");
                 }
             }
 
