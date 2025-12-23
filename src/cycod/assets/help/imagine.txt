@@ -1,0 +1,94 @@
+CYCOD IMAGINE COMMAND
+
+  Generate AI images from text prompts using DALL-E or other image generation models.
+
+USAGE: cycod imagine [PROMPTS...] [OPTIONS]
+   OR: cycod imagine --input "PROMPT" [OPTIONS]
+   OR: cycod imagine --inputs "PROMPT1" "PROMPT2" [...] [OPTIONS]
+
+ARGUMENTS
+
+  PROMPTS...           One or more text prompts to generate images from
+
+OPTIONS
+
+  IMAGE GENERATION OPTIONS
+
+    --input "PROMPT"              Generate image from a single text prompt
+    --inputs "PROMPT1" [...] 	  Generate images from multiple text prompts
+
+    --count COUNT, -c COUNT       Number of images to generate per prompt (1-10, default: 1)
+    --size SIZE, -s SIZE          Image size (default: 1024x1024)
+                                  Supported: 256x256, 512x512, 1024x1024, 1792x1024, 1024x1792
+    --style STYLE                 Image style: vivid or natural (default: vivid)
+    --quality QUALITY, -q QUALITY Image quality: standard or hd (default: standard)
+    --format FORMAT, -f FORMAT    Output format: png or jpg (default: png)
+
+  OUTPUT OPTIONS
+
+    --output DIR, -o DIR          Output directory (default: current directory)
+    --provider PROVIDER, -p PROVIDER Use specific provider (openai, azure, etc.)
+
+EXAMPLES
+
+  EXAMPLE 1: Generate a single image
+
+    cycod imagine "a beautiful sunset over mountains"
+
+  EXAMPLE 2: Generate multiple variations
+
+    cycod imagine "app icon for weather app" --count 3
+
+  EXAMPLE 3: Generate multiple different images
+
+    cycod imagine --inputs "weather icon" "calendar icon" "notes icon"
+
+  EXAMPLE 4: Specify size and quality
+
+    cycod imagine "logo design" --size 1024x1024 --quality hd --style natural
+
+  EXAMPLE 5: Save to specific directory
+
+    cycod imagine "user avatar" --output ./generated --format jpg
+
+  EXAMPLE 6: Use with variables and loops
+
+    cycod imagine "{{animal}} in a park" --foreach var animal in dog cat bird
+
+  EXAMPLE 7: Batch generate app icons
+
+    cycod imagine --inputs "weather app icon" "music player icon" "todo list icon" \
+                  --count 2 --style natural --output ./icons
+
+CONFIGURATION
+
+  Image generation requires an AI provider that supports image generation:
+  
+  AZURE OPENAI (Recommended)
+    cycod config set Azure.OpenAI.Endpoint "https://your-service.openai.azure.com/" --user
+    cycod config set Azure.OpenAI.ApiKey "your-api-key" --user
+    
+  OPENAI API
+    cycod config set OPENAI_API_KEY "sk-your-api-key" --user
+
+PROVIDER REQUIREMENTS
+
+  - Azure OpenAI: Requires DALL-E deployment (dall-e-2 or dall-e-3)
+  - OpenAI API: Automatically uses DALL-E 3
+  - Provider must support image generation capabilities
+
+NOTES
+
+  - Generated images are saved with descriptive filenames including timestamps
+  - Image generation may take 10-30 seconds per image depending on provider
+  - Different providers may have varying rate limits and capabilities
+  - All image generation features are currently experimental (MEAI001)
+
+SEE ALSO
+
+  cycod help image
+  cycod help config
+  cycod help use azure openai
+  cycod help use openai
+  cycod help options
+  cycod help examples
