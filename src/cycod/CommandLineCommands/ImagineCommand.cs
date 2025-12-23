@@ -52,7 +52,7 @@ public class ImagineCommand : CommandWithVariables
                 return 1;
             }
 
-            ConsoleHelpers.WriteLine($"🎨 Imagining {Prompts.Count} image{(Prompts.Count == 1 ? "" : "s")}...\n", ConsoleColor.Cyan);
+            ConsoleHelpers.WriteLine($"Generating {Prompts.Count} image{(Prompts.Count == 1 ? "" : "s")}...\n", ConsoleColor.Cyan);
 
             // Create a working image generator (using the pattern from ImageAIExample)
             var imageGenerator = CreateWorkingImageGenerator();
@@ -67,7 +67,7 @@ public class ImagineCommand : CommandWithVariables
             int totalGenerated = 0;
             foreach (var prompt in Prompts)
             {
-                ConsoleHelpers.WriteLine($"💭 Generating: \"{prompt}\"");
+                ConsoleHelpers.WriteLine($"Generating: \"{prompt}\"", ConsoleColor.DarkGray);
                 
                 var options = new ImageGenerationOptions
                 {
@@ -87,7 +87,7 @@ public class ImagineCommand : CommandWithVariables
                 totalGenerated += await SaveGeneratedImages(response, prompt, totalGenerated);
             }
 
-            ConsoleHelpers.WriteLine($"\n✅ Successfully generated {totalGenerated} image{(totalGenerated == 1 ? "" : "s")}!", ConsoleColor.Green);
+            ConsoleHelpers.WriteLine($"\nSuccessfully generated {totalGenerated} image{(totalGenerated == 1 ? "" : "s")}!", ConsoleColor.Green);
             return 0;
         }
         catch (Exception ex)
@@ -201,7 +201,7 @@ public class ImagineCommand : CommandWithVariables
                 var filePath = Path.Combine(OutputDirectory, fileName);
                 
                 await File.WriteAllBytesAsync(filePath, dataContent.Data.ToArray());
-                ConsoleHelpers.WriteLine($"💾 Saved: {fileName}");
+                ConsoleHelpers.WriteLine($"Saved: {fileName}", ConsoleColor.DarkGray);
                 saved++;
             }
             else if (content is UriContent uriContent)
@@ -214,7 +214,7 @@ public class ImagineCommand : CommandWithVariables
                 var filePath = Path.Combine(OutputDirectory, fileName);
                 
                 await File.WriteAllBytesAsync(filePath, imageData);
-                ConsoleHelpers.WriteLine($"💾 Saved: {fileName}");
+                ConsoleHelpers.WriteLine($"Saved: {fileName}", ConsoleColor.DarkGray);
                 saved++;
             }
             else
