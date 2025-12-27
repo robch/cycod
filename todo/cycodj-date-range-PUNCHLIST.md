@@ -85,6 +85,23 @@ public DateTime? CreatedBefore { get; set; }
 **File:** `src/cycodj/CommandLine/CycoDjCommandLineOptions.cs`
 
 **Add option parsing (copy pattern from cycodmd):**
+
+#### A. Add --today and --yesterday shortcuts
+```csharp
+// Shortcuts for common calendar days
+else if (arg == "--today")
+{
+    command.After = DateTime.Today;
+    command.Before = DateTime.Now; // Up to current moment
+}
+else if (arg == "--yesterday")
+{
+    command.After = DateTime.Today.AddDays(-1);
+    command.Before = DateTime.Today.AddTicks(-1); // End of yesterday
+}
+```
+
+#### B. Add TIMESPEC options
 ```csharp
 // In ProcessOptions method:
 else if (arg == "--after" || arg == "--time-after")
@@ -106,7 +123,59 @@ else if (arg == "--date-range" || arg == "--time-range")
 }
 ```
 
-**Also support existing --date with TIMESPEC:**
+#### C. Make --last smart (detect TIMESPEC vs count)
+```csharp
+else if (arg == "--last")
+{
+    var value = GetNextArg(i++, args);
+    
+    // Smart detection: TIMESPEC vs conversation count
+    if (IsTimeSpec(value))
+    {
+        // Parse as TIMESPEC
+        try
+        {
+            var (after, before) = TimeSpecHelpers.ParseTimeSpecRange(arg, value);
+            command.After = after;
+            command.Before = before;
+        }
+        catch (Exception ex)
+        {
+            throw new CommandLineException($"Invalid time specification for --last: {value}\n{ex.Message}");
+        }
+    }
+    else
+    {
+        // Parse as conversation count
+        if (!int.TryParse(value, out var count))
+        {
+            throw new CommandLineException($"Invalid number for --last: {value}");
+        }
+        command.Last = count;
+    }
+}
+
+// Helper: Detect if value is a TIMESPEC
+private bool IsTimeSpec(string value)
+{
+    if (string.IsNullOrWhiteSpace(value)) return false;
+    
+    // Has range syntax?
+    if (value.Contains("..")) return true;
+    
+    // Is keyword?
+    if (value.Equals("today", StringComparison.OrdinalIgnoreCase)) return true;
+    if (value.Equals("yesterday", StringComparison.OrdinalIgnoreCase)) return true;
+    
+    // Has time units (d, h, m, s)?
+    if (Regex.IsMatch(value, @"[dhms]", RegexOptions.IgnoreCase)) return true;
+    
+    // Otherwise it's a plain number (conversation count)
+    return false;
+}
+```
+
+#### D. Update existing --date to support TIMESPEC
 ```csharp
 else if (arg == "--date" || arg == "--time")
 {
@@ -351,10 +420,14 @@ TIME SPECIFICATIONS (TIMESPEC):
 - ✅ `cycodj list --last 20` (unrelated to time, keeps working)
 
 **New capabilities:**
-- ✅ `cycodj list --date 7d` (parse as TIMESPEC)
+- ✅ `cycodj list --today` (shortcut!)
+- ✅ `cycodj list --yesterday` (shortcut!)
+- ✅ `cycodj list --last today` (TIMESPEC)
+- ✅ `cycodj list --last 7d` (smart detection - TIMESPEC!)
+- ✅ `cycodj list --last 20` (smart detection - count!)
 - ✅ `cycodj list --date-range "7d..today"`
 - ✅ `cycodj list --after 7d --before yesterday`
-- ✅ `cycodj journal --date 7d` (instead of --last-days 7)
+- ✅ `cycodj journal --last 7d` (replaces --last-days 7)
 - ✅ `cycodj stats --date-range "2023-01-01..2023-12-31"`
 
 ---
@@ -362,13 +435,36 @@ TIME SPECIFICATIONS (TIMESPEC):
 ### 8. Testing
 
 **Create test cases for:**
-1. Absolute dates: `--date "2023-12-20"`
-2. Relative times: `--date 7d`, `--date 3d`
-3. Keywords: `--date today`, `--date yesterday`
-4. Ranges: `--date-range "7d..today"`, `--date-range "2023-01-01..2023-12-31"`
-5. Open ranges: `--date-range "3d.."`, `--date-range "..yesterday"`
-6. Explicit after/before: `--after 7d`, `--before yesterday`
-7. Backward compat: Old string dates still work
+
+#### Shortcuts:
+1. `--today` - This calendar day (midnight to now)
+2. `--yesterday` - Yesterday's calendar day (full day)
+
+#### Smart --last detection:
+3. `--last 20` - Last 20 conversations (pure number = count)
+4. `--last 7d` - Last 7 days (has "d" = TIMESPEC)
+5. `--last today` - Today (keyword = TIMESPEC)
+6. `--last yesterday` - Yesterday (keyword = TIMESPEC)
+7. `--last 3d..today` - Range (has ".." = TIMESPEC)
+
+#### TIMESPEC formats:
+8. Absolute dates: `--date "2023-12-20"`
+9. Relative times: `--last 7d`, `--last 3d`
+10. Keywords: `--last today`, `--last yesterday`
+11. Ranges: `--date-range "7d..today"`, `--date-range "2023-01-01..2023-12-31"`
+12. Open ranges: `--date-range "3d.."`, `--date-range "..yesterday"`
+13. Explicit after/before: `--after 7d`, `--before yesterday`
+
+#### Backward compatibility:
+14. Old string dates still work: `--date today`, `--date "2023-12-20"`
+15. `--last-days` still works in journal
+16. Pure numbers in --last still work as count
+
+#### Edge cases:
+17. `--today` at midnight (edge of day)
+18. `--yesterday` at midnight (edge of day)
+19. `--last 1` (count, not timespec)
+20. `--last 1d` (timespec, not count)
 
 ---
 
@@ -377,11 +473,14 @@ TIME SPECIFICATIONS (TIMESPEC):
 ### Changes Needed:
 1. ✅ TimeSpecHelpers - Already exists in common!
 2. ✏️ Add After/Before properties to CycoDjCommand
-3. ✏️ Add option parsing in CycoDjCommandLineOptions
+3. ✏️ Add option parsing in CycoDjCommandLineOptions:
+   - `--today` and `--yesterday` shortcuts
+   - Smart `--last` detection (TIMESPEC vs count)
+   - `--after`, `--before`, `--date-range` options
 4. ✏️ Add FilterByDateRange to HistoryFileHelpers
 5. ✏️ Update 6 commands (list, journal, search, branches, stats, export)
 6. ✏️ Update help documentation
-7. ✏️ Test backward compatibility
+7. ✏️ Test backward compatibility + new features
 
 ### Changes NOT Needed:
 - ❌ No changes to cycodmd (we're copying, not modifying)
@@ -391,9 +490,15 @@ TIME SPECIFICATIONS (TIMESPEC):
 ### Backward Compatibility Strategy:
 - Keep old `Date` string property as fallback
 - Keep `LastDays` for journal
-- Try TIMESPEC parsing first, fall back to old parsing
+- Smart `--last`: detect TIMESPEC vs count automatically
 - All old commands still work exactly as before
-- New TIMESPEC syntax is additive, not breaking
+- New syntax is additive, not breaking
+
+### New Features:
+- ✅ `--today` and `--yesterday` shortcuts (calendar days)
+- ✅ Smart `--last`: `--last 20` (count) vs `--last 7d` (time)
+- ✅ Full TIMESPEC support: relative times, keywords, ranges
+- ✅ Consistent with cycodmd's date handling
 
 ---
 
@@ -401,10 +506,13 @@ TIME SPECIFICATIONS (TIMESPEC):
 
 **Small changes:**
 - Add properties: 5 minutes
-- Add option parsing: 15 minutes
+- Add --today/--yesterday shortcuts: 10 minutes
+- Add IsTimeSpec helper: 5 minutes
 - Add FilterByDateRange: 5 minutes
 
 **Medium changes:**
+- Smart --last detection: 15 minutes
+- Add TIMESPEC option parsing: 20 minutes
 - Update each command: 10 minutes × 6 = 60 minutes
 - Handle backward compatibility: 20 minutes
 
@@ -412,12 +520,81 @@ TIME SPECIFICATIONS (TIMESPEC):
 - Update help files: 30 minutes
 
 **Testing:**
-- Create test cases: 30 minutes
-- Run and verify: 20 minutes
+- Create test cases: 40 minutes
+- Run and verify: 30 minutes
 
-**Total: ~3 hours**
+**Total: ~4 hours**
 
-Most of it is mechanical - copy the pattern from cycodmd, apply to cycodj commands.
+Most of it is mechanical - copy patterns, apply to commands, test.
+
+---
+
+## After Implementation: What Users Can Do
+
+### Shortcuts (Most Common)
+```bash
+# Calendar day shortcuts
+cycodj list --today                    # This morning to now
+cycodj list --yesterday                # All of yesterday
+cycodj journal --today                 # Today's journal
+cycodj search "bug" --yesterday        # Yesterday's bugs
+```
+
+### Smart --last (Automatic Detection)
+```bash
+# Conversation count (pure number)
+cycodj list --last 20                  # Last 20 conversations
+cycodj stats --last 50                 # Stats for last 50
+
+# Time period (has units/keywords)
+cycodj list --last 7d                  # Last 7 days
+cycodj list --last 30d                 # Last 30 days
+cycodj list --last today               # Today
+cycodj list --last yesterday           # Yesterday
+cycodj journal --last 7d               # Week journal (replaces --last-days 7)
+```
+
+### Full TIMESPEC Power
+```bash
+# Relative times
+cycodj list --last 3d                  # Last 3 days
+cycodj stats --last 4h                 # Last 4 hours
+cycodj export --last 90d -o quarter.md # Last quarter
+
+# Date ranges
+cycodj journal --date-range "7d..today"           # Last week
+cycodj export --date-range "2023-01-01..2023-12-31" -o year.md
+
+# Open ranges
+cycodj list --date-range "3d.."        # Last 3 days to now
+cycodj search "TODO" --date-range "..yesterday"   # Up to yesterday
+
+# Explicit boundaries
+cycodj list --after 7d                 # After 7 days ago
+cycodj list --before yesterday         # Before yesterday
+cycodj stats --after "2023-01-01" --before "2023-12-31"
+```
+
+### Combined with Other Options
+```bash
+# Shortcuts + instructions
+cycodj list --today --instructions "summarize main topics"
+
+# Smart --last + search
+cycodj search "bug" --last 7d --context 3
+
+# Range + export
+cycodj export --date-range "30d..today" --output month.md
+```
+
+### Backward Compatible (Still Work!)
+```bash
+# Old syntax continues to work
+cycodj list --date today               # Still works
+cycodj list --date 2023-12-20          # Still works
+cycodj journal --last-days 7           # Still works
+cycodj list --last 20                  # Still works (count detection)
+```
 
 ---
 
