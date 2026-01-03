@@ -1,0 +1,105 @@
+CYCODJ - Chat History Journal and Analysis Tool
+
+DESCRIPTION:
+  cycodj analyzes and journals your cycod chat history files stored in
+  the ~/.cycod/history/ directory. It provides powerful tools for browsing,
+  searching, analyzing, and exporting your AI conversation history.
+
+MAIN COMMANDS:
+  list       - List conversations with previews and filters
+  show       - Display detailed conversation information
+  search     - Search across conversation content
+  branches   - Visualize conversation branching tree
+  stats      - View usage statistics and patterns
+  cleanup    - Clean up duplicate or empty conversations
+  help       - Show help information
+  version    - Show version information
+
+COMMON WORKFLOWS:
+
+  Browse Recent Conversations:
+    cycodj                           # List last 20 conversations
+    cycodj list --last 50            # List last 50 conversations
+    cycodj list --date today         # List today's conversations
+
+  Find Specific Content:
+    cycodj search "authentication"   # Search all conversations
+    cycodj search "TODO" --date today # Search today's conversations
+    cycodj search --regex "bug|fix"  # Use regex patterns
+
+  Review Conversation Details:
+    cycodj show <conversation-id>    # Show full conversation
+    cycodj show <id> --show-tool-calls # Include tool details
+
+  Understand Conversation Flow:
+    cycodj branches                  # Show branching tree
+    cycodj branches --verbose        # Show detailed branch info
+
+  Generate Reports:
+    cycodj list --stats              # List with statistics
+    cycodj stats                     # Usage statistics  
+    cycodj stats --show-tools        # Tool usage breakdown
+    cycodj list --save-output report.md  # Save to file
+
+  Maintain History:
+    cycodj cleanup --find-duplicates # Find duplicates
+    cycodj cleanup --remove-empty --execute # Clean empty files
+
+COMMON OPTIONS:
+  --date <date>        Filter by date (YYYY-MM-DD or "today")
+  --last <n|timespec>  Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>   Number of messages to show per conversation
+  --stats              Add statistics summary to output
+  --branches           Show branch indicators (↳) on list/search
+  --save-output <file> Save output to file instead of console
+  --verbose, -v        Show detailed output
+  --debug              Enable debug output
+  --quiet              Suppress non-essential output
+  --log <file>         Log to file
+
+AI PROCESSING OPTIONS:
+  --instructions <text>        Apply AI processing to output
+  --use-built-in-functions     Enable AI to use tools
+  --save-chat-history <file>   Save AI processing chat
+
+GETTING HELP:
+  cycodj help                  # General help
+  cycodj help <command>        # Command-specific help
+  cycodj help examples         # Usage examples
+  cycodj help options          # All options explained
+
+DETAILED COMMAND HELP:
+  cycodj help list             # List command details
+  cycodj help show             # Show command details
+  cycodj help search           # Search command details
+  cycodj help branches         # Branches command details
+  cycodj help stats            # Stats command details
+  cycodj help cleanup          # Cleanup command details
+
+KEY FEATURES:
+  - Browse conversation history with rich previews
+  - Control message display count (--messages N or --messages all)
+  - Search across all messages with regex support
+  - Visualize conversation branching (when you tried different approaches)
+  - Show branch indicators inline with lists (--branches)
+  - Add statistics to any output (--stats)
+  - Save any output to markdown files (--save-output)
+  - View statistics on tool usage and patterns
+  - Clean up duplicates and empty files
+  - Apply AI processing to any output
+  - Filter by date ranges and conversation count
+
+UNDERSTANDING BRANCHES:
+  When you branch a conversation (continue from an earlier point), cycodj
+  tracks these relationships. The branches command visualizes this as a
+  tree, helping you understand how conversations evolved.
+
+HISTORY LOCATION:
+  Conversations are stored in: ~/.cycod/history/
+  Each conversation is a JSONL file with messages and metadata
+
+SEE ALSO:
+  cycodj help examples         # Comprehensive examples
+  cycodj help options          # All options explained
+  cycod help                   # Main cycod tool help
+
