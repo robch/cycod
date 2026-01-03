@@ -1,0 +1,137 @@
+CYCOD IMAGINE EXAMPLES
+
+  Generate AI images from text prompts for development, design, and creative projects.
+
+BASIC IMAGE GENERATION
+
+  EXAMPLE 1: Generate a simple image
+
+    cycod imagine "a beautiful sunset over mountains"
+
+  EXAMPLE 2: Create an app icon
+
+    cycod imagine "weather app icon, minimalist design, blue and white colors"
+
+  EXAMPLE 3: Generate multiple variations
+
+    cycod imagine "logo for a coffee shop" --count 3
+
+DEVELOPMENT USE CASES
+
+  EXAMPLE 4: Create placeholder user avatars
+
+    cycod imagine --inputs "professional headshot" "casual avatar" "cartoon character" \
+                  --style natural --output ./avatars
+
+  EXAMPLE 5: Generate app icons for different categories
+
+    cycod imagine "productivity app icon" --count 2 --style vivid --output ./icons
+    cycod imagine "entertainment app icon" --count 2 --style vivid --output ./icons
+
+  EXAMPLE 6: Create hero images for website
+
+    cycod imagine "modern office workspace, bright lighting, technology" \
+                  --size 1792x1024 --quality hd --output ./hero-images
+
+BATCH OPERATIONS
+
+  EXAMPLE 7: Generate icons with variable substitution
+
+    cycod imagine "{{category}} app icon, modern flat design" \
+                  --foreach var category in weather music notes calendar camera \
+                  --output ./app-icons
+
+  EXAMPLE 8: Create variations of the same concept
+
+    cycod imagine "startup logo, {{style}} design, professional" \
+                  --foreach var style in minimalist vintage modern futuristic \
+                  --count 2
+
+  EXAMPLE 9: Generate images for different screen sizes
+
+    cycod imagine "mobile app background, gradient colors" \
+                  --foreach var size in 375x812 414x896 1920x1080 \
+                  --size {{size}}
+
+CREATIVE PROJECTS
+
+  EXAMPLE 10: Game asset creation
+
+    cycod imagine --inputs "fantasy sword weapon" "magic potion bottle" "treasure chest" \
+                  --style vivid --count 2 --output ./game-assets
+
+  EXAMPLE 11: Marketing materials
+
+    cycod imagine "product showcase, professional photography style" \
+                  --quality hd --size 1024x1024 --output ./marketing
+
+  EXAMPLE 12: Social media content
+
+    cycod imagine "team collaboration, office environment, diverse people" \
+                  --size 1080x1080 --style natural --output ./social
+
+ADVANCED TECHNIQUES
+
+  EXAMPLE 13: Iterative design process
+
+    cycod imagine "logo concept for tech startup"
+    # Review generated images, then refine
+    cycod imagine "logo concept for tech startup, more geometric, blue accent"
+    cycod imagine "logo concept for tech startup, geometric, blue and gray, minimal"
+
+  EXAMPLE 14: Style consistency across multiple images
+
+    cycod imagine --inputs "user dashboard screenshot" "settings page mockup" "profile page layout" \
+                  --style natural --count 1 --output ./ui-mockups
+    # Add consistent prompt suffix: ", clean UI design, white background, modern interface"
+
+  EXAMPLE 15: High-quality artwork for presentations
+
+    cycod imagine "data visualization concept, charts and graphs, professional" \
+                  --quality hd --size 1792x1024 --format png --output ./presentations
+
+CONFIGURATION EXAMPLES
+
+  EXAMPLE 16: Set up Azure OpenAI for image generation
+
+    cycod config set Azure.OpenAI.Endpoint "https://eastus.api.cognitive.microsoft.com/" --user
+    cycod config set Azure.OpenAI.ApiKey "your-azure-api-key" --user
+    # Verify with: cycod imagine "test image generation"
+
+  EXAMPLE 17: Use specific provider
+
+    cycod imagine "nature landscape" --provider azure
+    cycod imagine "abstract art" --provider openai
+
+TROUBLESHOOTING
+
+  EXAMPLE 18: Check configuration
+
+    cycod config list | grep -i openai
+    cycod config list | grep -i azure
+
+  EXAMPLE 19: Debug image generation
+
+    cycod imagine "simple test image" --debug --verbose
+
+  EXAMPLE 20: Test with minimal prompt
+
+    cycod imagine "red apple"
+
+TIPS AND BEST PRACTICES
+
+  - Be specific and descriptive in your prompts for better results
+  - Include style keywords: "photorealistic", "cartoon", "minimalist", "vintage"
+  - Specify technical details: "4K resolution", "studio lighting", "professional"
+  - Use negative prompts conceptually: "high quality, not blurry, not distorted"
+  - For development assets, include context: "app icon", "website hero", "user avatar"
+  - Save high-quality versions for final use: --quality hd
+  - Organize output with descriptive directory names
+
+SEE ALSO
+
+  cycod help imagine
+  cycod help config
+  cycod help use azure openai
+  cycod help use openai
+  cycod help options
