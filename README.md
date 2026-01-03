@@ -1,39 +1,4 @@
-# cycodj - Chat Journal Tool
-
-> A standalone tool for analyzing and summarizing cycod chat history files
-
-## Status: Phases 0-4 Complete ✅ - Fully Functional!
-
-**Phase 0 (Infrastructure):** Complete - Project setup, CI/CD, build integration  
-**Phase 1 (Core Reading):** Complete - JSONL parsing, file discovery, list command  
-**Phase 2 (Branch Detection):** Complete - Tool call ID tracking, conversation tree  
-**Phase 3 (Content Analysis):** Complete - Summarization, content filtering  
-**Phase 4 (Commands & Output):** Complete - show, journal, branches commands with full formatting
-
-**All core functionality is working!** Try: `cycodj list`, `cycodj show <id>`, `cycodj journal`  
-**Phase 1 (Core Reading):** Complete - List command with filtering and performance optimization
-
-### Try it now:
-```bash
-cd src/cycodj
-dotnet run -- list
-dotnet run -- list --last 50
-dotnet run -- list --date 2025-12-20
-```
-
-See [docs/chat-journal-plan.md](docs/chat-journal-plan.md) for the full project plan and [docs/SUMMARY.md](docs/SUMMARY.md) for current status.
-
----
-
-**Branch Info:**
-- Worktree: `C:/src/cycod-chat-journal`
-- Branch: `robch/2512-dec20-chat-journal`
-- Based on: `robch/2512-dec19-system-prompt-and-tools`
-- Next: Phase 2 (Branch Detection)
-
----
-
-# Original CycoD README (for reference)
+# CycoD - AI-powered CLI
 
 CycoD is a command-line interface (CLI) application that provides a chat-based interaction with AI assistants. Built in C#, it leverages AI chat models from multiple providers with function calling capabilities to create a powerful tool for AI-assisted command-line operations.
 
