@@ -7,35 +7,30 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
-    <AssemblyName>cycodt</AssemblyName>
+    <AssemblyName>cycodj</AssemblyName>
+  
     <OutputType>Exe</OutputType>
     
     <!-- Cross-platform support -->
     <!-- RuntimeIdentifiers removed - specified on command line during publish -->
         
     <!-- NuGet Package Properties -->
-    <PackageId>CycoDt</PackageId>
+    <PackageId>CycoDj</PackageId>
     <Authors>Rob Chambers</Authors>
-    <Description>AI-powered CLI Test Framework</Description>
-    <PackageTags>cli;ai;chat;openai;azure;github-copilot</PackageTags>
+    <Description>Chat history journal and analysis CLI tool - dig through your cycod conversation history</Description>
+    <PackageTags>cli;chat-history;journal;analysis;cycod;conversation</PackageTags>
     <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     
     <!-- .NET Tool Configuration -->
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>cycodt</ToolCommandName>
+    <ToolCommandName>cycodj</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="YamlDotNet" Version="16.3.0" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="17.0.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="5.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +40,9 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\help\**">
       <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="assets\prompts\**">
+      <Link>prompts\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </EmbeddedResource>
   </ItemGroup>
 

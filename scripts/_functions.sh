@@ -115,7 +115,7 @@ cycod_build_dotnet() {
   echo "Building cycod projects with Version=$VERSION, NumericVersion=$NUMERIC_VERSION"
   
   # List of projects to build
-  local PROJECTS=("src/common/common.csproj" "src/cycod/cycod.csproj" "src/cycodt/cycodt.csproj" "src/cycodmd/cycodmd.csproj" "src/cycodgr/cycodgr.csproj")
+  local PROJECTS=("src/common/common.csproj" "src/cycod/cycod.csproj" "src/cycodt/cycodt.csproj" "src/cycodmd/cycodmd.csproj" "src/cycodgr/cycodgr.csproj" "src/cycodj/cycodj.csproj")
   
   # First restore dependencies
   echo "Restoring dependencies..."
@@ -126,6 +126,7 @@ cycod_build_dotnet() {
     echo "Building $PROJECT..."
     dotnet build "$PROJECT" \
       -c "$CONFIGURATION" \
+      --framework net9.0 \
       --no-restore \
       -p:Version="$VERSION" \
       -p:AssemblyVersion="$NUMERIC_VERSION" \
@@ -161,7 +162,7 @@ cycod_pack_dotnet() {
   mkdir -p "$OUTPUT_DIR"
   
   # List of tools to pack
-  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
+  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr" "cycodj")
   
   # List of runtimes to publish for
   local RIDS=("win-x64" "linux-x64" "osx-x64")
@@ -171,27 +172,8 @@ cycod_pack_dotnet() {
   for TOOL in "${TOOLS[@]}"; do
     echo "→ Packing $TOOL"
     
-    # First publish for each platform
-    for RID in "${RIDS[@]}"; do
-      echo "  Publishing for $RID..."
-      dotnet publish "src/$TOOL/$TOOL.csproj" \
-        -c "$CONFIGURATION" \
-        -r "$RID" \
-        -p:Version="$VERSION" \
-        -p:AssemblyVersion="$NUMERIC_VERSION" \
-        -p:FileVersion="$NUMERIC_VERSION" \
-        -p:InformationalVersion="$VERSION"
-        
-      if [ $? -ne 0 ]; then
-        echo "Error: Failed to publish $TOOL for $RID"
-        return 1
-      fi
-    done
-    
-    # Then create the NuGet package
     dotnet pack "src/$TOOL/$TOOL.csproj" \
       -c "$CONFIGURATION" \
-      --no-build \
       -p:Version="$VERSION" \
       -p:AssemblyVersion="$NUMERIC_VERSION" \
       -p:FileVersion="$NUMERIC_VERSION" \
@@ -220,7 +202,7 @@ cycod_pack_dotnet() {
 set -euo pipefail
 
 VERSION="${VERSION}"
-TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
+TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr" "cycodj")
 
 # Resolve this script's folder, then the feed folder
 DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
@@ -262,7 +244,7 @@ cycod_publish_self_contained() {
   mkdir -p "$OUTPUT_DIR"
   
   # List of tools to publish
-  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr")
+  local TOOLS=("cycod" "cycodt" "cycodmd" "cycodgr" "cycodj")
   
   # List of runtimes to publish for
   local RIDS=("win-x64" "linux-x64" "osx-x64")
@@ -305,6 +287,7 @@ cycod_publish_self_contained() {
       # Run the publish command with self-contained and single-file parameters
       dotnet publish "src/$TOOL/$TOOL.csproj" \
         -c "$CONFIGURATION" \
+        --framework net9.0 \
         -r "$RID" \
         --self-contained \
         -p:PublishSingleFile=true \
