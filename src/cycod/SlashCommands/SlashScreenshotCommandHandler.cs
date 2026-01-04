@@ -33,7 +33,7 @@ public class SlashScreenshotCommandHandler : IAsyncSlashCommandHandler
         ConsoleHelpers.DisplayUserFunctionCall("/screenshot", null);
 
         // Check platform support
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             var errorMessage = ScreenshotHelper.GetPlatformErrorMessage();
             ConsoleHelpers.DisplayUserFunctionCall("/screenshot", errorMessage);

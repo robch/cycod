@@ -12,12 +12,12 @@ public class ScreenshotHelperFunctions
         _chatCommand = chatCommand;
     }
 
-#if WINDOWS
-    [Description("Take a screenshot of the primary screen and add it to the conversation. The screenshot will be included in the next message exchange. Only works on Windows.")]
+#if WINDOWS || OSX
+    [Description("Take a screenshot of the primary screen and add it to the conversation. The screenshot will be included in the next message exchange. Works on Windows and macOS.")]
     public object TakeScreenshot()
     {
         // Check platform support
-        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             return ScreenshotHelper.GetPlatformErrorMessage();
         }
