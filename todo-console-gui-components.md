@@ -66,6 +66,278 @@ The Azure AI CLI tool has a complete console GUI framework at:
    - Use `HelpViewer` for better help display
    - Navigate help topics with keyboard
 
+5. **Speech Recognition in Chat** ⭐ **HIGH PRIORITY**
+   - Add `--speech` flag to `cycod chat` command
+   - Show context menu with "speech" option when user presses ENTER
+   - Real-time speech-to-text with interim results
+   - Similar to AI CLI's implementation
+
+## Speech Recognition Integration
+
+### Overview
+
+The AI CLI includes a sophisticated speech recognition feature that allows users to input chat messages via voice. This is a **high-priority feature** to port to cycod's chat command.
+
+### How It Works in AI CLI
+
+**Command Line Usage**:
+```bash
+ai chat --speech
+```
+
+**Interactive Flow**:
+1. User presses ENTER on empty input
+2. Context menu appears with options:
+   ```
+   ┌─────────────────────┐
+   │ speech              │  ← Arrow keys to select
+   │ ---                 │
+   │ reset conversation  │
+   │ exit                │
+   └─────────────────────┘
+   ```
+3. Selecting "speech" triggers voice recognition
+4. Shows "(listening)..." and real-time interim results
+5. Returns final recognized text
+
+### Source Code Location
+
+**Main Implementation**: `../ai/src/ai/commands/chat_command.cs`
+- Lines 324-334: `CreateSpeechConfig()` - Configuration setup
+- Lines 336-369: `GetSpeechInputAsync()` - Speech input implementation
+- Lines 140-150: Integration with context menu
+- Lines 371-391: `PickInteractiveContextMenu()` - Menu with speech option
+
+### Key Components to Port
+
+#### 1. **Azure Speech SDK Dependency**
+Add to cycod.csproj:
+```xml
+<PackageReference Include="Microsoft.CognitiveServices.Speech" Version="[latest]" />
+```
+
+#### 2. **Speech Configuration** (Lines 324-334)
+```csharp
+private SpeechConfig CreateSpeechConfig()
+{
+    // Load from config files
+    var existing = FileHelpers.DemandFindFileInDataPath("speech.key", _values, "speech.key");
+    var key = FileHelpers.ReadAllText(existing, Encoding.Default);
+    
+    existing = FileHelpers.DemandFindFileInDataPath("speech.region", _values, "speech.region");
+    var region = FileHelpers.ReadAllText(existing, Encoding.Default);
+    
+    return SpeechConfig.FromSubscription(key, region);
+}
+```
+
+**Configuration Files**:
+- `.cycod/speech.key` - Azure Speech Service API key
+- `.cycod/speech.region` - Azure region (e.g., "westus2")
+
+#### 3. **Speech Input Method** (Lines 336-369)
+```csharp
+private async Task<string> GetSpeechInputAsync()
+{
+    Console.Write("\r");
+    DisplayUserChatPromptLabel();
+    Console.ForegroundColor = ColorHelpers.MapColor(ConsoleColor.DarkGray);
+    
+    var text = "(listening)";
+    Console.Write($"{text} ...");
+    var lastTextDisplayed = text;
+    
+    var config = CreateSpeechConfig();
+    var recognizer = new SpeechRecognizer(config);
+    
+    // Show interim results in real-time
+    recognizer.Recognizing += (s, e) =>
+    {
+        Console.Write("\r");
+        DisplayUserChatPromptLabel();
+        Console.ForegroundColor = ColorHelpers.MapColor(ConsoleColor.DarkGray);
+        
+        Console.Write($"{e.Result.Text} ...");
+        if (e.Result.Text.Length < lastTextDisplayed.Length) 
+            Console.Write(new string(' ', lastTextDisplayed.Length - e.Result.Text.Length));
+        lastTextDisplayed = text;
+    };
+    
+    // Get final result
+    var result = await recognizer.RecognizeOnceAsync();
+    
+    // Clear and return
+    Console.Write("\r");
+    DisplayUserChatPromptLabel();
+    Console.Write(new string(' ', result.Text.Length + 4));
+    Console.Write("\r");
+    DisplayUserChatPromptLabel();
+    
+    return result.Text;
+}
+```
+
+**Key Features**:
+- ✅ Real-time interim results via `Recognizing` event
+- ✅ Automatic cleanup of console output
+- ✅ Shows progress while listening
+- ✅ Returns final recognized text
+
+#### 4. **Context Menu Integration** (Lines 140-150, 371-391)
+```csharp
+private async Task ChatInteractively()
+{
+    var speechInput = _values.GetOrDefault("chat.speech.input", false);
+    var userPrompt = _values["chat.message.user.prompt"];
+    
+    while (true)
+    {
+        DisplayUserChatPromptLabel();
+        var text = ReadLineOrSimulateInput(ref userPrompt, "exit");
+        
+        if (text.ToLower() == "")
+        {
+            // Show context menu on empty input
+            text = PickInteractiveContextMenu(speechInput);
+            if (text == null) continue;
+            
+            var fromSpeech = false;
+            if (text == "speech")
+            {
+                text = await GetSpeechInputAsync();
+                fromSpeech = true;
+            }
+            
+            DisplayUserChatPromptText(text, fromSpeech);
+        }
+        
+        // Process the input...
+    }
+}
+
+private string PickInteractiveContextMenu(bool allowSpeechInput)
+{
+    if (Console.CursorTop > 0)
+    {
+        var x = _quiet ? 0 : 11;
+        Console.SetCursorPosition(x, Console.CursorTop - 1);
+    }
+    
+    var choices = allowSpeechInput
+        ? new string[] { "speech", "---", "reset conversation", "exit" }
+        : new string[] { "reset conversation", "exit" };
+    var select = allowSpeechInput ? 0 : choices.Length - 1;
+    
+    var choice = ListBoxPicker.PickString(
+        choices, 20, choices.Length + 2,
+        new Colors(ConsoleColor.White, ConsoleColor.Blue),
+        new Colors(ConsoleColor.White, ConsoleColor.Red),
+        select);
+    
+    return choice switch
+    {
+        "speech" => "speech",
+        "exit" => "exit",
+        _ => "reset"
+    };
+}
+```
+
+#### 5. **Command Parser Configuration**
+From `../ai/src/ai/commands/parsers/chat_command_parser.cs` (line 156):
+```csharp
+new TrueFalseNamedValueTokenParser("chat.speech.input", "010"),
+```
+
+**For cycod**: Add similar parser token to enable `--speech` flag
+
+### Implementation Checklist
+
+- [ ] Add Microsoft.CognitiveServices.Speech NuGet package
+- [ ] Create speech configuration helpers (CreateSpeechConfig)
+- [ ] Implement GetSpeechInputAsync method
+- [ ] Add speech option to context menu
+- [ ] Add `--speech` command line flag parser
+- [ ] Create config file structure for speech.key and speech.region
+- [ ] Add error handling for missing/invalid credentials
+- [ ] Test with different accents and languages
+- [ ] Add documentation for Azure Speech Service setup
+- [ ] Consider fallback for users without Speech Service
+
+### Configuration Setup
+
+Users will need to configure Azure Speech Service:
+
+```bash
+# Set up speech credentials
+cycod config @speech.key --set YOUR_SPEECH_API_KEY
+cycod config @speech.region --set westus2
+
+# Or manually create files
+echo "YOUR_SPEECH_API_KEY" > .cycod/speech.key
+echo "westus2" > .cycod/speech.region
+```
+
+### Testing Approach
+
+1. **Unit Tests**: Mock SpeechRecognizer for testing
+2. **Integration Tests**: Test with actual Speech Service (optional)
+3. **Manual Tests**: 
+   - Test with clear speech
+   - Test with background noise
+   - Test with different languages
+   - Test cancellation (how to cancel mid-recognition?)
+
+### User Experience Design
+
+**Visual Feedback**:
+```
+user@CHAT: (listening) ...
+user@CHAT: what is the weather today ...  (interim)
+user@CHAT: What is the weather today?     (final)
+```
+
+**Error Handling**:
+- Missing speech.key → Clear error message with setup instructions
+- Network issues → Retry or fallback to text input
+- No audio input → Detect and provide helpful message
+
+### Alternative: Local Speech Recognition
+
+Consider supporting local speech recognition (not requiring Azure):
+- **Windows**: System.Speech or Windows Speech Recognition
+- **macOS**: NSSpeechRecognizer
+- **Linux**: CMU Sphinx or Vosk
+
+This could be a Phase 7 enhancement for offline capabilities.
+
+### Dependencies and Considerations
+
+**NuGet Package**:
+```xml
+<PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.38.0" />
+```
+
+**Supported Platforms**:
+- ✅ Windows (x64, x86, ARM64)
+- ✅ macOS (x64, ARM64)
+- ✅ Linux (x64, ARM64)
+
+**Runtime Dependencies**:
+- Native libraries bundled with NuGet package
+- No additional system dependencies needed
+
+### Future Enhancements (Post-MVP)
+
+1. **Language Selection**: Allow users to specify recognition language
+2. **Custom Vocabulary**: Add domain-specific terms
+3. **Noise Cancellation**: Improve recognition in noisy environments
+4. **Voice Activity Detection**: Auto-start/stop listening
+5. **Transcription History**: Save recognized text for review
+6. **Multiple Input Sources**: Select microphone device
+
+---
+
 ## Implementation Plan
 
 ### Phase 1: Foundation (Week 1)
@@ -92,11 +364,17 @@ The Azure AI CLI tool has a complete console GUI framework at:
 3. Update existing prompts to use ListBoxPicker where appropriate
 4. Add examples to documentation
 
-### Phase 5: Advanced Features (Future)
-1. Speech recognition integration (if desired)
-2. Custom themes/color schemes
-3. Mouse support (if needed)
-4. Additional control types based on needs
+### Phase 5: Speech Recognition Integration (High Priority)
+1. Add Azure Speech SDK dependency
+2. Create speech configuration helpers
+3. Implement speech input method for chat
+4. Integrate with interactive context menu
+5. Add real-time recognition display
+
+### Phase 6: Advanced Features (Future)
+1. Custom themes/color schemes
+2. Mouse support (if needed)
+3. Additional control types based on needs
 
 ## Technical Considerations
 
@@ -217,6 +495,7 @@ private string PickInteractiveContextMenu(bool allowSpeechInput)
 
 ## Success Criteria
 
+### Core GUI Components
 - [ ] All core components compile and run on Windows/macOS/Linux
 - [ ] ListBoxPicker works with keyboard navigation
 - [ ] Speed search functionality works correctly
@@ -225,6 +504,16 @@ private string PickInteractiveContextMenu(bool allowSpeechInput)
 - [ ] Unit tests cover core functionality
 - [ ] Documentation includes usage examples
 - [ ] No regressions in existing cycod functionality
+
+### Speech Recognition Integration
+- [ ] `--speech` flag works in cycod chat command
+- [ ] Speech option appears in context menu when enabled
+- [ ] Real-time interim results display while listening
+- [ ] Final recognized text integrates with chat flow
+- [ ] Configuration files (speech.key, speech.region) work correctly
+- [ ] Clear error messages for missing/invalid credentials
+- [ ] Documentation covers Azure Speech Service setup
+- [ ] Works on Windows, macOS, and Linux
 
 ## Notes
 
