@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## Current Position: Phase 7.1 COMPLETE! Day 15
+## Current Position: Phase 6.1 COMPLETE! Day 16
 
-Last Update: Day 15 - Completed Phase 7.1: Created cycodt YAML tests + added --speech to help (2025-01-05)
+Last Update: Day 16 - Completed Phase 6.1: Ported EditBoxControl.cs + ConsoleKeyInfoExtensions.cs (2025-01-05)
 
-Next Action Required: Phase 7.2 - Test on multiple platforms OR Phase 6.1 - Port EditBoxControl.cs
+Next Action Required: Phase 3.3 - Port SpeedSearchListBoxControl.cs (NOW UNBLOCKED!) or Phase 6.1b - Port EditBoxQuickEdit.cs
 
-Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 67% | Phase 4: 100% | Phase 5: 100% | Phase 7.1: COMPLETE!
+Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 67% | Phase 4: 100% | Phase 5: 100% | Phase 6: 20% | Phase 7.1: COMPLETE!
 
 ---
 
@@ -109,7 +109,7 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
   - Interactive demos work perfectly
   - Build succeeds with 0 warnings, 0 errors
   - **Note:** Will be enhanced to extend SpeedSearchListBoxControl after Phase 6.1 (EditBoxControl)
-- ⬜ **Phase 3.3**: Port SpeedSearchListBoxControl.cs (BLOCKED - requires EditBoxControl from Phase 6.1)
+- ⬜ **Phase 3.3**: Port SpeedSearchListBoxControl.cs (NOW UNBLOCKED! ⭐ - EditBoxControl complete Day 16)
 
 ### Phase 4: Chat Integration ⭐ (COMPLETE - 100% ✅)
 - ✅ **Phase 4.1-4.4**: Context Menu Integration ✅ COMPLETE
@@ -135,26 +135,35 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
 
 ## Current Focus
 
-Phase 7: Testing - IN PROGRESS (Day 15)
+Phase 6: Additional Controls - IN PROGRESS (Day 16)
 
-We've successfully completed Phase 7.1:
-- ✅ Created cycodt YAML test suite (console-gui-tests.yaml)
-- ✅ Added --speech flag to help documentation
-- ✅ All 3 automated tests pass (100%)
-- ✅ Manual testing steps documented
+We've successfully completed Phase 6.1:
+- ✅ Ported ConsoleKeyInfoExtensions.cs (keyboard helper methods)
+- ✅ Ported EditBoxControl.cs (full-featured text input control)
+- ✅ Created comprehensive API structure tests (10/10 passing)
+- ✅ Build succeeds with 0 errors
 
-**Testing Achievement:** Basic automated tests verify console GUI features work correctly! 🧪✅
+**Achievement:** EditBoxControl complete! This is a critical component that unblocks Phase 3.3! 🎉
+
+EditBoxControl provides:
+- Text navigation (Home/End/Left/Right/arrows)
+- Insert/overwrite editing mode
+- Input validation with picture formats
+- Cursor management with visual feedback
+- Horizontal scrolling
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
 Phase 2 (Base Controls) is complete and tested.
 Phase 3.1 and 3.2 (ListBoxControl and ListBoxPicker) are complete and tested.
+Phase 3.3 is NOW UNBLOCKED! ⭐
 Phase 4 (Chat Integration) is 100% complete with documentation! 🎊
 Phase 5 (Speech Integration) is 100% complete with documentation! 🎤
-**Phase 7.1 (YAML Tests) is complete!** 🧪
+**Phase 6.1 (EditBoxControl) is complete!** 📝✅
+Phase 7.1 (YAML Tests) is complete! 🧪
 
-**Next Up:** Phase 7.2 - Test on multiple platforms (macOS, Linux) or Phase 6.1 - Port EditBoxControl.cs
+**Next Up:** Phase 3.3 - Port SpeedSearchListBoxControl.cs (NOW UNBLOCKED!) or Phase 6.1b - Port EditBoxQuickEdit.cs
 
-**Recommendation:** Continue with Phase 7.2 to test cross-platform compatibility, or move to Phase 6.1 to add more features.
+**Recommendation:** Port SpeedSearchListBoxControl.cs next to complete Phase 3 and enhance ListBoxPicker with type-to-filter search functionality.
 
 ## Implementation Phases
 
@@ -230,8 +239,19 @@ Phase 5 (Speech Integration) is 100% complete with documentation! 🎤
   - Updated CHANGELOG.md with speech documentation
   - Day 14 complete
 
-### Phase 6: Additional Controls (Target: 3-5 days)
-- [ ] **Phase 6.1**: Port EditBoxControl.cs and EditBoxQuickEdit.cs
+### Phase 6: Additional Controls (Target: 3-5 days) - IN PROGRESS (Day 16)
+- [x] **Phase 6.1**: Port EditBoxControl.cs and ConsoleKeyInfoExtensions.cs ✅ COMPLETE (Day 16)
+  - Created ConsoleKeyInfoExtensions.cs with keyboard helper methods
+  - Created EditBoxControl.cs - full-featured text input control
+  - Text navigation: Home/End/Left/Right/arrows
+  - Editing: Insert/overwrite mode, Backspace/Delete
+  - Input validation with picture formats (@#, @A, custom)
+  - Cursor management with shape changes
+  - Horizontal scrolling for long text
+  - Created comprehensive API structure tests (10/10 passing)
+  - Build succeeds with 0 warnings, 0 errors
+  - **UNBLOCKS Phase 3.3 (SpeedSearchListBoxControl)**
+- [ ] **Phase 6.1b**: Port EditBoxQuickEdit.cs (NOW UNBLOCKED)
 - [ ] **Phase 6.2**: Port TextViewerControl.cs
 - [ ] **Phase 6.3**: Port HelpViewer.cs
 - [ ] **Phase 6.4**: Port InOutPipeServer.cs (for testing)
@@ -250,33 +270,51 @@ Phase 5 (Speech Integration) is 100% complete with documentation! 🎤
 
 ## Immediate Next Steps
 
-### Phase 5.4: Test Speech Input Flow ⭐ ← **RECOMMENDED NEXT**
+### Phase 3.3: Port SpeedSearchListBoxControl.cs ⭐ ← **RECOMMENDED NEXT (NOW UNBLOCKED!)**
 
-**Goal**: Manually test the speech recognition feature with real credentials and microphone.
+**Goal**: Add type-to-filter search functionality to list boxes.
 
-**Why Now**: Phases 5.1, 5.2, and 5.3 are complete! The speech integration is fully implemented and needs real-world testing.
+**Why Now**: EditBoxControl dependency is now complete! This will:
+- Complete Phase 3 (ListBoxPicker)
+- Enhance ListBoxPicker with search functionality
+- Provide high user value
+- Natural progression from Day 16's EditBoxControl work
 
-**Requirements**:
-- Azure Cognitive Services Speech subscription
-- speech.key file with subscription key
-- speech.region file with region (e.g., "westus2")
-- Microphone hardware
+**Dependencies**:
+- ✅ EditBoxControl (Phase 6.1) - COMPLETE Day 16
+- ✅ VirtualListBoxControl (Phase 2.3) - Already complete
+- ✅ ListBoxControl (Phase 3.1) - Already complete
 
 **Steps**:
-1. Obtain Azure Speech credentials
-2. Create speech.key and speech.region files in .cycod/ directory
-3. Run `cycod --speech`
-4. Press ENTER on empty input
-5. Select "Speech input" from menu
-6. Speak into microphone
-7. Verify interim results display during recognition
-8. Verify final recognized text is displayed correctly
-9. Verify text flows through normal chat processing
-10. Test error scenarios (missing config, no microphone, etc.)
-11. Document any issues found
-12. Commit with message: "Phase 5.4: Manual testing of speech input flow"
+1. Locate SpeedSearchListBoxControl.cs in AI CLI source
+2. Analyze dependencies and code structure
+3. Create in `src/common/ConsoleGui/Controls/SpeedSearchListBoxControl.cs`
+4. Update namespace to `ConsoleGui.Controls`
+5. Build and fix compilation errors
+6. Create comprehensive tests
+7. Update ListBoxPicker to extend SpeedSearchListBoxControl
+8. Commit with message: "Phase 3.3: Port SpeedSearchListBoxControl.cs - type-to-filter search"
 
-**Expected Complexity**: LOW - Testing existing functionality
+**Then**: Phase 3 will be 100% complete! 🎉
+
+**Expected Complexity**: MEDIUM - ~300 lines, extends VirtualListBoxControl, uses EditBoxControl
+
+### Phase 6.1b: Port EditBoxQuickEdit.cs (Alternative Next Step)
+
+**Goal**: Port the quick edit companion to EditBoxControl.
+
+**Why**: Natural follow-on to today's EditBoxControl work.
+
+**Steps**:
+1. Locate EditBoxQuickEdit.cs in AI CLI source
+2. Analyze dependencies (EditBoxControl - already ported!)
+3. Create in `src/common/ConsoleGui/Controls/EditBoxQuickEdit.cs`
+4. Update namespace to `ConsoleGui.Controls`
+5. Build and fix compilation errors
+6. Create tests
+7. Commit with message: "Phase 6.1b: Port EditBoxQuickEdit.cs - quick editing functionality"
+
+**Expected Complexity**: LOW - Companion to EditBoxControl
 
 ### Phase 5.5: Create Setup Documentation (Alternative Next Step)
 
