@@ -17,6 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - "Reset conversation" - clears chat history and starts fresh
     - "Exit" - cleanly exits the chat session
     - Menu navigation: use arrow keys to select, ENTER to confirm, ESC to cancel
+- Speech Recognition:
+  - Added `--speech` flag to enable speech-to-text input in interactive mode
+  - Integration with Azure Cognitive Services Speech SDK
+  - Speech input accessible via context menu when speech is enabled
+  - Real-time interim results display during recognition
+  - Configuration via `speech.key` and `speech.region` files in .cycod/ directory
+  - Comprehensive setup documentation in docs/speech-setup.md
 
 ### Fixed
 - GitHub Copilot integration: Fixed token expiration issue by implementing automatic token refresh

@@ -137,6 +137,8 @@ When in interactive mode, pressing ENTER on an empty line displays a context men
 
 Navigate the menu using arrow keys, press ENTER to select, or ESC to cancel.
 
+**Note**: When speech recognition is enabled (with the `--speech` flag), the menu includes a "Speech input" option that allows you to dictate your prompt instead of typing it. See the [Speech Setup Guide](speech-setup.md) for configuration details.
+
 ### Asking a Direct Question
 
 To ask a single question without entering interactive mode:
@@ -172,6 +174,45 @@ cycod --input "How much disk space do I have left?"
 ```
 
 The AI might use `RunBashCommand` to execute `df -h` and explain the results.
+
+## Using Speech Recognition
+
+CycoD supports speech-to-text input using Azure Cognitive Services. This allows you to speak your prompts instead of typing them.
+
+### Quick Start
+
+1. Set up Azure Speech Service credentials (see [Speech Setup Guide](speech-setup.md) for details)
+2. Start cycod with the `--speech` flag:
+
+```bash
+cycod --speech
+```
+
+3. Press ENTER on an empty line and select "Speech input" from the menu
+4. Speak your prompt clearly into the microphone
+5. The recognized text will appear and be sent to the AI
+
+### Example Session
+
+```bash
+$ cycod --speech
+
+You> [Press Enter]
+  Continue chatting
+  Speech input       ← Select this
+  Reset conversation
+  Exit
+
+(listening)...
+Interim: "tell me about"
+Interim: "tell me about python"
+
+You> tell me about python
+
+AI> Python is a high-level, interpreted programming language...
+```
+
+For complete setup instructions, see the [Speech Setup Guide](speech-setup.md).
 
 ## Managing Chat History
 
