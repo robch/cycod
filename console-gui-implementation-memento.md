@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## Current Position: Phase 6.1b COMPLETE! Day 18
+## Current Position: Phase 6.2 COMPLETE! Day 19
 
-Last Update: Day 18 - Completed Phase 6.1b: Ported EditBoxQuickEdit.cs (2025-01-05)
+Last Update: Day 19 - Completed Phase 6.2: Ported TextViewerControl.cs (2025-01-05)
 
-Next Action Required: Phase 6.2 - Port TextViewerControl.cs
+Next Action Required: Phase 6.3 - Port HelpViewer.cs
 
-Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 100% ✅ | Phase 4: 100% | Phase 5: 100% | Phase 6: 40% | Phase 7.1: COMPLETE!
+Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 100% ✅ | Phase 4: 100% | Phase 5: 100% | Phase 6: 60% | Phase 7.1: COMPLETE!
 
 ---
 
@@ -144,23 +144,27 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
 
 ## Current Focus
 
-Phase 6.1b: EditBoxQuickEdit - COMPLETE (Day 18) 🎉
+Phase 6.2: TextViewerControl - COMPLETE (Day 19) 🎉
 
-We've successfully completed Phase 6.1b:
-- ✅ Ported EditBoxQuickEdit.cs (61 lines)
-- ✅ Quick modal text input functionality
-- ✅ Extends EditBoxControl with Enter/Escape handling
-- ✅ Static Edit() method for simple dialogs
-- ✅ Created comprehensive tests (5/5 passing)
+We've successfully completed Phase 6.2:
+- ✅ Ported TextViewerControl.cs (194 lines)
+- ✅ Text viewing control with column selection
+- ✅ Extends SpeedSearchListBoxControl for search features
+- ✅ Left/Right arrow navigation for columns
+- ✅ Syntax highlighting with backtick markers
+- ✅ Static Display() method for modal text viewing
+- ✅ Created comprehensive tests (7/7 passing)
 - ✅ Build succeeds with 0 errors
 
-**Achievement:** Edit box family is complete! 🎉
+**Achievement:** Text viewer control is complete! 🎉
 
-EditBoxQuickEdit provides:
-- Quick modal text input with single static method call
-- Enter confirms, Escape cancels (standard dialog behavior)
-- All editing features from EditBoxControl (navigation, insert/overwrite, etc.)
-- Clean API: EditBoxQuickEdit.Edit(width, height, colors, text, maxLength, picture, border)
+TextViewerControl provides:
+- Column-level text selection (not just rows)
+- Left/Right arrow keys move column cursor
+- Syntax highlighting: `code` in backticks
+- Speed search inherited from base class
+- Returns (row, col, width) on selection
+- Enter confirms, Escape cancels
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
 Phase 2 (Base Controls) is complete and tested.
@@ -168,12 +172,13 @@ Phase 3 (ListBoxPicker) is 100% complete and enhanced with search! 🎊
 Phase 4 (Chat Integration) is 100% complete with documentation! 🎊
 Phase 5 (Speech Integration) is 100% complete with documentation! 🎤
 Phase 6.1 (EditBoxControl) is complete! 📝✅
-**Phase 6.1b (EditBoxQuickEdit) is complete! 📝✅**
+Phase 6.1b (EditBoxQuickEdit) is complete! 📝✅
+**Phase 6.2 (TextViewerControl) is complete! 📖✅**
 Phase 7.1 (YAML Tests) is complete! 🧪
 
-**Next Up:** Phase 6.2 - Port TextViewerControl.cs
+**Next Up:** Phase 6.3 - Port HelpViewer.cs
 
-**Recommendation:** Port TextViewerControl.cs next - it's a natural progression through additional controls and useful for help/documentation display.
+**Recommendation:** Port HelpViewer.cs next - it builds on TextViewerControl and completes the viewer family. Natural progression.
 
 ## Implementation Phases
 
@@ -249,7 +254,7 @@ Phase 7.1 (YAML Tests) is complete! 🧪
   - Updated CHANGELOG.md with speech documentation
   - Day 14 complete
 
-### Phase 6: Additional Controls (Target: 3-5 days) - IN PROGRESS (Day 18)
+### Phase 6: Additional Controls (Target: 3-5 days) - IN PROGRESS (Day 19)
 - [x] **Phase 6.1**: Port EditBoxControl.cs and ConsoleKeyInfoExtensions.cs ✅ COMPLETE (Day 16)
   - Created ConsoleKeyInfoExtensions.cs with keyboard helper methods
   - Created EditBoxControl.cs - full-featured text input control
@@ -269,7 +274,16 @@ Phase 7.1 (YAML Tests) is complete! 🧪
   - Created comprehensive test suite (5/5 passing)
   - Build succeeds with 0 warnings, 0 errors
   - **Completes edit box family of controls**
-- [ ] **Phase 6.2**: Port TextViewerControl.cs
+- [x] **Phase 6.2**: Port TextViewerControl.cs ✅ COMPLETE (Day 19)
+  - Created TextViewerControl.cs - text viewing with column selection
+  - Extends SpeedSearchListBoxControl for search functionality
+  - Left/Right arrow keys for column navigation
+  - Syntax highlighting with backtick markers
+  - Static Display() method for modal text viewing
+  - Returns (row, col, width) on selection
+  - Created comprehensive test suite (7/7 passing)
+  - Build succeeds with 0 warnings, 0 errors
+  - **Text viewer control complete!**
 - [ ] **Phase 6.3**: Port HelpViewer.cs
 - [ ] **Phase 6.4**: Port InOutPipeServer.cs (for testing)
 
@@ -287,46 +301,43 @@ Phase 7.1 (YAML Tests) is complete! 🧪
 
 ## Immediate Next Steps
 
-### Phase 6.1b: Port EditBoxQuickEdit.cs ⭐ ← **RECOMMENDED NEXT**
+### Phase 6.3: Port HelpViewer.cs ⭐ ← **RECOMMENDED NEXT**
 
-**Goal**: Port the quick edit companion to EditBoxControl.
+**Goal**: Port the help viewer component.
 
 **Why Now**: 
-- Natural follow-on to EditBoxControl (Day 16)
-- Small, focused component
-- EditBoxControl dependency already complete
-- Completes the edit box family of controls
+- Natural follow-on to TextViewerControl (Day 19)
+- Likely uses TextViewerControl as base (dependency met)
+- Completes the viewer family of controls
+- Useful for displaying help and documentation
 
 **Dependencies**:
-- ✅ EditBoxControl (Phase 6.1) - COMPLETE Day 16
+- ✅ TextViewerControl (Phase 6.2) - COMPLETE Day 19
+- ✅ SpeedSearchListBoxControl (Phase 3.3) - COMPLETE Day 17
+- ✅ All foundation controls - COMPLETE
 
 **Steps**:
-1. Locate EditBoxQuickEdit.cs in AI CLI source
-2. Analyze dependencies (EditBoxControl - already ported!)
-3. Create in `src/common/ConsoleGui/Controls/EditBoxQuickEdit.cs`
+1. Locate HelpViewer.cs in AI CLI source
+2. Analyze dependencies (TextViewerControl - already ported!)
+3. Create in `src/common/ConsoleGui/Controls/HelpViewer.cs`
 4. Update namespace to `ConsoleGui.Controls`
 5. Build and fix compilation errors
 6. Create tests
-7. Commit with message: "Phase 6.1b: Port EditBoxQuickEdit.cs - quick editing functionality"
+7. Commit with message: "Phase 6.3: Port HelpViewer.cs - help display control"
 
-**Expected Complexity**: LOW-MEDIUM - Companion to EditBoxControl
+**Expected Complexity**: MEDIUM - Builds on TextViewerControl, adds help-specific features
 
-### Phase 6.2: Port TextViewerControl.cs (Alternative Next Step)
+### Phase 6.2: Port TextViewerControl.cs ⭐ ← **COMPLETED ✅ Day 19**
 
-**Goal**: Port the text viewer control for displaying text content.
+**Status**: DONE!
 
-**Why**: Useful for help and documentation display.
-
-**Steps**:
-1. Locate TextViewerControl.cs in AI CLI source
-2. Analyze dependencies (probably ScrollingControl - already ported!)
-3. Create in `src/common/ConsoleGui/Controls/TextViewerControl.cs`
-4. Update namespace to `ConsoleGui.Controls`
-5. Build and fix compilation errors
-6. Create tests
-7. Commit with message: "Phase 6.2: Port TextViewerControl.cs - text viewing control"
-
-**Expected Complexity**: MEDIUM - Larger component with scrolling
+- ✅ Created TextViewerControl.cs (194 lines)
+- ✅ Text viewing control with column selection
+- ✅ Extends SpeedSearchListBoxControl
+- ✅ Left/Right arrow navigation, syntax highlighting
+- ✅ Created comprehensive tests (7/7 passing)
+- ✅ Build succeeds with 0 errors
+- ✅ Committed with message: "Phase 6.2: Port TextViewerControl.cs - text viewing control"
 
 ### Phase 3.3: Port SpeedSearchListBoxControl.cs ⭐ ← **COMPLETED ✅ Day 17**
 
