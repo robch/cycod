@@ -160,21 +160,29 @@ public class ChatCommand : CommandWithVariables
             while (true)
             {
                 DisplayUserPrompt();
-                var userPrompt = interactive && !Console.IsInputRedirected
+                var isActuallyInteractive = interactive && !Console.IsInputRedirected;
+                var userPrompt = isActuallyInteractive
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
                 
-                // Handle empty input in interactive mode with a context menu
-                if (string.IsNullOrWhiteSpace(userPrompt) && interactive && !Console.IsInputRedirected)
+                var useContextMenu = string.IsNullOrWhiteSpace(userPrompt) && isActuallyInteractive;
+                if (useContextMenu)
                 {
                     var choice = PickInteractiveContextMenu(UseSpeechInput);
                     if (choice == null) continue;
 
                     userPrompt = choice;
                 }
-                
-                // Handle explicit "exit" command or null input (EOF)
-                if (userPrompt == "exit" || userPrompt == null)
+
+                var useMultiLine = userPrompt == "/multiline" && isActuallyInteractive;
+                if (useMultiLine)
+                {
+                    DisplayUserPrompt();
+                    userPrompt = InteractivelyReadMultiLineInput("`````");
+                }
+
+                var shouldExit = userPrompt == "exit" || userPrompt == null;
+                if (shouldExit)
                 {
                     // Show any pending notifications before exiting
                     // This prevents title updates from being missed by the user.
@@ -585,9 +593,12 @@ public class ChatCommand : CommandWithVariables
 
     private string? InteractivelyReadMultiLineInput(string firstLine)    
     {
-        ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
+        var backtickCount = firstLine.TakeWhile(c => c == '`').Count();
+        var backticks = new string('`', backtickCount);
+        ConsoleHelpers.WriteLine($"Entering multiline mode. Type {backticks} on a line by itself to finish.", ConsoleColor.DarkGray);
         return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
+
     private string? PickInteractiveContextMenu(bool allowSpeechInput)
     {
         if (Console.CursorTop > 0)
@@ -597,10 +608,10 @@ public class ChatCommand : CommandWithVariables
         }
 
         var choices = allowSpeechInput
-            ? new[] { "speech", "---", "clear", "help", "exit" }
-            : new[] { "clear", "help", "exit" };
+            ? new[] { "speech", "multiline", "---", "clear", "help", "exit" }
+            : new[] { "multiline", "---", "clear", "help", "exit" };
         
-        var defaultSelection = allowSpeechInput ? 0 : choices.Length - 1;
+        var defaultSelection = 0;
         
         var selectedChoice = ListBoxPicker.PickString(
             choices, 
@@ -613,6 +624,7 @@ public class ChatCommand : CommandWithVariables
         return selectedChoice switch
         {
             "speech" => "/speech",
+            "multiline" => "/multiline",
             "clear" => "/clear",
             "help" => "/help",
             "exit" => "exit",
