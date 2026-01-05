@@ -10,13 +10,10 @@ namespace ConsoleGui.Controls
 {
     /// <summary>
     /// Interactive list picker control that allows users to select an item from a list.
-    /// Supports keyboard navigation (arrows, page up/down, home/end) and selection (Enter/Escape).
+    /// Supports keyboard navigation (arrows, page up/down, home/end), selection (Enter/Escape),
+    /// and type-to-filter search (press '?' or Ctrl+F to open, type to filter, Tab to cycle matches).
     /// </summary>
-    /// <remarks>
-    /// This is a simplified version that extends ListBoxControl directly.
-    /// TODO: When SpeedSearchListBoxControl is ported, change base class to enable type-to-filter.
-    /// </remarks>
-    public class ListBoxPicker : ListBoxControl
+    public class ListBoxPicker : SpeedSearchListBoxControl
     {
         /// <summary>
         /// Displays an interactive picker and returns the selected index.
@@ -106,17 +103,17 @@ namespace ConsoleGui.Controls
 
         /// <summary>
         /// Processes keyboard input for the picker.
+        /// Supports speed search (type to filter), navigation, and selection.
         /// </summary>
         /// <param name="key">The console key info from user input</param>
         /// <returns>True if the key was processed, false otherwise</returns>
         public override bool ProcessKey(ConsoleKeyInfo key)
         {
-            // TODO: When SpeedSearchListBoxControl is ported, add speed search support here
-            // var processed = ProcessSpeedSearchKey(key);
-            // if (processed) return processed;
+            // Process speed search keys (?, Ctrl+F, typing, Tab, etc.)
+            var processed = ProcessSpeedSearchKey(key);
+            if (processed) return processed;
 
-            var processed = false;
-
+            // Handle Enter and Escape for selection/cancellation
             switch (key.Key)
             {
                 case ConsoleKey.Escape:

@@ -1,6 +1,7 @@
 using System;
 using ConsoleGui.Controls;
 
+#if MANUAL_TEST
 class TestPickerManual
 {
     static void Main()
@@ -25,3 +26,4 @@ class TestPickerManual
         }
     }
 }
+#endif
