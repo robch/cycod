@@ -161,18 +161,18 @@ Phase 2.2 (ScrollingControl.cs) is complete and tested.
 **Goal**: Port the VirtualListBoxControl class that provides efficient list rendering with virtual scrolling.
 
 **Steps**:
-1. Locate ScrollingControl.cs in AI CLI source (`../ai/src/common/details/console/gui/controls/`)
+1. Locate VirtualListBoxControl.cs in AI CLI source (`../ai/src/common/details/console/gui/controls/`)
 2. Analyze dependencies and complexity
-3. Create in `src/common/ConsoleGui/Controls/ScrollingControl.cs`
+3. Create in `src/common/ConsoleGui/Controls/VirtualListBoxControl.cs`
 4. Update namespace to `ConsoleGui.Controls`
-5. Verify dependencies (should need ControlWindow, Window, Screen, Rect)
+5. Verify dependencies (should need ScrollingControl, Window, Screen, Rect, Colors)
 6. Build and fix any compilation errors
 7. Create basic tests
-8. Commit with message: "Port ScrollingControl.cs - adds scrolling capability"
+8. Commit with message: "Port VirtualListBoxControl.cs - virtual list rendering"
 
-**Expected Complexity**: Medium - more complex than ControlWindow, includes viewport management and scroll position tracking.
+**Expected Complexity**: Medium-High - involves rendering logic, manages visible item subset, handles item measurement and layout.
 
-### Phase 2.1: Port ControlWindow.cs (COMPLETE ✅)
+### Phase 2.2: Port ScrollingControl.cs (COMPLETE ✅)
 
 **Goal**: Ensure foundation classes build and run on all supported platforms.
 
