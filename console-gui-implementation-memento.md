@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## 🔬 **Current Position:** Phase 4 COMPLETE! 🎊🎊🎊
+## 🔬 **Current Position:** Phase 5.1 COMPLETE! 🎊
 
-**Last Update:** Day #11 - Completed Phase 4 documentation (2025-01-05)
+**Last Update:** Day #12 - Completed Phase 5.1: Added Speech SDK dependency (2025-01-05)
 
-**Next Action Required:** Phase 5.1 - Add Speech Recognition NuGet package (RECOMMENDED) OR Phase 6.1 - Port EditBoxControl.cs
+**Next Action Required:** Phase 5.2 - Integrate speech input into ChatCommand interactive mode
 
-**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 100% complete ✅ | Phase 3 ListBoxPicker: 67% complete (2/3 core files) ⭐ | Phase 4 Chat Integration: 100% complete ✅🎊
+**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 100% complete ✅ | Phase 3 ListBoxPicker: 67% complete (2/3 core files) ⭐ | Phase 4 Chat Integration: 100% complete ✅🎊 | Phase 5 Speech Recognition: 20% complete (1/5 steps) 🎤
 
 ---
 
@@ -135,33 +135,29 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
 
 ## Current Focus
 
-**Phase 4: Chat Integration** ← **100% COMPLETE!** 🎊🎊🎊
+**Phase 5: Speech Recognition** ← **20% COMPLETE!** 🎤
 
-We've successfully completed all aspects of the context menu integration:
-- ✅ Context menu appears on empty input (COMPLETE)
-- ✅ Reset conversation functionality (COMPLETE)
-- ✅ Exit functionality (COMPLETE)
-- ✅ Automated testing (COMPLETE)
-- ✅ Documentation updates (COMPLETE)
+We've successfully completed Phase 5.1:
+- ✅ Speech SDK dependency added (COMPLETE)
+- ✅ SpeechHelpers.cs created with configuration loading (COMPLETE)
+- ✅ KnownSettings updated with Speech.Key and Speech.Region (COMPLETE)
+- ✅ Build succeeds with 0 errors (COMPLETE)
 
-**Major Achievement:** First complete feature from planning to documentation! Users can now:
-- Press ENTER on empty line to see menu
-- Navigate with arrow keys
-- Reset conversation to start fresh
-- Exit cleanly
-- Documentation available in CHANGELOG.md and getting-started.md
+**Major Achievement:** Speech SDK infrastructure is now in place! The foundation for voice input is ready.
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
 Phase 2 (Base Controls) is complete and tested.
 Phase 3.1 and 3.2 (ListBoxControl and ListBoxPicker) are complete and tested.
-**Phase 4 (Chat Integration) is 100% complete with documentation!** 🎊
+Phase 4 (Chat Integration) is 100% complete with documentation! 🎊
+**Phase 5.1 (Speech SDK) is complete!** 🎤
 
-**Next Up:** Three options:
-1. **Phase 5.1** - Start speech recognition integration (RECOMMENDED - next major feature)
-2. **Phase 6.1** - Port EditBoxControl.cs (complete foundation for Phase 3.3)
-3. **Phase 3.3** - Port SpeedSearchListBoxControl.cs (BLOCKED - needs EditBoxControl)
+**Next Up:** Phase 5.2 - Integrate speech input into ChatCommand interactive mode
+- Add "speech" option to context menu (when --speech flag is present)
+- Add --speech command line parameter
+- Wire up SpeechHelpers.GetSpeechInputAsync() in the chat loop
+- Test the end-to-end flow
 
-**Recommendation:** Start Phase 5.1 (Speech Recognition) as the next major user-facing feature.
+**Recommendation:** Continue with Phase 5.2 to complete the speech recognition feature.
 
 ## Implementation Phases
 
@@ -209,15 +205,17 @@ Phase 3.1 and 3.2 (ListBoxControl and ListBoxPicker) are complete and tested.
   - Updated docs/getting-started.md with Interactive Context Menu section
   - Build verified - 0 errors
 
-### Phase 5: Speech Recognition (Target: 3-5 days)
-- [ ] **Phase 5.1**: Add Microsoft.CognitiveServices.Speech NuGet package
-- [ ] **Phase 5.2**: Create SpeechHelpers.cs with configuration
-- [ ] **Phase 5.3**: Implement GetSpeechInputAsync with interim results
-- [ ] **Phase 5.4**: Add "speech" option to context menu (when --speech flag)
-- [ ] **Phase 5.5**: Add --speech command line parser
-- [ ] **Phase 5.6**: Create speech.key and speech.region config files
-- [ ] **Phase 5.7**: Test speech input flow
-- [ ] **Phase 5.8**: Create setup documentation
+### Phase 5: Speech Recognition (Target: 3-5 days) - IN PROGRESS 🎤
+- [x] **Phase 5.1**: Add Microsoft.CognitiveServices.Speech NuGet package ✅ COMPLETE
+  - Added Speech SDK version 1.35.0 to cycod.csproj
+  - Created SpeechHelpers.cs with configuration loading
+  - Added Speech.Key and Speech.Region to KnownSettings
+  - Build succeeds with 0 errors
+  - Day 12 complete
+- [ ] **Phase 5.2**: Integrate speech input into ChatCommand
+- [ ] **Phase 5.3**: Add --speech command line parameter
+- [ ] **Phase 5.4**: Test speech input flow
+- [ ] **Phase 5.5**: Create setup documentation
 
 ### Phase 6: Additional Controls (Target: 3-5 days)
 - [ ] **Phase 6.1**: Port EditBoxControl.cs and EditBoxQuickEdit.cs
@@ -235,22 +233,33 @@ Phase 3.1 and 3.2 (ListBoxControl and ListBoxPicker) are complete and tested.
 
 ## Immediate Next Steps
 
-### Phase 5.1: Add Speech Recognition NuGet Package ⭐ ← **RECOMMENDED NEXT - Start Major New Feature**
+### Phase 5.2: Integrate Speech Input into ChatCommand ⭐ ← **RECOMMENDED NEXT**
 
-**Goal**: Start integrating Microsoft Cognitive Services Speech SDK for voice input.
+**Goal**: Add speech input capability to the interactive chat mode.
 
-**Why Now**: Phase 4 is complete! Time to start the next major user-facing feature.
+**Why Now**: Phase 5.1 (infrastructure) is complete! Time to make it functional.
 
 **Steps**:
-1. Add Microsoft.CognitiveServices.Speech NuGet package to cycod.csproj
-2. Create SpeechHelpers.cs with configuration loading
-3. Add speech.key and speech.region to KnownSettings
-4. Build and verify dependencies
-5. Commit with message: "Phase 5.1: Add Speech SDK dependency"
+1. Add `--speech` command line parameter to ChatCommand
+2. Add "speech" option to context menu when --speech flag is present
+3. Wire up SpeechHelpers.GetSpeechInputAsync() in the interactive loop
+4. Handle speech recognition results
+5. Test the end-to-end flow
+6. Commit with message: "Phase 5.2: Integrate speech input into ChatCommand"
 
-**Then**: Continue with Phase 5.2 (implement GetSpeechInputAsync)
+**Then**: Continue with Phase 5.3 (test and document)
 
-**Expected Complexity**: MEDIUM-HIGH - New external dependency and API learning curve
+**Expected Complexity**: MEDIUM - Wiring up existing components, following AI CLI pattern
+
+### Phase 5.1: Add Speech Recognition NuGet Package ⭐ ← **COMPLETED ✅**
+
+**Status**: DONE on Day 12!
+
+- ✅ Added Microsoft.CognitiveServices.Speech NuGet package to cycod.csproj
+- ✅ Created SpeechHelpers.cs with configuration loading
+- ✅ Added speech.key and speech.region to KnownSettings
+- ✅ Build and verify dependencies
+- ✅ Committed with message: "Phase 5.1: Add Speech SDK dependency"
 
 ### Phase 6.1: Port EditBoxControl.cs (Alternative Next Step)
 
