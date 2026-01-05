@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chat Mode:
   - Added support for multiline input using backtick code blocks
   - Users can now paste multiline content by starting with three or more backticks and ending with a matching number of backticks
+  - Added interactive context menu on empty input in interactive mode
+    - Press ENTER on an empty line to display a menu with options
+    - "Continue chatting" - returns to chat input
+    - "Reset conversation" - clears chat history and starts fresh
+    - "Exit" - cleanly exits the chat session
+    - Menu navigation: use arrow keys to select, ENTER to confirm, ESC to cancel
 
 ### Fixed
 - GitHub Copilot integration: Fixed token expiration issue by implementing automatic token refresh

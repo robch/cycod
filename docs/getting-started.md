@@ -127,6 +127,16 @@ cycod
 
 This will start an interactive session where you can talk with the AI assistant.
 
+#### Interactive Context Menu
+
+When in interactive mode, pressing ENTER on an empty line displays a context menu with helpful options:
+
+- **Continue chatting** - Return to chat input (or just press ESC)
+- **Reset conversation** - Clear chat history and start a fresh conversation
+- **Exit** - Cleanly exit the chat session
+
+Navigate the menu using arrow keys, press ENTER to select, or ESC to cancel.
+
 ### Asking a Direct Question
 
 To ask a single question without entering interactive mode:
