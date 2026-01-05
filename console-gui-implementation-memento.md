@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## 🔬 **Current Position:** Phase 2.1 COMPLETE - ControlWindow.cs Ready
+## 🔬 **Current Position:** Phase 2.2 COMPLETE - ScrollingControl.cs Ready
 
-**Last Update:** Day #5 - Ported ControlWindow.cs base class (2025-01-05)
+**Last Update:** Day #6 - Ported ScrollingControl.cs base class (2025-01-05)
 
-**Next Action Required:** Begin Phase 2.2 - Port ScrollingControl.cs
+**Next Action Required:** Begin Phase 2.3 - Port VirtualListBoxControl.cs
 
-**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 25% complete (1/4 sub-phases)
+**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 50% complete (2/4 sub-phases)
 
 ---
 
@@ -69,7 +69,7 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
   - Console redirection handled correctly
   - No code changes needed - already cross-platform ready
 
-### Phase 2: Base Controls (IN PROGRESS - 25% complete)
+### Phase 2: Base Controls (IN PROGRESS - 50% complete)
 - ✅ **Phase 2.1**: Ported ControlWindow.cs ✅
   - Created `src/common/ConsoleGui/Controls/ControlWindow.cs`
   - Base class for all interactive controls
@@ -77,18 +77,28 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
   - Created comprehensive test suite (tests/ControlWindowTests)
   - All tests pass - 4/4 successful
   - Build succeeds with 0 warnings, 0 errors
+- ✅ **Phase 2.2**: Ported ScrollingControl.cs ✅
+  - Created `src/common/ConsoleGui/Controls/ScrollingControl.cs`
+  - Abstract base class for scrollable controls
+  - Manages viewport scrolling and row/column selection
+  - Automatic viewport adjustment to keep selections visible
+  - Created comprehensive test suite (tests/ScrollingControlTests)
+  - All tests pass - 10/10 successful
+  - Build succeeds with 0 warnings, 0 errors
+
 
 ## Current Focus
 
-**Phase 2: Base Controls** ← **IN PROGRESS (25% complete)**
+**Phase 2: Base Controls** ← **IN PROGRESS (50% complete)**
 
 We're building the control infrastructure that ListBoxPicker and other components depend on:
 - ✅ ControlWindow.cs - Base class for all interactive controls (COMPLETE)
-- ⏳ ScrollingControl.cs - Adds scrolling capability to controls (NEXT)
-- ⏳ VirtualListBoxControl.cs - Efficient list rendering with virtual scrolling
+- ✅ ScrollingControl.cs - Adds scrolling capability to controls (COMPLETE)
+- ⏳ VirtualListBoxControl.cs - Efficient list rendering with virtual scrolling (NEXT)
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
 Phase 2.1 (ControlWindow.cs) is complete and tested.
+Phase 2.2 (ScrollingControl.cs) is complete and tested.
 
 ## Implementation Phases
 
@@ -101,8 +111,8 @@ Phase 2.1 (ControlWindow.cs) is complete and tested.
 
 ### Phase 2: Base Controls (Target: 3-5 days) ← **IN PROGRESS**
 - [x] **Phase 2.1**: Port ControlWindow.cs ✅ COMPLETE
-- [ ] **Phase 2.2**: Port ScrollingControl.cs ← **NEXT ACTION**
-- [ ] **Phase 2.3**: Port VirtualListBoxControl.cs
+- [x] **Phase 2.2**: Port ScrollingControl.cs ✅ COMPLETE
+- [ ] **Phase 2.3**: Port VirtualListBoxControl.cs ← **NEXT ACTION**
 - [ ] **Phase 2.4**: Create tests for base controls
 - [ ] **Phase 2.5**: Build simple demo to verify controls work
 
@@ -146,9 +156,9 @@ Phase 2.1 (ControlWindow.cs) is complete and tested.
 
 ## Immediate Next Steps
 
-### Phase 2.2: Port ScrollingControl.cs ← **NEXT**
+### Phase 2.3: Port VirtualListBoxControl.cs ← **NEXT**
 
-**Goal**: Port the ScrollingControl class that adds scrolling capability to controls.
+**Goal**: Port the VirtualListBoxControl class that provides efficient list rendering with virtual scrolling.
 
 **Steps**:
 1. Locate ScrollingControl.cs in AI CLI source (`../ai/src/common/details/console/gui/controls/`)
