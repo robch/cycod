@@ -3,6 +3,7 @@ using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
 using ConsoleGui.Controls;
+using CyCoD.Helpers;
 
 public class ChatCommand : CommandWithVariables
 {
@@ -48,6 +49,8 @@ public class ChatCommand : CommandWithVariables
         clone.UseMcps = new List<string>(this.UseMcps);
         clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
         clone.ImagePatterns = new List<string>(this.ImagePatterns);
+        
+        clone.UseSpeechInput = this.UseSpeechInput;
         
         return clone;
     }
@@ -163,24 +166,65 @@ public class ChatCommand : CommandWithVariables
                 // Handle empty input in interactive mode with a context menu
                 if (string.IsNullOrWhiteSpace(userPrompt) && interactive && !Console.IsInputRedirected)
                 {
-                    var menuOptions = new[] { "Continue chatting", "Reset conversation", "Exit" };
+                    // Build menu options based on speech input availability
+                    var menuOptions = UseSpeechInput
+                        ? new[] { "Speech input", "---", "Continue chatting", "Reset conversation", "Exit" }
+                        : new[] { "Continue chatting", "Reset conversation", "Exit" };
+                    
                     var selectedIndex = ListBoxPicker.PickIndexOf(menuOptions, 0);
                     
-                    if (selectedIndex == 0 || selectedIndex == -1) // Continue or Escape
+                    // Handle speech input option
+                    if (UseSpeechInput && selectedIndex == 0)
                     {
-                        continue;
+                        try
+                        {
+                            userPrompt = await SpeechHelpers.GetSpeechInputAsync();
+                            if (string.IsNullOrWhiteSpace(userPrompt))
+                            {
+                                continue; // No speech recognized, return to prompt
+                            }
+                            // Display the recognized text in yellow to show it was from speech
+                            ConsoleHelpers.WriteLine(userPrompt, ConsoleColor.Yellow);
+                            // Continue processing the speech input as normal user input
+                        }
+                        catch (FileNotFoundException fnfe)
+                        {
+                            ConsoleHelpers.WriteErrorLine($"\nSpeech configuration error: {fnfe.Message}");
+                            continue;
+                        }
+                        catch (Exception e)
+                        {
+                            ConsoleHelpers.WriteErrorLine($"\nSpeech recognition error: {e.Message}");
+                            continue;
+                        }
                     }
-                    else if (selectedIndex == 1) // Reset conversation
+                    else
                     {
-                        chat.ClearChatHistory();
-                        _titleGenerationAttempted = false;
-                        ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
-                        continue;
-                    }
-                    else if (selectedIndex == 2) // Exit
-                    {
-                        CheckAndShowPendingNotifications(chat);
-                        break;
+                        // Adjust indices for menu options based on whether speech is enabled
+                        var continueIndex = UseSpeechInput ? 2 : 0;
+                        var resetIndex = UseSpeechInput ? 3 : 1;
+                        var exitIndex = UseSpeechInput ? 4 : 2;
+                        
+                        if (selectedIndex == continueIndex || selectedIndex == -1) // Continue or Escape
+                        {
+                            continue;
+                        }
+                        else if (selectedIndex == resetIndex) // Reset conversation
+                        {
+                            chat.ClearChatHistory();
+                            _titleGenerationAttempted = false;
+                            ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
+                            continue;
+                        }
+                        else if (selectedIndex == exitIndex) // Exit
+                        {
+                            CheckAndShowPendingNotifications(chat);
+                            break;
+                        }
+                        else if (selectedIndex == 1 && UseSpeechInput) // Separator "---"
+                        {
+                            continue;
+                        }
                     }
                 }
                 
@@ -1241,6 +1285,8 @@ public class ChatCommand : CommandWithVariables
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
     
     public List<string> ImagePatterns = new();
+    
+    public bool UseSpeechInput { get; set; } = false;
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
