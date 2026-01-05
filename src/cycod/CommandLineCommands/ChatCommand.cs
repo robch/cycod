@@ -2,6 +2,7 @@ using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
+using ConsoleGui.Controls;
 
 public class ChatCommand : CommandWithVariables
 {
@@ -158,7 +159,33 @@ public class ChatCommand : CommandWithVariables
                 var userPrompt = interactive && !Console.IsInputRedirected
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
-                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+                
+                // Handle empty input in interactive mode with a context menu
+                if (string.IsNullOrWhiteSpace(userPrompt) && interactive && !Console.IsInputRedirected)
+                {
+                    var menuOptions = new[] { "Continue chatting", "Reset conversation", "Exit" };
+                    var selectedIndex = ListBoxPicker.PickIndexOf(menuOptions, 0);
+                    
+                    if (selectedIndex == 0 || selectedIndex == -1) // Continue or Escape
+                    {
+                        continue;
+                    }
+                    else if (selectedIndex == 1) // Reset conversation
+                    {
+                        chat.ClearChatHistory();
+                        _titleGenerationAttempted = false;
+                        ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
+                        continue;
+                    }
+                    else if (selectedIndex == 2) // Exit
+                    {
+                        CheckAndShowPendingNotifications(chat);
+                        break;
+                    }
+                }
+                
+                // Handle explicit "exit" command or null input (EOF)
+                if (userPrompt == "exit" || userPrompt == null)
                 {
                     // Show any pending notifications before exiting
                     // This prevents title updates from being missed by the user.
