@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## 🔬 **Current Position:** Phase 1 COMPLETE - Foundation Components Ready
+## 🔬 **Current Position:** Phase 2.1 COMPLETE - ControlWindow.cs Ready
 
-**Last Update:** Day #4 - Verified cross-platform compilation (2025-01-04)
+**Last Update:** Day #5 - Ported ControlWindow.cs base class (2025-01-05)
 
-**Next Action Required:** Begin Phase 2.1 - Port ControlWindow.cs
+**Next Action Required:** Begin Phase 2.2 - Port ScrollingControl.cs
 
-**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 0% complete
+**Progress:** Phase 1 foundation: 100% complete ✅ | Phase 2 base controls: 25% complete (1/4 sub-phases)
 
 ---
 
@@ -69,16 +69,26 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
   - Console redirection handled correctly
   - No code changes needed - already cross-platform ready
 
+### Phase 2: Base Controls (IN PROGRESS - 25% complete)
+- ✅ **Phase 2.1**: Ported ControlWindow.cs ✅
+  - Created `src/common/ConsoleGui/Controls/ControlWindow.cs`
+  - Base class for all interactive controls
+  - Adds IsEnabled() and IsHotKey() methods to Window
+  - Created comprehensive test suite (tests/ControlWindowTests)
+  - All tests pass - 4/4 successful
+  - Build succeeds with 0 warnings, 0 errors
+
 ## Current Focus
 
-**Phase 2: Base Controls** ← **STARTING NOW**
+**Phase 2: Base Controls** ← **IN PROGRESS (25% complete)**
 
-We're ready to build the control infrastructure that ListBoxPicker and other components depend on:
-- ControlWindow.cs - Base class for all interactive controls
-- ScrollingControl.cs - Adds scrolling capability to controls
-- VirtualListBoxControl.cs - Efficient list rendering with virtual scrolling
+We're building the control infrastructure that ListBoxPicker and other components depend on:
+- ✅ ControlWindow.cs - Base class for all interactive controls (COMPLETE)
+- ⏳ ScrollingControl.cs - Adds scrolling capability to controls (NEXT)
+- ⏳ VirtualListBoxControl.cs - Efficient list rendering with virtual scrolling
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
+Phase 2.1 (ControlWindow.cs) is complete and tested.
 
 ## Implementation Phases
 
@@ -89,9 +99,9 @@ Phase 1 (Foundation Components) is complete and verified cross-platform.
 - [x] **Phase 1.4**: Create comprehensive unit tests for foundation ✅
 - [x] **Phase 1.5**: Verify cross-platform compilation (Windows/macOS/Linux) ✅
 
-### Phase 2: Base Controls (Target: 3-5 days) ← **START HERE**
-- [ ] **Phase 2.1**: Port ControlWindow.cs ← **NEXT ACTION**
-- [ ] **Phase 2.2**: Port ScrollingControl.cs
+### Phase 2: Base Controls (Target: 3-5 days) ← **IN PROGRESS**
+- [x] **Phase 2.1**: Port ControlWindow.cs ✅ COMPLETE
+- [ ] **Phase 2.2**: Port ScrollingControl.cs ← **NEXT ACTION**
 - [ ] **Phase 2.3**: Port VirtualListBoxControl.cs
 - [ ] **Phase 2.4**: Create tests for base controls
 - [ ] **Phase 2.5**: Build simple demo to verify controls work
@@ -136,20 +146,23 @@ Phase 1 (Foundation Components) is complete and verified cross-platform.
 
 ## Immediate Next Steps
 
-### Phase 2.1: Port ControlWindow.cs ← **NEXT**
+### Phase 2.2: Port ScrollingControl.cs ← **NEXT**
 
-**Goal**: Port the base ControlWindow class that all interactive controls inherit from.
+**Goal**: Port the ScrollingControl class that adds scrolling capability to controls.
 
 **Steps**:
-1. Locate ControlWindow.cs in AI CLI source (`../ai/src/common/details/console/gui/controls/`)
-2. Create `src/common/ConsoleGui/Controls/` directory
-3. Copy and adapt ControlWindow.cs
+1. Locate ScrollingControl.cs in AI CLI source (`../ai/src/common/details/console/gui/controls/`)
+2. Analyze dependencies and complexity
+3. Create in `src/common/ConsoleGui/Controls/ScrollingControl.cs`
 4. Update namespace to `ConsoleGui.Controls`
-5. Verify dependencies (should only need Window, Screen, Colors)
+5. Verify dependencies (should need ControlWindow, Window, Screen, Rect)
 6. Build and fix any compilation errors
-7. Commit with message: "Port ControlWindow.cs - base class for all controls"
+7. Create basic tests
+8. Commit with message: "Port ScrollingControl.cs - adds scrolling capability"
 
-### Phase 1.5: Verify Cross-Platform Compilation (COMPLETE ✅)
+**Expected Complexity**: Medium - more complex than ControlWindow, includes viewport management and scroll position tracking.
+
+### Phase 2.1: Port ControlWindow.cs (COMPLETE ✅)
 
 **Goal**: Ensure foundation classes build and run on all supported platforms.
 
