@@ -7,7 +7,7 @@ echo "=== Console GUI Implementation - Foreach Loop ==="
 echo
 
 # Use cycod's --foreach to iterate 1-100 times
-cycod --foreach i in 1..100 \
+cycod --foreach var i in 1..100 \
       --input "
 ITERATION {i} of 100
 
