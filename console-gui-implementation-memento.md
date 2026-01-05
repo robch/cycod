@@ -1,12 +1,12 @@
 # Console GUI Implementation Memento
 
-## Current Position: Phase 6.2 COMPLETE! Day 19
+## Current Position: Phase 6.3 COMPLETE! Day 20
 
-Last Update: Day 19 - Completed Phase 6.2: Ported TextViewerControl.cs (2025-01-05)
+Last Update: Day 20 - Completed Phase 6.3: Ported HelpViewer.cs (2025-01-05)
 
-Next Action Required: Phase 6.3 - Port HelpViewer.cs
+Next Action Required: Phase 6.4 - Port InOutPipeServer.cs (testing infrastructure)
 
-Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 100% ✅ | Phase 4: 100% | Phase 5: 100% | Phase 6: 60% | Phase 7.1: COMPLETE!
+Progress: Phase 1: 100% | Phase 2: 100% | Phase 3: 100% ✅ | Phase 4: 100% | Phase 5: 100% | Phase 6: 80% | Phase 7.1: COMPLETE!
 
 ---
 
@@ -144,27 +144,29 @@ We are porting the console GUI system from the Azure AI CLI tool to cycod, enabl
 
 ## Current Focus
 
-Phase 6.2: TextViewerControl - COMPLETE (Day 19) 🎉
+Phase 6.3: HelpViewer - COMPLETE (Day 20) 🎉
 
-We've successfully completed Phase 6.2:
-- ✅ Ported TextViewerControl.cs (194 lines)
-- ✅ Text viewing control with column selection
-- ✅ Extends SpeedSearchListBoxControl for search features
-- ✅ Left/Right arrow navigation for columns
-- ✅ Syntax highlighting with backtick markers
-- ✅ Static Display() method for modal text viewing
+We've successfully completed Phase 6.3:
+- ✅ Ported HelpViewer.cs (187 lines)
+- ✅ Help viewer control extending TextViewerControl
+- ✅ Interactive help links with command execution
+- ✅ URL detection and browser launching
+- ✅ "Try it" command execution
+- ✅ Added StartBrowser to ProcessHelpers
+- ✅ Extended ProgramInfo with Exe and GetDisplayBannerText
 - ✅ Created comprehensive tests (7/7 passing)
 - ✅ Build succeeds with 0 errors
 
-**Achievement:** Text viewer control is complete! 🎉
+**Achievement:** Help viewer control is complete! 🎉
 
-TextViewerControl provides:
-- Column-level text selection (not just rows)
-- Left/Right arrow keys move column cursor
-- Syntax highlighting: `code` in backticks
+HelpViewer provides:
+- Interactive help text display with clickable links
+- Help command detection and execution
+- URL detection and browser opening
+- "Try it" command execution
+- Topic picker mode using ListBoxPicker
+- Custom key bindings (Ctrl+H, Tab, F3)
 - Speed search inherited from base class
-- Returns (row, col, width) on selection
-- Enter confirms, Escape cancels
 
 Phase 1 (Foundation Components) is complete and verified cross-platform.
 Phase 2 (Base Controls) is complete and tested.
@@ -173,12 +175,13 @@ Phase 4 (Chat Integration) is 100% complete with documentation! 🎊
 Phase 5 (Speech Integration) is 100% complete with documentation! 🎤
 Phase 6.1 (EditBoxControl) is complete! 📝✅
 Phase 6.1b (EditBoxQuickEdit) is complete! 📝✅
-**Phase 6.2 (TextViewerControl) is complete! 📖✅**
+Phase 6.2 (TextViewerControl) is complete! 📖✅
+**Phase 6.3 (HelpViewer) is complete! 📚✅**
 Phase 7.1 (YAML Tests) is complete! 🧪
 
-**Next Up:** Phase 6.3 - Port HelpViewer.cs
+**Next Up:** Phase 6.4 - Port InOutPipeServer.cs
 
-**Recommendation:** Port HelpViewer.cs next - it builds on TextViewerControl and completes the viewer family. Natural progression.
+**Recommendation:** Port InOutPipeServer.cs next - it's a testing infrastructure component used by AI CLI for interactive control testing. Completes Phase 6.
 
 ## Implementation Phases
 
@@ -284,7 +287,18 @@ Phase 7.1 (YAML Tests) is complete! 🧪
   - Created comprehensive test suite (7/7 passing)
   - Build succeeds with 0 warnings, 0 errors
   - **Text viewer control complete!**
-- [ ] **Phase 6.3**: Port HelpViewer.cs
+- [x] **Phase 6.3**: Port HelpViewer.cs ✅ COMPLETE (Day 20)
+  - Created HelpViewer.cs - interactive help viewer (187 lines)
+  - Extends TextViewerControl with help-specific features
+  - Interactive help links with command execution
+  - URL detection and browser launching (added ProcessHelpers.StartBrowser)
+  - "Try it" command execution support
+  - Extended ProgramInfo with Exe property and GetDisplayBannerText method
+  - Custom key bindings (Ctrl+H, Tab, F3 for search)
+  - Two display modes: DisplayHelpText() and DisplayHelpTopics()
+  - Created comprehensive test suite (7/7 passing)
+  - Build succeeds with 0 warnings, 0 errors
+  - **Help viewer control complete!**
 - [ ] **Phase 6.4**: Port InOutPipeServer.cs (for testing)
 
 ### Phase 7: Testing & Polish (Target: 2-3 days) - IN PROGRESS
@@ -301,31 +315,62 @@ Phase 7.1 (YAML Tests) is complete! 🧪
 
 ## Immediate Next Steps
 
-### Phase 6.3: Port HelpViewer.cs ⭐ ← **RECOMMENDED NEXT**
+### Phase 6.4: Port InOutPipeServer.cs ⭐ ← **RECOMMENDED NEXT**
 
-**Goal**: Port the help viewer component.
+**Goal**: Port the InOutPipeServer testing infrastructure component.
 
 **Why Now**: 
-- Natural follow-on to TextViewerControl (Day 19)
-- Likely uses TextViewerControl as base (dependency met)
-- Completes the viewer family of controls
-- Useful for displaying help and documentation
+- Last component in Phase 6
+- Used by AI CLI for testing interactive controls
+- Not critical for user-facing features, but useful for test infrastructure
+- Completes the Additional Controls phase
 
 **Dependencies**:
-- ✅ TextViewerControl (Phase 6.2) - COMPLETE Day 19
-- ✅ SpeedSearchListBoxControl (Phase 3.3) - COMPLETE Day 17
 - ✅ All foundation controls - COMPLETE
+- ✅ No specific dependencies - standalone component
 
 **Steps**:
-1. Locate HelpViewer.cs in AI CLI source
-2. Analyze dependencies (TextViewerControl - already ported!)
-3. Create in `src/common/ConsoleGui/Controls/HelpViewer.cs`
-4. Update namespace to `ConsoleGui.Controls`
+1. Locate InOutPipeServer.cs in AI CLI source
+2. Analyze dependencies (likely minimal)
+3. Create in `src/common/ConsoleGui/InOutPipeServer.cs`
+4. Update namespace to `ConsoleGui`
 5. Build and fix compilation errors
-6. Create tests
-7. Commit with message: "Phase 6.3: Port HelpViewer.cs - help display control"
+6. Create tests (may be optional - this is test infrastructure)
+7. Commit with message: "Phase 6.4: Port InOutPipeServer.cs - testing infrastructure"
 
-**Expected Complexity**: MEDIUM - Builds on TextViewerControl, adds help-specific features
+**Expected Complexity**: MEDIUM - Testing infrastructure, may have platform-specific code
+
+**Alternative**: Skip InOutPipeServer (testing infrastructure) and go directly to Phase 7.2 (cross-platform testing)
+
+### Phase 6.3: Port HelpViewer.cs ⭐ ← **COMPLETED ✅ Day 20**
+
+**Status**: DONE!
+
+- ✅ Created HelpViewer.cs (187 lines)
+- ✅ Help viewer control extending TextViewerControl
+- ✅ Interactive help links with command execution
+- ✅ URL detection and browser launching
+- ✅ "Try it" command execution
+- ✅ Added StartBrowser to ProcessHelpers
+- ✅ Extended ProgramInfo with Exe and GetDisplayBannerText
+- ✅ Created comprehensive tests (7/7 passing)
+- ✅ Build succeeds with 0 errors
+- ✅ Committed with message: "Phase 6.3: Port HelpViewer.cs - interactive help viewer"
+
+### Phase 6.3: Port HelpViewer.cs ⭐ ← **COMPLETED ✅ Day 20**
+
+**Status**: DONE!
+
+- ✅ Created HelpViewer.cs (187 lines)
+- ✅ Help viewer control extending TextViewerControl
+- ✅ Interactive help links with command execution
+- ✅ URL detection and browser launching
+- ✅ "Try it" command execution
+- ✅ Added StartBrowser to ProcessHelpers
+- ✅ Extended ProgramInfo with Exe and GetDisplayBannerText
+- ✅ Created comprehensive tests (7/7 passing)
+- ✅ Build succeeds with 0 errors
+- ✅ Committed with message: "Phase 6.3: Port HelpViewer.cs - interactive help viewer"
 
 ### Phase 6.2: Port TextViewerControl.cs ⭐ ← **COMPLETED ✅ Day 19**
 
