@@ -71,6 +71,7 @@ public class ChatCommand : CommandWithVariables
         // Async handlers - operations that may take time like process execution  
         _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));   // ← Async: external process execution
         _slashCommandRouter.Register(new SlashScreenshotCommandHandler(this)); // ← Async: screenshot capture and file I/O
+        _slashCommandRouter.Register(new SlashSpeechCommandHandler());         // ← Async: speech recognition
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -169,46 +170,7 @@ public class ChatCommand : CommandWithVariables
                     var choice = PickInteractiveContextMenu(UseSpeechInput);
                     if (choice == null) continue;
 
-                    var fromSpeech = false;
-                    if (choice == "speech")
-                    {
-                        try
-                        {
-                            userPrompt = await SpeechHelpers.GetSpeechInputAsync();
-                            if (string.IsNullOrWhiteSpace(userPrompt))
-                            {
-                                continue; // No speech recognized, return to prompt
-                            }
-                            fromSpeech = true;
-                        }
-                        catch (FileNotFoundException fnfe)
-                        {
-                            ConsoleHelpers.WriteErrorLine($"\nSpeech configuration error: {fnfe.Message}");
-                            continue;
-                        }
-                        catch (Exception e)
-                        {
-                            ConsoleHelpers.WriteErrorLine($"\nSpeech recognition error: {e.Message}");
-                            continue;
-                        }
-                    }
-                    else if (choice == "reset")
-                    {
-                        chat.ClearChatHistory();
-                        _titleGenerationAttempted = false;
-                        ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
-                        continue;
-                    }
-                    else if (choice == "exit")
-                    {
-                        CheckAndShowPendingNotifications(chat);
-                        break;
-                    }
-
-                    if (fromSpeech)
-                    {
-                        ConsoleHelpers.WriteLine(userPrompt!, ConsoleColor.Yellow);
-                    }
+                    userPrompt = choice;
                 }
                 
                 // Handle explicit "exit" command or null input (EOF)
@@ -630,13 +592,13 @@ public class ChatCommand : CommandWithVariables
     {
         if (Console.CursorTop > 0)
         {
-            var x = ConsoleHelpers.IsQuiet() ? 0 : 6; // "User: " is 6 characters
+            var x = ConsoleHelpers.IsQuiet() ? 0 : 6;
             Console.SetCursorPosition(x, Console.CursorTop - 1);
         }
 
         var choices = allowSpeechInput
-            ? new[] { "speech", "---", "reset conversation", "exit" }
-            : new[] { "reset conversation", "exit" };
+            ? new[] { "speech", "---", "clear", "help", "exit" }
+            : new[] { "clear", "help", "exit" };
         
         var defaultSelection = allowSpeechInput ? 0 : choices.Length - 1;
         
@@ -650,11 +612,12 @@ public class ChatCommand : CommandWithVariables
         
         return selectedChoice switch
         {
-            "speech" => "speech",
+            "speech" => "/speech",
+            "clear" => "/clear",
+            "help" => "/help",
             "exit" => "exit",
-            "reset conversation" => "reset",
-            "---" => null, // Separator - treat as cancel/continue
-            _ => null // Escape or unknown - continue chatting
+            "---" => null,
+            _ => null
         };
     }
 
@@ -1320,6 +1283,12 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+
+    public void ResetTitleGenerationFlag()
+    {
+        _titleGenerationAttempted = false;
+    }
+
 
 
 }
