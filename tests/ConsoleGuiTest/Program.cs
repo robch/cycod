@@ -9,71 +9,76 @@ namespace ConsoleGuiTest
         {
             try
             {
-                // Check if we have a console
-                if (Console.IsOutputRedirected)
+                Console.WriteLine("Console GUI Comprehensive Test Suite");
+                Console.WriteLine("=====================================\n");
+
+                var allPassed = true;
+
+                // Run non-interactive tests first (these work even with redirected output)
+                allPassed &= RectTests.RunAll();
+
+                // Run interactive tests if we have a real console
+                if (!Console.IsOutputRedirected)
                 {
-                    Console.WriteLine("Test requires an interactive console. Skipping interactive test.");
-                    return TestWithoutConsole();
+                    allPassed &= CursorTests.RunAll();
+                    allPassed &= ScreenTests.RunAll();
+                    allPassed &= WindowTests.RunAll();
+
+                    // Run visual demo if all tests passed
+                    if (allPassed)
+                    {
+                        Console.WriteLine("\n=== Visual Demo ===");
+                        Console.WriteLine("Running visual demonstration of Window functionality...\n");
+                        RunVisualDemo();
+                    }
                 }
-                
-                return TestScreenAndWindow();
+                else
+                {
+                    Console.WriteLine("\n(Interactive tests skipped - console redirection detected)");
+                }
+
+                // Summary
+                Console.WriteLine("\n=====================================");
+                if (allPassed)
+                {
+                    Console.WriteLine("✓ ALL TESTS PASSED");
+                    return 0;
+                }
+                else
+                {
+                    Console.WriteLine("✗ SOME TESTS FAILED");
+                    return 1;
+                }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"\n✗ FATAL ERROR: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
                 return 1;
             }
         }
 
-        static int TestWithoutConsole()
+        static void RunVisualDemo()
         {
-            Console.WriteLine("Running basic object instantiation tests...");
-            
-            // Test that classes can be instantiated
-            var colors = new Colors(ConsoleColor.White, ConsoleColor.Black);
-            Console.WriteLine($"✓ Colors created: fg={colors.Foreground}, bg={colors.Background}");
-            
-            var rect = new Rect(0, 0, 10, 5);
-            Console.WriteLine($"✓ Rect created: x={rect.X}, y={rect.Y}, w={rect.Width}, h={rect.Height}");
-            
-            Console.WriteLine("✓ All basic tests passed!");
-            return 0;
-        }
-
-        static int TestScreenAndWindow()
-        {
-            Console.WriteLine("Testing Screen and Window classes...\n");
-
-            // Test 1: Screen initialization
-            Console.WriteLine("Test 1: Screen.Current initialized");
             var screen = Screen.Current;
-            Console.WriteLine($"  Screen width: {Console.WindowWidth}");
-            Console.WriteLine($"  Screen height: {Console.WindowHeight}");
-
-            // Test 2: Colors
-            Console.WriteLine("\nTest 2: Colors");
-            var originalColors = screen.ColorsStart;
-            Console.WriteLine($"  Original foreground: {originalColors.Foreground}");
-            Console.WriteLine($"  Original background: {originalColors.Background}");
-            
-            // Test 3: Create a simple window
-            Console.WriteLine("\nTest 3: Create and display a window with border");
-            var testColors = new Colors(ConsoleColor.White, ConsoleColor.DarkBlue);
-            var rect = screen.MakeSpaceAtCursor(40, 5);
-            var window = new Window(null, rect, testColors, Window.Borders.SingleLine);
+            var colors = new Colors(ConsoleColor.White, ConsoleColor.DarkBlue);
+            var rect = screen.MakeSpaceAtCursor(50, 8);
+            var window = new Window(null, rect, colors, Window.Borders.SingleLine);
             
             window.Open();
-            window.WriteClientText(testColors, 1, 1, "Hello from Console GUI!");
-            window.WriteClientText(testColors, 1, 2, "This is a test window.");
+            window.WriteClientText(colors, 2, 1, "╔═══════════════════════════════════════════╗");
+            window.WriteClientText(colors, 2, 2, "║  Console GUI Foundation Components Demo  ║");
+            window.WriteClientText(colors, 2, 3, "╚═══════════════════════════════════════════╝");
+            window.WriteClientText(colors, 2, 5, "✓ Screen management");
+            window.WriteClientText(colors, 2, 6, "✓ Window rendering with borders");
+            window.WriteClientText(colors, 2, 7, "✓ Color management");
+            window.WriteClientText(colors, 2, 8, "✓ Cursor positioning");
             
-            Console.WriteLine("\n\nPress any key to close the window...");
+            Console.WriteLine("\n\nPress any key to close and complete tests...");
             Console.ReadKey(true);
             
             window.Close();
             screen.Reset();
-            
-            Console.WriteLine("\nTest complete!");
-            return 0;
         }
     }
 }
