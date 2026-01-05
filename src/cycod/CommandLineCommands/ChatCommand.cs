@@ -166,15 +166,11 @@ public class ChatCommand : CommandWithVariables
                 // Handle empty input in interactive mode with a context menu
                 if (string.IsNullOrWhiteSpace(userPrompt) && interactive && !Console.IsInputRedirected)
                 {
-                    // Build menu options based on speech input availability
-                    var menuOptions = UseSpeechInput
-                        ? new[] { "Speech input", "---", "Continue chatting", "Reset conversation", "Exit" }
-                        : new[] { "Continue chatting", "Reset conversation", "Exit" };
-                    
-                    var selectedIndex = ListBoxPicker.PickIndexOf(menuOptions, 0);
-                    
-                    // Handle speech input option
-                    if (UseSpeechInput && selectedIndex == 0)
+                    var choice = PickInteractiveContextMenu(UseSpeechInput);
+                    if (choice == null) continue;
+
+                    var fromSpeech = false;
+                    if (choice == "speech")
                     {
                         try
                         {
@@ -183,9 +179,7 @@ public class ChatCommand : CommandWithVariables
                             {
                                 continue; // No speech recognized, return to prompt
                             }
-                            // Display the recognized text in yellow to show it was from speech
-                            ConsoleHelpers.WriteLine(userPrompt, ConsoleColor.Yellow);
-                            // Continue processing the speech input as normal user input
+                            fromSpeech = true;
                         }
                         catch (FileNotFoundException fnfe)
                         {
@@ -198,33 +192,22 @@ public class ChatCommand : CommandWithVariables
                             continue;
                         }
                     }
-                    else
+                    else if (choice == "reset")
                     {
-                        // Adjust indices for menu options based on whether speech is enabled
-                        var continueIndex = UseSpeechInput ? 2 : 0;
-                        var resetIndex = UseSpeechInput ? 3 : 1;
-                        var exitIndex = UseSpeechInput ? 4 : 2;
-                        
-                        if (selectedIndex == continueIndex || selectedIndex == -1) // Continue or Escape
-                        {
-                            continue;
-                        }
-                        else if (selectedIndex == resetIndex) // Reset conversation
-                        {
-                            chat.ClearChatHistory();
-                            _titleGenerationAttempted = false;
-                            ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
-                            continue;
-                        }
-                        else if (selectedIndex == exitIndex) // Exit
-                        {
-                            CheckAndShowPendingNotifications(chat);
-                            break;
-                        }
-                        else if (selectedIndex == 1 && UseSpeechInput) // Separator "---"
-                        {
-                            continue;
-                        }
+                        chat.ClearChatHistory();
+                        _titleGenerationAttempted = false;
+                        ConsoleHelpers.WriteLine("\nConversation reset.\n", ConsoleColor.Yellow);
+                        continue;
+                    }
+                    else if (choice == "exit")
+                    {
+                        CheckAndShowPendingNotifications(chat);
+                        break;
+                    }
+
+                    if (fromSpeech)
+                    {
+                        ConsoleHelpers.WriteLine(userPrompt!, ConsoleColor.Yellow);
                     }
                 }
                 
@@ -643,8 +626,37 @@ public class ChatCommand : CommandWithVariables
         ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
         return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
+    private string? PickInteractiveContextMenu(bool allowSpeechInput)
+    {
+        if (Console.CursorTop > 0)
+        {
+            var x = ConsoleHelpers.IsQuiet() ? 0 : 6; // "User: " is 6 characters
+            Console.SetCursorPosition(x, Console.CursorTop - 1);
+        }
 
-
+        var choices = allowSpeechInput
+            ? new[] { "speech", "---", "reset conversation", "exit" }
+            : new[] { "reset conversation", "exit" };
+        
+        var defaultSelection = allowSpeechInput ? 0 : choices.Length - 1;
+        
+        var selectedChoice = ListBoxPicker.PickString(
+            choices, 
+            20,
+            choices.Length + 2,
+            new Colors(ConsoleColor.White, ConsoleColor.Blue), 
+            new Colors(ConsoleColor.White, ConsoleColor.Red), 
+            defaultSelection);
+        
+        return selectedChoice switch
+        {
+            "speech" => "speech",
+            "exit" => "exit",
+            "reset conversation" => "reset",
+            "---" => null, // Separator - treat as cancel/continue
+            _ => null // Escape or unknown - continue chatting
+        };
+    }
 
     /// <summary>
     /// Sets metadata for both trajectory files.
