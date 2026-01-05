@@ -9,62 +9,33 @@ namespace CyCoD.Helpers;
 public static class SpeechHelpers
 {
     /// <summary>
-    /// Creates a SpeechConfig from configuration files (speech.key and speech.region).
+    /// Creates a SpeechConfig from configuration settings (Speech.Key and Speech.Region).
     /// </summary>
     /// <returns>Configured SpeechConfig instance</returns>
-    /// <exception cref="FileNotFoundException">If speech.key or speech.region files are not found</exception>
+    /// <exception cref="InvalidOperationException">If speech key or region are not configured</exception>
     public static SpeechConfig CreateSpeechConfig()
     {
-        // Look for speech.key file in scope order: local, user, global
-        var keyFile = ScopeFileHelpers.FindFileInAnyScope("speech.key", "", searchParents: false);
-        if (keyFile == null)
+        // Get speech key from configuration system
+        var keyConfig = ConfigStore.Instance.GetFromAnyScope(KnownSettings.SpeechKey);
+        if (keyConfig.IsNotFoundNullOrEmpty())
         {
-            // Try without subdirectory - look directly in config root
-            keyFile = FindFileInConfigScopes("speech.key");
+            throw new InvalidOperationException("Speech key not configured. " +
+                "Set it using: 'cycod config set Speech.Key <your-key>' or environment variable SPEECH_KEY.\n" +
+                "Run 'cycod config --help' for more information on configuration options.");
         }
-        if (keyFile == null)
-        {
-            throw new FileNotFoundException("Could not find speech.key file in any configuration scope (local, user, or global).\n" +
-                "Please create a speech.key file with your Azure Cognitive Services Speech key.\n" +
-                "Run 'cycod config --help' for more information on configuration scopes.");
-        }
-        var key = File.ReadAllText(keyFile, Encoding.Default).Trim();
+        var key = keyConfig.AsString()!.Trim();
         
-        // Look for speech.region file in scope order: local, user, global
-        var regionFile = ScopeFileHelpers.FindFileInAnyScope("speech.region", "", searchParents: false);
-        if (regionFile == null)
+        // Get speech region from configuration system
+        var regionConfig = ConfigStore.Instance.GetFromAnyScope(KnownSettings.SpeechRegion);
+        if (regionConfig.IsNotFoundNullOrEmpty())
         {
-            // Try without subdirectory - look directly in config root
-            regionFile = FindFileInConfigScopes("speech.region");
+            throw new InvalidOperationException("Speech region not configured. " +
+                "Set it using: 'cycod config set Speech.Region <region>' or environment variable SPEECH_REGION (e.g., 'westus2').\n" +
+                "Run 'cycod config --help' for more information on configuration options.");
         }
-        if (regionFile == null)
-        {
-            throw new FileNotFoundException("Could not find speech.region file in any configuration scope (local, user, or global).\n" +
-                "Please create a speech.region file with your Azure Cognitive Services Speech region (e.g., 'westus2').\n" +
-                "Run 'cycod config --help' for more information on configuration scopes.");
-        }
-        var region = File.ReadAllText(regionFile, Encoding.Default).Trim();
+        var region = regionConfig.AsString()!.Trim();
         
         return SpeechConfig.FromSubscription(key, region);
-    }
-    
-    /// <summary>
-    /// Finds a file in configuration scopes (local, user, global) directly in the config directory root.
-    /// </summary>
-    private static string? FindFileInConfigScopes(string fileName)
-    {
-        foreach (var scope in new[] { ConfigFileScope.Local, ConfigFileScope.User, ConfigFileScope.Global })
-        {
-            var scopeDir = ConfigFileHelpers.GetScopeDirectoryPath(scope);
-            if (scopeDir == null) continue;
-            
-            var filePath = Path.Combine(scopeDir, fileName);
-            if (File.Exists(filePath))
-            {
-                return filePath;
-            }
-        }
-        return null;
     }
     
     /// <summary>
