@@ -111,6 +111,7 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ScreenshotHelperFunctions(this));
         factory.AddFunctions(new ShellAndProcessHelperFunctions());
         factory.AddFunctions(new GitHubSearchHelperFunctions());
+        factory.AddFunctions(new MemoryLogHelperFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
