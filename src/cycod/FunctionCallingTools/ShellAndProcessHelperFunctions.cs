@@ -60,6 +60,9 @@ public class ShellAndProcessHelperFunctions
 
         try
         {
+            // ***** LOGGING TEST: This should ALWAYS appear *****
+            Logger.Warning($"🔥🔥🔥 RunShellCommand STARTED: command='{command}', expectedTimeout={expectedTimeout}ms 🔥🔥🔥");
+            
             // Create a temporary shell for this command
             string tempShellName = $"temp-{Guid.NewGuid():N}";
             var shellResult = NamedShellProcessManager.Instance.CreateShell(parsedShellType, tempShellName, workingDir, envVars);
@@ -71,15 +74,22 @@ public class ShellAndProcessHelperFunctions
 
             // Execute the command with timeout
             var result = await NamedShellProcessManager.Instance.ExecuteInShellAsync(tempShellName, command, expectedTimeout);
+            
+            // ***** LOGGING TEST: Check the result *****
+            Logger.Warning($"🔥🔥🔥 RunShellCommand AFTER ExecuteInShellAsync: TimedOut={result.TimedOut}, ExitCode={result.ExitCode}, Duration={result.Duration.TotalMilliseconds}ms 🔥🔥🔥");
 
             // If command timed out, promote the shell to a named shell
             if (result.TimedOut)
             {
+                Logger.Warning($"🔥🔥🔥 RunShellCommand: TIMEOUT DETECTED! Promoting shell... 🔥🔥🔥");
+                
                 // Generate name for auto-promoted shell
                 string promotedShellName = NamedShellProcessManager.GenerateAutoPromotedShellName(parsedShellType);
                 
                 // Promote the existing temporary shell instead of creating new and terminating old
                 bool promotionSuccess = NamedShellProcessManager.Instance.PromoteShellToNamed(tempShellName, promotedShellName);
+                
+                Logger.Warning($"🔥🔥🔥 RunShellCommand: Promotion result={promotionSuccess}, shellName='{promotedShellName}' 🔥🔥🔥");
                 
                 if (!promotionSuccess)
                 {
@@ -104,6 +114,8 @@ public class ShellAndProcessHelperFunctions
             }
             else
             {
+                Logger.Warning($"🔥🔥🔥 RunShellCommand: Command completed WITHOUT timeout. Terminating temp shell. 🔥🔥🔥");
+                
                 // Command completed within timeout, terminate the temporary shell
                 NamedShellProcessManager.Instance.TerminateShell(tempShellName);
                 

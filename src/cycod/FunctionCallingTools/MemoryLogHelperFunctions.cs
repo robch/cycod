@@ -13,15 +13,25 @@ public class MemoryLogHelperFunctions
         [Description("Start log line number (1-indexed). Negative numbers count from end (-1 = last line). Default: 1")] int startLine = 1,
         [Description("End log line number. 0 or -1 = end of logs. Negative numbers count from end. Default: 0")] int endLine = 0,
         
-        [Description("Only show lines containing this regex pattern. Applied after removeAllLines filter.")] string lineContains = "",
-        [Description("Remove lines containing this regex pattern. Applied first, before other filters.")] string removeAllLines = "",
+        [Description("Only show lines containing this regex pattern (if useRegex=true) or literal text (if useRegex=false). Applied after removeAllLines filter.")] string lineContains = "",
+        [Description("Remove lines containing this regex pattern (if useRegex=true) or literal text (if useRegex=false). Applied first, before other filters. Default filters out GetMemoryLogs calls.")] string removeAllLines = "GetMemoryLogs",
         
         [Description("Number of lines to show before and after lineContains matches.")] int linesBeforeAndAfter = 0,
         [Description("Include line numbers in output.")] bool lineNumbers = true,
         
+        [Description("Use regex for lineContains and removeAllLines patterns. If false, uses literal text matching.")] bool useRegex = true,
+        
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
+        // Check if file logging is enabled and get the location
+        var fileLogPath = FileLogger.Instance.GetCurrentLogFilePath();
+        var fileLoggingInfo = "";
+        if (!string.IsNullOrEmpty(fileLogPath))
+        {
+            fileLoggingInfo = $"\n\n💾 Full logs are being saved to: {fileLogPath}\n   (These logs persist across rebuilds - use ViewFile to access them)";
+        }
+        
         // Get all memory logs thread-safely
         var allLines = MemoryLogger.Instance.GetAllLogs()
             .Select(line => line.TrimEnd('\r', '\n'))
@@ -29,7 +39,7 @@ public class MemoryLogHelperFunctions
         var logLineCount = allLines.Length;
         
         if (logLineCount == 0)
-            return "No logs available in memory.";
+            return $"No logs available in memory.{fileLoggingInfo}";
         
         // Enhanced line number handling with negative indexing
         if (endLine == 0) endLine = -1;
@@ -59,11 +69,12 @@ public class MemoryLogHelperFunctions
         {
             try
             {
-                removeAllLinesRegex = new Regex(removeAllLines, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+                var removePattern = useRegex ? removeAllLines : Regex.Escape(removeAllLines);
+                removeAllLinesRegex = new Regex(removePattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
             }
             catch (Exception ex)
             {
-                return $"Invalid regular expression pattern for removeAllLines: {removeAllLines} - {ex.Message}";
+                return $"Invalid {(useRegex ? "regular expression" : "text")} pattern for removeAllLines: {removeAllLines} - {ex.Message}";
             }
             
             // Filter out removed lines completely
@@ -104,11 +115,12 @@ public class MemoryLogHelperFunctions
         Regex lineContainsRegex;
         try
         {
-            lineContainsRegex = new Regex(lineContains, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+            var linePattern = useRegex ? lineContains : Regex.Escape(lineContains);
+            lineContainsRegex = new Regex(linePattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
         catch (Exception ex)
         {
-            return $"Invalid regular expression pattern for lineContains: {lineContains} - {ex.Message}";
+            return $"Invalid {(useRegex ? "regular expression" : "text")} pattern for lineContains: {lineContains} - {ex.Message}";
         }
         
         // Find matching line indices within the cleaned range  
@@ -148,14 +160,14 @@ public class MemoryLogHelperFunctions
         var matchedIndicesSet = matchedLineIndices.ToHashSet();
         
         return FormatAndTruncateLines(selectedLines, lineNumbers, selectedLineNumbers, shouldHighlight, 
-            expandedLineIndices.Select(i => matchedIndicesSet.Contains(i)).ToArray(), maxCharsPerLine, maxTotalChars, logLineCount);
+            expandedLineIndices.Select(i => matchedIndicesSet.Contains(i)).ToArray(), maxCharsPerLine, maxTotalChars, logLineCount, matchedLineIndices.Count, expandedLineIndices.Count);
     }
     
     /// <summary>
     /// Helper method to format lines with optional line numbers and highlighting, then apply truncation
     /// </summary>
     private static string FormatAndTruncateLines(string[] lines, bool lineNumbers, int[] lineNumbersArray, 
-        bool shouldHighlight, bool[]? isMatchingLine, int maxCharsPerLine, int maxTotalChars, int logLineCount)
+        bool shouldHighlight, bool[]? isMatchingLine, int maxCharsPerLine, int maxTotalChars, int logLineCount, int totalMatches = 0, int totalIncluded = 0)
     {
         var sb = new StringBuilder();
         int firstLine = lineNumbersArray[0];
@@ -220,7 +232,22 @@ public class MemoryLogHelperFunctions
         // Add metadata
         sb.AppendLine();
         sb.AppendLine();
-        sb.Append($"[Showing lines {firstLine}-{lastLine}");
+        
+        if (totalMatches > 0)
+        {
+            sb.Append($"[Matched {totalMatches} line{(totalMatches != 1 ? "s" : "")}");
+            if (totalIncluded > totalMatches)
+            {
+                sb.Append($", showing {totalIncluded} lines with context");
+            }
+            sb.Append(", ");
+        }
+        else
+        {
+            sb.Append("[Showing ");
+        }
+        
+        sb.Append($"lines {firstLine}-{lastLine}");
         
         if (wasTruncated)
         {
@@ -244,6 +271,17 @@ public class MemoryLogHelperFunctions
         {
             sb.AppendLine();
             sb.Append($"[Note: Some lines were truncated to {maxCharsPerLine} chars]");
+        }
+        
+        // Add file logging info at the end
+        var fileLogPath = FileLogger.Instance.GetCurrentLogFilePath();
+        if (!string.IsNullOrEmpty(fileLogPath))
+        {
+            sb.AppendLine();
+            sb.AppendLine();
+            sb.Append($"💾 Full logs saved to: {fileLogPath}");
+            sb.AppendLine();
+            sb.Append("   (Persists across rebuilds - use ViewFile to access)");
         }
         
         return sb.ToString();
