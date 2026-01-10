@@ -1,0 +1,63 @@
+class: tilde-path-expansion-tests  
+tag: file-operations  
+tests:
+
+- name: "Manual tilde expansion test"
+  bash: |
+    # Create test file in home
+    echo 'Testing tilde expansion manually' > ~/.test_manual.txt
+    
+    # Build the project first
+    dotnet build src/cycod/cycod.csproj > /dev/null
+    
+    # Test the ViewFile function directly
+    OUTPUT=$(dotnet run --project src/cycod/cycod.csproj -- --wait "ViewFile ~/.test_manual.txt" 2>/dev/null)
+    
+    # Check if tilde expansion worked  
+    if echo "$OUTPUT" | grep -q "Testing tilde expansion manually"; then
+      echo "SUCCESS: Tilde expansion works!"
+      echo "Output contains the expected text"
+    else
+      echo "FAILURE: Tilde expansion failed"
+      echo "Output was: $OUTPUT"
+    fi
+    
+    # Cleanup
+    rm -f ~/.test_manual.txt
+  expect-regex:
+    - "SUCCESS: Tilde expansion works!"
+
+- name: "Compare before/after fix - should work now"
+  bash: |
+    # Create test file
+    echo 'Before and after test' > ~/.test_before_after.txt
+    
+    # Build first
+    dotnet build src/cycod/cycod.csproj > /dev/null
+    
+    # Test with tilde - should work now
+    TILDE_RESULT=$(dotnet run --project src/cycod/cycod.csproj -- --wait "ViewFile ~/.test_before_after.txt" 2>&1)
+    
+    # Test with full path - should also work
+    FULL_RESULT=$(dotnet run --project src/cycod/cycod.csproj -- --wait "ViewFile $HOME/.test_before_after.txt" 2>&1)
+    
+    # Check if tilde path works (doesn't give "does not exist" error)
+    if echo "$TILDE_RESULT" | grep -q "does not exist"; then
+      echo "FAILURE: Tilde path still not working"
+    elif echo "$TILDE_RESULT" | grep -q "Before and after test"; then
+      echo "SUCCESS: Tilde path expansion is working"
+    else
+      echo "UNCLEAR: Unexpected tilde result: $TILDE_RESULT"
+    fi
+    
+    # Check equivalence
+    if [ "$TILDE_RESULT" = "$FULL_RESULT" ]; then
+      echo "SUCCESS: Tilde and full paths give identical results"
+    else
+      echo "WARNING: Results differ between tilde and full path"
+    fi
+    
+    # Cleanup
+    rm -f ~/.test_before_after.txt
+  expect-regex:
+    - "SUCCESS: Tilde path expansion is working"
