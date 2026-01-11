@@ -35,7 +35,7 @@ public class SlashSpeechCommandHandler : IAsyncSlashCommandHandler
             }
 
             // Display the recognized text in yellow to show it was from speech
-            ConsoleHelpers.WriteLine(recognizedText, ConsoleColor.Yellow);
+            ConsoleHelpers.WriteLine(recognizedText, ConsoleColor.White);
             
             // Return the recognized text to be sent to the assistant
             return SlashCommandResult.WithResponse(recognizedText);

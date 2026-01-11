@@ -1,5 +1,6 @@
 #if WINDOWS
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 #endif
 using System.Runtime.InteropServices;
@@ -45,7 +46,8 @@ public static class ScreenshotHelper
             var fileName = Path.Combine(Path.GetTempPath(), $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss-fff}.png");
             bitmap.Save(fileName, ImageFormat.Png);
 
-            return fileName;
+            // Resize to keep file size manageable
+            return ResizeImageIfNeeded(fileName);
 #pragma warning restore CA1416 // Validate platform compatibility
         }
         catch (Exception ex)
@@ -101,7 +103,7 @@ public static class ScreenshotHelper
                 return null;
             }
 
-            return fileName;
+            return ResizeImageIfNeeded(fileName);
 #pragma warning restore CA1416 // Validate platform compatibility
         }
         catch (Exception ex)
@@ -226,7 +228,7 @@ public static class ScreenshotHelper
                 return null;
             }
 
-            return fileName;
+            return ResizeImageIfNeeded(fileName);
 #pragma warning restore CA1416 // Validate platform compatibility
         }
         catch (Exception ex)
@@ -288,7 +290,7 @@ public static class ScreenshotHelper
                 return null;
             }
 
-            return fileName;
+            return ResizeImageIfNeeded(fileName);
 #pragma warning restore CA1416 // Validate platform compatibility
         }
         catch (Exception ex)
@@ -504,6 +506,151 @@ public static class ScreenshotHelper
         public long length;
     }
 #endif
+
+    /// <summary>
+    /// Resizes an image if it exceeds the specified maximum dimension.
+    /// Images are resized proportionally to fit within maxDimension x maxDimension.
+    /// </summary>
+    /// <param name="imagePath">Path to the image file to resize</param>
+    /// <param name="maxDimension">Maximum width or height in pixels (default: 1200)</param>
+    /// <returns>The image path (same as input), or null if resize failed</returns>
+    private static string? ResizeImageIfNeeded(string imagePath, int maxDimension = 1200)
+    {
+        if (!File.Exists(imagePath))
+        {
+            Logger.Error($"Cannot resize image - file not found: {imagePath}");
+            return imagePath;
+        }
+
+#if WINDOWS
+        try
+        {
+#pragma warning disable CA1416 // Validate platform compatibility
+            using var original = new Bitmap(imagePath);
+            
+            // Check if resize is needed
+            if (original.Width <= maxDimension && original.Height <= maxDimension)
+            {
+                Logger.Verbose($"Image resize not needed - dimensions: {original.Width}x{original.Height}");
+                return imagePath;
+            }
+
+            // Calculate new dimensions maintaining aspect ratio
+            var scale = (double)maxDimension / Math.Max(original.Width, original.Height);
+            var newWidth = (int)(original.Width * scale);
+            var newHeight = (int)(original.Height * scale);
+
+            Logger.Verbose($"Resizing image from {original.Width}x{original.Height} to {newWidth}x{newHeight}");
+
+            // Create resized bitmap
+            using var resized = new Bitmap(newWidth, newHeight);
+            using var graphics = Graphics.FromImage(resized);
+            
+            // Use high quality resizing
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+            graphics.PixelOffsetMode = PixelOffsetMode.HighQuality;
+            
+            graphics.DrawImage(original, 0, 0, newWidth, newHeight);
+            
+            // Save over the original file
+            resized.Save(imagePath, ImageFormat.Png);
+            
+            return imagePath;
+#pragma warning restore CA1416 // Validate platform compatibility
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to resize image: {ex.Message}");
+            return imagePath; // Return original on failure
+        }
+#elif OSX
+        try
+        {
+#pragma warning disable CA1416 // Validate platform compatibility
+            // Use sips to get current dimensions
+            var getDimensionsInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "/usr/bin/sips",
+                Arguments = $"-g pixelWidth -g pixelHeight \"{imagePath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var getDims = System.Diagnostics.Process.Start(getDimensionsInfo);
+            if (getDims == null)
+            {
+                Logger.Error("Failed to start sips process to get dimensions");
+                return imagePath;
+            }
+
+            getDims.WaitForExit(5000);
+            var output = getDims.StandardOutput.ReadToEnd();
+            
+            // Parse dimensions from output like "  pixelWidth: 2940\n  pixelHeight: 1912"
+            var widthMatch = System.Text.RegularExpressions.Regex.Match(output, @"pixelWidth:\s*(\d+)");
+            var heightMatch = System.Text.RegularExpressions.Regex.Match(output, @"pixelHeight:\s*(\d+)");
+            
+            if (widthMatch.Success && heightMatch.Success)
+            {
+                var width = int.Parse(widthMatch.Groups[1].Value);
+                var height = int.Parse(heightMatch.Groups[1].Value);
+                
+                if (width <= maxDimension && height <= maxDimension)
+                {
+                    Logger.Verbose($"Image resize not needed - dimensions: {width}x{height}");
+                    return imagePath;
+                }
+
+                Logger.Verbose($"Resizing image from {width}x{height} using sips");
+            }
+
+            // Resize using sips (-Z resizes proportionally to fit within maxDimension)
+            var resizeInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "/usr/bin/sips",
+                Arguments = $"-Z {maxDimension} \"{imagePath}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using var process = System.Diagnostics.Process.Start(resizeInfo);
+            if (process == null)
+            {
+                Logger.Error("Failed to start sips process for resize");
+                return imagePath;
+            }
+
+            process.WaitForExit(10000); // Allow up to 10 seconds for resize
+
+            if (process.ExitCode != 0)
+            {
+                var error = process.StandardError.ReadToEnd();
+                Logger.Error($"sips resize failed with exit code {process.ExitCode}: {error}");
+                return imagePath;
+            }
+
+            Logger.Verbose($"Image resized successfully");
+            return imagePath;
+#pragma warning restore CA1416 // Validate platform compatibility
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to resize image: {ex.Message}");
+            return imagePath; // Return original on failure
+        }
+#else
+        // On other platforms, return the original image without resizing
+        Logger.Verbose("Image resizing not supported on this platform");
+        return imagePath;
+#endif
+    }
+
 
     /// <summary>
     /// Gets a user-friendly error message for unsupported platforms.
