@@ -1,0 +1,67 @@
+LIST COMMAND - List chat history conversations
+
+USAGE:
+  cycodj list [options]
+
+OPTIONS:
+  --date <date>          Filter conversations by date (YYYY-MM-DD, or "today"/"yesterday")
+  --last <n|timespec>    Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>     Number of messages to show per conversation (default: 3)
+  --branches             Show branch indicators (↳) and relationships
+  --stats                Add statistics summary at end of output
+  --save-output <file>   Save output to file instead of console
+
+TIME FILTER OPTIONS:
+  --today                Show today's conversations
+  --yesterday            Show yesterday's conversations
+  --after <timespec>     Show conversations after time (e.g., "2025-12-20" or "-7d")
+  --before <timespec>    Show conversations before time
+  --date-range <range>   Show conversations in time range (e.g., "-7d.." or "2025-12-01..2025-12-31")
+
+EXAMPLES:
+  cycodj list
+    List last 20 conversations with 3 message previews each (default)
+
+  cycodj list --last 50
+    Show the 50 most recent conversations
+
+  cycodj list --last 7d
+    Show conversations from the last 7 days
+
+  cycodj list --messages 1
+    List conversations with minimal message preview
+
+  cycodj list --messages all
+    List conversations showing all messages (like export)
+
+  cycodj list --branches
+    Show conversations with branch indicators (↳) and indentation
+
+  cycodj list --stats
+    Show conversation list plus statistics summary at end
+
+  cycodj list --last 10 --messages 5 --branches --stats
+    Combine multiple flags: 10 conversations, 5 messages each, with branches and stats
+
+  cycodj list --today --save-output today.md
+    Save today's conversations to a markdown file
+
+  cycodj list --date 2025-12-20
+    List all conversations from December 20, 2025
+
+DESCRIPTION:
+  The list command displays conversations from your chat history directory
+  (~/.cycod/history/). Each conversation shows its timestamp, title (if available),
+  message counts by role, and message previews.
+  
+  By default, shows 3 messages per conversation and lists the last 20 conversations.
+  Use --messages to control preview length, --last to change conversation count,
+  and --branches to see how conversations relate to each other.
+  
+  All flags are composable - mix and match them to get exactly the view you need.
+
+SEE ALSO:
+  cycodj help search    - Search within conversations
+  cycodj help show      - View full conversation details
+  cycodj help branches  - Visualize conversation trees
+  cycodj help stats     - View statistics

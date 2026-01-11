@@ -282,7 +282,7 @@ public static class AIExtensionsChatHelpers
         if (string.IsNullOrEmpty(content)) return false;
 
         var isTooBig = content.Length > maxPromptTokenTarget * ESTIMATED_BYTES_PER_TOKEN;
-        ConsoleHelpers.WriteDebugLine($"User chat content size: {content.Length}, max token size: {maxPromptTokenTarget}, is too big: {isTooBig}");
+        // ConsoleHelpers.WriteDebugLine($"User chat content size: {content.Length}, max token size: {maxPromptTokenTarget}, is too big: {isTooBig}");
 
         return isTooBig;
     }

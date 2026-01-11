@@ -1,9 +1,19 @@
 #!/bin/bash
 
 # Cycod Debug Environment Setup Script
-# This script sets up the PATH to prioritize debug builds over global dotnet tools
+# This script sets up the PATH to prioritize debug builds of all cycod tools over global dotnet tools
 
-set -e
+# Detect if being sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    SOURCED=false
+else
+    SOURCED=true
+fi
+
+# Only set -e if not sourced to avoid exiting user's shell
+if [[ "$SOURCED" == false ]]; then
+    set -e
+fi
 
 # Get the repository root directory (where this script is located relative to scripts/)
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -11,8 +21,15 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Define the debug binary paths
 DEBUG_PATHS=(
     "$REPO_ROOT/src/cycod/bin/Debug/net9.0"
+    "$REPO_ROOT/src/cycodj/bin/Debug/net9.0"
     "$REPO_ROOT/src/cycodmd/bin/Debug/net9.0"
     "$REPO_ROOT/src/cycodt/bin/Debug/net9.0"
+    "$REPO_ROOT/src/cycodgr/bin/Debug/net9.0"
+    "$REPO_ROOT/src/mcp/geolocation/bin/Debug/net9.0"
+    "$REPO_ROOT/src/mcp/mxlookup/bin/Debug/net9.0"
+    "$REPO_ROOT/src/mcp/osm/bin/Debug/net9.0"
+    "$REPO_ROOT/src/mcp/weather/bin/Debug/net9.0"
+    "$REPO_ROOT/src/mcp/whois/bin/Debug/net9.0"
 )
 
 # Function to check if PATH already contains our debug paths
@@ -71,7 +88,7 @@ test_setup() {
     echo "🧪 Testing debug environment setup:"
     echo "=================================="
     
-    for tool in cycod cycodmd cycodt; do
+    for tool in cycod cycodj cycodmd cycodt cycodgr cycod-mcp-geolocation cycod-mcp-mxlookup cycod-mcp-osm cycod-mcp-weather cycod-mcp-whois; do
         local tool_path=$(which "$tool" 2>/dev/null || echo "not found")
         echo "  $tool: $tool_path"
         
@@ -178,5 +195,7 @@ main() {
     fi
 }
 
-# Run main function with all arguments
-main "$@"
+# Only run main if executed directly (not sourced)
+if [[ "$SOURCED" == false ]]; then
+    main "$@"
+fi

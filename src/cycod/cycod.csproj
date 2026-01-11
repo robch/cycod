@@ -11,8 +11,8 @@
     <OutputType>Exe</OutputType>
     
     <!-- Cross-platform support -->
-    <RuntimeIdentifiers>win-x64;linux-x64;osx-x64</RuntimeIdentifiers>
-    
+    <!-- RuntimeIdentifiers removed - specified on command line during publish -->
+        
     <!-- NuGet Package Properties -->
     <PackageId>CycoD</PackageId>
     <Authors>Rob Chambers</Authors>
@@ -48,6 +48,7 @@
     <PackageReference Include="GeminiDotnet.Extensions.AI" Version="0.12.0" />
     <PackageReference Include="Azure.Identity" Version="1.17.0" />
     <PackageReference Include="Azure.AI.OpenAI" Version="2.2.0-beta.4" />
+    <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.35.0" />
     <PackageReference Include="Microsoft.Extensions.AI" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.AI.Abstractions" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" Version="9.5.0-preview.1.25265.7" />

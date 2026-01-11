@@ -103,7 +103,7 @@ class Program
             
             // Stage 2: Phase E - Dual behavior for --file-contains
             // If --file-contains is specified WITHOUT repo pre-filtering, use it to find repos first
-            var hasRepoPreFiltering = !string.IsNullOrEmpty(command.RepoFileContains) || command.Repos.Any();
+            var hasRepoPreFiltering = !string.IsNullOrEmpty(command.RepoFileContains) || command.Repos.Any() || command.RepoPatterns.Any();
             var hasFileContains = !string.IsNullOrEmpty(command.FileContains);
             
             if (hasFileContains && !hasRepoPreFiltering)

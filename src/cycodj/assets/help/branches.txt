@@ -1,0 +1,69 @@
+COMMAND: cycodj branches
+
+DESCRIPTION:
+  Displays conversation branching relationships in a tree structure.
+  
+  Analyzes chat history files to detect when conversations branch from each other
+  (when you continue from an earlier point in a conversation). Shows the parent-child
+  relationships in an easy-to-read tree format.
+
+USAGE:
+  cycodj branches [options]
+
+OPTIONS:
+  --date, -d <date>           Filter conversations by date (YYYY-MM-DD)
+  --last <n|timespec>         Limit to last N conversations or time period (e.g., "7d", "2h")
+  --messages <n|all>          Number of messages to show per conversation (default: 0)
+  --stats                     Add statistics summary at end of output
+  --save-output <file>        Save output to file instead of console
+  --conversation, -c <id>     Show branches for a specific conversation
+  --verbose, -v               Show detailed branching information
+  --debug                     Enable debug output
+  --quiet                     Suppress non-essential output
+
+EXAMPLES:
+  # Show all conversation branches
+  cycodj branches
+
+  # Show branches for a specific date
+  cycodj branches --date 2024-12-20
+
+  # Show last 10 conversations with message previews
+  cycodj branches --last 10 --messages 3
+
+  # Show last week's branches with statistics
+  cycodj branches --last 7d --stats
+
+  # Show branches with detailed information
+  cycodj branches --verbose --messages 2
+
+  # Show branches for a specific conversation
+  cycodj branches --conversation chat-history-1754437373970
+
+  # Save branch tree to file
+  cycodj branches --last 20 --messages 1 --save-output tree.md
+
+OUTPUT:
+  The tree view shows:
+  📁 - Root conversations (no parent)
+  ├─ - Branched conversations (has a parent)
+  
+  Example output:
+    📁 2024-12-20 10:15:33 - Installing Git CLI
+      ├─ 2024-12-20 10:22:15 - Trying alternative approach
+      ├─ 2024-12-20 10:25:30 - Using chocolatey instead
+        ├─ 2024-12-20 10:28:00 - Added configuration
+        
+  Conversations that share the same tool_call_id sequence at the beginning
+  are identified as branches. The more tool_call_ids they share, the later
+  in the conversation the branch point occurred.
+
+VERBOSE MODE:
+  With --verbose, shows additional details:
+  - Number of messages (user, assistant)
+  - Number of tool calls
+  - Exact branch point (which tool call diverged)
+
+SEE ALSO:
+  cycodj list      - List conversations
+  cycodj help      - General help

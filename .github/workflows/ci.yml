@@ -55,14 +55,15 @@ jobs:
       run: ./scripts/build.sh ${{ env.CI_VERSION }} Release
     
     - name: Test
-      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test --configuration Release --framework net9.0 --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0:$(pwd)/src/cycodj/bin/Release/net9.0
         which cycod
         which cycodmd
         which cycodgr
+        which cycodj
         which cycodt
         cycodt run --log ./TestResults/test-results-cycodt.log --output-file ./TestResults/test-results-cycodt.trx
     
@@ -129,3 +130,14 @@ jobs:
           src/cycodgr/bin/Release/net9.0/win-x64/publish/
           src/cycodgr/bin/Release/net9.0/linux-x64/publish/
           src/cycodgr/bin/Release/net9.0/osx-x64/publish/
+    
+    - name: Upload cycodj build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cycodj-build
+        path: |
+          src/cycodj/bin/Release/net9.0/
+          src/cycodj/bin/Release/net9.0/win-x64/publish/
+          src/cycodj/bin/Release/net9.0/linux-x64/publish/
+          src/cycodj/bin/Release/net9.0/osx-x64/publish/
+

@@ -144,13 +144,22 @@ public abstract class PersistentShellProcess
         }
         catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
         {
+            Logger.Info($"RunCommandAsync: CANCELLATION TOKEN FIRED after {timeoutMs}ms - This is Path A (correct path)");
+            
+            // Capture output that was produced before timeout
+            var outputSoFar = _shellProcess.GetCurrentOutput();
+            var errorSoFar = _shellProcess.GetCurrentError();
+            var mergedSoFar = _shellProcess.GetCurrentMergedOutput();
+            
+            Logger.Info($"RunCommandAsync: Captured output before timeout - stdout={outputSoFar?.Length ?? 0} chars, stderr={errorSoFar?.Length ?? 0} chars, merged={mergedSoFar?.Length ?? 0} chars");
+            
             // Convert cancellation due to timeout to a timeout exception result
             var startTime = DateTime.Now.AddMilliseconds(-timeoutMs); // Approximate start time
             return PersistentShellCommandResult.FromProcessResult(
                 new RunnableProcessResult(
-                    "",
-                    "",
-                    "",
+                    outputSoFar ?? "",
+                    errorSoFar ?? "",
+                    mergedSoFar ?? "",
                     -1,
                     ProcessCompletionState.TimedOut,
                     TimeSpan.FromMilliseconds(timeoutMs), // Approximate duration
@@ -264,45 +273,25 @@ public abstract class PersistentShellProcess
                 isSyntaxError
             );
         }
-        catch (TimeoutException)
-        {
-            // Attempt to kill the shell process since it's in a bad state
-            try
-            {
-                _shellProcess.ForceShutdown();
-            }
-            catch
-            {
-                // Ignore errors during cleanup
-            }
-            
-            // Report the actual timeout used
-            int actualTimeout = timeoutMs ?? _commandTimeoutMs;
-            var duration = DateTime.Now - startTime;
-            return PersistentShellCommandResult.FromProcessResult(
-                new RunnableProcessResult(
-                    "",
-                    "",
-                    "",
-                    -1,
-                    ProcessCompletionState.TimedOut,
-                    duration,
-                    ProcessErrorType.Timeout,
-                    $"Command timed out after {duration.TotalMilliseconds:0}ms (timeout: {actualTimeout}ms)"
-                ),
-                command
-            );
-        }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException ex)
         {
             var duration = DateTime.Now - startTime;
             var looksLikeTimeout = timeoutMs.HasValue && Math.Abs(duration.TotalMilliseconds - timeoutMs.Value) < 100;
             
+            Logger.Warning($"⚠️ RunCommandInternalAsync: CAUGHT OPERATIONCANCELEDEXCEPTION - duration={duration.TotalMilliseconds}ms, timeout={timeoutMs}ms, looksLikeTimeout={looksLikeTimeout}");
+            
+            // Capture output that was produced before cancellation/timeout
+            var outputSoFar = _shellProcess.GetCurrentOutput();
+            var errorSoFar = _shellProcess.GetCurrentError();
+            var mergedSoFar = _shellProcess.GetCurrentMergedOutput();
+            
+            Logger.Info($"RunCommandInternalAsync: Captured output before cancellation - stdout={outputSoFar?.Length ?? 0} chars, stderr={errorSoFar?.Length ?? 0} chars, merged={mergedSoFar?.Length ?? 0} chars");
+            
             return PersistentShellCommandResult.FromProcessResult(
                 new RunnableProcessResult(
-                    "",
-                    "",
-                    "",
+                    outputSoFar ?? "",
+                    errorSoFar ?? "",
+                    mergedSoFar ?? "",
                     -1,
                     looksLikeTimeout ? ProcessCompletionState.TimedOut : ProcessCompletionState.Canceled,
                     duration,
@@ -411,13 +400,20 @@ public abstract class PersistentShellProcess
         }
         catch (OperationCanceledException) when (tokenSource.IsCancellationRequested)
         {
+            // Capture output that was produced before timeout
+            var outputSoFar = _shellProcess.GetCurrentOutput();
+            var errorSoFar = _shellProcess.GetCurrentError();
+            var mergedSoFar = _shellProcess.GetCurrentMergedOutput();
+            
+            Logger.Info($"RunCommandWithInputAsync: Captured output before timeout - stdout={outputSoFar?.Length ?? 0} chars, stderr={errorSoFar?.Length ?? 0} chars, merged={mergedSoFar?.Length ?? 0} chars");
+            
             // Convert cancellation due to timeout to a timeout exception result
             var startTime = DateTime.Now.AddMilliseconds(-timeoutMs); // Approximate start time
             return PersistentShellCommandResult.FromProcessResult(
                 new RunnableProcessResult(
-                    "",
-                    "",
-                    "",
+                    outputSoFar ?? "",
+                    errorSoFar ?? "",
+                    mergedSoFar ?? "",
                     -1,
                     ProcessCompletionState.TimedOut,
                     TimeSpan.FromMilliseconds(timeoutMs), // Approximate duration
@@ -442,11 +438,13 @@ public abstract class PersistentShellProcess
     /// <returns>A task that completes when the marker is found with the process output.</returns>
     protected virtual async Task<RunnableProcessResult> WaitForMarkerAsync(CancellationToken cancellationToken, int? timeoutMs = null)
     {
+        var actualTimeoutMs = timeoutMs ?? _commandTimeoutMs;
+        Logger.Warning($"🔍 WaitForMarkerAsync STARTED: timeout={actualTimeoutMs}ms, marker={_marker}, Thread={Thread.CurrentThread.ManagedThreadId}");
+        
         // Pattern to match marker with exit code
         var pattern = $@"{Regex.Escape(_marker)}(-?\d+)";
         var regex = new Regex(pattern, RegexOptions.Compiled | RegexOptions.Multiline);
         var startTime = DateTime.Now;
-        var actualTimeoutMs = timeoutMs ?? _commandTimeoutMs; // Use provided timeout or default command timeout
         
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -457,39 +455,52 @@ public abstract class PersistentShellProcess
             }
             
             // Check for marker in output
+            Logger.Warning($"🔍 WaitForMarkerAsync: About to read outputs - Thread={Thread.CurrentThread.ManagedThreadId}, Time={DateTime.Now:HH:mm:ss.fff}");
+            
             string currentOutput;
             lock (_lock)
             {
+                Logger.Warning($"🔒 WaitForMarkerAsync: INSIDE LOCK - Reading GetCurrentOutput() - Thread={Thread.CurrentThread.ManagedThreadId}");
                 currentOutput = _shellProcess.GetCurrentOutput();
+                Logger.Warning($"🔒 WaitForMarkerAsync: Got output (length={currentOutput?.Length ?? 0}) - Thread={Thread.CurrentThread.ManagedThreadId}");
             }
+            
+            Logger.Warning($"🔓 WaitForMarkerAsync: OUTSIDE LOCK - About to check regex - Thread={Thread.CurrentThread.ManagedThreadId}");
             
             if (regex.IsMatch(currentOutput))
             {
+                Logger.Warning($"✅ WaitForMarkerAsync: MARKER FOUND! About to read error/merged outputs OUTSIDE LOCK - Thread={Thread.CurrentThread.ManagedThreadId}, Time={DateTime.Now:HH:mm:ss.fff}");
+                
+                var error = _shellProcess.GetCurrentError();
+                Logger.Warning($"🔓 WaitForMarkerAsync: GetCurrentError() returned length={error?.Length ?? 0} - Thread={Thread.CurrentThread.ManagedThreadId}");
+                
+                var merged = _shellProcess.GetCurrentMergedOutput();
+                Logger.Warning($"🔓 WaitForMarkerAsync: GetCurrentMergedOutput() returned length={merged?.Length ?? 0} - Thread={Thread.CurrentThread.ManagedThreadId}");
+                
+                // Compare with what we captured earlier
+                Logger.Warning($"📊 WaitForMarkerAsync: COMPARISON - currentOutput.Length={currentOutput.Length}, merged.Length={merged?.Length ?? 0}, match={currentOutput.Length == (merged?.Length ?? 0)}");
+                
                 // Marker found, return the current output
                 return new RunnableProcessResult(
                     currentOutput,
-                    _shellProcess.GetCurrentError(),
-                    _shellProcess.GetCurrentMergedOutput(),
+                    error,
+                    merged,
                     0, // Actual exit code will be parsed later
                     ProcessCompletionState.Completed,
                     DateTime.Now - startTime
                 );
             }
             
-            // Check for timeout
-            var elapsed = (DateTime.Now - startTime).TotalMilliseconds;
-            if (elapsed > actualTimeoutMs)
-            {
-                throw new TimeoutException($"Timed out waiting for marker after {actualTimeoutMs}ms");
-            }
-            
             // Wait briefly before checking again
+            Logger.Warning($"💤 WaitForMarkerAsync: No marker yet, sleeping 50ms - Thread={Thread.CurrentThread.ManagedThreadId}");
             await Task.Delay(50, cancellationToken);
         }
         
+        Logger.Warning($"🛑 WaitForMarkerAsync: Exited while loop - cancellationToken.IsCancellationRequested={cancellationToken.IsCancellationRequested}");
         cancellationToken.ThrowIfCancellationRequested();
         
         // Should never reach here if cancellation token behaves correctly
+        Logger.Warning($"🚨 WaitForMarkerAsync: UNEXPECTED - reached after ThrowIfCancellationRequested without throwing!");
         throw new InvalidOperationException("Unexpected state in WaitForMarkerAsync");
     }
     

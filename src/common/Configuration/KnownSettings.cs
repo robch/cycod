@@ -53,6 +53,10 @@ public static class KnownSettings
     public const string CopilotApiEndpoint = "Copilot.ApiEndpoint";
     public const string CopilotIntegrationId = "Copilot.IntegrationId";
     public const string CopilotEditorVersion = "Copilot.EditorVersion";
+    
+    // Speech settings
+    public const string SpeechKey = "Speech.Key";
+    public const string SpeechRegion = "Speech.Region";
 
     // Test provider settings
     public const string TestDefaultResponse = "Test.DefaultResponse";
@@ -106,6 +110,9 @@ public static class KnownSettings
         
         // GitHub secrets
         GitHubToken,
+        
+        // Speech secrets
+        SpeechKey,
     };
     
     #endregion
@@ -160,6 +167,10 @@ public static class KnownSettings
         { CopilotApiEndpoint, "COPILOT_API_ENDPOINT" },
         { CopilotIntegrationId, "COPILOT_INTEGRATION_ID" },
         { CopilotEditorVersion, "COPILOT_EDITOR_VERSION" },
+        
+        // Speech mappings
+        { SpeechKey, "SPEECH_KEY" },
+        { SpeechRegion, "SPEECH_REGION" },
         
         // Test provider mappings
         { TestDefaultResponse, "TEST_DEFAULT_RESPONSE" },
@@ -229,6 +240,10 @@ public static class KnownSettings
         { CopilotApiEndpoint, "--copilot-api-endpoint" },
         { CopilotIntegrationId, "--copilot-integration-id" },
         { CopilotEditorVersion, "--copilot-editor-version" },
+        
+        // Speech mappings
+        { SpeechKey, "--speech-key" },
+        { SpeechRegion, "--speech-region" },
         
         // Test provider mappings
         { TestDefaultResponse, "--test-default-response" },
@@ -357,6 +372,15 @@ public static class KnownSettings
         CopilotApiEndpoint,
         CopilotIntegrationId,
         CopilotEditorVersion
+    };
+    
+    /// <summary>
+    /// Collection of settings for Speech integration.
+    /// </summary>
+    public static readonly HashSet<string> SpeechSettings = new(StringComparer.OrdinalIgnoreCase)
+    {
+        SpeechKey,
+        SpeechRegion
     };
     
     /// <summary>

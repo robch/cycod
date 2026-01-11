@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Import shared version settings -->
+  <Import Project="../../BuildCommon.targets" />
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+    <AssemblyName>cycodj</AssemblyName>
+  
+    <OutputType>Exe</OutputType>
+    
+    <!-- Cross-platform support -->
+    <!-- RuntimeIdentifiers removed - specified on command line during publish -->
+        
+    <!-- NuGet Package Properties -->
+    <PackageId>CycoDj</PackageId>
+    <Authors>Rob Chambers</Authors>
+    <Description>Chat history journal and analysis CLI tool - dig through your cycod conversation history</Description>
+    <PackageTags>cli;chat-history;journal;analysis;cycod;conversation</PackageTags>
+    <PackageProjectUrl>https://github.com/robch/cycod</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    
+    <!-- .NET Tool Configuration -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>cycodj</ToolCommandName>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\common\common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="assets\help\**">
+      <Link>help\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+    <EmbeddedResource Include="assets\prompts\**">
+      <Link>prompts\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

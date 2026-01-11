@@ -131,6 +131,26 @@ public class MemoryLogger : ILogger
         }
     }
     
+    public string[] GetAllLogs()
+    {
+        // Lock range to prevent new log entries during read
+        var lockTickets = LockAllSteps();
+        
+        try
+        {
+            return _lines.ReadAll().ToArray();
+        }
+        finally
+        {
+            // Dispose lock tickets in reverse order (LIFO)
+            for (int i = lockTickets.Length - 1; i >= 0; i--)
+            {
+                lockTickets[i].Dispose();
+            }
+        }
+    }
+
+    
     private MultiStepTicketQueue<int>.TicketGuard[] LockAllSteps()
     {
         // Create two back-to-back tickets for range locking

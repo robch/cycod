@@ -35,6 +35,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         return name1 switch
         {
             "chat" => "chat",
+            "imagine" => "imagine",
             _ => base.PeekCommandName(args, i)
         };
     }
@@ -58,6 +59,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         return commandName switch
         {
             "chat" => new ChatCommand(),
+            "imagine" => new ImagineCommand(),
             "github login" => new GitHubLoginCommand(),
             "github models" => new GitHubModelsCommand(),
             "config list" => new ConfigListCommand(),
@@ -85,6 +87,7 @@ public class CycoDevCommandLineOptions : CommandLineOptions
     override protected bool TryParseOtherCommandOptions(Command? command, string[] args, ref int i, string arg)
 	{
 		return TryParseChatCommandOptions(command as ChatCommand, args, ref i, arg) ||
+               TryParseImagineCommandOptions(command as ImagineCommand, args, ref i, arg) ||
                TryParseGitHubLoginCommandOptions(command as GitHubLoginCommand, args, ref i, arg) ||
                TryParseConfigCommandOptions(command as ConfigBaseCommand, args, ref i, arg) ||
                TryParseAliasCommandOptions(command as AliasBaseCommand, args, ref i, arg) ||
@@ -203,6 +206,12 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         else if (command is McpRemoveCommand mcpRemoveCommand && string.IsNullOrEmpty(mcpRemoveCommand.Name))
         {
             mcpRemoveCommand.Name = arg;
+            parsedOption = true;
+        }
+        else if (command is ImagineCommand imagineCommand)
+        {
+            // Add positional arguments as prompts
+            imagineCommand.Prompts.Add(arg);
             parsedOption = true;
         }
 
@@ -662,6 +671,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.ImagePatterns.AddRange(imagePatterns);
             i += imageArgs.Count();
         }
+        else if (arg == "--speech")
+        {
+            command.UseSpeechInput = true;
+        }
         else if (arg == "--auto-generate-title")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);
@@ -715,6 +728,108 @@ public class CycoDevCommandLineOptions : CommandLineOptions
         {
             command.Scope = ConfigFileScope.Any;
             command.ConfigFileName = null;
+        }
+        else
+        {
+            parsed = false;
+        }
+
+        return parsed;
+    }
+
+    private bool TryParseImagineCommandOptions(ImagineCommand? command, string[] args, ref int i, string arg)
+    {
+        bool parsed = true;
+
+        if (command == null)
+        {
+            parsed = false;
+        }
+        else if (arg == "--input" || arg == "-i")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var prompt = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(prompt))
+            {
+                command.Prompts.Add(prompt);
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--inputs")
+        {
+            var inputs = GetInputOptionArgs(i + 1, args);
+            command.Prompts.AddRange(inputs);
+            i += inputs.Count();
+        }
+        else if (arg == "--count" || arg == "-c")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var countStr = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(countStr) && int.TryParse(countStr, out var count))
+            {
+                command.Count = Math.Max(1, Math.Min(10, count)); // Limit to 1-10 images
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--size" || arg == "-s")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var size = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(size))
+            {
+                command.Size = size;
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--style")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var style = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(style))
+            {
+                command.Style = style;
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--quality" || arg == "-q")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var quality = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(quality))
+            {
+                command.Quality = quality;
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--output" || arg == "-o")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var output = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(output))
+            {
+                command.OutputDirectory = output;
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--format" || arg == "-f")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var format = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(format))
+            {
+                command.Format = format;
+            }
+            i += maxArgs.Count();
+        }
+        else if (arg == "--provider" || arg == "-p")
+        {
+            var maxArgs = GetInputOptionArgs(i + 1, args, max: 1);
+            var provider = maxArgs.FirstOrDefault();
+            if (!string.IsNullOrEmpty(provider))
+            {
+                command.Provider = provider;
+            }
+            i += maxArgs.Count();
         }
         else
         {

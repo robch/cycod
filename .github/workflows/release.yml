@@ -68,14 +68,15 @@ jobs:
         ./scripts/build.sh ${{ env.VERSION }} Release
     
     - name: Test
-      run: dotnet test --configuration Release --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      run: dotnet test --configuration Release --framework net9.0 --verbosity normal --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
     
     - name: Run cycodt tests
       run: |
-        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0
+        export PATH=$PATH:$(pwd)/src/cycod/bin/Release/net9.0:$(pwd)/src/cycodt/bin/Release/net9.0:$(pwd)/src/cycodmd/bin/Release/net9.0:$(pwd)/src/cycodgr/bin/Release/net9.0:$(pwd)/src/cycodj/bin/Release/net9.0
         which cycod
         which cycodmd
         which cycodgr
+        which cycodj
         which cycodt
         cycodt run --output-file ./TestResults/test-results-cycodt.trx
     
@@ -109,7 +110,7 @@ jobs:
     - name: Upload NuGet packages and checksums
       uses: actions/upload-artifact@v4
       with:
-        name: cycod-cycodt-cycodmd-cycodgr-nuget-packages
+        name: cycod-cycodt-cycodmd-cycodgr-cycodj-nuget-packages
         path: nuget-packages/*
     
     - name: Build self-contained executables
@@ -160,6 +161,9 @@ jobs:
             - cycodgr-win-x64-${{ env.VERSION }}.zip
             - cycodgr-linux-x64-${{ env.VERSION }}.zip
             - cycodgr-osx-x64-${{ env.VERSION }}.zip
+            - cycodj-win-x64-${{ env.VERSION }}.zip
+            - cycodj-linux-x64-${{ env.VERSION }}.zip
+            - cycodj-osx-x64-${{ env.VERSION }}.zip
 
           - Platform packages (all tools):
             - cycodev-tools-win-x64-${{ env.VERSION }}.zip

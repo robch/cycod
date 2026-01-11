@@ -2,6 +2,8 @@ using Microsoft.Extensions.AI;
 using ModelContextProtocol.Client;
 using System.Diagnostics;
 using System.Text;
+using ConsoleGui.Controls;
+using CyCoD.Helpers;
 
 public class ChatCommand : CommandWithVariables
 {
@@ -48,6 +50,8 @@ public class ChatCommand : CommandWithVariables
         clone.WithStdioMcps = new Dictionary<string, StdioMcpServerConfig>(this.WithStdioMcps);
         clone.ImagePatterns = new List<string>(this.ImagePatterns);
         
+        clone.UseSpeechInput = this.UseSpeechInput;
+        
         return clone;
     }
 
@@ -67,6 +71,7 @@ public class ChatCommand : CommandWithVariables
         // Async handlers - operations that may take time like process execution  
         _slashCommandRouter.Register(new SlashCycoDmdCommandHandler(this));   // ← Async: external process execution
         _slashCommandRouter.Register(new SlashScreenshotCommandHandler(this)); // ← Async: screenshot capture and file I/O
+        _slashCommandRouter.Register(new SlashSpeechCommandHandler());         // ← Async: speech recognition
 
         // Transfer known settings to the command
         var maxOutputTokens = ConfigStore.Instance.GetFromAnyScope(KnownSettings.AppMaxOutputTokens).AsInt(defaultValue: 0);
@@ -110,6 +115,8 @@ public class ChatCommand : CommandWithVariables
         factory.AddFunctions(new ImageHelperFunctions(this));
         factory.AddFunctions(new ScreenshotHelperFunctions(this));
         factory.AddFunctions(new ShellAndProcessHelperFunctions());
+        factory.AddFunctions(new GitHubSearchHelperFunctions());
+        factory.AddFunctions(new MemoryLogHelperFunctions());
         
         // Add MCP functions if any are configured
         await AddMcpFunctions(factory);
@@ -154,10 +161,29 @@ public class ChatCommand : CommandWithVariables
             while (true)
             {
                 DisplayUserPrompt();
-                var userPrompt = interactive && !Console.IsInputRedirected
+                var isActuallyInteractive = interactive && !Console.IsInputRedirected;
+                var userPrompt = isActuallyInteractive
                     ? InteractivelyReadLineOrSimulateInput(InputInstructions, "exit")
                     : ReadLineOrSimulateInput(InputInstructions, "exit");
-                if (string.IsNullOrWhiteSpace(userPrompt) || userPrompt == "exit")
+                
+                var useContextMenu = string.IsNullOrWhiteSpace(userPrompt) && isActuallyInteractive;
+                if (useContextMenu)
+                {
+                    var choice = PickInteractiveContextMenu(UseSpeechInput);
+                    if (choice == null) continue;
+
+                    userPrompt = choice;
+                }
+
+                var useMultiLine = userPrompt == "/multiline" && isActuallyInteractive;
+                if (useMultiLine)
+                {
+                    DisplayUserPrompt();
+                    userPrompt = InteractivelyReadMultiLineInput("`````");
+                }
+
+                var shouldExit = userPrompt == "exit" || userPrompt == null;
+                if (shouldExit)
                 {
                     // Show any pending notifications before exiting
                     // This prevents title updates from being missed by the user.
@@ -568,11 +594,45 @@ public class ChatCommand : CommandWithVariables
 
     private string? InteractivelyReadMultiLineInput(string firstLine)    
     {
-        ConsoleHelpers.WriteLine("Entering multiline mode. Enter a matching number of backticks on a line by itself to end.", ConsoleColor.DarkGray);
+        var backtickCount = firstLine.TakeWhile(c => c == '`').Count();
+        var backticks = new string('`', backtickCount);
+        ConsoleHelpers.WriteLine($"Entering multiline mode. Type {backticks} on a line by itself to finish.", ConsoleColor.DarkGray);
         return MultilineInputHelper.ReadMultilineInput(firstLine);
     }
 
+    private string? PickInteractiveContextMenu(bool allowSpeechInput)
+    {
+        if (Console.CursorTop > 0)
+        {
+            var x = ConsoleHelpers.IsQuiet() ? 0 : 6;
+            Console.SetCursorPosition(x, Console.CursorTop - 1);
+        }
 
+        var choices = allowSpeechInput
+            ? new[] { "speech", "multiline", "---", "clear", "help", "exit" }
+            : new[] { "multiline", "---", "clear", "help", "exit" };
+        
+        var defaultSelection = 0;
+        
+        var selectedChoice = ListBoxPicker.PickString(
+            choices, 
+            20,
+            choices.Length + 2,
+            new Colors(ConsoleColor.White, ConsoleColor.Blue), 
+            new Colors(ConsoleColor.White, ConsoleColor.Red), 
+            defaultSelection);
+        
+        return selectedChoice switch
+        {
+            "speech" => "/speech",
+            "multiline" => "/multiline",
+            "clear" => "/clear",
+            "help" => "/help",
+            "exit" => "exit",
+            "---" => null,
+            _ => null
+        };
+    }
 
     /// <summary>
     /// Sets metadata for both trajectory files.
@@ -1213,6 +1273,8 @@ public class ChatCommand : CommandWithVariables
     public Dictionary<string, StdioMcpServerConfig> WithStdioMcps = new();
     
     public List<string> ImagePatterns = new();
+    
+    public bool UseSpeechInput { get; set; } = false;
 
     private int _assistantResponseCharsSinceLabel = 0;
     private bool _asssistantResponseNeedsLF = false;
@@ -1234,6 +1296,12 @@ public class ChatCommand : CommandWithVariables
 
     private HashSet<string> _approvedFunctionCallNames = new HashSet<string>();
     private HashSet<string> _deniedFunctionCallNames = new HashSet<string>();
+
+    public void ResetTitleGenerationFlag()
+    {
+        _titleGenerationAttempted = false;
+    }
+
 
 
 }

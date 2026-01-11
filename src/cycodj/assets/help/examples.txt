@@ -1,0 +1,157 @@
+EXAMPLES - Common usage patterns for cycodj
+
+LISTING CONVERSATIONS
+
+  EXAMPLE 1: List recent conversations (default behavior)
+
+    cycodj
+    cycodj list
+    cycodj list --last 20
+
+  EXAMPLE 2: List more or fewer conversations
+
+    cycodj list --last 5
+    cycodj list --last 100
+
+  EXAMPLE 3: List conversations from a specific date
+
+    cycodj list --date 2025-12-20
+    cycodj list --date today
+    cycodj list --date 2025-12-20 --last 10
+
+SEARCHING CONVERSATIONS
+
+  EXAMPLE 4: Basic text search
+
+    cycodj search "authentication"
+    cycodj search "how do I"
+    cycodj search "TODO"
+
+  EXAMPLE 5: Advanced search with filters
+
+    cycodj search "JWT" --user-only
+    cycodj search "error" --assistant-only
+    cycodj search "implementation" --date today
+
+  EXAMPLE 6: Regular expression search
+
+    cycodj search --regex "JWT|OAuth|SAML"
+    cycodj search --regex "TODO|FIXME|HACK" --case-sensitive
+
+  EXAMPLE 7: Search with context
+
+    cycodj search "bug" --context 5
+    cycodj search "performance" -C 10 --date 2025-12-20
+
+VIEWING CONVERSATION DETAILS
+
+  EXAMPLE 8: Show a specific conversation
+
+    cycodj show 1754437373970
+    cycodj show chat-history-1754437373970
+
+  EXAMPLE 9: Show conversation with tool details
+
+    cycodj show 1754437373970 --show-tool-calls
+    cycodj show 1754437373970 --show-tool-output
+    cycodj show 1754437373970 --max-content-length 2000
+
+VISUALIZING CONVERSATION BRANCHES
+
+  EXAMPLE 10: Show conversation tree
+
+    cycodj branches
+    cycodj branches --date today
+    cycodj branches --last 20
+
+  EXAMPLE 11: Show branches with details and messages
+
+    cycodj branches --verbose
+    cycodj branches --last 10 --messages 3
+    cycodj branches --last 7d --messages 2 --stats
+
+USING COMPOSABLE FLAGS
+
+  EXAMPLE 12: Control message display
+
+    cycodj list --messages 1           # Minimal preview
+    cycodj list --messages 5           # More context
+    cycodj list --messages all         # Show everything
+    cycodj search "bug" --messages 10  # Detailed search results
+
+  EXAMPLE 13: Show branch relationships
+
+    cycodj list --branches             # See which convs are branches
+    cycodj list --branches --messages 1 # Compact branch view
+    cycodj search "TODO" --branches    # Search with branch indicators
+
+  EXAMPLE 14: Add statistics to output
+
+    cycodj list --stats                # List with stats
+    cycodj search "error" --stats      # Search with stats
+    cycodj branches --stats            # Tree with stats
+    cycodj list --last 7d --messages 5 --branches --stats  # Everything!
+
+  EXAMPLE 15: Save output to files
+
+    cycodj list --save-output recent.md
+    cycodj list --last 7d --stats --save-output weekly-report.md
+    cycodj search "TODO" --branches --save-output todos.md
+    cycodj branches --messages 2 --save-output tree.md
+
+VIEWING STATISTICS
+
+  EXAMPLE 16: Basic statistics
+
+    cycodj stats
+    cycodj stats --date today
+    cycodj stats --last 7d
+
+  EXAMPLE 17: Detailed statistics
+
+    cycodj stats --show-tools
+    cycodj stats --last 100 --show-tools --save-output report.md
+
+CLEANING UP HISTORY
+
+  EXAMPLE 18: Find issues (dry run)
+
+    cycodj cleanup --find-duplicates
+    cycodj cleanup --find-empty
+
+  EXAMPLE 19: Remove duplicates and empty files
+
+    cycodj cleanup --remove-duplicates --execute
+    cycodj cleanup --remove-empty --execute
+
+  EXAMPLE 20: Clean up old conversations
+
+    cycodj cleanup --older-than-days 90 --remove-empty --execute
+
+COMBINING WITH AI PROCESSING
+
+  EXAMPLE 21: Apply AI instructions to output
+
+    cycodj list --instructions "summarize the main topics"
+    cycodj search "performance" --instructions "categorize by issue type"
+    cycodj stats --instructions "identify usage patterns"
+
+  EXAMPLE 22: Use built-in functions with AI
+
+    cycodj stats --instructions "create a visualization plan" --use-built-in-functions
+    cycodj list --last 30 --instructions "organize by project" --save-output report.md
+
+  EXAMPLE 23: Save chat history of AI processing
+
+    cycodj list --instructions "summarize" --save-chat-history analysis.jsonl
+    cycodj search "TODO" --instructions "prioritize" --save-chat-history todos.jsonl
+
+SEE ALSO
+
+  cycodj help
+  cycodj help list
+  cycodj help search
+  cycodj help show
+  cycodj help branches
+  cycodj help stats
+  cycodj help cleanup

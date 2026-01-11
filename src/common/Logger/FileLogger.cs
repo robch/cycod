@@ -29,6 +29,14 @@ public class FileLogger : ILogger
     public LogLevel Level { get; set; } = LogLevel.All;
     public bool IsLoggingEnabled => _fileStream != null;
     
+    public string GetCurrentLogFilePath()
+    {
+        lock (_fileLock)
+        {
+            return _currentFileName;
+        }
+    }
+    
     private FileLogger() { }
     
     public void SetFileOptions(string fileName, uint durationSeconds = 0, uint sizeMB = 0, bool append = false, bool autoFlush = true)

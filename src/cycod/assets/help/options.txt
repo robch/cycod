@@ -116,6 +116,7 @@ USAGE: cycod [...]
 
   ADDITIONAL OPTIONS
     --interactive TRUE/FALSE              Allow interactive use (default: true, unless stdin redirected)
+    --speech                              Enable speech input for chat (requires Azure Speech Service configuration)
     --threads COUNT                       Number of parallel threads for non-interactive mode (default: CPU core count)
     --folder PATH                         Change to the specified folder path before executing commands
     --cwd PATH                            Same as --folder
