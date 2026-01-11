@@ -173,25 +173,9 @@ public abstract class ShellSession
                 .WithTimeout(timeoutMs);
 
             ConsoleHelpers.WriteDebugLine($"Executing command in {Name}: {command}");
-            return await commandBuilder.RunAsync();
-        }
-        catch (TimeoutException)
-        {
-            ForceShutdown();
-            var errorMsg = $"<Command timed out after {timeoutMs}ms>";
-            return PersistentShellCommandResult.FromProcessResult(
-                new RunnableProcessResult(
-                    "",
-                    errorMsg,
-                    errorMsg,
-                    -1,
-                    ProcessCompletionState.TimedOut,
-                    TimeSpan.FromMilliseconds(timeoutMs),
-                    ProcessErrorType.Timeout,
-                    errorMsg
-                ),
-                command
-            );
+            var result = await commandBuilder.RunAsync();
+            Logger.Info($"ShellSession.ExecuteCommandAsync: Command completed successfully (no timeout) - Duration: {result.Duration}, ExitCode: {result.ExitCode}");
+            return result;
         }
         catch (Exception ex)
         {
