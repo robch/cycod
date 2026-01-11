@@ -671,6 +671,10 @@ public class CycoDevCommandLineOptions : CommandLineOptions
             command.ImagePatterns.AddRange(imagePatterns);
             i += imageArgs.Count();
         }
+        else if (arg == "--speech")
+        {
+            command.UseSpeechInput = true;
+        }
         else if (arg == "--auto-generate-title")
         {
             var max1Arg = GetInputOptionArgs(i + 1, args, max: 1);

@@ -21,6 +21,8 @@ CycoD is a command-line interface (CLI) application that provides a chat-based i
 - **Token Management**: Automatically manages token usage for long conversations
 - **Chat Commands**: Special commands like `/clear`, `/save`, `/cost` during chat sessions
   - CYCODMD integration commands: `/file`, `/files`, `/find`, `/search`, `/get`, `/run`
+- **Speech Recognition**: Use voice input with the `--speech` flag (requires Azure Speech Service)
+- **Interactive Context Menu**: Press Enter on empty line for quick actions (reset, exit, speech input)
 
 ## Installation
 
@@ -83,6 +85,7 @@ cycod [options]
 - `--output-chat-history <file>`: Save chat history to a file
 - `--max-chat-tokens <n>`: Set a target for trimming chat history when it gets too large
 - `--interactive`: Control whether to enter interactive mode (default: true)
+- `--speech`: Enable speech-to-text input (requires Azure Speech Service configuration)
 - `--save-alias <name>`: Save the current command options as a named alias
 - `--foreach var <name> in <values>`: Define a loop variable with multiple values
 - `--foreach var <name> in <start>..<end>`: Define a loop variable with a numeric range
@@ -110,6 +113,13 @@ Save and load chat history:
 cycod --output-chat-history "linux-help-session.jsonl"
 cycod --input-chat-history "linux-help-session.jsonl"
 ```
+
+Use speech-to-text input:
+```
+cycod --speech
+```
+
+See the [Speech Setup Guide](docs/speech-setup.md) for configuration details.
 
 ## Environment Variables and Configuration
 

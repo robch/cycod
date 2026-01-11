@@ -3,12 +3,24 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Text;
 
 
 public static class ProcessHelpers
 {
+    public static Process? StartBrowser(string url)
+    {
+        return RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+            ? Process.Start(new ProcessStartInfo("cmd", $"/c start {url.Replace("&", "^&")}") { CreateNoWindow = true })
+            : RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? Process.Start("xdg-open", url)
+                : RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                    ? Process.Start("open", url)
+                    : null;
+    }
+
     public static RunnableProcessResult RunShellScript(string shell, string script, string? scriptArgs = null, string? workingDirectory = null, Dictionary<string, string>? envVars = null, string? input = null, int? timeout = null)
     {
         return RunShellScriptAsync(shell, script, scriptArgs, workingDirectory, envVars, input, timeout).GetAwaiter().GetResult();

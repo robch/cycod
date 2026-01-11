@@ -2,6 +2,47 @@ using System.Text.RegularExpressions;
 
 public class StringHelpers
 {
+    public static bool ContainsAllCharsInOrder(string s, string chars)
+    {
+        return ContainsAllCharsInOrder(s, chars, out int _);
+    }
+
+    public static bool ContainsAllCharsInOrder(string s, string chars, out int index, out int width)
+    {
+        if (!ContainsAllCharsInOrder(s, chars, out int iSLastChar))
+        {
+            index = width = -1;
+            return false;
+        }
+
+        var iS = iSLastChar;
+        var iChars = chars.Length - 1;
+        while (iChars >= 0 && iS >= 0)
+        {
+            while (s[iS] != chars[iChars]) iS--;
+            iChars--;
+        }
+        iS++;
+
+        index = iS;
+        width = iSLastChar - iS + 1;
+
+        return true;
+    }
+
+    private static bool ContainsAllCharsInOrder(string s, string chars, out int lastCharAt)
+    {
+        lastCharAt = 0;
+        foreach (var ch in chars)
+        {
+            lastCharAt = s.IndexOf(ch, lastCharAt);
+            if (lastCharAt < 0) return false;
+            lastCharAt++;
+        }
+        lastCharAt--;
+        return lastCharAt >= 0;
+    }
+
     public static string? ReplaceOnce(string fileContent, string oldStr, string newStr, out int countFound)
     {
         var check = ExactlyReplaceOnce(fileContent, oldStr, newStr, out countFound);
