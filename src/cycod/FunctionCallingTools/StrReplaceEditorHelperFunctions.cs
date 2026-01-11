@@ -12,9 +12,8 @@ public class StrReplaceEditorHelperFunctions
     [Description("Returns a list of non-hidden files and directories up to 2 levels deep.")]
     public string ListFiles([Description("Absolute or relative path to directory.")] string path)
     {
-        // Expand tilde paths before any file operations
         path = PathHelpers.ExpandPath(path);
-        
+
         if (Directory.Exists(path))
         {
             path = Path.GetFullPath(path);
@@ -57,7 +56,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
-        // Expand tilde paths before any file operations
         path = PathHelpers.ExpandPath(path);
         
         // Basic file validation
@@ -302,8 +300,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("Absolute or relative path to file.")] string path,
         [Description("Content to be written to the file.")] string fileText)
     {
-        // Expand tilde paths before any file operations
-        path = PathHelpers.ExpandPath(path);
         
         if (File.Exists(path))
         {
@@ -321,8 +317,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("New content to replace the entire file.")] string newContent,
         [Description("Current line count of the file (for verification).")] int oldContentLineCount)
     {
-        // Expand tilde paths before any file operations
-        path = PathHelpers.ExpandPath(path);
         
         if (!File.Exists(path))
         {
@@ -404,8 +398,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [Description("New string content that will replace the old string.")] string newStr)
     {
-        // Expand tilde paths before any file operations
-        path = PathHelpers.ExpandPath(path);
         
         if (!File.Exists(path))
         {
@@ -437,8 +429,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("Array of old strings to be replaced. Each must match exactly one occurrence.")] string[] oldStrings,
         [Description("Array of new strings to replace with. Must be same length as oldStrings.")] string[] newStrings)
     {
-        // Expand tilde paths before any file operations
-        path = PathHelpers.ExpandPath(path);
         
         if (!File.Exists(path))
         {
@@ -509,8 +499,6 @@ public class StrReplaceEditorHelperFunctions
         [Description("Line number (1-indexed) after which to insert the new string.")] int insertLine,
         [Description("The string to insert into the file.")] string newStr)
     {
-        // Expand tilde paths before any file operations
-        path = PathHelpers.ExpandPath(path);
         
         if (!File.Exists(path))
         {
@@ -539,9 +527,6 @@ public class StrReplaceEditorHelperFunctions
     public string UndoEdit(
         [Description("Absolute or relative path to file.")] string path)
     {
-        // Expand tilde paths before any file operations
-        var originalPath = path;
-        path = PathHelpers.ExpandPath(path);
         
         if (!EditHistory.ContainsKey(path))
         {

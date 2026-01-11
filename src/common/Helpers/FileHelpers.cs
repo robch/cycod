@@ -18,6 +18,7 @@ public class FileHelpers
 
     public static IEnumerable<string> FindFiles(string fileNames)
     {
+        fileNames = PathHelpers.ExpandPath(fileNames);
         var currentDir = Directory.GetCurrentDirectory();
         foreach (var item in fileNames.Split(new char[] { ';', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
         {
@@ -103,11 +104,14 @@ public class FileHelpers
 
     public static bool FileExists(string? fileName)
     {
-        return !string.IsNullOrEmpty(fileName) && (File.Exists(fileName) || fileName == "-");
+        if (string.IsNullOrEmpty(fileName)) return false;
+        fileName = PathHelpers.ExpandPath(fileName);
+        return File.Exists(fileName) || fileName == "-";
     }
 
     public static bool IsFileMatch(string fileName, List<Regex> includeFileContainsPatternList, List<Regex> excludeFileContainsPatternList)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         var checkContent = includeFileContainsPatternList.Any() || excludeFileContainsPatternList.Any();
         if (!checkContent) return true;
 
@@ -185,6 +189,7 @@ public class FileHelpers
 
     public static void ReadIgnoreFile(string ignoreFile, out List<string> excludeGlobs, out List<Regex> excludeFileNamePatternList)
     {
+        ignoreFile = PathHelpers.ExpandPath(ignoreFile);
         ConsoleHelpers.WriteDebugLine($"ReadIgnoreFile: ignoreFile: {ignoreFile}");
 
         excludeGlobs = new List<string>();
@@ -355,6 +360,7 @@ public class FileHelpers
         DateTime? accessedAfter, DateTime? accessedBefore,
         DateTime? anyTimeAfter, DateTime? anyTimeBefore)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         try
         {
             var fileInfo = new FileInfo(fileName);
@@ -436,6 +442,7 @@ public class FileHelpers
 
     public static string ReadAllText(string fileName)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         var content = ConsoleHelpers.IsStandardInputReference(fileName)
             ? string.Join("\n", ConsoleHelpers.GetAllLinesFromStdin())
             : File.ReadAllText(fileName, Encoding.UTF8);
@@ -445,6 +452,7 @@ public class FileHelpers
 
     public static string[] ReadAllLines(string fileName)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         var lines = ConsoleHelpers.IsStandardInputReference(fileName)
             ? ConsoleHelpers.GetAllLinesFromStdin().ToArray()
             : File.ReadAllLines(fileName, Encoding.UTF8);
@@ -454,6 +462,7 @@ public class FileHelpers
 
     public static string WriteAllText(string fileName, string content, string? saveToFolderOnAccessDenied = null)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         try
         {
             DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
@@ -478,6 +487,7 @@ public class FileHelpers
 
     public static void AppendAllText(string fileName, string trajectoryContent)
     {
+        fileName = PathHelpers.ExpandPath(fileName);
         DirectoryHelpers.EnsureDirectoryForFileExists(fileName);
         File.AppendAllText(fileName, trajectoryContent, Encoding.UTF8);
     }
@@ -638,6 +648,9 @@ public class FileHelpers
     {
         if (fileNames == null || fileNames.Length == 0)
             return null;
+        
+        // Expand tilde paths for all filenames
+        fileNames = fileNames.Select(PathHelpers.ExpandPath).ToArray();
             
         var currentPath = Directory.GetCurrentDirectory();
         
