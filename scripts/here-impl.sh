@@ -5,39 +5,29 @@
 # Light mode: Sets up PATH and environment in current shell
 # Heavy mode: Launches new shell with full environment setup
 
-set -e
+# Determine if script is being sourced
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    SOURCED=false
+else
+    SOURCED=true
+fi
+
+# Only set -e if not sourced to avoid exiting user's shell
+if [[ "$SOURCED" == false ]]; then
+    set -e
+fi
 
 # Get the repository root directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
+# Source the shared PATH setup utilities
+source "$SCRIPT_DIR/setup-debug-path.sh"
+
 # Default values
 MODE="light"
 STAY_FLAG=""
 SHOW_HELP=""
-
-# ===== PARSE ARGUMENTS =====
-while [[ $# -gt 0 ]]; do
-    case $1 in
-        --shell|-s|shell)
-            MODE="heavy"
-            shift
-            ;;
-        --stay)
-            STAY_FLAG="yes"
-            shift
-            ;;
-        --help|-h)
-            SHOW_HELP="yes"
-            shift
-            ;;
-        *)
-            echo "Unknown argument: $1"
-            show_usage
-            exit 1
-            ;;
-    esac
-done
 
 show_usage() {
     cat << EOF
@@ -60,9 +50,42 @@ Note: For light mode to affect your current shell, source this script:
 EOF
 }
 
+# Function to exit or return based on whether script is sourced
+safe_exit() {
+    local code=${1:-0}
+    if [[ "$SOURCED" == true ]]; then
+        return $code
+    else
+        exit $code
+    fi
+}
+
+# ===== PARSE ARGUMENTS =====
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --shell|-s|shell)
+            MODE="heavy"
+            shift
+            ;;
+        --stay)
+            STAY_FLAG="yes"
+            shift
+            ;;
+        --help|-h)
+            SHOW_HELP="yes"
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            show_usage
+            safe_exit 1
+            ;;
+    esac
+done
+
 if [[ -n "$SHOW_HELP" ]]; then
     show_usage
-    exit 0
+    safe_exit 0
 fi
 
 echo ""
@@ -73,8 +96,12 @@ if [[ "$MODE" == "light" ]]; then
     echo "Light mode: Setting up environment..."
     echo ""
     
-    # Call the existing PATH setup script
-    source "$REPO_ROOT/scripts/setup-debug-path.sh" --session-only --no-test
+    # Use sourced PATH setup functions from setup-debug-path.sh
+    if path_already_configured; then
+        echo "ℹ️  Debug paths already in PATH"
+    else
+        configure_current_session
+    fi
     
     # Set additional environment variables
     export CYCOD_DEV_MODE=1
@@ -93,8 +120,10 @@ elif [[ "$MODE" == "heavy" ]]; then
     export CYCOD_DEV_MODE=1
     export CYCOD_REPO_ROOT="$REPO_ROOT"
     
-    # Set up PATH
-    source "$REPO_ROOT/scripts/setup-debug-path.sh" --session-only --no-test >/dev/null 2>&1
+    # Set up PATH using sourced function (suppress output for cleaner experience)
+    if ! path_already_configured; then
+        configure_current_session >/dev/null 2>&1
+    fi
     
     # Prepare custom prompt
     CUSTOM_PS1="(here:cycod) \u@\h:\w\$ "
