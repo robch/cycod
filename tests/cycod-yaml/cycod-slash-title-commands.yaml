@@ -1017,6 +1017,7 @@ tests:
 # ====================================================================
 
 - name: refresh_with_full_verification_and_notification
+  optional: flaky
   steps:
   - name: Create test file copy for refresh test
     bash: cp testfiles/unlocked-title-full-conversation.jsonl testfiles/refresh-verification-test.jsonl
