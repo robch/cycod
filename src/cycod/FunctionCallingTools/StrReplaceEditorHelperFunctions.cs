@@ -12,6 +12,8 @@ public class StrReplaceEditorHelperFunctions
     [Description("Returns a list of non-hidden files and directories up to 2 levels deep.")]
     public string ListFiles([Description("Absolute or relative path to directory.")] string path)
     {
+        path = PathHelpers.ExpandPath(path);
+
         if (Directory.Exists(path))
         {
             path = Path.GetFullPath(path);
@@ -54,6 +56,8 @@ public class StrReplaceEditorHelperFunctions
         [Description("Maximum number of characters to display per line.")] int maxCharsPerLine = 500,
         [Description("Maximum total number of characters to display.")] int maxTotalChars = 100000)
     {
+        path = PathHelpers.ExpandPath(path);
+        
         // Basic file validation
         var noFile = Directory.Exists(path) || !File.Exists(path);
         if (noFile) return $"Path {path} does not exist or is not a file.";
@@ -296,6 +300,7 @@ public class StrReplaceEditorHelperFunctions
         [Description("Absolute or relative path to file.")] string path,
         [Description("Content to be written to the file.")] string fileText)
     {
+        
         if (File.Exists(path))
         {
             return $"Path {path} already exists; cannot create file. Use ViewFile and then ReplaceOneInFile to edit the file.";
@@ -312,6 +317,7 @@ public class StrReplaceEditorHelperFunctions
         [Description("New content to replace the entire file.")] string newContent,
         [Description("Current line count of the file (for verification).")] int oldContentLineCount)
     {
+        
         if (!File.Exists(path))
         {
             return $"File {path} does not exist. Use CreateFile to create a new file.";
@@ -392,6 +398,7 @@ public class StrReplaceEditorHelperFunctions
         [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [Description("New string content that will replace the old string.")] string newStr)
     {
+        
         if (!File.Exists(path))
         {
             return $"File {path} does not exist.";
@@ -422,6 +429,7 @@ public class StrReplaceEditorHelperFunctions
         [Description("Array of old strings to be replaced. Each must match exactly one occurrence.")] string[] oldStrings,
         [Description("Array of new strings to replace with. Must be same length as oldStrings.")] string[] newStrings)
     {
+        
         if (!File.Exists(path))
         {
             return $"File {path} does not exist.";
@@ -491,6 +499,7 @@ public class StrReplaceEditorHelperFunctions
         [Description("Line number (1-indexed) after which to insert the new string.")] int insertLine,
         [Description("The string to insert into the file.")] string newStr)
     {
+        
         if (!File.Exists(path))
         {
             return $"File {path} does not exist.";
@@ -518,6 +527,7 @@ public class StrReplaceEditorHelperFunctions
     public string UndoEdit(
         [Description("Absolute or relative path to file.")] string path)
     {
+        
         if (!EditHistory.ContainsKey(path))
         {
             return $"No previous edit found for {path}.";
