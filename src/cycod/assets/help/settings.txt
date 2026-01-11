@@ -258,6 +258,7 @@ USE APP SETTINGS
 
       cycod config set App.PreferredProvider copilot --user
       cycod config set App.PreferredProvider anthropic --global
+      cycod config set App.PreferredProvider azure-anthropic --local
       cycod config set App.PreferredProvider azure-openai --local
       cycod config set App.PreferredProvider bedrock
       cycod config set App.PreferredProvider gemini
