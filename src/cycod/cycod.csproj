@@ -26,6 +26,9 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>cycod</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    
+    <!-- Suppress warnings -->
+    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
 
   <!-- Platform-specific compilation symbols -->

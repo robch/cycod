@@ -191,11 +191,11 @@ public class ChatCommand : CommandWithVariables
                     break;
                 }
 
-                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt);
+                var (skipAssistant, replaceUserPrompt) = await TryHandleChatCommandAsync(chat, userPrompt!);
                 if (skipAssistant) continue; // Some chat commands don't require a response from the assistant.
 
                 var shouldReplaceUserPrompt = !string.IsNullOrEmpty(replaceUserPrompt);
-                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt, replaceUserPrompt);
+                if (shouldReplaceUserPrompt) DisplayPromptReplacement(userPrompt!, replaceUserPrompt);
 
                 var giveAssistant = shouldReplaceUserPrompt ? replaceUserPrompt! : userPrompt;
 
@@ -210,7 +210,7 @@ public class ChatCommand : CommandWithVariables
                 var imageFiles = ImagePatterns.Any() ? ImageResolver.ResolveImagePatterns(ImagePatterns) : new List<string>();
                 ImagePatterns.Clear();
 
-                var response = await CompleteChatStreamingAsync(chat, giveAssistant, imageFiles,
+                var response = await CompleteChatStreamingAsync(chat, giveAssistant!, imageFiles,
                     (messages) => HandleUpdateMessages(messages),
                     (update) => HandleStreamingChatCompletionUpdate(update),
                     (name, args) => HandleFunctionCallApproval(factory, name, args!),
