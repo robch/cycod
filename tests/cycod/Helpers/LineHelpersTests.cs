@@ -441,6 +441,7 @@ public class LineHelpersTests
             content, includePatterns, 1, 1, false, excludePatterns, "```", true);
 
         // Assert
+        Assert.IsNotNull(result);
         var lines = result.Split('\n');
         Assert.AreEqual(3, lines.Length);
         Assert.IsFalse(lines[0].StartsWith("*"), "Context line should not be marked");
@@ -461,6 +462,7 @@ public class LineHelpersTests
             content, includePatterns, 1, 1, true, excludePatterns, "```", true);
 
         // Assert
+        Assert.IsNotNull(result);
         var lines = result.Split('\n');
         Assert.AreEqual(3, lines.Length);
         Assert.IsTrue(lines[0].StartsWith("  1:"), "Context line should have space prefix");
@@ -501,6 +503,7 @@ public class LineHelpersTests
             content, includePatterns, 0, 0, false, excludePatterns, "```", false);
 
         // Assert
+        Assert.IsNotNull(result);
         Assert.IsFalse(result.Contains("```\n\n```"), "Should not contain separator for contiguous lines");
     }
 
@@ -521,6 +524,7 @@ public class LineHelpersTests
             content, includePatterns, 2, 2, false, excludePatterns, "```", false);
 
         // Assert
+        Assert.IsNotNull(result);
         // Should include: good 2, MATCH, good 3
         // Should exclude: bad line (both before and after)
         var lines = result.Split('\n');

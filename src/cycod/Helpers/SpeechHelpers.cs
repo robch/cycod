@@ -45,7 +45,7 @@ public static class SpeechHelpers
     public static async Task<string> GetSpeechInputAsync()
     {
         Console.Write("\r");
-        ConsoleHelpers.Write("\nUser: ", ConsoleColor.Yellow);
+        ConsoleHelpers.Write("User: ", ConsoleColor.Yellow);
         Console.ForegroundColor = ConsoleColor.DarkGray;
         
         var text = "(listening)";

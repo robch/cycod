@@ -273,7 +273,7 @@ public abstract class PersistentShellProcess
                 isSyntaxError
             );
         }
-        catch (OperationCanceledException ex)
+        catch (OperationCanceledException)
         {
             var duration = DateTime.Now - startTime;
             var looksLikeTimeout = timeoutMs.HasValue && Math.Abs(duration.TotalMilliseconds - timeoutMs.Value) < 100;
@@ -467,7 +467,7 @@ public abstract class PersistentShellProcess
             
             Logger.Warning($"🔓 WaitForMarkerAsync: OUTSIDE LOCK - About to check regex - Thread={Thread.CurrentThread.ManagedThreadId}");
             
-            if (regex.IsMatch(currentOutput))
+            if (regex.IsMatch(currentOutput!))
             {
                 Logger.Warning($"✅ WaitForMarkerAsync: MARKER FOUND! About to read error/merged outputs OUTSIDE LOCK - Thread={Thread.CurrentThread.ManagedThreadId}, Time={DateTime.Now:HH:mm:ss.fff}");
                 
@@ -478,13 +478,13 @@ public abstract class PersistentShellProcess
                 Logger.Warning($"🔓 WaitForMarkerAsync: GetCurrentMergedOutput() returned length={merged?.Length ?? 0} - Thread={Thread.CurrentThread.ManagedThreadId}");
                 
                 // Compare with what we captured earlier
-                Logger.Warning($"📊 WaitForMarkerAsync: COMPARISON - currentOutput.Length={currentOutput.Length}, merged.Length={merged?.Length ?? 0}, match={currentOutput.Length == (merged?.Length ?? 0)}");
+                Logger.Warning($"📊 WaitForMarkerAsync: COMPARISON - currentOutput.Length={currentOutput!.Length}, merged.Length={merged?.Length ?? 0}, match={currentOutput.Length == (merged?.Length ?? 0)}");
                 
                 // Marker found, return the current output
                 return new RunnableProcessResult(
                     currentOutput,
-                    error,
-                    merged,
+                    error ?? string.Empty,
+                    merged ?? string.Empty,
                     0, // Actual exit code will be parsed later
                     ProcessCompletionState.Completed,
                     DateTime.Now - startTime

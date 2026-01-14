@@ -26,11 +26,22 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>cycod</ToolCommandName>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    
+    <!-- Suppress warnings -->
+    <NoWarn>$(NoWarn);NETSDK1206</NoWarn>
   </PropertyGroup>
 
   <!-- Platform-specific compilation symbols -->
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('osx'))">
+    <DefineConstants>$(DefineConstants);OSX</DefineConstants>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('linux'))">
+    <DefineConstants>$(DefineConstants);LINUX</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
