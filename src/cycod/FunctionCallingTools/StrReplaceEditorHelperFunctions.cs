@@ -329,12 +329,22 @@ public class StrReplaceEditorHelperFunctions
         [Description("New content to replace the entire file.")] string newContent,
         [Description("Current line count of the file (for verification).")] int oldContentLineCount)
     {
+        path = PathHelpers.ExpandPath(path);
         
-        if (!File.Exists(path))
-        {
-            return $"File {path} does not exist. Use CreateFile to create a new file.";
-        }
+        var fileExists = File.Exists(path);
+        if (fileExists) return ReplaceExistingFileContent(path, newContent, oldContentLineCount);
+        
+        var fuzzyPath = FileHelpers.TryFuzzyFindFile(path);
+        var fileNotFound = fuzzyPath == null;
+        if (fileNotFound) return $"File {path} does not exist. Use CreateFile to create a new file.";
+        
+        Logger.Info($"ReplaceFileContent: Fuzzy matched '{path}' to '{fuzzyPath}'");
+        var result = ReplaceExistingFileContent(fuzzyPath!, newContent, oldContentLineCount);
+        return $"Note: Fuzzy matched '{path}' to '{fuzzyPath}'\n\n{result}";
+    }
 
+    private string ReplaceExistingFileContent(string path, string newContent, int oldContentLineCount)
+    {
         // Read current content and count lines
         var currentContent = File.ReadAllText(path);
         var currentLines = currentContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
@@ -410,12 +420,22 @@ public class StrReplaceEditorHelperFunctions
         [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
         [Description("New string content that will replace the old string.")] string newStr)
     {
+        path = PathHelpers.ExpandPath(path);
         
-        if (!File.Exists(path))
-        {
-            return $"File {path} does not exist.";
-        }
+        var fileExists = File.Exists(path);
+        if (fileExists) return ReplaceOneInExistingFile(path, oldStr, newStr);
         
+        var fuzzyPath = FileHelpers.TryFuzzyFindFile(path);
+        var fileNotFound = fuzzyPath == null;
+        if (fileNotFound) return $"File {path} does not exist.";
+        
+        Logger.Info($"ReplaceOneInFile: Fuzzy matched '{path}' to '{fuzzyPath}'");
+        var result = ReplaceOneInExistingFile(fuzzyPath!, oldStr, newStr);
+        return $"Note: Fuzzy matched '{path}' to '{fuzzyPath}'\n\n{result}";
+    }
+
+    private string ReplaceOneInExistingFile(string path, string oldStr, string newStr)
+    {
         var text = FileHelpers.ReadAllText(path);
         var replaced = StringHelpers.ReplaceOnce(text, oldStr, newStr, out var countFound);
         if (countFound != 1)
@@ -441,12 +461,22 @@ public class StrReplaceEditorHelperFunctions
         [Description("Array of old strings to be replaced. Each must match exactly one occurrence.")] string[] oldStrings,
         [Description("Array of new strings to replace with. Must be same length as oldStrings.")] string[] newStrings)
     {
+        path = PathHelpers.ExpandPath(path);
         
-        if (!File.Exists(path))
-        {
-            return $"File {path} does not exist.";
-        }
+        var fileExists = File.Exists(path);
+        if (fileExists) return ReplaceMultipleInExistingFile(path, oldStrings, newStrings);
+        
+        var fuzzyPath = FileHelpers.TryFuzzyFindFile(path);
+        var fileNotFound = fuzzyPath == null;
+        if (fileNotFound) return $"File {path} does not exist.";
+        
+        Logger.Info($"ReplaceMultipleInFile: Fuzzy matched '{path}' to '{fuzzyPath}'");
+        var result = ReplaceMultipleInExistingFile(fuzzyPath!, oldStrings, newStrings);
+        return $"Note: Fuzzy matched '{path}' to '{fuzzyPath}'\n\n{result}";
+    }
 
+    private string ReplaceMultipleInExistingFile(string path, string[] oldStrings, string[] newStrings)
+    {
         if (oldStrings.Length != newStrings.Length)
         {
             return $"Error: oldStrings array length ({oldStrings.Length}) must match newStrings array length ({newStrings.Length}).";
@@ -511,11 +541,22 @@ public class StrReplaceEditorHelperFunctions
         [Description("Line number (1-indexed) after which to insert the new string.")] int insertLine,
         [Description("The string to insert into the file.")] string newStr)
     {
+        path = PathHelpers.ExpandPath(path);
         
-        if (!File.Exists(path))
-        {
-            return $"File {path} does not exist.";
-        }
+        var fileExists = File.Exists(path);
+        if (fileExists) return InsertIntoExistingFile(path, insertLine, newStr);
+        
+        var fuzzyPath = FileHelpers.TryFuzzyFindFile(path);
+        var fileNotFound = fuzzyPath == null;
+        if (fileNotFound) return $"File {path} does not exist.";
+        
+        Logger.Info($"Insert: Fuzzy matched '{path}' to '{fuzzyPath}'");
+        var result = InsertIntoExistingFile(fuzzyPath!, insertLine, newStr);
+        return $"Note: Fuzzy matched '{path}' to '{fuzzyPath}'\n\n{result}";
+    }
+
+    private string InsertIntoExistingFile(string path, int insertLine, string newStr)
+    {
         var text = FileHelpers.ReadAllText(path);
         var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
         if (insertLine < 0 || insertLine > lines.Count)
