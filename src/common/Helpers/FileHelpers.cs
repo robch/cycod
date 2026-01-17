@@ -684,5 +684,144 @@ public class FileHelpers
         return null;
     }
 
+    /// <summary>
+    /// Normalizes bash-style paths (e.g., /c/folder/file.txt) to Windows paths (e.g., C:\folder\file.txt).
+    /// On Windows, Git Bash uses /c/ to represent C:\, /d/ for D:\, etc.
+    /// </summary>
+    /// <param name="path">The path to normalize</param>
+    /// <returns>The normalized path, or the original path if no normalization needed</returns>
+    private static string NormalizeBashStylePath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+        
+        // Check for bash-style paths: /c/, /d/, etc. (Unix-style root with single letter)
+        // Pattern: starts with / followed by single letter followed by /
+        if (path.Length >= 3 && 
+            path[0] == '/' && 
+            char.IsLetter(path[1]) && 
+            path[2] == '/')
+        {
+            var driveLetter = char.ToUpper(path[1]);
+            var remainingPath = path.Substring(3); // Skip "/c/"
+            
+            // Convert forward slashes to backslashes
+            remainingPath = remainingPath.Replace('/', Path.DirectorySeparatorChar);
+            
+            return $"{driveLetter}:{Path.DirectorySeparatorChar}{remainingPath}";
+        }
+        
+        return path;
+    }
+
+
+    /// <summary>
+    /// Attempts to find a file using progressive fuzzy matching when the exact path doesn't exist.
+    /// Progressively relaxes path matching from right-to-left by adding wildcards.
+    /// </summary>
+    /// <param name="requestedPath">The originally requested file path that doesn't exist</param>
+    /// <returns>The matched file path if exactly one match is found, null otherwise</returns>
+    public static string? TryFuzzyFindFile(string requestedPath)
+    {
+        // Already checked that exact path doesn't exist before calling this
+        requestedPath = PathHelpers.ExpandPath(requestedPath);
+        
+        // Normalize bash-style paths (e.g., /c/folder -> C:\folder)
+        var normalizedPath = NormalizeBashStylePath(requestedPath);
+        if (normalizedPath != requestedPath)
+        {
+            Logger.Verbose($"TryFuzzyFindFile: Normalized bash-style path '{requestedPath}' -> '{normalizedPath}'");
+            
+            // Check if the normalized path exists exactly
+            if (File.Exists(normalizedPath))
+            {
+                Logger.Info($"TryFuzzyFindFile: Found file after bash path normalization '{requestedPath}' -> '{normalizedPath}'");
+                return normalizedPath;
+            }
+            
+            // Use the normalized path for fuzzy matching
+            requestedPath = normalizedPath;
+        }
+        
+        // Split path into segments
+        var segments = requestedPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+        
+        if (segments.Length == 0) return null;
+        
+        // Strategy: Progressively add * suffix to segments from right-to-left
+        // Example: a/b/c/file.cs -> a/b/c*/file.cs -> a/b/*/file.cs -> a/*/*/file.cs -> **/file.cs
+        
+        for (int wildcardIndex = segments.Length - 2; wildcardIndex >= 0; wildcardIndex--)
+        {
+            // Build pattern with * suffix on segments from wildcardIndex onwards (except the filename)
+            var patternSegments = new string[segments.Length];
+            for (int i = 0; i < segments.Length; i++)
+            {
+                if (i >= wildcardIndex && i < segments.Length - 1)
+                {
+                    // Replace this segment with *
+                    patternSegments[i] = "*";
+                }
+                else
+                {
+                    patternSegments[i] = segments[i];
+                }
+            }
+            
+            var pattern = string.Join(Path.DirectorySeparatorChar.ToString(), patternSegments);
+            Logger.Verbose($"TryFuzzyFindFile: Trying pattern: {pattern}");
+            
+            try
+            {
+                var matches = FindFiles(pattern).ToList();
+                
+                if (matches.Count == 1)
+                {
+                    Logger.Info($"TryFuzzyFindFile: Found unique match for '{requestedPath}' -> '{matches[0]}'");
+                    return matches[0];
+                }
+                else if (matches.Count > 1)
+                {
+                    Logger.Verbose($"TryFuzzyFindFile: Pattern '{pattern}' matched {matches.Count} files (ambiguous)");
+                    // Keep trying more specific patterns
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Verbose($"TryFuzzyFindFile: Exception trying pattern '{pattern}': {ex.Message}");
+            }
+        }
+        
+        // Last resort: try filename with ** (search anywhere)
+        var filename = segments[segments.Length - 1];
+        var lastResortPattern = $"**{Path.DirectorySeparatorChar}{filename}";
+        Logger.Verbose($"TryFuzzyFindFile: Trying last resort pattern: {lastResortPattern}");
+        
+        try
+        {
+            var matches = FindFiles(lastResortPattern).ToList();
+            
+            if (matches.Count == 1)
+            {
+                Logger.Info($"TryFuzzyFindFile: Found unique match with last resort for '{requestedPath}' -> '{matches[0]}'");
+                return matches[0];
+            }
+            else if (matches.Count > 1)
+            {
+                Logger.Info($"TryFuzzyFindFile: Last resort pattern matched {matches.Count} files, suggestions:");
+                foreach (var match in matches.Take(5))
+                {
+                    Logger.Info($"  - {match}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Verbose($"TryFuzzyFindFile: Exception trying last resort pattern: {ex.Message}");
+        }
+        
+        Logger.Verbose($"TryFuzzyFindFile: No unique match found for '{requestedPath}'");
+        return null;
+    }
+
     private static char[] _invalidFileNameCharsForWeb = GetInvalidFileNameCharsForWeb();
 }

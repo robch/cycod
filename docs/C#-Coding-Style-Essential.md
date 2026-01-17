@@ -812,6 +812,30 @@ public DeliveryConfirmation ProcessDeliveryRequest(DeliveryRequest request)
     return DeliveryConfirmation.Successful();
 }
 
+
+// Reduce nesting with helper extraction
+public string ProcessFile(string path, bool applyFilters = true)
+{
+    var fileExists = File.Exists(path);
+    if (fileExists) return ProcessExistingFile(path, applyFilters);
+    
+    var fallbackPath = TryFindAlternative(path);
+    var fileNotFound = fallbackPath == null;
+    if (fileNotFound) return "File not found";
+    
+    Logger.Info($"Using alternative: {fallbackPath}");
+    return ProcessExistingFile(fallbackPath, applyFilters);
+}
+
+private string ProcessExistingFile(string path, bool applyFilters)
+{
+    // All file processing logic extracted here
+    // Called by both direct and fallback paths
+    var content = File.ReadAllText(path);
+    return applyFilters ? ApplyFormatting(content) : content;
+}
+
+
 // Use ternary for returns - single line for very simple cases
 public string GetDeliveryStatus(Package package)
 {
@@ -829,12 +853,14 @@ public string GetDeliveryInstructions(DeliveryAddress address)
 
 ### Principles:
 - Use early returns to reduce nesting and improve readability
+- Extract complex processing to private helpers when validation leads to nested logic
 - Use ternary operators for simple conditional return values
 - Return empty collections instead of null for collection results
 - Use expression-bodied methods for very simple returns
 
 ### Notes:
 - Early returns make code more readable by reducing indentation levels
+- Helper extraction keeps validation/routing flat while enabling code reuse
 - Consistent return types make your APIs more predictable
 
 ## 17. Parameter Handling
