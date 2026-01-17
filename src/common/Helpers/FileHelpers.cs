@@ -685,6 +685,36 @@ public class FileHelpers
     }
 
     /// <summary>
+    /// Normalizes bash-style paths (e.g., /c/folder/file.txt) to Windows paths (e.g., C:\folder\file.txt).
+    /// On Windows, Git Bash uses /c/ to represent C:\, /d/ for D:\, etc.
+    /// </summary>
+    /// <param name="path">The path to normalize</param>
+    /// <returns>The normalized path, or the original path if no normalization needed</returns>
+    private static string NormalizeBashStylePath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+        
+        // Check for bash-style paths: /c/, /d/, etc. (Unix-style root with single letter)
+        // Pattern: starts with / followed by single letter followed by /
+        if (path.Length >= 3 && 
+            path[0] == '/' && 
+            char.IsLetter(path[1]) && 
+            path[2] == '/')
+        {
+            var driveLetter = char.ToUpper(path[1]);
+            var remainingPath = path.Substring(3); // Skip "/c/"
+            
+            // Convert forward slashes to backslashes
+            remainingPath = remainingPath.Replace('/', Path.DirectorySeparatorChar);
+            
+            return $"{driveLetter}:{Path.DirectorySeparatorChar}{remainingPath}";
+        }
+        
+        return path;
+    }
+
+
+    /// <summary>
     /// Attempts to find a file using progressive fuzzy matching when the exact path doesn't exist.
     /// Progressively relaxes path matching from right-to-left by adding wildcards.
     /// </summary>
@@ -694,6 +724,23 @@ public class FileHelpers
     {
         // Already checked that exact path doesn't exist before calling this
         requestedPath = PathHelpers.ExpandPath(requestedPath);
+        
+        // Normalize bash-style paths (e.g., /c/folder -> C:\folder)
+        var normalizedPath = NormalizeBashStylePath(requestedPath);
+        if (normalizedPath != requestedPath)
+        {
+            Logger.Verbose($"TryFuzzyFindFile: Normalized bash-style path '{requestedPath}' -> '{normalizedPath}'");
+            
+            // Check if the normalized path exists exactly
+            if (File.Exists(normalizedPath))
+            {
+                Logger.Info($"TryFuzzyFindFile: Found file after bash path normalization '{requestedPath}' -> '{normalizedPath}'");
+                return normalizedPath;
+            }
+            
+            // Use the normalized path for fuzzy matching
+            requestedPath = normalizedPath;
+        }
         
         // Split path into segments
         var segments = requestedPath.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
