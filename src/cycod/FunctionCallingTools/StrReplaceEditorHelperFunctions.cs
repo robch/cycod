@@ -58,10 +58,22 @@ public class StrReplaceEditorHelperFunctions
     {
         path = PathHelpers.ExpandPath(path);
         
-        // Basic file validation
-        var noFile = Directory.Exists(path) || !File.Exists(path);
-        if (noFile) return $"Path {path} does not exist or is not a file.";
+        var fileExists = File.Exists(path) && !Directory.Exists(path);
+        if (fileExists) return ViewExistingFile(path, startLine, endLine, lineNumbers, lineContains, removeAllLines, linesBeforeAndAfter, maxCharsPerLine, maxTotalChars);
+        
+        var fuzzyPath = FileHelpers.TryFuzzyFindFile(path);
 
+        var fileNotFound = fuzzyPath == null;
+        if (fileNotFound) return $"Path {path} does not exist or is not a file.";
+        
+        Logger.Info($"ViewFile: Fuzzy matched '{path}' to '{fuzzyPath}'");
+
+        var content = ViewExistingFile(fuzzyPath!, startLine, endLine, lineNumbers, lineContains, removeAllLines, linesBeforeAndAfter, maxCharsPerLine, maxTotalChars);
+        return $"Note: Fuzzy matched '{path}' to '{fuzzyPath}'\n\n{content}";
+    }
+
+    private string ViewExistingFile(string path, int startLine, int endLine, bool lineNumbers, string lineContains, string removeAllLines, int linesBeforeAndAfter, int maxCharsPerLine, int maxTotalChars)
+    {
         // Read all lines from file
         var allLines = FileHelpers.ReadAllText(path).Split('\n', StringSplitOptions.None)
             .Select(line => line.TrimEnd('\r'))
