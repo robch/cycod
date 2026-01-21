@@ -609,8 +609,8 @@ public class ChatCommand : CommandWithVariables
         }
 
         var choices = allowSpeechInput
-            ? new[] { "speech", "multiline", "---", "clear", "help", "exit" }
-            : new[] { "multiline", "---", "clear", "help", "exit" };
+            ? new[] { "exit", "---", "multiline", "speech", "clear", "help" }
+            : new[] { "exit", "---", "multiline", "clear", "help" };
         
         var defaultSelection = 0;
         
