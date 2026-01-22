@@ -348,69 +348,310 @@ public class StrReplaceEditorHelperFunctions
     }
 
 
-    // [ReadOnly(false)]
-    // [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
-    // public string LinesReplace(
-    //     [Description("Absolute or relative path to file.")] string path,
-    //     [Description("Optional start line number (1-indexed) to view.")] int startLine,
-    //     [Description("Optional end line number. Use -1 to view all remaining lines.")] int endLine,
-    //     [Description("New string content that will replace the lines.")] string newStr)
-    // {
-    //     if (!File.Exists(path))
-    //     {
-    //         return $"File {path} does not exist.";
-    //     }
+    [ReadOnly(false)]
+    [Description("Replaces the lines in the file at `path` from `startLine` to `endLine` with the new string `newStr`. If `endLine` is -1, all remaining lines are replaced.")]
+    public string LinesReplace(
+        [Description("Absolute or relative path to file.")] string path,
+        [Description("Optional start line number (1-indexed) to view.")] int startLine,
+        [Description("Optional end line number. Use -1 to view all remaining lines.")] int endLine,
+        [Description("New string content that will replace the lines.")] string newStr)
+    {
+        if (!File.Exists(path))
+        {
+            return $"File {path} does not exist.";
+        }
 
-    //     var text = File.ReadAllText(path);
-    //     var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
-    //     if (startLine < 0 || startLine > lines.Count)
-    //     {
-    //         return $"Invalid line number: {startLine}; file has {lines.Count} lines.";
-    //     }
+        var text = File.ReadAllText(path);
+        var lines = text.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
+        if (startLine < 0 || startLine > lines.Count)
+        {
+            return $"Invalid line number: {startLine}; file has {lines.Count} lines.";
+        }
 
-    //     // Save current text for undo.
-    //     if (!EditHistory.ContainsKey(path))
-    //     {
-    //         EditHistory[path] = text;
-    //     }
+        // Save current text for undo.
+        if (!EditHistory.ContainsKey(path))
+        {
+            EditHistory[path] = text;
+        }
 
-    //     // Replace lines with new string.
-    //     var newLines = newStr.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
-    //     if (endLine == -1)
-    //     {
-    //         endLine = lines.Count;
-    //     }
-    //     else if (endLine < startLine || endLine > lines.Count)
-    //     {
-    //         return $"Invalid range: start line {startLine} and end line {endLine} exceed file line count of {lines.Count}";
-    //     }
-    //     lines.RemoveRange(startLine - 1, endLine - startLine + 1);
-    //     lines.InsertRange(startLine - 1, newLines);
-    //     var newText = string.Join(Environment.NewLine, lines);
-    //     File.WriteAllText(path, newText);
-    //     return $"Replaced lines {startLine} to {endLine} in {path} with {newStr.Length} characters.";
-    // }
+        // Replace lines with new string.
+        var newLines = newStr.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None).ToList();
+        if (endLine == -1)
+        {
+            endLine = lines.Count;
+        }
+        else if (endLine < startLine || endLine > lines.Count)
+        {
+            return $"Invalid range: start line {startLine} and end line {endLine} exceed file line count of {lines.Count}";
+        }
+        lines.RemoveRange(startLine - 1, endLine - startLine + 1);
+        lines.InsertRange(startLine - 1, newLines);
+        var newText = string.Join(Environment.NewLine, lines);
+        File.WriteAllText(path, newText);
+        return $"Replaced lines {startLine} to {endLine} in {path} with {newStr.Length} characters.";
+    }
+
+
+    /// <summary>
+    /// Finds all occurrences of a pattern and formats them with context for display
+    /// </summary>
+    private string FormatMultipleMatches(string filePath, string fileContent, string oldStr, int contextLines = 3)
+    {
+        var lines = fileContent.Split(new[] { "\r\n", "\n" }, StringSplitOptions.None);
+        var sb = new StringBuilder();
+        
+        // Find all matches - try exact matching first
+        var matches = new List<int>(); // List of character positions where matches start
+        
+        // Try exact matching
+        int pos = 0;
+        while ((pos = fileContent.IndexOf(oldStr, pos, StringComparison.Ordinal)) != -1)
+        {
+            matches.Add(pos);
+            pos += oldStr.Length;
+        }
+        
+        // If no exact matches, try fuzzy matching
+        if (matches.Count == 0)
+        {
+            var escapedLines = oldStr
+                .Split('\n', StringSplitOptions.None)
+                .Select(line => line.TrimEnd('\r').TrimEnd())
+                .Select(line => Regex.Escape(line))
+                .ToArray();
+
+            var linesWithTrailingWsPattern = escapedLines
+                .Take(escapedLines.Length - 1)
+                .Select(line => $"{line}[\\t\\f\\v\\r\\u00A0\\u2000-\\u200A\\u2028\\u2029\\u3000 ]*$")
+                .Concat(new[] { escapedLines.Last() });
+
+            var joined = string.Join('\n', linesWithTrailingWsPattern);
+            var pattern = new Regex(joined, RegexOptions.Multiline | RegexOptions.CultureInvariant);
+            var regexMatches = pattern.Matches(fileContent);
+            
+            foreach (Match match in regexMatches)
+            {
+                matches.Add(match.Index);
+            }
+        }
+        
+        if (matches.Count == 0)
+        {
+            return $"No occurrences found (this shouldn't happen - internal error)";
+        }
+        
+        sb.AppendLine($"Found {matches.Count} matches in {filePath}:");
+        sb.AppendLine();
+        
+        for (int matchIdx = 0; matchIdx < matches.Count; matchIdx++)
+        {
+            var matchPos = matches[matchIdx];
+            
+            // Find which line this match is on
+            int currentPos = 0;
+            int lineNum = 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                int lineLength = lines[i].Length + Environment.NewLine.Length; // Account for newline
+                if (currentPos + lineLength > matchPos)
+                {
+                    lineNum = i + 1; // 1-indexed
+                    break;
+                }
+                currentPos += lineLength;
+            }
+            
+            sb.AppendLine($"Match {matchIdx + 1} at line {lineNum}:");
+            
+            // Show context lines
+            int startLine = Math.Max(0, lineNum - 1 - contextLines);
+            int endLine = Math.Min(lines.Length - 1, lineNum - 1 + contextLines);
+            
+            for (int i = startLine; i <= endLine; i++)
+            {
+                var prefix = (i == lineNum - 1) ? "*" : " ";
+                sb.AppendLine($"{prefix} {i + 1,4}: {lines[i]}");
+            }
+            
+            if (matchIdx < matches.Count - 1)
+            {
+                sb.AppendLine();
+            }
+        }
+        
+        sb.AppendLine();
+        sb.AppendLine("To replace a specific occurrence, you have two options:");
+        sb.AppendLine();
+        sb.AppendLine("Option 1 (Recommended): Use the 'which' parameter to specify which occurrence to replace:");
+        sb.AppendLine($"  ReplaceOneInFile(path: \"{filePath}\", oldStr: \"...\", newStr: \"...\", which: 1)  // Replace 1st occurrence");
+        sb.AppendLine($"  ReplaceOneInFile(path: \"{filePath}\", oldStr: \"...\", newStr: \"...\", which: 2)  // Replace 2nd occurrence");
+        sb.AppendLine($"  ReplaceOneInFile(path: \"{filePath}\", oldStr: \"...\", newStr: \"...\", which: -1) // Replace last occurrence");
+        sb.AppendLine();
+        sb.AppendLine("Option 2: Add more surrounding context to your oldStr parameter to make it unique.");
+        sb.AppendLine("  For example, include the lines before and after the target match.");
+        
+        return sb.ToString();
+        
+        return sb.ToString();
+    }
+
+
+    /// <summary>
+    /// Replaces the Nth occurrence of a pattern in text
+    /// </summary>
+    private string? ReplaceNthOccurrence(string text, string oldStr, string newStr, int which, out int totalFound)
+    {
+        totalFound = 0;
+        
+        // Find all matches using exact matching first
+        var matches = new List<int>();
+        int pos = 0;
+        while ((pos = text.IndexOf(oldStr, pos, StringComparison.Ordinal)) != -1)
+        {
+            matches.Add(pos);
+            pos += oldStr.Length;
+        }
+        
+        // If no exact matches, try fuzzy matching
+        if (matches.Count == 0)
+        {
+            var escapedLines = oldStr
+                .Split('\n', StringSplitOptions.None)
+                .Select(line => line.TrimEnd('\r').TrimEnd())
+                .Select(line => Regex.Escape(line))
+                .ToArray();
+
+            var linesWithTrailingWsPattern = escapedLines
+                .Take(escapedLines.Length - 1)
+                .Select(line => $"{line}[\\t\\f\\v\\r\\u00A0\\u2000-\\u200A\\u2028\\u2029\\u3000 ]*$")
+                .Concat(new[] { escapedLines.Last() });
+
+            var joined = string.Join('\n', linesWithTrailingWsPattern);
+            var pattern = new Regex(joined, RegexOptions.Multiline | RegexOptions.CultureInvariant);
+            var regexMatches = pattern.Matches(text);
+            
+            foreach (Match match in regexMatches)
+            {
+                matches.Add(match.Index);
+            }
+        }
+        
+        totalFound = matches.Count;
+        
+        if (totalFound == 0)
+        {
+            return null;
+        }
+        
+        // Handle negative indices (e.g., -1 = last)
+        int targetIndex;
+        if (which < 0)
+        {
+            targetIndex = totalFound + which; // -1 becomes count-1 (last), -2 becomes count-2, etc.
+        }
+        else
+        {
+            targetIndex = which - 1; // Convert from 1-indexed to 0-indexed
+        }
+        
+        // Validate index
+        if (targetIndex < 0 || targetIndex >= totalFound)
+        {
+            return null; // Invalid index
+        }
+        
+        // Get the position of the target match
+        int matchPos = matches[targetIndex];
+        
+        // Determine the length of the match (need to handle fuzzy matches)
+        int matchLength;
+        if (text.Substring(matchPos).StartsWith(oldStr))
+        {
+            // Exact match
+            matchLength = oldStr.Length;
+        }
+        else
+        {
+            // Fuzzy match - need to find the actual match length
+            var escapedLines = oldStr
+                .Split('\n', StringSplitOptions.None)
+                .Select(line => line.TrimEnd('\r').TrimEnd())
+                .Select(line => Regex.Escape(line))
+                .ToArray();
+
+            var linesWithTrailingWsPattern = escapedLines
+                .Take(escapedLines.Length - 1)
+                .Select(line => $"{line}[\\t\\f\\v\\r\\u00A0\\u2000-\\u200A\\u2028\\u2029\\u3000 ]*$")
+                .Concat(new[] { escapedLines.Last() });
+
+            var joined = string.Join('\n', linesWithTrailingWsPattern);
+            var pattern = new Regex(joined, RegexOptions.Multiline | RegexOptions.CultureInvariant);
+            var match = pattern.Match(text, matchPos);
+            matchLength = match.Length;
+        }
+        
+        // Perform the replacement
+        var result = text.Substring(0, matchPos) + newStr + text.Substring(matchPos + matchLength);
+        return result;
+    }
 
     [ReadOnly(false)]
-    [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique, no changes are made.")]
+    [Description("Replaces the text specified by `oldStr` with `newStr` in the file at `path`. If the provided old string is not unique and `which` is not specified, no changes are made.")]
     public string ReplaceOneInFile(
         [Description("Absolute or relative path to file.")] string path,
-        [Description("Existing text in the file that should be replaced. Must match exactly one occurrence.")] string oldStr,
-        [Description("New string content that will replace the old string.")] string newStr)
+        [Description("Existing text in the file that should be replaced.")] string oldStr,
+        [Description("New string content that will replace the old string.")] string newStr,
+        [Description("Which occurrence to replace (1 = first, 2 = second, -1 = last, null = must be unique). Default: null")] int? which = null)
     {
-        
         if (!File.Exists(path))
         {
             return $"File {path} does not exist.";
         }
         
         var text = FileHelpers.ReadAllText(path);
-        var replaced = StringHelpers.ReplaceOnce(text, oldStr, newStr, out var countFound);
+        
+        // If which is specified, use ReplaceNthOccurrence
+        if (which.HasValue)
+        {
+            var replaced = ReplaceNthOccurrence(text, oldStr, newStr, which.Value, out var totalFound);
+            
+            if (totalFound == 0)
+            {
+                return $"No occurrences of '{oldStr}' found in {path}; no changes made.";
+            }
+            
+            if (replaced == null)
+            {
+                // Invalid index
+                var indexDesc = which.Value < 0 ? $"{which.Value} (counting from end)" : which.Value.ToString();
+                return $"Invalid occurrence index {indexDesc}. Found {totalFound} total occurrence(s) in {path}.\n\n" +
+                       FormatMultipleMatches(path, text, oldStr);
+            }
+            
+            // Success - save undo and write file
+            if (!EditHistory.ContainsKey(path))
+            {
+                EditHistory[path] = text;
+            }
+            
+            File.WriteAllText(path, replaced);
+            var occDesc = which.Value < 0 ? $"occurrence {totalFound + which.Value + 1} (index {which.Value})" : $"occurrence {which.Value}";
+            return $"File {path} updated: replaced {occDesc} of {totalFound} total occurrences.";
+        }
+        
+        // Original behavior when which is not specified - must be unique
+        var replacedUnique = StringHelpers.ReplaceOnce(text, oldStr, newStr, out var countFound);
         if (countFound != 1)
         {
-            return countFound == 0
-                ? $"No occurrences of '{oldStr}' found in {path}; no changes made."
-                : $"Multiple matches found for '{oldStr}' in {path}; no changes made. Please be more specific.";
+            if (countFound == 0)
+            {
+                return $"No occurrences of '{oldStr}' found in {path}; no changes made.";
+            }
+            else
+            {
+                // Multiple matches found - show them with context
+                return FormatMultipleMatches(path, text, oldStr);
+            }
         }
 
         if (!EditHistory.ContainsKey(path))
@@ -418,12 +659,12 @@ public class StrReplaceEditorHelperFunctions
             EditHistory[path] = text;
         }
 
-        File.WriteAllText(path, replaced);
+        File.WriteAllText(path, replacedUnique);
         return $"File {path} updated: replaced 1 occurrence of specified text.";
     }
 
     [ReadOnly(false)]
-    [Description("Replaces multiple text patterns in a single file atomically. All replacements must be unique occurrences.")]
+    [Description("Replaces multiple text patterns in a single file atomically. All replacements must be unique occurrences. Inputs are a sequence of one-to-one")]
     public string ReplaceMultipleInFile(
         [Description("Absolute or relative path to file.")] string path,
         [Description("Array of old strings to be replaced. Each must match exactly one occurrence.")] string[] oldStrings,
