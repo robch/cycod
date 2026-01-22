@@ -491,8 +491,6 @@ public class StrReplaceEditorHelperFunctions
         sb.AppendLine("  For example, include the lines before and after the target match.");
         
         return sb.ToString();
-        
-        return sb.ToString();
     }
 
 
