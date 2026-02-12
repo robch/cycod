@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using CycoDev.ChatPipeline;
 
 public class FunctionCallingChat : IAsyncDisposable
 {
@@ -11,6 +12,12 @@ public class FunctionCallingChat : IAsyncDisposable
     /// The notification management system.
     /// </summary>
     public NotificationManager Notifications { get; private set; }
+    
+    /// <summary>
+    /// The chat pipeline used for processing conversations.
+    /// Can be accessed to add hooks or inspect configuration.
+    /// </summary>
+    public IChatPipeline Pipeline { get; private set; }
 
     /// <summary>
     /// Clears the conversation history and reinitializes with the original system prompt and persistent user messages.
@@ -20,11 +27,20 @@ public class FunctionCallingChat : IAsyncDisposable
         Conversation.Clear(_systemPrompt);
     }
 
-    public FunctionCallingChat(IChatClient chatClient, string systemPrompt, FunctionFactory factory, ChatOptions? options, int? maxOutputTokens = null)
+    public FunctionCallingChat(
+        IChatClient chatClient, 
+        string systemPrompt, 
+        FunctionFactory factory, 
+        ChatOptions? options, 
+        int? maxOutputTokens = null,
+        IChatPipeline? pipeline = null)
     {
         _systemPrompt = systemPrompt;
         _functionFactory = factory;
         _functionCallDetector = new FunctionCallDetector();
+        
+        // Use provided pipeline or create default
+        Pipeline = pipeline ?? ChatPipelineFactory.CreateStandardPipeline();
 
         // Initialize composition objects
         Conversation = new Conversation();
@@ -81,145 +97,34 @@ public class FunctionCallingChat : IAsyncDisposable
     {
         var message = CreateUserMessageWithImages(userPrompt, imageFiles);
         
+        // TODO: Execute PreUserMessageAdd hook here once architecture supports it
+        // The user message is added before pipeline execution starts, so hooks
+        // cannot be executed at this point. Consider moving user message addition
+        // into the pipeline as a first stage (UserInputStage) to enable hook execution.
+        
         Conversation.Messages.Add(message);
         messageCallback?.Invoke(Conversation.Messages);
-
-        var contentToReturn = string.Empty;
-        while (true)
-        {
-            var responseContent = string.Empty;
-            await foreach (var update in _chatClient.GetStreamingResponseAsync(Conversation.Messages, _options))
-            {
-                _functionCallDetector.CheckForFunctionCall(update);
-
-                var content = string.Join("", update.Contents
-                    .Where(c => c is TextContent)
-                    .Cast<TextContent>()
-                    .Select(c => c.Text)
-                    .ToList());
-
-                if (update.FinishReason == ChatFinishReason.ContentFilter)
-                {
-                    content = $"{content}\nWARNING: Content filtered!";
-                }
-
-                responseContent += content;
-                contentToReturn += content;
-
-                streamingCallback?.Invoke(update);
-            }
-
-            if (TryCallFunctions(responseContent, approveFunctionCall, functionCallCallback, messageCallback))
-            {
-                _functionCallDetector.Clear();
-                continue;
-            }
-
-            Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, responseContent));
-            messageCallback?.Invoke(Conversation.Messages);
-
-            return contentToReturn;
-        }
-    }
-
-    private bool TryCallFunctions(string responseContent, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback, Action<IList<ChatMessage>>? messageCallback)
-    {
-        var noFunctionsToCall = !_functionCallDetector.HasFunctionCalls();
-        if (noFunctionsToCall) return false;
         
-        var readyToCallFunctionCalls = _functionCallDetector.GetReadyToCallFunctionCalls();
+        // TODO: Execute PostUserMessageAdd hook here once architecture supports it
 
-        var emptyResponseContent = string.IsNullOrEmpty(responseContent);
-        if (emptyResponseContent) responseContent = "Calling function(s)...";
-
-        var assistantContent = readyToCallFunctionCalls
-            .AsAIContentList()
-            .Prepend(new TextContent(responseContent))
-            .ToList();
-        Conversation.Messages.Add(new ChatMessage(ChatRole.Assistant, assistantContent));
-        messageCallback?.Invoke(Conversation.Messages);
-
-        var functionCallResults = CallFunctions(readyToCallFunctionCalls, approveFunctionCall, functionCallCallback);
-
-        var attachToToolMessage = functionCallResults
-            .Where(c => c is FunctionResultContent)
-            .Cast<AIContent>()
-            .ToList();
-
-        Conversation.Messages.Add(new ChatMessage(ChatRole.Tool, attachToToolMessage));
-        messageCallback?.Invoke(Conversation.Messages);
-
-        var otherContentToAttach = functionCallResults
-            .Where(c => c is not FunctionResultContent)
-            .ToList();
-        if (otherContentToAttach.Any())
-        {
-            var hasTextContent = otherContentToAttach.Any(c => c is TextContent);
-            if (!hasTextContent)
-            {
-                otherContentToAttach.Insert(0, new TextContent("attached content:"));
-            }
-
-            Conversation.Messages.Add(new ChatMessage(ChatRole.User, otherContentToAttach));
-            messageCallback?.Invoke(Conversation.Messages);
-        }
-
-        return true;
-    }
-
-    private List<AIContent> CallFunctions(List<FunctionCallDetector.ReadyToCallFunctionCall> readyToCallFunctionCalls, Func<string, string?, bool>? approveFunctionCall, Action<string, string, object?>? functionCallCallback)
-    {
-        ConsoleHelpers.WriteDebugLine($"Calling functions: {string.Join(", ", readyToCallFunctionCalls.Select(call => call.Name))}");
-
-        var functionResultContents = new List<AIContent>();
-        foreach (var functionCall in readyToCallFunctionCalls)
-        {
-            var approved = approveFunctionCall?.Invoke(functionCall.Name, functionCall.Arguments) ?? true;
-
-            var functionResult = approved
-                ? CallFunction(functionCall, functionCallCallback)
-                : DontCallFunction(functionCall, functionCallCallback);
-
-            var asDataContent = functionResult as DataContent;
-            if (asDataContent != null)
-            {
-                functionResultContents.Add(asDataContent);
-                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, "attaching data content"));
-            }
-            else
-            {
-                functionResultContents.Add(new FunctionResultContent(functionCall.CallId, functionResult));
-            }
-        }
-
-        return functionResultContents;
-    }
-
-    private object CallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, object?>? functionCallCallback)
-    {
-        functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
-
-        ConsoleHelpers.WriteDebugLine($"Calling function: {functionCall.Name} with arguments: {functionCall.Arguments}");
-        var functionResult = _functionFactory.TryCallFunction(functionCall.Name, functionCall.Arguments, out var functionResponse)
-            ? functionResponse ?? "Function call succeeded"
-            : $"Function not found or failed to execute: {functionResponse}";
-        ConsoleHelpers.WriteDebugLine($"Function call result: {functionResult}");
-
-        functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
-
-        return functionResult;
-    }
-
-    private object DontCallFunction(FunctionCallDetector.ReadyToCallFunctionCall functionCall, Action<string, string, object?>? functionCallCallback)
-    {
-        functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, null);
-
-        ConsoleHelpers.WriteDebugLine($"Function call not approved: {functionCall.Name} with arguments: {functionCall.Arguments}");
-        var functionResult = "User did not approve function call";
-
-        functionCallCallback?.Invoke(functionCall.Name, functionCall.Arguments, functionResult);
-
-        return functionResult;
+        // Create context for pipeline
+        var context = ChatPipelineFactory.CreateContext(
+            _chatClient,
+            _options,
+            _functionCallDetector,
+            _functionFactory,
+            Conversation,
+            userPrompt,
+            imageFiles,
+            messageCallback,
+            streamingCallback,
+            approveFunctionCall,
+            functionCallCallback);
+        
+        // Execute pipeline (use stored pipeline instance)
+        var result = await Pipeline.ExecuteAsync(context);
+        
+        return result.Content;
     }
 
     public async ValueTask DisposeAsync()
